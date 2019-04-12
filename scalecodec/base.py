@@ -46,6 +46,7 @@ class RuntimeConfiguration(metaclass=Singleton):
         self.type_mappings['default'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
 
     def get_decoder_class(self, type_string, spec_version_id='default'):
+        # TODO move ScaleDecoder.get_decoder_class logic to here
         return self.type_mappings.get(spec_version_id, {}).get(type_string.lower(), None)
 
     def set_type_mapping(self, spec_version_id, type_mapping):

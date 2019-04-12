@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Polkascan. If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
 from scalecodec.base import ScaleType, ScaleBytes
 
 
@@ -96,6 +97,7 @@ class Bytes(ScaleType):
             return value.hex()
 
 
+# TODO replace in metadata
 class String(ScaleType):
 
     def process(self):
@@ -145,10 +147,150 @@ class H256(ScaleType):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
 
+class Era(ScaleType):
+
+    def process(self):
+
+        option_byte = self.get_next_bytes(1).hex()
+        if option_byte == '00':
+            return option_byte
+        else:
+            return option_byte + self.get_next_bytes(1).hex()
+
+
 class Bool(ScaleType):
 
     def process(self):
         return self.get_next_bool()
+
+
+class Moment(CompactU32):
+    type_string = 'Compact<Moment>'
+
+    def process(self):
+        int_value = super().process()
+        return datetime.utcfromtimestamp(int_value)
+
+    def serialize(self):
+        return self.value.isoformat()
+
+
+class BoxProposal(ScaleType):
+    type_string = 'Box<Proposal>'
+
+    def __init__(self, data, **kwargs):
+        self.call_index = None
+        self.call = None
+        self.call_module = None
+        self.params = []
+        super().__init__(data, **kwargs)
+
+    def process(self):
+
+        self.call_index = self.get_next_bytes(2).hex()
+
+        self.call_module, self.call = self.metadata.call_index[self.call_index]
+
+        for arg in self.call.args:
+            arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+            self.params.append({
+                'name': arg.name,
+                'type': arg.type,
+                'value': arg_type_obj.serialize(),
+                'valueRaw': arg_type_obj.raw_value
+            })
+
+        return {
+            'call_index': self.call_index,
+            'call_name': self.call.name,
+            'call_module': self.call_module.name,
+            'params': self.params
+        }
+
+
+class Struct(ScaleType):
+    type_mapping = {}
+
+    def process(self):
+
+        result = {}
+
+        for key, data_type in self.type_mapping:
+            result[key] = self.process_type(data_type).value
+
+        return result
+
+
+class ValidatorPrefs(Struct):
+
+    type_string = '(Compact<u32>,Compact<Balance>)'
+
+    type_mapping = (('col1', 'Compact<u32>'), ('col2', 'Compact<Balance>'))
+
+
+class AccountId(H256):
+    pass
+
+
+class AccountIndex(U32):
+    pass
+
+
+class ReferendumIndex(U32):
+    pass
+
+
+class PropIndex(U32):
+    pass
+
+
+class Vote(U8):
+    pass
+
+
+class SessionKey(H256):
+    pass
+
+
+class AttestedCandidate(H256):
+    pass
+
+
+class Balance(U128):
+    pass
+
+
+class ParaId(U32):
+    pass
+
+
+class Key(Bytes):
+    pass
+
+
+class KeyValue(Struct):
+    type_string = '(Vec<u8>, Vec<u8>)'
+    type_mapping = (('key', 'Vec<u8>'), ('value', 'Vec<u8>'))
+
+
+class Signature(ScaleType):
+
+    def process(self):
+        return self.get_next_bytes(64).hex()
+
+
+class BalanceOf(CompactU32):
+
+    type_string = 'Compact<BalanceOf>'
+
+
+class BlockNumber(U64):
+    pass
+
+
+class NewAccountOutcome(CompactU32):
+    pass
 
 
 class Vec(ScaleType):
@@ -167,3 +309,79 @@ class Vec(ScaleType):
             result.append(element.value)
 
         return result
+
+# class BalanceTransferExtrinsic(Decoder):
+#
+#     type_string = '(Address,Compact<Balance>)'
+#
+#     type_mapping = {'to': 'Address', 'balance': 'Compact<Balance>'}
+
+
+class Address(ScaleType):
+
+    def __init__(self, data, **kwargs):
+        self.account_length = None
+        self.account_id = None
+        self.account_index = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.account_length = self.get_next_bytes(1).hex()
+
+        if self.account_length == 'ff':
+            self.account_id = self.get_next_bytes(32).hex()
+            return self.account_id
+        else:
+            if self.account_length == 'fc':
+                self.account_index = self.get_next_bytes(2).hex()
+            elif self.account_length == 'fd':
+                self.account_index = self.get_next_bytes(4).hex()
+            elif self.account_length == 'fe':
+                self.account_index = self.get_next_bytes(8).hex()
+            else:
+                self.account_index = self.account_length
+
+            return self.account_index
+
+
+class RawAddress(Address):
+    pass
+
+
+class Enum(ScaleType):
+
+    value_list = []
+
+    def __init__(self, data, value_list=None, **kwargs):
+        if value_list:
+            self.value_list = value_list
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        index = int(self.get_next_bytes(1).hex())
+        try:
+            return self.value_list[index]
+        except IndexError:
+            raise ValueError("Index '{}' not present in Enum value list".format(index))
+
+
+class RewardDestination(Enum):
+
+    value_list = ['Staked', 'Stash', 'Controller']
+
+
+class VoteThreshold(Enum):
+
+    value_list = ['SuperMajorityApprove', 'SuperMajorityAgainst', 'SimpleMajority']
+
+
+class Inherent(Bytes):
+    pass
+
+
+class LockPeriods(U8):
+    pass
+
+
+class Hash(H256):
+    pass
