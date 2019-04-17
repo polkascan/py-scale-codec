@@ -88,17 +88,16 @@ class MetadataV2Decoder(ScaleDecoder):
         for module in self.modules:
             if module.calls is not None:
                 for call_index, call in enumerate(module.calls):
-                    self.call_index["{:02x}{:02x}".format(call_module_index, call_index)] = (module, call)
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
                 call_module_index += 1
 
             if module.events is not None:
                 for event_index, event in enumerate(module.events):
-                    self.event_index["{:02x}{:02x}".format(event_module_index, event_index)] = (module, event)
-
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
                 event_module_index += 1
 
-        result_data["call_index"] = {idx: [call[0].name, call[1].name] for idx, call in self.call_index.items()}
-        result_data["event_index"] = {idx: [event[0].name, event[1].name] for idx, event in self.event_index.items()}
         result_data["metadata"][self.version]["modules"] = [m.value for m in self.modules]
 
         return result_data
@@ -134,20 +133,20 @@ class MetadataV3Decoder(ScaleDecoder):
         for module in self.modules:
             if module.calls is not None:
                 for call_index, call in enumerate(module.calls):
-                    self.call_index["{:02x}{:02x}".format(call_module_index, call_index)] = (module, call)
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
                 call_module_index += 1
 
             if module.events is not None:
                 for event_index, event in enumerate(module.events):
-                    self.event_index["{:02x}{:02x}".format(event_module_index, event_index)] = (module, event)
-
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
                 event_module_index += 1
 
-        result_data["call_index"] = {idx: call[1].name for idx, call in self.call_index.items()}
-        result_data["event_index"] = {idx: [event[0].name, event[1].name] for idx, event in self.event_index.items()}
         result_data["metadata"]["MetadataV3"]["modules"] = [m.value for m in self.modules]
 
         return result_data
+
 
 class MetadataV1Decoder(ScaleDecoder):
 
@@ -178,19 +177,17 @@ class MetadataV1Decoder(ScaleDecoder):
 
         for module in self.modules:
             if module.calls is not None:
-
                 for call_index, call in enumerate(module.calls):
-                    self.call_index["{:02x}{:02x}".format(call_module_index, call_index)] = (module, call)
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
                 call_module_index += 1
 
             if module.events is not None:
                 for event_index, event in enumerate(module.events):
-                    self.event_index["{:02x}{:02x}".format(event_module_index, event_index)] = (module, event)
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
                 event_module_index += 1
 
-
-        #result_data["call_index"] = {idx: call[1].name for idx, call in self.call_index.items()}
-        #result_data["event_index"] = {idx: [event[0].name, event[1].name] for idx, event in self.event_index.items()}
         result_data["metadata"]["MetadataV1"]["modules"] = [m.value for m in self.modules]
 
         return result_data
@@ -237,20 +234,19 @@ class MetadataV0Decoder(ScaleDecoder):
             if module_index > 0 and (len(module.functions) > 0 or len(module.storage) > 0):
 
                 for call_index, call in enumerate(module.functions):
-                    self.call_index["{:02x}{:02x}".format(call_module_index, call_index)] = (module, call)
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
 
                 call_module_index += 1
 
         for event_module_index, event_module in enumerate(self.events_modules):
             for event_index, event in enumerate(event_module.events):
-                self.event_index["{:02x}{:02x}".format(event_module_index, event_index)] = (event_module, event)
+                event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                self.event_index[event.lookup] = (event_module, event)
 
         result_data["metadata"]["MetadataV0"]["outerEvent"]["events"] = [e.value for e in self.events_modules]
         result_data["metadata"]["MetadataV0"]["modules"] = [m.value for m in self.modules]
         result_data["metadata"]["MetadataV0"]["sections"] = [s.value for s in self.sections]
-
-        result_data["call_index"] = {idx: call[1].name for idx, call in self.call_index.items()}
-        result_data["event_index"] = {idx: [event[0].name, event[1].name] for idx, event in self.event_index.items()}
 
         return result_data
 
