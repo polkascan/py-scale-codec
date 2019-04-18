@@ -57,7 +57,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
         self.extrinsic_length = self.process_type('Compact<u32>').value
 
-        if self.extrinsic_length != self.data.length:
+        if self.extrinsic_length != self.data.get_remaining_length():
             # Fallback for legacy version
             self.extrinsic_length = None
             self.data.reset()

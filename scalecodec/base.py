@@ -80,6 +80,9 @@ class ScaleBytes:
         self.offset = self.length
         return data
 
+    def get_remaining_length(self):
+        return self.length - self.offset
+
     def reset(self):
         self.offset = 0
 
