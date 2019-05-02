@@ -401,3 +401,19 @@ class VoteType(Enum):
 
 class VoteOutcome(U64):
     pass
+
+
+class Identity(Bytes):
+    pass
+
+
+class ProposalTitle(Bytes):
+    pass
+
+
+class ProposalContents(Bytes):
+    pass
+
+
+class ProposalStage(Enum):
+    value_list = ['PreVoting', 'Voting', 'Completed']
