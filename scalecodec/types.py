@@ -82,6 +82,18 @@ class CompactU32(Compact):
             return int.from_bytes(self.compact_bytes, byteorder='little')
 
 
+class Option(ScaleType):
+    def process(self):
+
+        option_byte = self.get_next_bytes(1)
+
+        if self.sub_type and option_byte != b'\x00':
+            self.data.reset()
+            return self.get_decoder_class(self.sub_type, ScaleBytes(self.data)).process()
+
+        return None
+
+
 class Bytes(ScaleType):
 
     type_string = 'Vec<u8>'
@@ -399,8 +411,10 @@ class VoteType(Enum):
     value_list = ['Binary', 'MultiOption']
 
 
-class VoteOutcome(U64):
-    pass
+class VoteOutcome(ScaleType):
+
+    def process(self):
+        return list(self.get_next_bytes(32))
 
 
 class Identity(Bytes):
@@ -417,3 +431,7 @@ class ProposalContents(Bytes):
 
 class ProposalStage(Enum):
     value_list = ['PreVoting', 'Voting', 'Completed']
+
+
+class ProposalCategory(Enum):
+    value_list = ['Signaling']
