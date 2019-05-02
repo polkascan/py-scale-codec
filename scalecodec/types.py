@@ -452,3 +452,7 @@ class TallyType(Enum):
     type_string = 'voting::TallyType'
 
     value_list = ['OnePerson', 'OneCoin']
+
+
+class Attestation(Bytes):
+    pass
