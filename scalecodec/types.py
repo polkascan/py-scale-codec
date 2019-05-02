@@ -385,3 +385,19 @@ class LockPeriods(U8):
 
 class Hash(H256):
     pass
+
+
+class VoteIndex(U32):
+    pass
+
+
+class IdentityType(Bytes):
+    pass
+
+
+class VoteType(Enum):
+    value_list = ['Binary', 'MultiOption']
+
+
+class VoteOutcome(U64):
+    pass

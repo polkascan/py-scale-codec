@@ -72,7 +72,7 @@ class MetadataV2Decoder(ScaleDecoder):
         result_data = {
             "magicNumber": 1635018093,  # struct.unpack('<L', bytearray.fromhex("6174656d")),
             "metadata": {
-                self.version: {
+                "MetadataV2": {
                     "modules": [],
                 }
             }
@@ -98,7 +98,7 @@ class MetadataV2Decoder(ScaleDecoder):
                     self.event_index[event.lookup] = (module, event)
                 event_module_index += 1
 
-        result_data["metadata"][self.version]["modules"] = [m.value for m in self.modules]
+        result_data["metadata"]["MetadataV2"]["modules"] = [m.value for m in self.modules]
 
         return result_data
 
