@@ -411,6 +411,9 @@ class IdentityType(Bytes):
 
 
 class VoteType(Enum):
+
+    type_string = 'voting::VoteType'
+
     value_list = ['Binary', 'MultiOption']
 
 
@@ -442,3 +445,10 @@ class ProposalCategory(Enum):
 
 class VoteStage(Enum):
     value_list = ['PreVoting', 'Commit', 'Voting', 'Completed']
+
+
+class TallyType(Enum):
+
+    type_string = 'voting::TallyType'
+
+    value_list = ['OnePerson', 'OneCoin']
