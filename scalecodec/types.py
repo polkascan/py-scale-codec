@@ -403,6 +403,9 @@ class VoteIndex(U32):
     pass
 
 
+# Edgeware types
+# TODO move to RuntimeConfiguration per network
+
 class IdentityType(Bytes):
     pass
 
@@ -435,3 +438,7 @@ class ProposalStage(Enum):
 
 class ProposalCategory(Enum):
     value_list = ['Signaling']
+
+
+class VoteStage(Enum):
+    value_list = ['PreVoting', 'Commit', 'Voting', 'Completed']
