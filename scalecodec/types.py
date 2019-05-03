@@ -456,3 +456,31 @@ class TallyType(Enum):
 
 class Attestation(Bytes):
     pass
+
+
+# Joystream types
+# TODO move to RuntimeConfiguration per network
+
+class ContentId(H256):
+    pass
+
+
+class MemberId(U64):
+    pass
+
+
+class PaidTermId(U64):
+    pass
+
+
+class SubscriptionId(U64):
+    pass
+
+
+class SchemaId(U64):
+    pass
+
+
+class DownloadSessionId(U64):
+    pass
+
