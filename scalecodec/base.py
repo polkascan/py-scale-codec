@@ -96,7 +96,7 @@ class ScaleDecoder(ABC):
 
     type_mapping = None
 
-    debug = True
+    debug = False
 
     def __init__(self, data, sub_type=None):
 
