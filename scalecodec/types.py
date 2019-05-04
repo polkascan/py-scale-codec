@@ -510,3 +510,54 @@ class Role(Enum):
 
     value_list = ['Storage']
 
+
+class ContentVisibility(Enum):
+    value_list = ['Draft', 'Public']
+
+
+class ContentMetadata(Struct):
+    type_mapping = (
+        ('owner', 'AccountId'),
+        ('added_at', 'BlockAndTime'),
+        ('children_ids', 'Vec<ContentId>'),
+        ('visibility', 'ContentVisibility'),
+        ('schema', 'SchemaId'),
+        ('json', 'Vec<u8>'),
+
+    )
+
+
+class ContentMetadataUpdate(Struct):
+    type_mapping = (
+        ('children_ids', 'Option<Vec<ContentId>>'),
+        ('visibility', 'Option<ContentVisibility>'),
+        ('schema', 'Option<SchemaId>'),
+        ('json', 'Option<Vec<u8>>')
+    )
+
+
+class LiaisonJudgement(Enum):
+    value_list = ['Pending', 'Accepted', 'Rejected']
+
+
+class BlockAndTime(Struct):
+    type_mapping = (
+        ('block', 'BlockNumber'),
+        ('time', 'Moment')
+    )
+
+
+class DataObjectTypeId(U64):
+    pass
+
+
+class DataObject(Struct):
+    type_mapping = (
+        ('owner', 'AccountId'),
+        ('added_at', 'BlockAndTime'),
+        ('type_id', 'DataObjectTypeId'),
+        ('size', 'u64'),
+        ('liaison', 'AccountId'),
+        ('liaison_judgement', 'LiaisonJudgement'),
+    )
+
