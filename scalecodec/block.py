@@ -84,6 +84,10 @@ class ExtrinsicsDecoder(ScaleDecoder):
             self.call = self.metadata.call_index[self.call_index][1]
             self.call_module = self.metadata.call_index[self.call_index][0]
 
+            if self.debug:
+                print('Call: ', self.call.name)
+                print('Module: ', self.call_module.name)
+
             for arg in self.call.args:
                 arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
 

@@ -88,8 +88,7 @@ class Option(ScaleType):
         option_byte = self.get_next_bytes(1)
 
         if self.sub_type and option_byte != b'\x00':
-            self.data.reset()
-            return self.get_decoder_class(self.sub_type, ScaleBytes(self.data)).process()
+            return self.process_type(self.sub_type).value
 
         return None
 
@@ -107,6 +106,20 @@ class Bytes(ScaleType):
             return value.decode()
         except UnicodeDecodeError:
             return value.hex()
+
+
+class OptionBytes(ScaleType):
+
+    type_string = 'Option<Vec<u8>>'
+
+    def process(self):
+
+        option_byte = self.get_next_bytes(1)
+
+        if option_byte != b'\x00':
+            return self.process_type('Bytes').value
+
+        return None
 
 
 # TODO replace in metadata
@@ -292,9 +305,8 @@ class Signature(ScaleType):
         return self.get_next_bytes(64).hex()
 
 
-class BalanceOf(CompactU32):
-
-    type_string = 'Compact<BalanceOf>'
+class BalanceOf(Balance):
+    pass
 
 
 class BlockNumber(U64):
@@ -483,4 +495,18 @@ class SchemaId(U64):
 
 class DownloadSessionId(U64):
     pass
+
+
+class UserInfo(Struct):
+
+    type_mapping = (
+        ('handle', 'Option<Vec<u8>>'),
+        ('avatar_uri', 'Option<Vec<u8>>'),
+        ('about', 'Option<Vec<u8>>')
+    )
+
+
+class Role(Enum):
+
+    value_list = ['Storage']
 

@@ -199,7 +199,7 @@ class ScaleDecoder(ABC):
         obj = self.get_decoder_class(type_string, self.data, **kwargs)
         obj.decode(check_remaining=False)
         if self.debug:
-            print('=======================\nClass:\t{}\nType:\t{}\nValue:\t{}\nRaw:\t\t{}\n\nOffset:\t{} / {}\n'.format(
+            print('=======================\nClass:\t{}\nType:\t{}\nValue:\t{}\nRaw:\t{}\n\nOffset:\t{} / {}\n'.format(
                 self.__class__.__name__, type_string, obj.value, obj.raw_value, self.data.offset, self.data.length
             ))
         return obj
