@@ -548,7 +548,7 @@ class BlockAndTime(Struct):
 
 
 class DataObjectTypeId(U64):
-    pass
+    type_string = "<T as DOTRTrait>::DataObjectTypeId"
 
 
 class DataObject(Struct):
@@ -561,3 +561,6 @@ class DataObject(Struct):
         ('liaison_judgement', 'LiaisonJudgement'),
     )
 
+
+class DataObjectStorageRelationshipId(U64):
+    pass
