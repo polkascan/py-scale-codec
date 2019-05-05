@@ -564,3 +564,12 @@ class DataObject(Struct):
 
 class DataObjectStorageRelationshipId(U64):
     pass
+
+
+class ProposalStatus(Enum):
+    value_list = ['Active', 'Cancelled', 'Expired', 'Approved', 'Rejected', 'Slashed']
+
+
+class VoteKind(Enum):
+    value_list = ['Abstain', 'Approve', 'Reject', 'Slash']
+
