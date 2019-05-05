@@ -573,3 +573,16 @@ class ProposalStatus(Enum):
 class VoteKind(Enum):
     value_list = ['Abstain', 'Approve', 'Reject', 'Slash']
 
+
+class TallyResult(Struct):
+    type_string = 'TallyResult<BlockNumber>'
+
+    type_mapping = (
+        ('proposal_id', 'u32'),
+        ('abstentions', 'u32'),
+        ('approvals', 'u32'),
+        ('rejections', 'u32'),
+        ('slashes', 'u32'),
+        ('status', 'ProposalStatus'),
+        ('finalized_at', 'BlockNumber'),
+    )
