@@ -415,6 +415,14 @@ class VoteIndex(U32):
     pass
 
 
+class ProposalIndex(U32):
+    pass
+
+
+class Permill(U32):
+    pass
+
+
 # Edgeware types
 # TODO move to RuntimeConfiguration per network
 
