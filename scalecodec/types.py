@@ -377,16 +377,19 @@ class Enum(ScaleType):
     value_list = []
 
     def __init__(self, data, value_list=None, **kwargs):
+
+        self.index = None
+
         if value_list:
             self.value_list = value_list
         super().__init__(data, **kwargs)
 
     def process(self):
-        index = int(self.get_next_bytes(1).hex())
+        self.index = int(self.get_next_bytes(1).hex())
         try:
-            return self.value_list[index]
+            return self.value_list[self.index]
         except IndexError:
-            raise ValueError("Index '{}' not present in Enum value list".format(index))
+            raise ValueError("Index '{}' not present in Enum value list".format(self.index))
 
 
 class RewardDestination(Enum):
@@ -594,3 +597,23 @@ class TallyResult(Struct):
         ('status', 'ProposalStatus'),
         ('finalized_at', 'BlockNumber'),
     )
+
+
+class StorageHasher(Enum):
+
+    value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
+
+    def is_blake2_128(self):
+        return self.index == 0
+
+    def is_blake2_256(self):
+        return self.index == 1
+
+    def is_twox128(self):
+        return self.index == 2
+
+    def is_twox256(self):
+        return self.index == 3
+
+    def is_twox128_concat(self):
+        return self.index == 4
