@@ -13,12 +13,12 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+from hashlib import blake2b
 from collections import OrderedDict
 
-from scalecodec.base import ScaleDecoder
+from scalecodec.base import ScaleDecoder, ScaleBytes
 from scalecodec.metadata import MetadataDecoder
-from scalecodec.types import Vec
+from scalecodec.types import Vec, CompactU32
 
 
 class ExtrinsicsDecoder(ScaleDecoder):
@@ -38,6 +38,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
         self.metadata = metadata
         self.extrinsic_length = None
+        self.extrinsic_hash = None
         self.version_info = None
         self.contains_transaction: bool = False
         self.address = None
@@ -50,6 +51,21 @@ class ExtrinsicsDecoder(ScaleDecoder):
         self.call_args = None
         self.params = []
         super().__init__(data, sub_type)
+
+    def generate_hash(self):
+        if self.contains_transaction:
+
+            if self.extrinsic_length:
+                extrinsic_data = self.data.data
+            else:
+                # Fallback for legacy version, prefix additional Compact<u32> with length
+                extrinsic_length_type = CompactU32(ScaleBytes(bytearray()))
+                extrinsic_length_type.encode(self.data.length)
+                extrinsic_data = extrinsic_length_type.data.data + self.data.data
+
+            return blake2b(extrinsic_data, digest_size=32).digest().hex()
+        else:
+            return None
 
     def process(self):
         # TODO for all attributes
@@ -74,6 +90,8 @@ class ExtrinsicsDecoder(ScaleDecoder):
             self.nonce = self.process_type(attribute_types['nonce'])
 
             self.era = self.process_type('Era')
+
+            self.extrinsic_hash = self.generate_hash()
 
         self.call_index = self.get_next_bytes(2).hex()
 
@@ -111,6 +129,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['signature'] = self.signature.value
             result['nonce'] = self.nonce.value
             result['era'] = self.era.value
+            result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
             result['call_code'] = self.call_index
             result['call_module_function'] = self.call.get_identifier()

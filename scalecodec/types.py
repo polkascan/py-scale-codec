@@ -81,6 +81,23 @@ class CompactU32(Compact):
         else:
             return int.from_bytes(self.compact_bytes, byteorder='little')
 
+    def encode(self, value: int):
+
+        if value <= 0b00111111:
+            self.data = ScaleBytes(bytearray(int(value << 2).to_bytes(1, 'little')))
+
+        elif value <= 0b0011111111111111:
+            self.data = ScaleBytes(bytearray(int((value << 2) | 0b01).to_bytes(2, 'little')))
+
+        elif value <= 0b00111111111111111111111111111111:
+
+            self.data = ScaleBytes(bytearray(int((value << 2) | 0b10).to_bytes(4, 'little')))
+
+        else:
+            raise NotImplemented('Value range not implemented')
+
+        return self.data
+
 
 class Option(ScaleType):
     def process(self):

@@ -157,6 +157,9 @@ class ScaleDecoder(ABC):
     def __str__(self):
         return str(self.value) or ''
 
+    def encode(self, value):
+        raise NotImplemented("Encoding not implemented for this ScaleType")
+
     @classmethod
     def get_decoder_class(cls, type_string, data, **kwargs):
 
