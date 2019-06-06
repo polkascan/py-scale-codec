@@ -126,6 +126,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['account_length'] = self.address.account_length
             result['account_id'] = self.address.account_id
             result['account_index'] = self.address.account_index
+            result['account_idx'] = self.address.account_idx
             result['signature'] = self.signature.value
             result['nonce'] = self.nonce.value
             result['era'] = self.era.value
@@ -178,7 +179,7 @@ class EventRecord(ScaleDecoder):
 
     def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
 
-        assert (type(metadata) == MetadataDecoder)
+        assert (not metadata or type(metadata) == MetadataDecoder)
 
         self.metadata = metadata
 

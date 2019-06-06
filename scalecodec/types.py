@@ -364,23 +364,31 @@ class Address(ScaleType):
         self.account_length = None
         self.account_id = None
         self.account_index = None
+        self.account_idx = None
         super().__init__(data, **kwargs)
 
     def process(self):
-        self.account_length = self.get_next_bytes(1).hex()
+        self.account_length = self.get_next_bytes(1)
 
-        if self.account_length == 'ff':
+        if self.account_length == b'\xff':
             self.account_id = self.get_next_bytes(32).hex()
+            self.account_length = self.account_length.hex()
+
             return self.account_id
         else:
-            if self.account_length == 'fc':
-                self.account_index = self.get_next_bytes(2).hex()
-            elif self.account_length == 'fd':
-                self.account_index = self.get_next_bytes(4).hex()
-            elif self.account_length == 'fe':
-                self.account_index = self.get_next_bytes(8).hex()
+            if self.account_length == b'\xfc':
+                account_index = self.get_next_bytes(2)
+            elif self.account_length == b'\xfd':
+                account_index = self.get_next_bytes(4)
+            elif self.account_length == b'\xfe':
+                account_index = self.get_next_bytes(8)
             else:
-                self.account_index = self.account_length
+                account_index = self.account_length
+
+            self.account_index = account_index.hex()
+            self.account_idx = int.from_bytes(account_index, byteorder='little')
+
+            self.account_length = self.account_length.hex()
 
             return self.account_index
 
