@@ -268,7 +268,7 @@ class ValidatorPrefs(Struct):
 
     type_string = '(Compact<u32>,Compact<Balance>)'
 
-    type_mapping = (('col1', 'Compact<u32>'), ('col2', 'Compact<Balance>'))
+    type_mapping = (('unstakeThreshold', 'Compact<u32>'), ('validatorPayment', 'Compact<Balance>'))
 
 
 class AccountId(H256):
@@ -642,3 +642,11 @@ class StorageHasher(Enum):
 
     def is_twox128_concat(self):
         return self.index == 4
+
+
+class Gas(U64):
+    pass
+
+
+class CodeHash(Hash):
+    pass
