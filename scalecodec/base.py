@@ -217,6 +217,7 @@ class ScaleDecoder(ABC):
         name = re.sub(r'T::', "", name)
         name = re.sub(r'<T>', "", name)
         name = re.sub(r'<T as Trait>::', "", name)
+        name = re.sub(r'\n', "", name)
 
         if name == '()':
             return "Null"
