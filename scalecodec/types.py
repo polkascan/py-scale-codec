@@ -451,6 +451,34 @@ class Permill(U32):
     pass
 
 
+class StorageHasher(Enum):
+
+    value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
+
+    def is_blake2_128(self):
+        return self.index == 0
+
+    def is_blake2_256(self):
+        return self.index == 1
+
+    def is_twox128(self):
+        return self.index == 2
+
+    def is_twox256(self):
+        return self.index == 3
+
+    def is_twox128_concat(self):
+        return self.index == 4
+
+
+class Gas(U64):
+    pass
+
+
+class CodeHash(Hash):
+    pass
+
+
 # Edgeware types
 # TODO move to RuntimeConfiguration per network
 
@@ -624,29 +652,48 @@ class TallyResult(Struct):
     )
 
 
-class StorageHasher(Enum):
+# Robonomics types
+# TODO move to RuntimeConfiguration per network
 
-    value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
+class Order(Struct):
+    type_string = 'Order<Balance, AccountId>'
 
-    def is_blake2_128(self):
-        return self.index == 0
-
-    def is_blake2_256(self):
-        return self.index == 1
-
-    def is_twox128(self):
-        return self.index == 2
-
-    def is_twox256(self):
-        return self.index == 3
-
-    def is_twox128_concat(self):
-        return self.index == 4
+    type_mapping = (
+        ('models', 'Vec<u8>'),
+        ('objective', 'Vec<u8>'),
+        ('cost', 'Balance'),
+        ('custodian', 'AccountId'),
+    )
 
 
-class Gas(U64):
-    pass
+class Offer(Struct):
+    type_string = 'Offer<Balance, AccountId>'
+
+    type_mapping = (
+        ('order', 'Order<Balance, AccountId>'),
+        #('sender', 'AccountId'),
+    )
 
 
-class CodeHash(Hash):
+class Demand(Struct):
+    type_string = 'Demand<Balance, AccountId>'
+
+    type_mapping = (
+        ('order', 'Order<Balance, AccountId>'),
+        #('sender', 'AccountId'), TODO not present in current blocks but referenced in https://github.com/airalab/substrate-node-robonomics/blob/master/res/custom_types.json
+    )
+
+
+class Liability(Struct):
+    type_string = 'Liability<Balance, AccountId>'
+
+    type_mapping = (
+        ('order', 'Order<Balance, AccountId>'),
+        ('promisee', 'AccountId'),
+        #('promisor', 'AccountId'), TODO not present in current blocks but referenced in https://github.com/airalab/substrate-node-robonomics/blob/master/res/custom_types.json
+        ('result', 'Option<Vec<u8>>'),
+    )
+
+
+class LiabilityIndex(U64):
     pass
