@@ -18,7 +18,7 @@ from collections import OrderedDict
 
 from scalecodec.base import ScaleDecoder, ScaleBytes
 from scalecodec.metadata import MetadataDecoder
-from scalecodec.types import Vec, CompactU32
+from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct
 
 
 class ExtrinsicsDecoder(ScaleDecoder):
@@ -224,3 +224,48 @@ class EventRecord(ScaleDecoder):
             'event_id': self.event.name,
             'params': self.params
         }
+
+
+class Other(Bytes):
+    pass
+
+
+class AuthoritiesChange(Vec):
+    type_string = 'Vec<AccountId>'
+
+    def __init__(self, data, **kwargs):
+
+        super().__init__(data, sub_type='AccountId', **kwargs)
+
+
+class ChangesTrieRoot(Bytes):
+    pass
+
+
+class Seal(Struct):
+    type_string = '(u64, Signature)'
+
+    type_mapping = (('slot', 'u64'), ('signature', 'Signature'))
+
+
+class Consensus(Struct):
+    type_string = '(u32, Vec<u8>)'
+
+    type_mapping = (('engine', 'u32'), ('data', 'Vec<u8>'))
+
+
+class LogDigest(Enum):
+
+    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'Seal', 'Consensus']
+
+    def __init__(self, data, **kwargs):
+        self.log_type = None
+        self.index_value = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.index = int(self.get_next_bytes(1).hex())
+        self.index_value = self.value_list[self.index]
+        self.log_type = self.process_type(self.value_list[self.index])
+        return {'type': self.log_type.type_string, 'value': self.log_type.value}
+

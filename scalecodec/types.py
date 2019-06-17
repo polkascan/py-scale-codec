@@ -252,7 +252,6 @@ class BoxProposal(ScaleType):
 
 
 class Struct(ScaleType):
-    type_mapping = {}
 
     def process(self):
 
