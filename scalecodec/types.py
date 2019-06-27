@@ -622,11 +622,72 @@ class DataObject(Struct):
         ('size', 'u64'),
         ('liaison', 'AccountId'),
         ('liaison_judgement', 'LiaisonJudgement'),
+        ('ipfs_content_id', 'Bytes'),
     )
 
 
 class DataObjectStorageRelationshipId(U64):
     pass
+
+
+class IPNSIdentity(Bytes):
+    pass
+
+
+class AccountInfo(Struct):
+    type_string = 'AccountInfo<BlockNumber>'
+
+    type_mapping = (
+        ('identity', 'IPNSIdentity'),
+        ('expires_at', 'BlockNumber'),
+    )
+
+
+class DownloadState(Enum):
+    value_list = ['Started', 'Ended']
+
+
+class DownloadSession(Struct):
+
+    type_mapping = (
+        ('content_id', 'ContentId'),
+        ('consumer', 'AccountId'),
+        ('distributor', 'AccountId'),
+        ('initiated_at_block', 'BlockNumber'),
+        ('initiated_at_time', 'BlockNumber'),
+        ('state', 'DownloadState'),
+        ('transmitted_bytes', 'u64'),
+    )
+
+
+class Url(Bytes):
+    pass
+
+
+class EntryMethod(Enum):
+    value_list = ['Paid', 'Screening']
+
+
+class Profile(Struct):
+    type_mapping = (
+        ('id', 'MemberId'),
+        ('handle', 'Bytes'),
+        ('avatar_uri', 'Bytes'),
+        ('about', 'Bytes'),
+        ('registered_at_block', 'BlockNumber'),
+        ('registered_at_time', 'Moment'),
+        ('entry', 'EntryMethod'),
+        ('suspended', 'bool'),
+        ('subscription', 'Option<SubscriptionId>'),
+    )
+
+
+class PaidMembershipTerms(Struct):
+    type_mapping = (
+        ('id', 'PaidTermId'),
+        ('fee', 'BalanceOf'),
+        ('text', 'Bytes'),
+    )
 
 
 class ProposalStatus(Enum):
