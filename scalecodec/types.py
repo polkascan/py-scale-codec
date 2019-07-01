@@ -165,6 +165,12 @@ class U8(ScaleType):
         return self.get_next_u8()
 
 
+class U16(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(2), byteorder='little')
+
+
 class U32(ScaleType):
 
     def process(self):
@@ -687,6 +693,110 @@ class PaidMembershipTerms(Struct):
         ('id', 'PaidTermId'),
         ('fee', 'BalanceOf'),
         ('text', 'Bytes'),
+    )
+
+
+class ThreadId(U64):
+    pass
+
+
+class InputValidationLengthConstraint(Struct):
+    type_mapping = (
+        ('min', 'u16'),
+        ('max_min_diff', 'u16'),
+    )
+
+
+class BlockchainTimestamp(Struct):
+    type_string = 'BlockchainTimestamp<BlockNumber, Moment>'
+
+    type_mapping = (
+        ('block', 'BlockNumber'),
+        ('time', 'Moment'),
+    )
+
+
+class ModerationAction(Struct):
+    type_mapping = (
+        ('moderated_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
+        ('moderator_id', 'AccountId'),
+        ('rationale', 'Vec<u8>'),
+    )
+
+
+class PostId(U64):
+    pass
+
+
+class PostTextChange(Struct):
+    type_string = 'PostTextChange<BlockNumber, Moment>'
+
+    type_mapping = (
+        ('expired_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
+        ('text', 'Vec<u8>'),
+    )
+
+
+class Post(Struct):
+    type_string = 'Post<BlockNumber, Moment, AccountId>'
+
+    type_mapping = (
+        ('id', 'PostId'),
+        ('thread_id', 'ThreadId'),
+        ('nr_in_thread', 'u32'),
+        ('current_text', 'Vec<u8>'),
+        ('moderation', 'Option<ModerationAction<BlockNumber, Moment, AccountId>>'),
+        ('text_change_history', 'Vec<PostTextChange<BlockNumber, Moment>>'),
+        ('created_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
+        ('author_id', 'AccountId'),
+
+    )
+
+
+class Thread(Struct):
+    type_string = 'Thread<BlockNumber, Moment, AccountId>'
+
+    type_mapping = (
+        ('id', 'ThreadId'),
+        ('title', 'Vec<u8>'),
+        ('category_id', 'CategoryId'),
+        ('nr_in_category', 'u32'),
+        ('moderation', 'Option<ModerationAction<BlockNumber, Moment, AccountId>>'),
+        ('num_unmoderated_posts', 'u32'),
+        ('num_moderated_posts', 'u32'),
+        ('author_id', 'AccountId'),
+        ('created_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
+        ('author_id', 'AccountId'),
+    )
+
+
+class CategoryId(U64):
+    pass
+
+
+class ChildPositionInParentCategory(Struct):
+
+    type_mapping = (
+        ('parent_id', 'CategoryId'),
+        ('child_nr_in_parent_category', 'u32'),
+    )
+
+
+class Category(Struct):
+    type_string = 'Category<BlockNumber, Moment, AccountId>'
+
+    type_mapping = (
+        ('id', 'CategoryId'),
+        ('title', 'Vec<u8>'),
+        ('description', 'Vec<u8>'),
+        ('created_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
+        ('deleted', 'bool'),
+        ('archived', 'bool'),
+        ('num_direct_subcategories', 'u32'),
+        ('num_direct_unmoderated_threads', 'u32'),
+        ('num_direct_moderated_threads', 'u32'),
+        ('position_in_parent_category', 'Option<ChildPositionInParentCategory>'),
+        ('moderator_id', 'AccountId'),
     )
 
 
