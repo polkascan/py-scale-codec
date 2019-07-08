@@ -242,6 +242,8 @@ class ScaleDecoder(ABC):
 # TODO move type_string and sub_type behaviour to this sub class
 class ScaleType(ScaleDecoder, ABC):
 
-    def __init__(self, data, sub_type=None, metadata=None):
+    def __init__(self, data=None, sub_type=None, metadata=None):
         self.metadata = metadata
+        if not data:
+            data = ScaleBytes(bytearray())
         super().__init__(data, sub_type)

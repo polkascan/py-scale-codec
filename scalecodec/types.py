@@ -176,6 +176,22 @@ class U32(ScaleType):
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
+    def encode(self, value):
+        if value <= 0b00111111:
+            self.data = ScaleBytes(bytearray(int(value).to_bytes(1, 'little')))
+
+        elif value <= 0b0011111111111111:
+            self.data = ScaleBytes(bytearray(int(value).to_bytes(2, 'little')))
+
+        elif value <= 0b00111111111111111111111111111111:
+
+            self.data = ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
+
+        else:
+            raise NotImplemented('Value range not implemented')
+
+        return self.data
+
 
 class U64(ScaleType):
 
