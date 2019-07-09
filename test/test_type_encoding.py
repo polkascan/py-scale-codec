@@ -47,6 +47,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj.encode(1000000)
         self.assertEqual(str(obj.data), "0x02093d00")
 
+    def test_compact_u32_larger_than_4bytes(self):
+
+        obj = CompactU32(ScaleBytes(bytearray()))
+        obj.encode(150000000000000)
+        self.assertEqual(str(obj.data), "0x0b0060b7986c88")
+
     def test_compact_u32_encode_decode(self):
 
         value = 2000001
