@@ -238,6 +238,10 @@ class Era(ScaleType):
             return option_byte + self.get_next_bytes(1).hex()
 
 
+class EraIndex(U32):
+    pass
+
+
 class Bool(ScaleType):
 
     def process(self):
@@ -329,6 +333,10 @@ class Vote(U8):
 
 
 class SessionKey(H256):
+    pass
+
+
+class SessionIndex(U32):
     pass
 
 
@@ -488,6 +496,33 @@ class Permill(U32):
     pass
 
 
+class ApprovalFlag(U32):
+    pass
+
+
+class SetIndex(U32):
+    pass
+
+
+class AuthorityId(H256):
+    pass
+
+
+class ValidatorId(H256):
+    pass
+
+
+class AuthorityWeight(U64):
+    pass
+
+
+class StoredPendingChange(Struct):
+    type_mapping = (
+        ('scheduled_at', 'u32'),
+        ('forced', 'u32'),
+    )
+
+
 class StorageHasher(Enum):
 
     value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
@@ -506,6 +541,17 @@ class StorageHasher(Enum):
 
     def is_twox128_concat(self):
         return self.index == 4
+
+
+class VoterInfo(Struct):
+    type_string = 'VoterInfo<Balance>'
+
+    type_mapping = (
+        ('last_active', 'VoteIndex'),
+        ('last_win', 'VoteIndex'),
+        ('pot', 'Balance'),
+        ('stake', 'Balance'),
+    )
 
 
 class Gas(U64):

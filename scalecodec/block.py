@@ -189,6 +189,7 @@ class EventRecord(ScaleDecoder):
         self.params = []
         self.event = None
         self.event_module = None
+        self.topics = []
 
         super().__init__(data, sub_type)
 
@@ -216,13 +217,18 @@ class EventRecord(ScaleDecoder):
                 'valueRaw': arg_type_obj.raw_value
             })
 
+        # Topics introduced since MetadataV4
+        if self.metadata.version.index >= 4:
+            self.topics = self.process_type('Vec<Hash>').value
+
         return {
             'phase': self.phase,
             'extrinsic_idx': self.extrinsic_idx,
             'type': self.type,
             'module_id': self.event_module.name,
             'event_id': self.event.name,
-            'params': self.params
+            'params': self.params,
+            'topics': self.topics
         }
 
 
@@ -242,7 +248,7 @@ class ChangesTrieRoot(Bytes):
     pass
 
 
-class Seal(Struct):
+class SealV0(Struct):
     type_string = '(u64, Signature)'
 
     type_mapping = (('slot', 'u64'), ('signature', 'Signature'))
@@ -254,9 +260,21 @@ class Consensus(Struct):
     type_mapping = (('engine', 'u32'), ('data', 'Vec<u8>'))
 
 
+class Seal(Struct):
+    type_string = '(u32, Bytes)'
+
+    type_mapping = (('engine', 'u32'), ('data', 'Bytes'))
+
+
+class PreRuntime(Struct):
+    type_string = '(u32, Bytes)'
+
+    type_mapping = (('engine', 'u32'), ('data', 'Bytes'))
+
+
 class LogDigest(Enum):
 
-    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'Seal', 'Consensus']
+    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'SealV0', 'Consensus', 'Seal', 'PreRuntime']
 
     def __init__(self, data, **kwargs):
         self.log_type = None

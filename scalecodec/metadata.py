@@ -37,6 +37,8 @@ class MetadataDecoder(ScaleDecoder):
                 "MetadataV2Decoder",
                 "MetadataV3Decoder",
                 "MetadataV4Decoder",
+                "MetadataV5Decoder",
+                "MetadataV6Decoder",
             ])
 
             self.metadata = self.process_type(self.version.value)
@@ -188,6 +190,7 @@ class MetadataV4ModuleStorage(ScaleType):
                 }
             }
         elif storage_function_type == 'DoubleMapType':
+            self.hasher = self.process_type('StorageHasher')
             self.type = {
                 "DoubleMapType": {
                     "hasher": self.hasher.value,
@@ -212,6 +215,294 @@ class MetadataV4ModuleStorage(ScaleType):
             "modifier": self.modifier,
             "type": self.type,
             "fallback": self.fallback,
+            "docs": self.docs
+        }
+
+
+class MetadataV5Decoder(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None):
+        self.version = None
+        self.modules = []
+        self.call_index = {}
+        self.event_index = {}
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+        result_data = {
+            "magicNumber": 1635018093,  # struct.unpack('<L', bytearray.fromhex("6174656d")),
+            "metadata": {
+                "MetadataV5": {
+                    "modules": [],
+                }
+            }
+        }
+
+        self.modules = self.process_type('Vec<MetadataV4Module>').elements
+
+        # Build call and event index
+
+        call_module_index = 0
+        event_module_index = 0
+
+        for module in self.modules:
+            if module.calls is not None:
+                for call_index, call in enumerate(module.calls):
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
+                call_module_index += 1
+
+            if module.events is not None:
+                for event_index, event in enumerate(module.events):
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
+                event_module_index += 1
+
+        result_data["metadata"]["MetadataV5"]["modules"] = [m.value for m in self.modules]
+
+        return result_data
+
+
+class MetadataV5Module(ScaleType):
+
+    def __init__(self, data, sub_type=None):
+        self.name = None
+        self.prefix = None
+        self.call_index = None
+        self.has_storage = False
+        self.storage = None
+        self.has_calls = False
+        self.calls = None
+        self.has_events = False
+        self.events = None
+        super().__init__(data, sub_type)
+
+    def get_identifier(self):
+        return self.name
+
+    def process(self):
+
+        self.name = self.process_type('Bytes').value
+        self.prefix = self.process_type('Bytes').value
+
+        result = {
+            "name": self.name,
+            "prefix": self.prefix,
+            "storage": self.storage,
+            "calls": self.calls,
+            "events": self.events
+        }
+
+        self.has_storage = self.process_type('bool').value
+
+        if self.has_storage:
+            # TODO convert to Option<Vec<MetadataModuleStorage>>
+            self.storage = self.process_type('Vec<MetadataV5ModuleStorage>').elements
+            result["storage"] = [s.value for s in self.storage]
+
+        self.has_calls = self.process_type('bool').value
+
+        if self.has_calls:
+            # TODO convert to Option<Vec<MetadataModuleCall>>
+            self.calls = self.process_type('Vec<MetadataModuleCall>').elements
+            result["calls"] = [s.value for s in self.calls]
+
+        self.has_events = self.process_type('bool').value
+
+        if self.has_events:
+            # TODO convert to Option<Vec<MetadataModuleEvent>>
+            self.events = self.process_type('Vec<MetadataModuleEvent>').elements
+            result["events"] = [s.value for s in self.events]
+
+        return result
+
+
+class MetadataV5ModuleStorage(ScaleType):
+    def __init__(self, data, sub_type=None):
+        self.name = None
+        self.modifier = None
+        self.type = {}
+        self.fallback = None
+        self.docs = []
+        self.hasher = None
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        self.name = self.process_type('Bytes').value
+        self.modifier = self.process_type('Enum', value_list=["Optional", "Default"]).value
+
+        storage_function_type = self.process_type('Enum', value_list=["PlainType", "MapType", "DoubleMapType"]).value
+
+        if storage_function_type == 'MapType':
+            self.hasher = self.process_type('StorageHasher')
+            self.type = {
+                "MapType": {
+                    "hasher": self.hasher.value,
+                    "key": self.convert_type(self.process_type('Bytes').value),
+                    "value": self.convert_type(self.process_type('Bytes').value),
+                    "isLinked": self.process_type('bool').value
+                }
+            }
+        elif storage_function_type == 'DoubleMapType':
+            self.hasher = self.process_type('StorageHasher')
+            self.type = {
+                "DoubleMapType": {
+                    "hasher": self.hasher.value,
+                    "key1": self.convert_type(self.process_type('Bytes').value),
+                    "key2": self.convert_type(self.process_type('Bytes').value),
+                    "value": self.convert_type(self.process_type('Bytes').value),
+                    "key2Hasher": self.process_type('StorageHasher').value
+                }
+            }
+
+        elif storage_function_type == 'PlainType':
+            self.type = {
+                "PlainType": self.convert_type(self.process_type('Bytes').value)
+            }
+
+        self.fallback = self.process_type('HexBytes').value
+
+        self.docs = self.process_type('Vec<Bytes>').value
+
+        return {
+            "name": self.name,
+            "modifier": self.modifier,
+            "type": self.type,
+            "fallback": self.fallback,
+            "docs": self.docs
+        }
+
+
+class MetadataV6Decoder(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None):
+        self.version = None
+        self.modules = []
+        self.call_index = {}
+        self.event_index = {}
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+        result_data = {
+            "magicNumber": 1635018093,  # struct.unpack('<L', bytearray.fromhex("6174656d")),
+            "metadata": {
+                "MetadataV6": {
+                    "modules": [],
+                }
+            }
+        }
+
+        self.modules = self.process_type('Vec<MetadataV6Module>').elements
+
+        # Build call and event index
+
+        call_module_index = 0
+        event_module_index = 0
+
+        for module in self.modules:
+            if module.calls is not None:
+                for call_index, call in enumerate(module.calls):
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
+                call_module_index += 1
+
+            if module.events is not None:
+                for event_index, event in enumerate(module.events):
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
+                event_module_index += 1
+
+        result_data["metadata"]["MetadataV6"]["modules"] = [m.value for m in self.modules]
+
+        return result_data
+
+
+class MetadataV6Module(ScaleType):
+
+    def __init__(self, data, sub_type=None):
+        self.name = None
+        self.prefix = None
+        self.call_index = None
+        self.has_storage = False
+        self.storage = None
+        self.has_calls = False
+        self.calls = None
+        self.has_events = False
+        self.events = None
+        self.constants = []
+        super().__init__(data, sub_type)
+
+    def get_identifier(self):
+        return self.name
+
+    def process(self):
+
+        self.name = self.process_type('Bytes').value
+        self.prefix = self.process_type('Bytes').value
+
+        result = {
+            "name": self.name,
+            "prefix": self.prefix,
+            "storage": self.storage,
+            "calls": self.calls,
+            "events": self.events,
+            "constants": self.constants
+        }
+
+        self.has_storage = self.process_type('bool').value
+
+        if self.has_storage:
+            # TODO convert to Option<Vec<MetadataModuleStorage>>
+            self.storage = self.process_type('Vec<MetadataV6ModuleStorage>').elements
+            result["storage"] = [s.value for s in self.storage]
+
+        self.has_calls = self.process_type('bool').value
+
+        if self.has_calls:
+            # TODO convert to Option<Vec<MetadataModuleCall>>
+            self.calls = self.process_type('Vec<MetadataModuleCall>').elements
+            result["calls"] = [s.value for s in self.calls]
+
+        self.has_events = self.process_type('bool').value
+
+        if self.has_events:
+            # TODO convert to Option<Vec<MetadataModuleEvent>>
+            self.events = self.process_type('Vec<MetadataModuleEvent>').elements
+            result["events"] = [s.value for s in self.events]
+
+        self.constants = self.process_type('Vec<MetadataV6ModuleConstants>').elements
+        result["constants"] = [s.value for s in self.constants]
+
+        return result
+
+
+class MetadataV6ModuleStorage(MetadataV5ModuleStorage):
+    pass
+
+
+class MetadataV6ModuleConstants(ScaleType):
+
+    def __init__(self, data, sub_type=None):
+        self.name = None
+        self.type = None
+        self.value = None
+        self.docs = []
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        self.name = self.process_type('Bytes').value
+        self.type = self.process_type('Bytes').value
+        self.value = self.process_type('Bytes').value
+        self.docs = self.process_type('Vec<Bytes>').value
+
+        return {
+            "name": self.name,
+            "type": self.type,
+            "value": self.value,
             "docs": self.docs
         }
 
