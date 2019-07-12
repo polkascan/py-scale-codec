@@ -379,6 +379,10 @@ class NewAccountOutcome(CompactU32):
     pass
 
 
+class Index(U64):
+    pass
+
+
 class Vec(ScaleType):
 
     def __init__(self, data, **kwargs):
