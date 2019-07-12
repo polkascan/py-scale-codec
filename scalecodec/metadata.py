@@ -495,7 +495,7 @@ class MetadataV6ModuleConstants(ScaleType):
     def process(self):
 
         self.name = self.process_type('Bytes').value
-        self.type = self.process_type('Bytes').value
+        self.type = self.convert_type(self.process_type('Bytes').value)
         self.value = self.process_type('Bytes').value
         self.docs = self.process_type('Vec<Bytes>').value
 
