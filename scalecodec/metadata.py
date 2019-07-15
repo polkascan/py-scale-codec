@@ -488,7 +488,7 @@ class MetadataV6ModuleConstants(ScaleType):
     def __init__(self, data, sub_type=None):
         self.name = None
         self.type = None
-        self.value = None
+        self.constant_value = None
         self.docs = []
         super().__init__(data, sub_type)
 
@@ -496,7 +496,7 @@ class MetadataV6ModuleConstants(ScaleType):
 
         self.name = self.process_type('Bytes').value
         self.type = self.convert_type(self.process_type('Bytes').value)
-        self.value = self.process_type('Bytes').value
+        self.constant_value = self.process_type('Bytes').value
         self.docs = self.process_type('Vec<Bytes>').value
 
         return {
