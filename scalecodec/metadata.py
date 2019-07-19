@@ -119,6 +119,7 @@ class MetadataV4Module(ScaleType):
         self.calls = None
         self.has_events = False
         self.events = None
+        self.constants = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -134,7 +135,8 @@ class MetadataV4Module(ScaleType):
             "prefix": self.prefix,
             "storage": self.storage,
             "calls": self.calls,
-            "events": self.events
+            "events": self.events,
+            "constants": self.constants
         }
 
         self.has_storage = self.process_type('bool').value
@@ -276,6 +278,7 @@ class MetadataV5Module(ScaleType):
         self.calls = None
         self.has_events = False
         self.events = None
+        self.constants = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -291,7 +294,8 @@ class MetadataV5Module(ScaleType):
             "prefix": self.prefix,
             "storage": self.storage,
             "calls": self.calls,
-            "events": self.events
+            "events": self.events,
+            "constants": self.constants
         }
 
         self.has_storage = self.process_type('bool').value
@@ -747,6 +751,7 @@ class MetadataV0Module(ScaleType):
         self.has_storage = False
         self.storage_prefix = None
         self.storage = []
+        self.constants = []
         super().__init__(data, sub_type)
 
     # TODO move to version agnostic superclass MetadataModule
@@ -886,6 +891,7 @@ class MetadataModule(ScaleType):
         self.calls = None
         self.has_events = False
         self.events = None
+        self.constants = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -901,7 +907,8 @@ class MetadataModule(ScaleType):
             "prefix": self.prefix,
             "storage": self.storage,
             "calls": self.calls,
-            "events": self.events
+            "events": self.events,
+            "constants": self.constants
         }
 
         self.has_storage = self.process_type('bool').value
@@ -940,6 +947,7 @@ class MetadataV1Module(ScaleType):
         self.calls = None
         self.has_events = False
         self.events = None
+        self.constants = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -955,7 +963,8 @@ class MetadataV1Module(ScaleType):
             "prefix": self.prefix,
             "storage": self.storage,
             "calls": self.calls,
-            "events": self.events
+            "events": self.events,
+            "constants": self.constants
         }
 
         self.has_storage = self.process_type('bool').value
