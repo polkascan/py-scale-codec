@@ -476,6 +476,41 @@ class RewardDestination(Enum):
     value_list = ['Staked', 'Stash', 'Controller']
 
 
+class StakingLedger(Struct):
+    type_string = 'StakingLedger<AccountId, BalanceOf, BlockNumber>'
+    type_mapping = (
+        ('stash', 'AccountId'),
+        ('total', 'Compact<Balance>'),
+        ('active', 'Compact<Balance>'),
+        ('unlocking', 'Vec<UnlockChunk<Balance>>'),
+    )
+
+
+class UnlockChunk(Struct):
+    type_string = 'UnlockChunk<Balance>'
+    type_mapping = (
+        ('value', 'Compact<Balance>'),
+        ('era', 'EraIndex'),
+    )
+
+
+class Exposure(Struct):
+    type_string = 'Exposure<AccountId, BalanceOf>'
+    type_mapping = (
+        ('total', 'Compact<Balance>'),
+        ('own', 'Compact<Balance>'),
+        ('others', 'Vec<IndividualExposure<AccountId, Balance>>'),
+    )
+
+
+class IndividualExposure(Struct):
+    type_string = 'IndividualExposure<AccountId, Balance>'
+    type_mapping = (
+        ('who', 'AccountId'),
+        ('value', 'Compact<Balance>'),
+    )
+
+
 class VoteThreshold(Enum):
 
     value_list = ['SuperMajorityApprove', 'SuperMajorityAgainst', 'SimpleMajority']
