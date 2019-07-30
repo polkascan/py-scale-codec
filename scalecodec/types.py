@@ -94,7 +94,12 @@ class CompactU32(Compact):
             self.data = ScaleBytes(bytearray(int((value << 2) | 0b10).to_bytes(4, 'little')))
 
         else:
-            raise NotImplemented('Value range not implemented')
+            for bytes_length in range(5, 68):
+                if 2 ** (8 * (bytes_length-1)) <= value < 2 ** (8 * bytes_length):
+                    self.data = ScaleBytes(bytearray(((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length, 'little')))
+                    break
+            else:
+                raise ValueError('{} out of range'.format(value))
 
         return self.data
 
