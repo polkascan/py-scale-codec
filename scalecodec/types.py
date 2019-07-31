@@ -311,10 +311,18 @@ class Struct(ScaleType):
 
 
 class ValidatorPrefs(Struct):
-
     type_string = '(Compact<u32>,Compact<Balance>)'
 
     type_mapping = (('unstakeThreshold', 'Compact<u32>'), ('validatorPayment', 'Compact<Balance>'))
+
+
+class Linkage(Struct):
+    type_string = 'Linkage<AccountId>'
+
+    type_mapping = (
+        ('previous', 'Option<AccountId>'),
+        ('next', 'Option<AccountId>')
+    )
 
 
 class AccountId(H256):

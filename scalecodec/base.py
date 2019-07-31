@@ -187,6 +187,7 @@ class ScaleDecoder(ABC):
                 return decoder_class(data, **kwargs)
 
         # Custom tuple
+        # TODO tuples should be converted to list not dict
         if type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
             decoder_class = RuntimeConfiguration().get_decoder_class('struct')
             decoder_class.type_string = type_string
