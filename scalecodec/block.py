@@ -218,7 +218,7 @@ class EventRecord(ScaleDecoder):
             })
 
         # Topics introduced since MetadataV5
-        if self.metadata.version.index >= 5:
+        if self.metadata.version and self.metadata.version.index >= 5:
             self.topics = self.process_type('Vec<Hash>').value
 
         return {
