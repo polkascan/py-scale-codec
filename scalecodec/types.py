@@ -498,7 +498,7 @@ class UnlockChunk(Struct):
     type_string = 'UnlockChunk<Balance>'
     type_mapping = (
         ('value', 'Compact<Balance>'),
-        ('era', 'EraIndex'),
+        ('era', 'Compact<EraIndex>'),
     )
 
 
