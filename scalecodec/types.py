@@ -258,6 +258,10 @@ class Moment(CompactU32):
 
     def process(self):
         int_value = super().process()
+
+        if int_value > 10000000000:
+            int_value = int_value / 1000
+
         return datetime.utcfromtimestamp(int_value)
 
     def serialize(self):
@@ -611,6 +615,33 @@ class Gas(U64):
 
 
 class CodeHash(Hash):
+    pass
+
+
+class Heartbeat(Struct):
+    type_string = 'Heartbeat<BlockNumber, AuthorityId>'
+
+    type_mapping = (
+        ('blockNumber', 'BlockNumber'),
+        ('networkState', 'OpaqueNetworkState'),
+        ('sessionIndex', 'SessionIndex'),
+        ('authorityId', 'AuthorityId'),
+    )
+
+
+class OpaqueNetworkState(Struct):
+
+    type_mapping = (
+        ('peerId', 'OpaquePeerId'),
+        ('externalAddresses', 'Vec<OpaqueMultiaddr>'),
+    )
+
+
+class OpaquePeerId(Bytes):
+    pass
+
+
+class OpaqueMultiaddr(Bytes):
     pass
 
 

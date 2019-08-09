@@ -45,6 +45,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         self.signature = None
         self.nonce = None
         self.era = None
+        self.tip = None
         self.call_index = None
         self.call_module = None
         self.call = None
@@ -82,21 +83,41 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
         self.contains_transaction = int(self.version_info, 16) >= 80
 
-        if self.contains_transaction:
-            self.address = self.process_type('Address')
+        if self.version_info == '01':
 
-            self.signature = self.process_type('Signature')
+            if self.contains_transaction:
+                self.address = self.process_type('Address')
 
-            self.nonce = self.process_type(attribute_types['nonce'])
+                self.signature = self.process_type('Signature')
 
-            self.era = self.process_type('Era')
+                self.nonce = self.process_type(attribute_types['nonce'])
 
-            self.extrinsic_hash = self.generate_hash()
+                self.era = self.process_type('Era')
 
-        self.call_index = self.get_next_bytes(2).hex()
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == '02':
+            self.call_index = self.get_next_bytes(2).hex()
+
+            if self.contains_transaction:
+                self.address = self.process_type('Address')
+
+                self.signature = self.process_type('Signature')
+
+                self.era = self.process_type('Era')
+
+                self.nonce = self.process_type('Compact<U64>')
+
+                self.tip = self.process_type('Compact<Balance>')
+
+                self.extrinsic_hash = self.generate_hash()
+
+        else:
+            raise NotImplemented('Extrinsics version "{}" is not implemented'.format(self.version_info))
 
         if self.call_index:
-
             # Decode params
 
             self.call = self.metadata.call_index[self.call_index][1]
@@ -128,13 +149,20 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['account_index'] = self.address.account_index
             result['account_idx'] = self.address.account_idx
             result['signature'] = self.signature.value
-            result['nonce'] = self.nonce.value
-            result['era'] = self.era.value
             result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
             result['call_code'] = self.call_index
             result['call_module_function'] = self.call.get_identifier()
             result['call_module'] = self.call_module.get_identifier()
+
+        if self.nonce:
+            result['nonce'] = self.nonce.value
+
+        if self.era:
+            result['era'] = self.era.value
+
+        if self.tip:
+            result['tip'] = self.tip.value
 
         result['params'] = self.params
 
