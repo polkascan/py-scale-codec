@@ -83,7 +83,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
         self.contains_transaction = int(self.version_info, 16) >= 80
 
-        if self.version_info == '01':
+        if self.version_info == '01' or self.version_info == '81':
 
             if self.contains_transaction:
                 self.address = self.process_type('Address')
@@ -98,7 +98,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
             self.call_index = self.get_next_bytes(2).hex()
 
-        elif self.version_info == '02':
+        elif self.version_info == '02' or self.version_info == '82':
             self.call_index = self.get_next_bytes(2).hex()
 
             if self.contains_transaction:
@@ -115,7 +115,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
                 self.extrinsic_hash = self.generate_hash()
 
         else:
-            raise NotImplemented('Extrinsics version "{}" is not implemented'.format(self.version_info))
+            raise NotImplementedError('Extrinsics version "{}" is not implemented'.format(self.version_info))
 
         if self.call_index:
             # Decode params
