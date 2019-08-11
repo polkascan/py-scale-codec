@@ -667,8 +667,14 @@ class SessionKeysPolkadot(Struct):
 class LegacyKeys(Struct):
 
     type_mapping = (
-        ('ed25519', 'AccountId'),
-        ('sr25519', 'AccountId'),
+        ('grandpa', 'AccountId'),
+        ('babe', 'AccountId'),
+    )
+
+
+class EdgewareKeys(Struct):
+    type_mapping = (
+        ('grandpa', 'AccountId'),
     )
 
 
@@ -689,6 +695,16 @@ class LegacyQueuedKeys(Struct):
     type_mapping = (
         ('validator', 'ValidatorId'),
         ('keys', 'LegacyKeys'),
+    )
+
+
+class EdgewareQueuedKeys(Struct):
+
+    type_string = '(ValidatorId, EdgewareKeys)'
+
+    type_mapping = (
+        ('validator', 'ValidatorId'),
+        ('keys', 'EdgewareKeys'),
     )
 
 
