@@ -645,8 +645,69 @@ class OpaqueMultiaddr(Bytes):
     pass
 
 
+class SessionKeysSubstrate(Struct):
+
+    type_mapping = (
+        ('grandpa', 'AccountId'),
+        ('babe', 'AccountId'),
+        ('im_online', 'AccountId'),
+    )
+
+
+class SessionKeysPolkadot(Struct):
+
+    type_mapping = (
+        ('grandpa', 'AccountId'),
+        ('babe', 'AccountId'),
+        ('im_online', 'AccountId'),
+        ('parachains', 'AccountId'),
+    )
+
+
+class LegacyKeys(Struct):
+
+    type_mapping = (
+        ('ed25519', 'AccountId'),
+        ('sr25519', 'AccountId'),
+    )
+
+
+class QueuedKeys(Struct):
+
+    type_string = '(ValidatorId, SessionKeysSubstrate)'
+
+    type_mapping = (
+        ('validator', 'ValidatorId'),
+        ('keys', 'SessionKeysSubstrate'),
+    )
+
+
+class LegacyQueuedKeys(Struct):
+
+    type_string = '(ValidatorId, LegacyKeys)'
+
+    type_mapping = (
+        ('validator', 'ValidatorId'),
+        ('keys', 'LegacyKeys'),
+    )
+
+
+class VecQueuedKeys(Vec):
+    type_string = 'Vec<(ValidatorId, Keys)>'
+
+    def process(self):
+        element_count = self.process_type('Compact<u32>').value
+        result = []
+        for _ in range(0, element_count):
+            element = self.process_type('QueuedKeys')
+            self.elements.append(element)
+            result.append(element.value)
+
+        return result
+
 # Edgeware types
 # TODO move to RuntimeConfiguration per network
+
 
 class IdentityType(Bytes):
     pass
