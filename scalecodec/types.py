@@ -680,11 +680,11 @@ class EdgewareKeys(Struct):
 
 class QueuedKeys(Struct):
 
-    type_string = '(ValidatorId, SessionKeysSubstrate)'
+    type_string = '(ValidatorId, Keys)'
 
     type_mapping = (
         ('validator', 'ValidatorId'),
-        ('keys', 'SessionKeysSubstrate'),
+        ('keys', 'Keys'),
     )
 
 

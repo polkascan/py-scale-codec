@@ -33,7 +33,7 @@ class Singleton(type):
 
 class RuntimeConfiguration(metaclass=Singleton):
 
-    type_mappings = {}
+    type_registry = {}
     active_spec_version_id = 'default'
 
     @classmethod
@@ -42,18 +42,36 @@ class RuntimeConfiguration(metaclass=Singleton):
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
     def __init__(self):
-        self.type_mappings['default'] = {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if cls.type_string}
-        self.type_mappings['default'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+        self.type_registry['default'] = {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if cls.type_string}
+        self.type_registry['default'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
 
     def get_decoder_class(self, type_string, spec_version_id='default'):
         # TODO move ScaleDecoder.get_decoder_class logic to here
-        return self.type_mappings.get(spec_version_id, {}).get(type_string.lower(), None)
 
-    def set_type_mapping(self, spec_version_id, type_mapping):
-        self.type_mappings[spec_version_id] = type_mapping
+        decoder_class = self.type_registry.get(str(spec_version_id), {}).get(type_string.lower(), None)
 
-    def override_type_mapping(self, type_string, decoder_class, spec_version_id='default'):
-        self.type_mappings[spec_version_id][type_string.lower()] = decoder_class
+        if decoder_class:
+            return decoder_class
+        else:
+            return self.type_registry.get('default', {}).get(type_string.lower(), None)
+
+    def update_type_registry(self, type_registry):
+
+        for spec_version_id, type_mapping in type_registry.items():
+
+            if spec_version_id not in self.type_registry:
+                self.type_registry[spec_version_id] = {}
+
+            for type_string, decoder_class in type_mapping.items():
+                type_string = type_string.lower()
+
+                self.type_registry[spec_version_id][type_string] = self.get_decoder_class(decoder_class, spec_version_id)
+
+    def set_type_registry(self, spec_version_id, type_mapping):
+        self.type_registry[spec_version_id] = type_mapping
+
+    def override_type_registry(self, type_string, decoder_class, spec_version_id='default'):
+        self.type_registry[spec_version_id][type_string.lower()] = decoder_class
 
 
 class ScaleBytes:
@@ -169,7 +187,10 @@ class ScaleDecoder(ABC):
 
         if type_string[-1:] == '>':
             # Check for specific implementation for composite type
-            decoder_class = RuntimeConfiguration().get_decoder_class(type_string.lower())
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_string.lower(),
+                spec_version_id=kwargs.get('spec_version_id', 'default')
+            )
 
             if decoder_class:
                 return decoder_class(data, **kwargs)
@@ -178,11 +199,17 @@ class ScaleDecoder(ABC):
             type_parts = re.match(r'^([^<]*)<(.+)>$', type_string).groups()
 
         if type_parts:
-            decoder_class = RuntimeConfiguration().get_decoder_class(type_parts[0].lower())
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_parts[0].lower(),
+                spec_version_id=kwargs.get('spec_version_id', 'default')
+            )
             if decoder_class:
                 return decoder_class(data, sub_type=type_parts[1], **kwargs)
         else:
-            decoder_class = RuntimeConfiguration().get_decoder_class(type_string.lower())
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_string.lower(),
+                spec_version_id=kwargs.get('spec_version_id', 'default')
+            )
             if decoder_class:
                 return decoder_class(data, **kwargs)
 
