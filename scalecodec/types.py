@@ -384,6 +384,13 @@ class Signature(ScaleType):
         return self.get_next_bytes(64).hex()
 
 
+class AuthoritySignature(ScaleType):
+
+    def process(self):
+        # TODO figure out where remaining data is missing..
+        return self.get_remaining_bytes().hex()
+
+
 class BalanceOf(Balance):
     pass
 
