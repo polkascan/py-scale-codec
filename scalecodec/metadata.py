@@ -501,7 +501,7 @@ class MetadataV6ModuleConstants(ScaleType):
 
         self.name = self.process_type('Bytes').value
         self.type = self.convert_type(self.process_type('Bytes').value)
-        self.constant_value = self.process_type('Bytes').value
+        self.constant_value = self.process_type('HexBytes').value
         self.docs = self.process_type('Vec<Bytes>').value
 
         return {
