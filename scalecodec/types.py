@@ -253,7 +253,11 @@ class Bool(ScaleType):
         return self.get_next_bool()
 
 
-class Moment(CompactU32):
+class Moment(U64):
+   pass
+
+
+class CompactMoment(CompactU32):
     type_string = 'Compact<Moment>'
 
     def process(self):
