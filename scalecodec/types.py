@@ -254,7 +254,7 @@ class Bool(ScaleType):
 
 
 class Moment(U64):
-   pass
+    pass
 
 
 class CompactMoment(CompactU32):
@@ -731,6 +731,15 @@ class VecQueuedKeys(Vec):
             result.append(element.value)
 
         return result
+
+
+class EthereumAddress(ScaleType):
+
+    def process(self):
+
+        value = self.get_next_bytes(20)
+
+        return value.hex()
 
 # Edgeware types
 # TODO move to RuntimeConfiguration per network
