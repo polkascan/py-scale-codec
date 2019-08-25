@@ -306,6 +306,10 @@ class BoxProposal(ScaleType):
         }
 
 
+class Proposal(BoxProposal):
+    type_string = '<T as Trait<I>>::Proposal'
+
+
 class Struct(ScaleType):
 
     def process(self):
@@ -740,6 +744,126 @@ class EthereumAddress(ScaleType):
         value = self.get_next_bytes(20)
 
         return value.hex()
+
+
+class BalanceLock(Struct):
+    type_string = 'BalanceLock<Balance, BlockNumber>'
+
+    type_mapping = (
+        ('id', 'LockIdentifier'),
+        ('amount', 'Balance'),
+        ('until', 'BlockNumber'),
+        ('reasons', 'WithdrawReasons'),
+    )
+
+
+class WithdrawReasons(Enum):
+
+    value_list = ['TransactionPayment', 'Transfer', 'Reserve', 'Fee']
+
+
+class Bidder(Enum):
+    type_string = 'Bidder<AccountId, ParaIdOf>'
+
+    value_list = ['NewBidder', 'ParaId']
+
+
+class BlockAttestations(Struct):
+
+    type_mapping = (
+        ('receipt', 'CandidateReceipt'),
+        ('valid', 'Vec<AccountId>'),
+        ('invalid', 'Vec<AccountId>'),
+    )
+
+
+class IncludedBlocks(Struct):
+
+    type_mapping = (
+        ('actualNumber', 'BlockNumber'),
+        ('session', 'SessionIndex'),
+        ('randomSeed', 'H256'),
+        ('activeParachains', 'Vec<ParaId>'),
+        ('paraBlocks', 'Vec<Hash>'),
+    )
+
+
+class CandidateReceipt(Struct):
+
+    type_mapping = (
+        ('parachainIndex', 'ParaId'),
+        ('collator', 'AccountId'),
+        ('signature', 'CollatorSignature'),
+        ('headData', 'HeadData'),
+        ('balanceUploads', 'Vec<BalanceUpload>'),
+        ('egressQueueRoots', 'Vec<EgressQueueRoot>'),
+        ('fees', 'u64'),
+        ('blockDataHash', 'Hash'),
+    )
+
+
+class CollatorSignature(Signature):
+    pass
+
+
+class HeadData(Bytes):
+    pass
+
+
+class Conviction(Enum):
+    value_list = ['None', 'Locked1x', 'Locked2x', 'Locked3x', 'Locked4x', 'Locked5x']
+
+
+class EraRewards(Struct):
+
+    type_mapping = (
+        ('total', 'u32'),
+        ('rewards', 'Vec<u32>'),
+    )
+
+
+class SlashJournalEntry(Struct):
+    type_mapping = (
+        ('who', 'AccountId'),
+        ('amount', 'Balance'),
+        ('ownSlash', 'Balance'),
+    )
+
+
+class UpwardMessage(Struct):
+    type_mapping = (
+        ('origin', 'ParachainDispatchOrigin'),
+        ('data', 'Bytes'),
+    )
+
+
+class ParachainDispatchOrigin(Enum):
+    value_list = ['Signed', 'Parachain']
+
+
+class StoredState(Enum):
+    value_list = ['Live', 'PendingPause', 'Paused', 'PendingResume']
+
+
+class UncleEntryItem(Enum):
+    value_list = ['InclusionHeight', 'Uncle']
+
+
+class Votes(Struct):
+    type_mapping = (
+        ('index', 'ProposalIndex'),
+        ('threshold', 'MemberCount'),
+        ('ayes', 'Vec<AccountId>'),
+        ('nays', 'Vec<AccountId>'),
+    )
+
+
+class WinningDataEntry(Struct):
+    type_mapping = (
+        ('AccountId', 'AccountId'),
+        ('ParaIdOf', 'ParaIdOf'),
+        ('BalanceOf', 'BalanceOf'),
+    )
 
 # Edgeware types
 # TODO move to RuntimeConfiguration per network
