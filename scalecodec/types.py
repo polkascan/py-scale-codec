@@ -323,6 +323,12 @@ class Struct(ScaleType):
 
 
 class ValidatorPrefs(Struct):
+    type_string = '(Compact<Balance>)'
+
+    type_mapping = (('validatorPayment', 'Compact<Balance>'),)
+
+
+class ValidatorPrefsLegacy(Struct):
     type_string = '(Compact<u32>,Compact<Balance>)'
 
     type_mapping = (('unstakeThreshold', 'Compact<u32>'), ('validatorPayment', 'Compact<Balance>'))
