@@ -746,9 +746,14 @@ class VecQueuedKeys(Vec):
 class EthereumAddress(ScaleType):
 
     def process(self):
-
         value = self.get_next_bytes(20)
+        return value.hex()
 
+
+class EcdsaSignature(ScaleType):
+
+    def process(self):
+        value = self.get_next_bytes(65)
         return value.hex()
 
 
