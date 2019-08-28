@@ -262,7 +262,7 @@ class ScaleDecoder(ABC):
         if name == '<Moment as HasCompact>::Type':
             return 'Compact<Moment>'
         if name == '<InherentOfflineReport as InherentOfflineReport>::Inherent':
-            return 'Inherent'
+            return 'InherentOfflineReport'
 
         return name
 

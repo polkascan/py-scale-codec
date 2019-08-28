@@ -549,7 +549,13 @@ class VoteThreshold(Enum):
     value_list = ['SuperMajorityApprove', 'SuperMajorityAgainst', 'SimpleMajority']
 
 
-class Inherent(Bytes):
+class Null(ScaleType):
+
+    def process(self):
+        return None
+
+
+class InherentOfflineReport(Null):
     pass
 
 
