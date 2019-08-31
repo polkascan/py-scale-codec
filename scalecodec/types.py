@@ -232,6 +232,57 @@ class H256(ScaleType):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
 
+class VecU8Length32(ScaleType):
+    type_string = '[u8; 32]'
+
+    def process(self):
+        return '0x{}'.format(self.get_next_bytes(32).hex())
+
+
+class VecU8Length16(ScaleType):
+    type_string = '[u8; 16]'
+
+    def process(self):
+        value = self.get_next_bytes(16)
+        try:
+            return value.decode()
+        except UnicodeDecodeError:
+            return value.hex()
+
+
+class VecU8Length8(ScaleType):
+    type_string = '[u8; 8]'
+
+    def process(self):
+        value = self.get_next_bytes(8)
+        try:
+            return value.decode()
+        except UnicodeDecodeError:
+            return value.hex()
+
+
+class VecU8Length4(ScaleType):
+    type_string = '[u8; 4]'
+
+    def process(self):
+        value = self.get_next_bytes(4)
+        try:
+            return value.decode()
+        except UnicodeDecodeError:
+            return value.hex()
+
+
+class VecU8Length2(ScaleType):
+    type_string = '[u8; 2]'
+
+    def process(self):
+        value = self.get_next_bytes(2)
+        try:
+            return value.decode()
+        except UnicodeDecodeError:
+            return value.hex()
+
+
 class Era(ScaleType):
 
     def process(self):
