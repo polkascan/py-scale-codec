@@ -657,6 +657,29 @@ class StoredPendingChange(Struct):
     )
 
 
+class OffenceDetails(Struct):
+    type_mapping = (
+        ('offender', 'Offender'),
+        ('reporters', 'Vec<Reporter>'),
+    )
+
+
+class VestingSchedule(Struct):
+    type_mapping = (
+        ('offset', 'Balance'),
+        ('perBlock', 'Balance'),
+        ('startingBlock', 'BlockNumber'),
+    )
+
+
+class Reporter(AccountId):
+    pass
+
+
+class ReportIdOf(Hash):
+    pass
+
+
 class StorageHasher(Enum):
 
     value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
@@ -694,6 +717,18 @@ class Gas(U64):
 
 class CodeHash(Hash):
     pass
+
+
+class PrefabWasmModule(Struct):
+    type_string = 'wasm::PrefabWasmModule'
+
+    type_mapping = (
+        ('scheduleVersion', 'Compact<u32>'),
+        ('initial', 'Compact<u32>'),
+        ('maximum', 'Compact<u32>'),
+        ('_reserved', 'Option<Null>'),
+        ('code', 'Bytes'),
+    )
 
 
 class Heartbeat(Struct):
