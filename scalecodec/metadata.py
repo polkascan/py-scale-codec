@@ -507,7 +507,7 @@ class MetadataV6ModuleConstants(ScaleType):
         return {
             "name": self.name,
             "type": self.type,
-            "value": self.value,
+            "value": self.constant_value,
             "docs": self.docs
         }
 
