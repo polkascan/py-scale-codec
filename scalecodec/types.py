@@ -283,6 +283,17 @@ class VecU8Length2(ScaleType):
             return value.hex()
 
 
+class Struct(ScaleType):
+
+    def process(self):
+
+        result = {}
+        for key, data_type in self.type_mapping:
+            result[key] = self.process_type(data_type, metadata=self.metadata).value
+
+        return result
+
+
 class Era(ScaleType):
 
     def process(self):
@@ -361,16 +372,15 @@ class Proposal(BoxProposal):
     type_string = '<T as Trait<I>>::Proposal'
 
 
-class Struct(ScaleType):
+class ReferendumInfo(Struct):
+    type_string = '(ReferendumInfo<BlockNumber, Proposal>)'
 
-    def process(self):
-
-        result = {}
-
-        for key, data_type in self.type_mapping:
-            result[key] = self.process_type(data_type).value
-
-        return result
+    type_mapping = (
+        ('end', 'BlockNumber'),
+        ('proposal', 'Proposal'),
+        ('threshold', 'VoteThreshold'),
+        ('delay', 'BlockNumber'),
+    )
 
 
 class ValidatorPrefs(Struct):
@@ -914,6 +924,9 @@ class HeadData(Bytes):
 
 
 class Conviction(Enum):
+    CONVICTION_MASK = 0b01111111
+    DEFAULT_CONVICTION = 0b00000000
+
     value_list = ['None', 'Locked1x', 'Locked2x', 'Locked3x', 'Locked4x', 'Locked5x']
 
 
