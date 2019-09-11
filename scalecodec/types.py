@@ -1306,6 +1306,21 @@ class VoteKind(Enum):
     value_list = ['Abstain', 'Approve', 'Reject', 'Slash']
 
 
+class RuntimeUpgradeProposal(Struct):
+    type_string = 'RuntimeUpgradeProposal<AccountId, Balance, BlockNumber, Hash>'
+
+    type_mapping = (
+        ('id', 'u32'),
+        ('proposer', 'AccountId'),
+        ('stake', 'Balance'),
+        ('name', 'Vec<u8>'),
+        ('description', 'Vec<u8>'),
+        ('wasm_hash', 'Hash'),
+        ('proposed_at', 'BlockNumber'),
+        ('status', 'ProposalStatus'),
+    )
+
+
 class TallyResult(Struct):
     type_string = 'TallyResult<BlockNumber>'
 
