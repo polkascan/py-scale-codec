@@ -268,6 +268,8 @@ class ScaleDecoder(ABC):
             return "Bytes"
         if name == '<Lookup as StaticLookup>::Source':
             return 'Address'
+        if name == 'Vec<<Lookup as StaticLookup>::Source>':
+            return 'Vec<Address>'
         if name == '<Balance as HasCompact>::Type':
             return 'Compact<Balance>'
         if name == '<BlockNumber as HasCompact>::Type':
