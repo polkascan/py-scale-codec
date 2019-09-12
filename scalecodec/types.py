@@ -640,6 +640,10 @@ class Permill(U32):
     pass
 
 
+class Perbill(U32):
+    pass
+
+
 class ApprovalFlag(U32):
     pass
 
