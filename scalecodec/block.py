@@ -50,6 +50,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         self.call_module = None
         self.call = None
         self.call_args = None
+        self.params_raw = None
         self.params = []
         super().__init__(data, sub_type)
 
@@ -136,6 +137,9 @@ class ExtrinsicsDecoder(ScaleDecoder):
             raise NotImplementedError('Extrinsics version "{}" is not implemented'.format(self.version_info))
 
         if self.call_index:
+
+            self.params_raw = self.data.data[self.data.offset:]
+
             # Decode params
 
             self.call = self.metadata.call_index[self.call_index][1]
