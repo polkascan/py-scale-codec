@@ -150,6 +150,9 @@ class ExtrinsicsDecoder(ScaleDecoder):
                 print('Module: ', self.call_module.name)
 
             for arg in self.call.args:
+                if self.debug:
+                    print('Param: ', arg.name, arg.type)
+
                 arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
 
                 self.params.append({

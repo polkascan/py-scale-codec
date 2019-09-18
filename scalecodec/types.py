@@ -285,6 +285,13 @@ class VecU8Length2(ScaleType):
 
 class Struct(ScaleType):
 
+    def __init__(self, data, type_mapping=None, **kwargs):
+
+        if type_mapping:
+            self.type_mapping = type_mapping
+
+        super().__init__(data, **kwargs)
+
     def process(self):
 
         result = {}
@@ -548,21 +555,35 @@ class RawAddress(Address):
 class Enum(ScaleType):
 
     value_list = []
+    type_mapping = None
 
-    def __init__(self, data, value_list=None, **kwargs):
+    def __init__(self, data, value_list=None, type_mapping=None, **kwargs):
 
         self.index = None
 
+        if type_mapping:
+            self.type_mapping = type_mapping
+
         if value_list:
             self.value_list = value_list
+
         super().__init__(data, **kwargs)
 
     def process(self):
         self.index = int(self.get_next_bytes(1).hex())
-        try:
-            return self.value_list[self.index]
-        except IndexError:
-            raise ValueError("Index '{}' not present in Enum value list".format(self.index))
+
+        if self.type_mapping:
+            try:
+                enum_type_mapping = self.type_mapping[self.index]
+                return self.process_type('Struct', type_mapping=[enum_type_mapping]).value
+
+            except IndexError:
+                raise ValueError("Index '{}' not present in Enum type mapping".format(self.index))
+        else:
+            try:
+                return self.value_list[self.index]
+            except IndexError:
+                raise ValueError("Index '{}' not present in Enum value list".format(self.index))
 
 
 class RewardDestination(Enum):

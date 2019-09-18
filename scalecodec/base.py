@@ -72,7 +72,10 @@ class RuntimeConfiguration(metaclass=Singleton):
 
                     elif decoder_class_data['type'] == 'enum':
                         from scalecodec.types import Enum
-                        decoder_class = type('DynamicEnum', (Enum,), {'value_list': decoder_class_data['value_list']})
+                        decoder_class = type('DynamicEnum', (Enum,), {
+                            'value_list': decoder_class_data.get('value_list'),
+                            'type_mapping': decoder_class_data.get('type_mapping')
+                        })
                     else:
                         raise NotImplementedError("Dynamic decoding type '{}' not supported".format(
                             decoder_class_data['type'])
