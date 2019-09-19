@@ -18,7 +18,7 @@ from collections import OrderedDict
 
 from scalecodec.base import ScaleDecoder, ScaleBytes
 from scalecodec.metadata import MetadataDecoder
-from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct
+from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct, VecU8Length4
 
 
 class ExtrinsicsDecoder(ScaleDecoder):
@@ -297,6 +297,10 @@ class AuthoritiesChange(Vec):
         super().__init__(data, sub_type='AccountId', **kwargs)
 
 
+class ConsensusEngineId(VecU8Length4):
+    pass
+
+
 class ChangesTrieRoot(Bytes):
     pass
 
@@ -308,21 +312,21 @@ class SealV0(Struct):
 
 
 class Consensus(Struct):
-    type_string = '(u32, Vec<u8>)'
+    type_string = '(ConsensusEngineId, Vec<u8>)'
 
-    type_mapping = (('engine', 'u32'), ('data', 'Vec<u8>'))
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'Vec<u8>'))
 
 
 class Seal(Struct):
-    type_string = '(u32, Bytes)'
+    type_string = '(ConsensusEngineId, Bytes)'
 
-    type_mapping = (('engine', 'u32'), ('data', 'Bytes'))
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'Bytes'))
 
 
 class PreRuntime(Struct):
-    type_string = '(u32, Bytes)'
+    type_string = '(ConsensusEngineId, Bytes)'
 
-    type_mapping = (('engine', 'u32'), ('data', 'Bytes'))
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'Bytes'))
 
 
 class LogDigest(Enum):

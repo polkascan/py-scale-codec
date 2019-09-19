@@ -62,17 +62,16 @@ class RuntimeConfiguration(metaclass=Singleton):
                 self.type_registry[spec_version_id] = {}
 
             for type_string, decoder_class_data in type_mapping.items():
-                type_string = type_string.lower()
 
                 if type(decoder_class_data) == dict:
                     # Create dynamic decoder class
                     if decoder_class_data['type'] == 'struct':
                         from scalecodec.types import Struct
-                        decoder_class = type('DynamicStruct', (Struct,), {'type_mapping': decoder_class_data['type_mapping']})
+                        decoder_class = type(type_string, (Struct,), {'type_mapping': decoder_class_data['type_mapping']})
 
                     elif decoder_class_data['type'] == 'enum':
                         from scalecodec.types import Enum
-                        decoder_class = type('DynamicEnum', (Enum,), {
+                        decoder_class = type(type_string, (Enum,), {
                             'value_list': decoder_class_data.get('value_list'),
                             'type_mapping': decoder_class_data.get('type_mapping')
                         })
@@ -83,7 +82,7 @@ class RuntimeConfiguration(metaclass=Singleton):
                 else:
                     decoder_class = self.get_decoder_class(decoder_class_data, spec_version_id)
 
-                self.type_registry[spec_version_id][type_string] = decoder_class
+                self.type_registry[spec_version_id][type_string.lower()] = decoder_class
 
     def set_type_registry(self, spec_version_id, type_mapping):
         self.type_registry[spec_version_id] = type_mapping

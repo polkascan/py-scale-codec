@@ -232,6 +232,12 @@ class H256(ScaleType):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
 
+class H512(ScaleType):
+
+    def process(self):
+        return '0x{}'.format(self.get_next_bytes(64).hex())
+
+
 class VecU8Length32(ScaleType):
     type_string = '[u8; 32]'
 
