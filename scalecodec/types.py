@@ -632,6 +632,25 @@ class IndividualExposure(Struct):
     )
 
 
+class BabeAuthorityWeight(U64):
+    pass
+
+
+class KeyTypeId(VecU8Length4):
+    pass
+
+
+class Points(U32):
+    pass
+
+
+class EraPoints(Struct):
+    type_mapping = (
+        ('total', 'Points'),
+        ('individual', 'Vec<Points>'),
+    )
+
+
 class VoteThreshold(Enum):
 
     value_list = ['SuperMajorityApprove', 'SuperMajorityAgainst', 'SimpleMajority']
