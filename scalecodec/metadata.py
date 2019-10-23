@@ -40,6 +40,7 @@ class MetadataDecoder(ScaleDecoder):
                 "MetadataV5Decoder",
                 "MetadataV6Decoder",
                 "MetadataV7Decoder",
+                "MetadataV8Decoder",
             ])
 
             self.metadata = self.process_type(self.version.value)
@@ -121,6 +122,7 @@ class MetadataV4Module(ScaleType):
         self.has_events = False
         self.events = None
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -137,7 +139,8 @@ class MetadataV4Module(ScaleType):
             "storage": self.storage,
             "calls": self.calls,
             "events": self.events,
-            "constants": self.constants
+            "constants": self.constants,
+            "errors": self.errors
         }
 
         self.has_storage = self.process_type('bool').value
@@ -280,6 +283,7 @@ class MetadataV5Module(ScaleType):
         self.has_events = False
         self.events = None
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -296,7 +300,8 @@ class MetadataV5Module(ScaleType):
             "storage": self.storage,
             "calls": self.calls,
             "events": self.events,
-            "constants": self.constants
+            "constants": self.constants,
+            "errors": self.errors
         }
 
         self.has_storage = self.process_type('bool').value
@@ -438,6 +443,7 @@ class MetadataV6Module(ScaleType):
         self.has_events = False
         self.events = None
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -454,7 +460,8 @@ class MetadataV6Module(ScaleType):
             "storage": self.storage,
             "calls": self.calls,
             "events": self.events,
-            "constants": self.constants
+            "constants": self.constants,
+            "errors": self.errors
         }
 
         self.has_storage = self.process_type('bool').value
@@ -570,6 +577,7 @@ class MetadataV7Module(MetadataV6Module):
         self.has_events = False
         self.events = None
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     def process(self):
@@ -582,7 +590,8 @@ class MetadataV7Module(MetadataV6Module):
             "storage": self.storage,
             "calls": self.calls,
             "events": self.events,
-            "constants": self.constants
+            "constants": self.constants,
+            "errors": self.errors
         }
 
         self.has_storage = self.process_type('bool').value
@@ -694,6 +703,132 @@ class MetadataV7ModuleStorageEntry(ScaleDecoder):
 
 class MetadataV7ModuleConstants(MetadataV6ModuleConstants):
     pass
+
+
+class MetadataV8Decoder(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None):
+        self.version = None
+        self.modules = []
+        self.call_index = {}
+        self.event_index = {}
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+        result_data = {
+            "magicNumber": 1635018093,  # struct.unpack('<L', bytearray.fromhex("6174656d")),
+            "metadata": {
+                "MetadataV8": {
+                    "modules": [],
+                }
+            }
+        }
+
+        self.modules = self.process_type('Vec<MetadataV8Module>').elements
+
+        # Build call and event index
+
+        call_module_index = 0
+        event_module_index = 0
+
+        for module in self.modules:
+            if module.calls is not None:
+                for call_index, call in enumerate(module.calls):
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
+                call_module_index += 1
+
+            if module.events is not None:
+                for event_index, event in enumerate(module.events):
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
+                event_module_index += 1
+
+        result_data["metadata"]["MetadataV8"]["modules"] = [m.value for m in self.modules]
+
+        return result_data
+
+
+class MetadataV8Module(MetadataV6Module):
+
+    def __init__(self, data, sub_type=None):
+        self.name = None
+        self.prefix = None
+        self.call_index = None
+        self.has_storage = False
+        self.storage = None
+        self.has_calls = False
+        self.calls = None
+        self.has_events = False
+        self.events = None
+        self.constants = []
+        self.errors = []
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        self.name = self.process_type('Bytes').value
+
+        result = {
+            "name": self.name,
+            "prefix": self.prefix,
+            "storage": self.storage,
+            "calls": self.calls,
+            "events": self.events,
+            "constants": self.constants,
+            "errors": self.errors
+        }
+
+        self.has_storage = self.process_type('bool').value
+
+        if self.has_storage:
+            # TODO convert to Option<Vec<MetadataModuleStorage>>
+            self.storage = self.process_type('MetadataV7ModuleStorage')
+            result["storage"] = self.storage.value
+            # TODO moved to storage, change data model
+            self.prefix = self.storage.prefix
+            result["prefix"] = self.prefix
+
+        self.has_calls = self.process_type('bool').value
+
+        if self.has_calls:
+            # TODO convert to Option<Vec<MetadataModuleCall>>
+            self.calls = self.process_type('Vec<MetadataModuleCall>').elements
+            result["calls"] = [s.value for s in self.calls]
+
+        self.has_events = self.process_type('bool').value
+
+        if self.has_events:
+            # TODO convert to Option<Vec<MetadataModuleEvent>>
+            self.events = self.process_type('Vec<MetadataModuleEvent>').elements
+            result["events"] = [s.value for s in self.events]
+
+        self.constants = self.process_type('Vec<MetadataV7ModuleConstants>').elements
+        result["constants"] = [s.value for s in self.constants]
+
+        self.errors = self.process_type('Vec<MetadataModuleError>').elements
+        result["errors"] = [s.value for s in self.errors]
+
+        return result
+
+
+class MetadataModuleError(ScaleType):
+
+    def __init__(self, data, sub_type=None):
+        self.name = None
+        self.docs = []
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        self.name = self.process_type('Bytes').value
+        self.docs = self.process_type('Vec<Bytes>').value
+
+        return {
+            "name": self.name,
+            "docs": self.docs
+        }
 
 
 class MetadataV3Decoder(ScaleDecoder):
