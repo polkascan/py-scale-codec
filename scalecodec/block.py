@@ -133,6 +133,22 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
             self.call_index = self.get_next_bytes(2).hex()
 
+        elif self.version_info == '04' or self.version_info == '84':
+
+            if self.contains_transaction:
+                self.address = self.process_type('Address')
+
+                self.signature = self.process_type('Signature')
+
+                self.era = self.process_type('Era')
+
+                self.nonce = self.process_type('Compact<U64>')
+
+                self.tip = self.process_type('Compact<Balance>')
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
         else:
             raise NotImplementedError('Extrinsics version "{}" is not implemented'.format(self.version_info))
 
