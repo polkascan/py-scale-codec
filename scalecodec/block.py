@@ -42,6 +42,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         self.version_info = None
         self.contains_transaction: bool = False
         self.address = None
+        self.signature_version = None
         self.signature = None
         self.nonce = None
         self.era = None
@@ -137,6 +138,8 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
             if self.contains_transaction:
                 self.address = self.process_type('Address')
+
+                self.signature_version = self.process_type('U8')
 
                 self.signature = self.process_type('Signature')
 
