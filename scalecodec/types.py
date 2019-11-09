@@ -512,6 +512,21 @@ class Vec(ScaleType):
 
         return result
 
+
+class VecNextAuthority(Vec):
+    type_string = 'Vec<NextAuthority>'
+
+    def process(self):
+        element_count = self.process_type('Compact<u32>').value
+
+        result = []
+        for _ in range(0, element_count):
+            element = self.process_type('NextAuthority')
+            self.elements.append(element)
+            result.append(element.value)
+
+        return result
+
 # class BalanceTransferExtrinsic(Decoder):
 #
 #     type_string = '(Address,Compact<Balance>)'
