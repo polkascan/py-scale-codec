@@ -238,6 +238,13 @@ class H512(ScaleType):
         return '0x{}'.format(self.get_next_bytes(64).hex())
 
 
+class VecU8Length64(ScaleType):
+    type_string = '[u8; 64]'
+
+    def process(self):
+        return '0x{}'.format(self.get_next_bytes(64).hex())
+
+
 class VecU8Length32(ScaleType):
     type_string = '[u8; 32]'
 
@@ -635,7 +642,7 @@ class Exposure(Struct):
     type_mapping = (
         ('total', 'Compact<Balance>'),
         ('own', 'Compact<Balance>'),
-        ('others', 'Vec<IndividualExposure<AccountId, Balance>>'),
+        ('others', 'Vec<IndividualExposure>'),
     )
 
 
