@@ -333,19 +333,19 @@ class SealV0(Struct):
 class Consensus(Struct):
     type_string = '(ConsensusEngineId, Vec<u8>)'
 
-    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'Vec<u8>'))
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
 
 
 class Seal(Struct):
     type_string = '(ConsensusEngineId, Bytes)'
 
-    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'Bytes'))
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
 
 
 class PreRuntime(Struct):
     type_string = '(ConsensusEngineId, Bytes)'
 
-    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'Bytes'))
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
 
 
 class LogDigest(Enum):
@@ -361,5 +361,6 @@ class LogDigest(Enum):
         self.index = int(self.get_next_bytes(1).hex())
         self.index_value = self.value_list[self.index]
         self.log_type = self.process_type(self.value_list[self.index])
+
         return {'type': self.log_type.type_string, 'value': self.log_type.value}
 
