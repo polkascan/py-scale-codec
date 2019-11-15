@@ -1072,6 +1072,7 @@ class MetadataV0Module(ScaleType):
         self.storage_prefix = None
         self.storage = []
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     # TODO move to version agnostic superclass MetadataModule
@@ -1212,6 +1213,7 @@ class MetadataModule(ScaleType):
         self.has_events = False
         self.events = None
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
@@ -1268,6 +1270,7 @@ class MetadataV1Module(ScaleType):
         self.has_events = False
         self.events = None
         self.constants = []
+        self.errors = []
         super().__init__(data, sub_type)
 
     def get_identifier(self):
