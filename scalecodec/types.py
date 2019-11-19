@@ -81,7 +81,7 @@ class CompactU32(Compact):
         else:
             return int.from_bytes(self.compact_bytes, byteorder='little')
 
-    def encode(self, value: int):
+    def encode(self, value):
 
         if value <= 0b00111111:
             self.data = ScaleBytes(bytearray(int(value << 2).to_bytes(1, 'little')))

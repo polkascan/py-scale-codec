@@ -40,7 +40,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         self.extrinsic_length = None
         self.extrinsic_hash = None
         self.version_info = None
-        self.contains_transaction: bool = False
+        self.contains_transaction = False
         self.address = None
         self.signature_version = None
         self.signature = None
