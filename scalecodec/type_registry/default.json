@@ -1,0 +1,135 @@
+{
+  "default": {
+    "FullIdentification": {
+      "type": "struct",
+      "type_mapping": [
+         ["total", "Compact<Balance>"],
+         ["own", "Compact<Balance>"],
+         ["others", "Vec<IndividualExposure>"]
+      ]
+    },
+    "IdentificationTuple": {
+      "type": "struct",
+      "type_mapping": [
+         ["validatorId", "ValidatorId"],
+         ["exposure", "FullIdentification"]
+      ]
+    },
+    "SetId": "U64",
+    "RoundNumber": "U64",
+    "SessionIndex": "U32",
+    "AuctionIndex": "U32",
+    "AuthIndex": "U32",
+    "AuthorityIndex": "u64",
+    "AuthorityWeight": "u64",
+    "NextAuthority": {
+      "type": "struct",
+      "type_mapping": [
+         ["AuthorityId", "AuthorityId"],
+         ["weight", "AuthorityWeight"]
+      ]
+    },
+    "AuthorityList": "VecNextAuthority",
+    "BalanceUpload": "(AccountId, u64)",
+    "CollatorId": "H256",
+    "EgressQueueRoot": "(ParaId, Hash)",
+    "EventIndex": "u32",
+    "LeasePeriod": "BlockNumber",
+    "LeasePeriodOf": "LeasePeriod",
+    "MaybeVrf": "[u8; 32]",
+    "MemberCount": "u32",
+    "MomentOf": "Moment",
+    "MoreAttestations": "Null",
+    "Multiplier": "u64",
+    "Offender": "(ValidatorId, Exposure)",
+    "ParaIdOf": "ParaId",
+    "ParaScheduling": {
+      "type": "enum",
+      "value_list": [
+        "Always",
+        "Dynamic"
+      ]
+    },
+    "ParaInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["scheduling", "ParaScheduling"]
+      ]
+    },
+    "ReportIdOf": "Hash",
+    "SubId": "u32",
+    "Weight": "u32",
+    "WeightMultiplier": "u64",
+    "WinningDataEntry": "(AccountId, ParaIdOf, BalanceOf)",
+    "WinningData": "Vec<WinningDataEntry>",
+    "Index": "U32",
+    "Kind": "[u8; 16]",
+    "OpaqueTimeSlot": "Bytes",
+    "Box<<T as Trait<I>>::Proposal>": "BoxProposal",
+    "<AuthorityId as RuntimeAppPublic>::Signature": "AuthoritySignature",
+    "&[u8]": "Bytes",
+    "Forcing": {
+      "type": "enum",
+      "value_list": [
+        "NotForcing",
+        "ForceNew",
+        "ForceNone"
+      ]
+    },
+    "Heartbeat": {
+      "type": "struct",
+      "type_mapping": [
+         ["blockNumber", "BlockNumber"],
+         ["networkState", "OpaqueNetworkState"],
+         ["sessionIndex", "SessionIndex"],
+         ["authorityId", "AuthorityId"]
+      ]
+    },
+    "RewardDestination": {
+      "type": "enum",
+      "value_list": [
+        "Staked",
+        "Stash",
+        "Controller"
+      ]
+    },
+    "ConsensusEngineId": "[u8; 4]",
+    "DigestItem": {
+      "type": "enum",
+      "type_mapping": [
+        ["Other", "Vec<u8>"],
+        ["AuthoritiesChange", "Vec<AuthorityId>"],
+        ["ChangesTrieRoot", "Hash"],
+        ["SealV0", "SealV0"],
+        ["Consensus", "Consensus"],
+        ["Seal", "Seal"],
+        ["PreRuntime", "PreRuntime"]
+      ]
+    },
+    "Digest": {
+      "type": "struct",
+      "type_mapping": [
+        ["logs", "Vec<DigestItem<Hash>>"]
+      ]
+    },
+    "DigestOf": "Digest",
+    "Keys": "SessionKeysSubstrate",
+    "Header": {
+      "type": "struct",
+      "type_mapping": [
+        ["parent_hash", "H256"],
+        ["number", "Compact<BlockNumber>"],
+        ["state_root", "H256"],
+        ["extrinsics_root", "H256"],
+        ["digest", "Digest"]
+      ]
+    },
+    "DispatchError": {
+      "type": "struct",
+      "type_mapping": [
+        ["module", "Option<u8>"],
+        ["error", "u8"]
+      ]
+    }
+  }
+}

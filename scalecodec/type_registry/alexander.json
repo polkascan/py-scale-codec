@@ -1,0 +1,6 @@
+{
+  "default": {
+    "ValidatorPrefs": "ValidatorPrefsLegacy",
+    "Index": "U64"
+  }
+}
