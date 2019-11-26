@@ -226,7 +226,7 @@ class ExtrinsicsBlock61181Decoder(ExtrinsicsDecoder):
 
 
 class EventsDecoder(Vec):
-    type_string = 'Vec<EventRecord>'
+    type_string = 'Vec<EventRecord<Event, Hash>>'
 
     def __init__(self, data, metadata=None, **kwargs):
         assert (type(metadata) == MetadataDecoder)
