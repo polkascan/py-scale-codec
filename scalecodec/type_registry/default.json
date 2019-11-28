@@ -128,6 +128,41 @@
       ]
     },
     "DigestOf": "Digest",
+    "SpanIndex": "u32",
+    "SlashingSpans": {
+      "type": "struct",
+      "type_mapping": [
+         ["spanIndex", "SpanIndex"],
+         ["lastStart", "EraIndex"],
+         ["prior", "Vec<EraIndex>"]
+      ]
+    },
+    "slashing::SlashingSpans": "SlashingSpans",
+    "SpanRecord": {
+      "type": "struct",
+      "type_mapping": [
+         ["slashed", "Balance"],
+         ["paidOut", "Balance"]
+      ]
+    },
+    "slashing::SpanRecord<BalanceOf>": "SpanRecord",
+    "UnappliedSlashOther": {
+      "type": "struct",
+      "type_mapping": [
+         ["account", "AccountId"],
+         ["amount", "Balance"]
+      ]
+    },
+    "UnappliedSlash": {
+      "type": "struct",
+      "type_mapping": [
+         ["validator", "AccountId"],
+         ["own", "AccountId"],
+         ["others", "Vec<UnappliedSlashOther>"],
+         ["reporters", "Vec<AccountId>"],
+         ["payout", "Balance"]
+      ]
+    },
     "Keys": "SessionKeysSubstrate",
     "Header": {
       "type": "struct",

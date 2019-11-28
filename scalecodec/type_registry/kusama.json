@@ -7,6 +7,7 @@
          ["grandpa", "AccountId"],
          ["babe", "AccountId"],
          ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"],
          ["parachains", "AccountId"]
       ]
     },
