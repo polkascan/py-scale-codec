@@ -79,6 +79,14 @@
     "WinningData": "Vec<WinningDataEntry>",
     "Index": "U32",
     "Kind": "[u8; 16]",
+    "Nominations": {
+      "type": "struct",
+      "type_mapping": [
+         ["targets", "Vec<AccountId>"],
+         ["submittedIn", "EraIndex"],
+         ["suppressed", "bool"]
+      ]
+    },
     "OpaqueTimeSlot": "Bytes",
     "Box<<T as Trait<I>>::Proposal>": "BoxProposal",
     "<AuthorityId as RuntimeAppPublic>::Signature": "AuthoritySignature",
