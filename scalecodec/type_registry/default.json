@@ -32,6 +32,21 @@
     "AuthorityList": "VecNextAuthority",
     "BalanceUpload": "(AccountId, u64)",
     "CollatorId": "H256",
+    "DispatchClass": {
+      "type": "enum",
+      "value_list": [
+        "Normal",
+        "Operational"
+      ]
+    },
+    "DispatchInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["weight", "Weight"],
+         ["class", "DispatchClass"],
+         ["paysFee", "bool"]
+      ]
+    },
     "EgressQueueRoot": "(ParaId, Hash)",
     "EventIndex": "u32",
     "LeasePeriod": "BlockNumber",
