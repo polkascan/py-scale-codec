@@ -1,0 +1,15 @@
+{
+  "default": {
+    "BlockNumber": "U32",
+    "SessionKeysPolkadot": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["parachains", "AccountId"]
+      ]
+    },
+    "Keys": "SessionKeysPolkadot"
+  }
+}
