@@ -388,6 +388,27 @@ class BoxProposal(ScaleType):
         }
 
 
+class ProposalPreimage(Struct):
+    type_string = '(Vec<u8>, AccountId, BalanceOf, BlockNumber)'
+
+    type_mapping = (
+        ("proposal", "HexBytes"),
+        ("registredBy", "AccountId"),
+        ("deposit", "BalanceOf"),
+        ("blockNumber", "BlockNumber")
+    )
+    def process(self):
+
+        result = {}
+        for key, data_type in self.type_mapping:
+            result[key] = self.process_type(data_type, metadata=self.metadata).value
+
+        # Replace HexBytes with actual proposal
+        result['proposal'] = Proposal(ScaleBytes(result['proposal']), metadata=self.metadata).decode()
+
+        return result
+
+
 class Proposal(BoxProposal):
     type_string = '<T as Trait<I>>::Proposal'
 
