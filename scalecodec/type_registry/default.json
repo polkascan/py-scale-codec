@@ -32,6 +32,17 @@
     "AuthorityList": "VecNextAuthority",
     "BalanceUpload": "(AccountId, u64)",
     "CollatorId": "H256",
+    "Data": {
+      "type": "enum",
+      "type_mapping": [
+        ["None", "Null"],
+        ["Raw", "Bytes"],
+        ["BlakeTwo256", "H256"],
+        ["Sha256", "H256"],
+        ["Keccak256", "H256"],
+        ["ShaThree256", "H256"]
+      ]
+    },
     "DispatchClass": {
       "type": "enum",
       "value_list": [
@@ -49,6 +60,45 @@
     },
     "EgressQueueRoot": "(ParaId, Hash)",
     "EventIndex": "u32",
+    "IdentityFields": {
+      "type": "enum",
+      "value_list": [
+        "Display",
+        "Legal",
+        "Web",
+        "Riot",
+        "Email",
+        "PgpFingerprint",
+        "Image"
+      ]
+    },
+    "IdentityInfoAdditional": "(Data, Data)",
+    "IdentityInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["additional", "Vec<IdentityInfoAdditional>"],
+         ["display", "Data"],
+         ["legal", "Data"],
+         ["web", "Data"],
+         ["riot", "Data"],
+         ["email", "Data"],
+         ["pgpFingerprint", "Option<H160>"],
+         ["image", "Data"]
+      ]
+    },
+    "Judgement": {
+      "type": "enum",
+      "type_mapping": [
+        ["Unknown", "Null"],
+        ["FeePaid", "Balance"],
+        ["Reasonable", "Null"],
+        ["KnownGood", "Null"],
+        ["OutOfDate", "Null"],
+        ["LowQuality", "Null"],
+        ["Erroneous", "Null"]
+      ]
+    },
+    "Judgement<BalanceOf>": "Judgement",
     "LeasePeriod": "BlockNumber",
     "LeasePeriodOf": "LeasePeriod",
     "MaybeVrf": "[u8; 32]",
@@ -71,6 +121,33 @@
          ["scheduling", "ParaScheduling"]
       ]
     },
+    "(ReferendumInfo<BlockNumber, Hash>)": {
+      "type": "struct",
+      "type_mapping": [
+         ["end", "BlockNumber"],
+         ["proposalHash", "Hash"],
+         ["threshold", "VoteThreshold"],
+         ["delay", "BlockNumber"]
+      ]
+    },
+    "RegistrarIndex": "u32",
+    "RegistrarInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["account", "AccountId"],
+         ["fee", "Balance"],
+         ["fields", "IdentityFields"]
+      ]
+    },
+    "Registration": {
+      "type": "struct",
+      "type_mapping": [
+         ["judgements", "Vec<RegistrationJudgement>"],
+         ["deposit", "Balance"],
+         ["info", "IdentityInfo"]
+      ]
+    },
+    "RegistrationJudgement": "(RegistrarIndex, Judgement)",
     "ReportIdOf": "Hash",
     "SubId": "u32",
     "Weight": "u32",

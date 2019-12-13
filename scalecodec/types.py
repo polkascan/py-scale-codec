@@ -226,6 +226,12 @@ class U128(ScaleType):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder='little'))
 
 
+class H160(ScaleType):
+
+    def process(self):
+        return '0x{}'.format(self.get_next_bytes(20).hex())
+
+
 class H256(ScaleType):
 
     def process(self):
