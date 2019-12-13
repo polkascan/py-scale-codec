@@ -20,7 +20,8 @@ import datetime
 import unittest
 
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
-    InvalidScaleTypeValueException
+    InvalidScaleTypeValueException, RuntimeConfiguration
+from scalecodec.type_registry import load_type_registry_preset
 
 
 class TestScaleTypes(unittest.TestCase):
@@ -91,6 +92,30 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
         obj.decode()
         self.assertEqual(obj.value, 2503000000000000000)
+
+    def test_type_registry(self):
+        # Example type SpanIndex only define in type registry 'default'
+        self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'SpanIndex', ScaleBytes("0x01000000"))
+
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+
+        obj = ScaleDecoder.get_decoder_class('SpanIndex', ScaleBytes("0x06000000"))
+        obj.decode()
+        self.assertEqual(obj.value, 6)
+
+    def test_type_registry_overloading(self):
+        # Type BlockNumber defined as U32 in type registry 'kusama'
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
+
+        obj = ScaleDecoder.get_decoder_class('BlockNumber', ScaleBytes("0x0000000000000001"))
+        self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
+
+        # Type BlockNumber changed to U64 in type registry 'test'
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = ScaleDecoder.get_decoder_class('BlockNumber', ScaleBytes("0x0000000000000001"))
+        obj.decode()
+        self.assertEqual(obj.value, 72057594037927936)
 
     def test_unknown_decoder_class(self):
         self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'UnknownType123', ScaleBytes("0x0c00"))
