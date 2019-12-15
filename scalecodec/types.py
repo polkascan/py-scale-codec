@@ -625,7 +625,7 @@ class Enum(ScaleType):
         super().__init__(data, **kwargs)
 
     def process(self):
-        self.index = int(self.get_next_bytes(1).hex())
+        self.index = int(self.get_next_bytes(1).hex(), 16)
 
         if self.type_mapping:
             try:
@@ -639,6 +639,42 @@ class Enum(ScaleType):
                 return self.value_list[self.index]
             except IndexError:
                 raise ValueError("Index '{}' not present in Enum value list".format(self.index))
+
+
+class Data(Enum):
+    type_mapping = [
+        ["None", "Null"],
+        ["Raw", "Bytes"],
+        ["BlakeTwo256", "H256"],
+        ["Sha256", "H256"],
+        ["Keccak256", "H256"],
+        ["ShaThree256", "H256"]
+      ]
+
+    def process(self):
+
+        self.index = int(self.get_next_bytes(1).hex(), 16)
+
+        if self.index == 0:
+            return {'None': None}
+
+        elif self.index >= 1 and self.index <= 33:
+            # Determine value of Raw type (length is processed in index byte)
+            data = self.get_next_bytes(self.index - 1)
+
+            try:
+                value = data.decode()
+            except UnicodeDecodeError:
+                value = '0x{}'.format(data.hex())
+            return {"Raw": value}
+
+        elif self.index >= 34 and self.index <= 37:
+
+            enum_value = self.type_mapping[self.index - 32][0]
+
+            return {enum_value: self.process_type(self.type_mapping[self.index - 32][1]).value}
+
+        raise ValueError("Unable to decode Data, invalid indicator byte '{}'".format(self.index))
 
 
 class RewardDestination(Enum):
@@ -1026,7 +1062,7 @@ class Conviction(Enum):
     CONVICTION_MASK = 0b01111111
     DEFAULT_CONVICTION = 0b00000000
 
-    value_list = ['None', 'Locked1x', 'Locked2x', 'Locked3x', 'Locked4x', 'Locked5x']
+    value_list = ['None', 'Locked1x', 'Locked2x', 'Locked3x', 'Locked4x', 'Locked5x', 'Locked6x']
 
 
 class EraRewards(Struct):

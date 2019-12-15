@@ -32,17 +32,6 @@
     "AuthorityList": "VecNextAuthority",
     "BalanceUpload": "(AccountId, u64)",
     "CollatorId": "H256",
-    "Data": {
-      "type": "enum",
-      "type_mapping": [
-        ["None", "Null"],
-        ["Raw", "Bytes"],
-        ["BlakeTwo256", "H256"],
-        ["Sha256", "H256"],
-        ["Keccak256", "H256"],
-        ["ShaThree256", "H256"]
-      ]
-    },
     "DispatchClass": {
       "type": "enum",
       "value_list": [
