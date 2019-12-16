@@ -32,6 +32,25 @@
     "AuthorityList": "VecNextAuthority",
     "BalanceUpload": "(AccountId, u64)",
     "CollatorId": "H256",
+    "ContractInfo": {
+      "type": "enum",
+      "value_list": [
+        "Alive",
+        "Tombstone"
+      ]
+    },
+    "TrieId": "Vec<u8>",
+    "RawAliveContractInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["trie_id", "TrieId"],
+         ["storage_size", "u32"],
+         ["code_hash", "CodeHash"],
+         ["rent_allowance", "Balance"],
+         ["deduct_block", "BlockNumber"],
+         ["last_write", "Option<BlockNumber>"]
+      ]
+    },
     "DispatchClass": {
       "type": "enum",
       "value_list": [
@@ -49,6 +68,7 @@
     },
     "EgressQueueRoot": "(ParaId, Hash)",
     "EventIndex": "u32",
+    "Gas": "u64",
     "IdentityFields": {
       "type": "enum",
       "value_list": [
@@ -138,6 +158,29 @@
     },
     "RegistrationJudgement": "(RegistrarIndex, Judgement)",
     "ReportIdOf": "Hash",
+    "Schedule": {
+      "type": "struct",
+      "type_mapping": [
+         ["version", "u32"],
+         ["put_code_per_byte_cost", "Gas"],
+         ["grow_mem_cost", "Gas"],
+         ["regular_op_cost", "Gas"],
+         ["return_data_per_byte_cost", "Gas"],
+         ["event_data_per_byte_cost", "Gas"],
+         ["event_per_topic_cost", "Gas"],
+         ["event_base_cost", "Gas"],
+         ["call_base_cost", "Gas"],
+         ["instantiate_base_cost", "Gas"],
+         ["sandbox_data_read_cost", "Gas"],
+         ["sandbox_data_write_cost", "Gas"],
+         ["max_event_topics", "u32"],
+         ["max_stack_height", "u32"],
+         ["max_memory_pages", "u32"],
+         ["max_table_size", "u32"],
+         ["enable_println", "bool"],
+         ["max_subject_len", "u32"]
+      ]
+    },
     "SubId": "u32",
     "Weight": "u32",
     "WeightMultiplier": "u64",
