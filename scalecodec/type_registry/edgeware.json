@@ -1,6 +1,14 @@
 {
   "default": {
-    "Keys": "SessionKeysSubstrate",
+    "Keys": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"]
+      ]
+    },
     "BlockNumber": "U32",
     "SessionIndex": "U32",
     "AuctionIndex": "U32",
