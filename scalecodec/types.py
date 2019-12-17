@@ -22,7 +22,7 @@ from scalecodec.base import ScaleType, ScaleBytes
 
 class Compact(ScaleType):
 
-    def __init__(self, data, **kwargs):
+    def __init__(self, data=None, **kwargs):
         self.compact_length = 0
         self.compact_bytes = None
         super().__init__(data, **kwargs)
@@ -81,27 +81,24 @@ class CompactU32(Compact):
         else:
             return int.from_bytes(self.compact_bytes, byteorder='little')
 
-    def encode(self, value):
+    def process_encode(self, value):
 
         if value <= 0b00111111:
-            self.data = ScaleBytes(bytearray(int(value << 2).to_bytes(1, 'little')))
+            return ScaleBytes(bytearray(int(value << 2).to_bytes(1, 'little')))
 
         elif value <= 0b0011111111111111:
-            self.data = ScaleBytes(bytearray(int((value << 2) | 0b01).to_bytes(2, 'little')))
+            return ScaleBytes(bytearray(int((value << 2) | 0b01).to_bytes(2, 'little')))
 
         elif value <= 0b00111111111111111111111111111111:
 
-            self.data = ScaleBytes(bytearray(int((value << 2) | 0b10).to_bytes(4, 'little')))
+            return ScaleBytes(bytearray(int((value << 2) | 0b10).to_bytes(4, 'little')))
 
         else:
             for bytes_length in range(4, 68):
                 if 2 ** (8 * (bytes_length-1)) <= value < 2 ** (8 * bytes_length):
-                    self.data = ScaleBytes(bytearray(((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length, 'little')))
-                    break
+                    return ScaleBytes(bytearray(((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length, 'little')))
             else:
                 raise ValueError('{} out of range'.format(value))
-
-        return self.data
 
 
 class Option(ScaleType):
@@ -169,13 +166,11 @@ class U8(ScaleType):
     def process(self):
         return self.get_next_u8()
 
-    def encode(self, value):
+    def process_encode(self, value):
         if 0 <= value <= 2**8 - 1:
-            self.data = ScaleBytes(bytearray(int(value).to_bytes(1, 'little')))
+            return ScaleBytes(bytearray(int(value).to_bytes(1, 'little')))
         else:
             raise ValueError('{} out of range for u8'.format(value))
-
-        return self.data
 
 
 class U16(ScaleType):
@@ -183,13 +178,11 @@ class U16(ScaleType):
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little')
 
-    def encode(self, value):
+    def process_encode(self, value):
         if 0 <= value <= 2**16 - 1:
-            self.data = ScaleBytes(bytearray(int(value).to_bytes(2, 'little')))
+            return ScaleBytes(bytearray(int(value).to_bytes(2, 'little')))
         else:
             raise ValueError('{} out of range for u16'.format(value))
-
-        return self.data
 
 
 class U32(ScaleType):
@@ -197,13 +190,11 @@ class U32(ScaleType):
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
-    def encode(self, value):
+    def process_encode(self, value):
         if 0 <= value <= 2**32 - 1:
-            self.data = ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
+            return  ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
         else:
             raise ValueError('{} out of range for u32'.format(value))
-
-        return self.data
 
 
 class U64(ScaleType):
@@ -211,13 +202,11 @@ class U64(ScaleType):
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder='little'))
 
-    def encode(self, value):
+    def process_encode(self, value):
         if 0 <= value <= 2**64 - 1:
-            self.data = ScaleBytes(bytearray(int(value).to_bytes(8, 'little')))
+            return ScaleBytes(bytearray(int(value).to_bytes(8, 'little')))
         else:
             raise ValueError('{} out of range for u64'.format(value))
-
-        return self.data
 
 
 class U128(ScaleType):
@@ -531,7 +520,7 @@ class Index(U64):
 
 class Vec(ScaleType):
 
-    def __init__(self, data, **kwargs):
+    def __init__(self, data=None, **kwargs):
         self.elements = []
         super().__init__(data, **kwargs)
 
@@ -545,6 +534,26 @@ class Vec(ScaleType):
             result.append(element.value)
 
         return result
+
+    def process_encode(self, value):
+
+        # encode element count to Compact<u32>
+        element_count_compact = CompactU32()
+
+        element_count_compact.encode(len(value))
+
+        data = element_count_compact.data
+
+        for element in value:
+            if type(element) == str:
+                if element[0:2] == '0x':
+                    data += element
+                else:
+                    string_length_compact = CompactU32()
+                    data += string_length_compact.encode(len(element))
+                    data += element.encode()
+
+        return data
 
 
 class VecNextAuthority(Vec):
