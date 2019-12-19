@@ -126,6 +126,12 @@ class Bytes(ScaleType):
         except UnicodeDecodeError:
             return value.hex()
 
+    def process_encode(self, value):
+        string_length_compact = CompactU32()
+        data = string_length_compact.encode(len(value))
+        data += value.encode()
+        return data
+
 
 class OptionBytes(ScaleType):
 
@@ -159,6 +165,18 @@ class HexBytes(ScaleType):
         length = self.process_type('Compact<u32>').value
 
         return '0x{}'.format(self.get_next_bytes(length).hex())
+
+    def process_encode(self, value):
+
+        if value[0:2] != '0x':
+            raise ValueError('HexBytes value should start with "0x"')
+
+        value = bytes.fromhex(value[2:])
+
+        string_length_compact = CompactU32()
+        data = string_length_compact.encode(len(value))
+        data += value
+        return data
 
 
 class U8(ScaleType):

@@ -29,7 +29,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x18"))
         obj.decode()
 
-        obj = CompactU32()
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>')
         obj.encode(6)
         self.assertEqual(str(obj.data), "0x18")
 
@@ -37,19 +37,19 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x18"))
         obj.decode()
 
-        obj = CompactU32()
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>')
         obj.encode(6000)
         self.assertEqual(str(obj.data), "0xc15d")
 
     def test_compact_u32_4bytes(self):
 
-        obj = CompactU32()
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>')
         obj.encode(1000000)
         self.assertEqual(str(obj.data), "0x02093d00")
 
     def test_compact_u32_larger_than_4bytes(self):
 
-        obj = CompactU32()
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>')
         obj.encode(150000000000000)
         self.assertEqual(str(obj.data), "0x0b0060b7986c88")
 
@@ -57,7 +57,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         value = 2000001
 
-        obj = CompactU32()
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>')
         data = obj.encode(value)
 
         obj = CompactU32(data)
@@ -100,3 +100,25 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Vec<AccountId>', data)
 
         self.assertEqual(obj.decode(), value)
+
+    def test_bytes_encode_decode(self):
+
+        value = 'This is a test'
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('Bytes', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+    def test_hexbytes_encode_decode(self):
+
+        value = '0x5468697320697320612074657374'
+
+        obj = ScaleDecoder.get_decoder_class('HexBytes')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('HexBytes', data)
+
+        self.assertEqual(obj_check.decode(), value)

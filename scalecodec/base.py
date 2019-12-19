@@ -213,7 +213,7 @@ class ScaleDecoder(ABC):
         raise NotImplementedError("Encoding not implemented for this ScaleType")
 
     @classmethod
-    def get_decoder_class(cls, type_string, data, **kwargs):
+    def get_decoder_class(cls, type_string, data=None, **kwargs):
 
         type_parts = None
 
