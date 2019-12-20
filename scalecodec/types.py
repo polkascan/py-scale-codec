@@ -408,17 +408,6 @@ class Proposal(BoxProposal):
     type_string = '<T as Trait<I>>::Proposal'
 
 
-class ReferendumInfo(Struct):
-    type_string = '(ReferendumInfo<BlockNumber, Proposal>)'
-
-    type_mapping = (
-        ('end', 'BlockNumber'),
-        ('proposal', 'Proposal'),
-        ('threshold', 'VoteThreshold'),
-        ('delay', 'BlockNumber'),
-    )
-
-
 class ValidatorPrefs(Struct):
     type_string = '(Compact<Balance>)'
 
