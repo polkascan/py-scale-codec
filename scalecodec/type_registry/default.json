@@ -130,6 +130,39 @@
          ["scheduling", "ParaScheduling"]
       ]
     },
+    "SlotNumber": "u64",
+    "VrfData": "[u8; 32]",
+    "VrfProof": "[u8; 64]",
+    "RawAuraPreDigest": {
+      "type": "struct",
+      "type_mapping": [
+         ["slotNumber", "SlotNumber"]
+      ]
+    },
+    "RawBabePreDigest": {
+      "type": "enum",
+      "type_mapping": [
+        ["value", "Null"],
+        ["value", "RawBabePreDigestPrimary"],
+        ["value", "RawBabePreDigestSecondary"]
+      ]
+    },
+    "RawBabePreDigestPrimary": {
+      "type": "struct",
+      "type_mapping": [
+         ["authorityIndex", "u32"],
+         ["slotNumber", "SlotNumber"],
+         ["vrfOutput", "VrfData"],
+         ["vrfProof", "VrfProof"]
+      ]
+    },
+    "RawBabePreDigestSecondary": {
+      "type": "struct",
+      "type_mapping": [
+         ["authorityIndex", "u32"],
+         ["slotNumber", "SlotNumber"]
+      ]
+    },
     "ReferendumInfo<BlockNumber, Proposal>": {
       "type": "struct",
       "type_mapping": [
