@@ -130,7 +130,17 @@
          ["scheduling", "ParaScheduling"]
       ]
     },
-    "(ReferendumInfo<BlockNumber, Hash>)": {
+    "ReferendumInfo<BlockNumber, Proposal>": {
+      "type": "struct",
+      "type_mapping": [
+         ["end", "BlockNumber"],
+         ["proposal", "Proposal"],
+         ["threshold", "VoteThreshold"],
+         ["delay", "BlockNumber"]
+      ]
+    },
+    "(ReferendumInfo<BlockNumber, Proposal>)": "ReferendumInfo<BlockNumber, Proposal>",
+    "ReferendumInfo<BlockNumber, Hash>": {
       "type": "struct",
       "type_mapping": [
          ["end", "BlockNumber"],
@@ -139,6 +149,7 @@
          ["delay", "BlockNumber"]
       ]
     },
+    "(ReferendumInfo<BlockNumber, Hash>)": "ReferendumInfo<BlockNumber, Hash>",
     "RegistrarIndex": "u32",
     "RegistrarInfo": {
       "type": "struct",
