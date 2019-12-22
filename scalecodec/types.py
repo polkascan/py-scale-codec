@@ -309,6 +309,27 @@ class Struct(ScaleType):
         return result
 
 
+class Set(ScaleType):
+    value_list = []
+
+    def __init__(self, data, value_list=None, **kwargs):
+        self.set_value = None
+        if value_list:
+            self.value_list = value_list
+
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.set_value = int(self.get_next_bytes(1).hex(), 16)
+        result = []
+        if self.set_value > 0:
+
+            for value, set_mask in self.value_list.items():
+                if self.set_value & set_mask > 0:
+                    result.append(value)
+        return result
+
+
 class Era(ScaleType):
 
     def process(self):
@@ -998,7 +1019,7 @@ class BalanceLock(Struct):
     type_mapping = (
         ('id', 'LockIdentifier'),
         ('amount', 'Balance'),
-        ('until', 'BlockNumber'),
+        ('until', 'U32'),
         ('reasons', 'WithdrawReasons'),
     )
 

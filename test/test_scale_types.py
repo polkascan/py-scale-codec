@@ -120,5 +120,22 @@ class TestScaleTypes(unittest.TestCase):
     def test_unknown_decoder_class(self):
         self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'UnknownType123', ScaleBytes("0x0c00"))
 
+    def test_dynamic_set(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+
+        obj = ScaleDecoder.get_decoder_class('WithdrawReasons', ScaleBytes("0x01"))
+        obj.decode()
+
+        self.assertEqual(obj.value, ["TransactionPayment"])
+
+        obj = ScaleDecoder.get_decoder_class('WithdrawReasons', ScaleBytes("0x03"))
+        obj.decode()
+
+        self.assertEqual(obj.value, ["TransactionPayment", "Transfer"])
+
+        obj = ScaleDecoder.get_decoder_class('WithdrawReasons', ScaleBytes("0x16"))
+        obj.decode()
+
+        self.assertEqual(obj.value, ["Transfer", "Reserve", "Tip"])
 
     # TODO make type_index in Metadatadecoder and add tests if all types are supported
