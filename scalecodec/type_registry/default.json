@@ -115,6 +115,22 @@
     "MomentOf": "Moment",
     "MoreAttestations": "Null",
     "Multiplier": "u64",
+    "Timepoint": {
+      "type": "struct",
+      "type_mapping": [
+         ["height", "BlockNumber"],
+         ["index", "u32"]
+      ]
+    },
+    "Multisig": {
+      "type": "struct",
+      "type_mapping": [
+         ["when", "Timepoint"],
+         ["deposit", "Balance"],
+         ["depositor", "AccountId"],
+         ["approvals", "Vec<AccountId>"]
+      ]
+    },
     "Offender": "(ValidatorId, Exposure)",
     "ParaIdOf": "ParaId",
     "ParaScheduling": {
