@@ -55,6 +55,7 @@ class RuntimeConfiguration(metaclass=Singleton):
             return self.type_registry.get('default', {}).get(type_string.lower(), None)
 
     def update_type_registry(self, type_registry):
+        from scalecodec.types import Enum, Struct, Set
 
         for spec_version_id, type_mapping in type_registry.items():
 
@@ -66,15 +67,22 @@ class RuntimeConfiguration(metaclass=Singleton):
                 if type(decoder_class_data) == dict:
                     # Create dynamic decoder class
                     if decoder_class_data['type'] == 'struct':
-                        from scalecodec.types import Struct
+
                         decoder_class = type(type_string, (Struct,), {'type_mapping': decoder_class_data['type_mapping']})
 
                     elif decoder_class_data['type'] == 'enum':
-                        from scalecodec.types import Enum
+
                         decoder_class = type(type_string, (Enum,), {
                             'value_list': decoder_class_data.get('value_list'),
                             'type_mapping': decoder_class_data.get('type_mapping')
                         })
+
+                    elif decoder_class_data['type'] == 'set':
+
+                        decoder_class = type(type_string, (Set,), {
+                            'value_list': decoder_class_data.get('value_list'),
+                        })
+
                     else:
                         raise NotImplementedError("Dynamic decoding type '{}' not supported".format(
                             decoder_class_data['type'])

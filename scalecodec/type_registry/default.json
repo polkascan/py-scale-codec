@@ -115,6 +115,22 @@
     "MomentOf": "Moment",
     "MoreAttestations": "Null",
     "Multiplier": "u64",
+    "Timepoint": {
+      "type": "struct",
+      "type_mapping": [
+         ["height", "BlockNumber"],
+         ["index", "u32"]
+      ]
+    },
+    "Multisig": {
+      "type": "struct",
+      "type_mapping": [
+         ["when", "Timepoint"],
+         ["deposit", "Balance"],
+         ["depositor", "AccountId"],
+         ["approvals", "Vec<AccountId>"]
+      ]
+    },
     "Offender": "(ValidatorId, Exposure)",
     "ParaIdOf": "ParaId",
     "ParaScheduling": {
@@ -128,6 +144,39 @@
       "type": "struct",
       "type_mapping": [
          ["scheduling", "ParaScheduling"]
+      ]
+    },
+    "SlotNumber": "u64",
+    "VrfData": "[u8; 32]",
+    "VrfProof": "[u8; 64]",
+    "RawAuraPreDigest": {
+      "type": "struct",
+      "type_mapping": [
+         ["slotNumber", "SlotNumber"]
+      ]
+    },
+    "RawBabePreDigest": {
+      "type": "enum",
+      "type_mapping": [
+        ["value", "Null"],
+        ["value", "RawBabePreDigestPrimary"],
+        ["value", "RawBabePreDigestSecondary"]
+      ]
+    },
+    "RawBabePreDigestPrimary": {
+      "type": "struct",
+      "type_mapping": [
+         ["authorityIndex", "u32"],
+         ["slotNumber", "SlotNumber"],
+         ["vrfOutput", "VrfData"],
+         ["vrfProof", "VrfProof"]
+      ]
+    },
+    "RawBabePreDigestSecondary": {
+      "type": "struct",
+      "type_mapping": [
+         ["authorityIndex", "u32"],
+         ["slotNumber", "SlotNumber"]
       ]
     },
     "ReferendumInfo<BlockNumber, Proposal>": {
@@ -197,6 +246,16 @@
     "WeightMultiplier": "u64",
     "WinningDataEntry": "(AccountId, ParaIdOf, BalanceOf)",
     "WinningData": "Vec<WinningDataEntry>",
+    "WithdrawReasons": {
+      "type": "set",
+      "value_list": {
+        "TransactionPayment": 1,
+        "Transfer": 2,
+        "Reserve": 4,
+        "Fee": 8,
+        "Tip": 16
+      }
+    },
     "Index": "U32",
     "Kind": "[u8; 16]",
     "Nominations": {
@@ -302,11 +361,27 @@
         ["digest", "Digest"]
       ]
     },
-    "DispatchError": {
+    "DispatchErrorModule": {
       "type": "struct",
       "type_mapping": [
-        ["module", "Option<u8>"],
-        ["error", "u8"]
+         ["index", "u8"],
+         ["error", "u8"]
+      ]
+    },
+    "DispatchError": {
+      "type": "enum",
+      "type_mapping": [
+        ["Other", "Null"],
+        ["CannotLookup", "Null"],
+        ["BadOrigin", "Null"],
+        ["Module", "DispatchErrorModule"]
+      ]
+    },
+    "DispatchResult": {
+      "type": "enum",
+      "type_mapping": [
+        ["Error", "DispatchError"],
+        ["Ok", "Null"]
       ]
     }
   }

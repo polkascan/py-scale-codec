@@ -327,6 +327,27 @@ class Struct(ScaleType):
         return result
 
 
+class Set(ScaleType):
+    value_list = []
+
+    def __init__(self, data, value_list=None, **kwargs):
+        self.set_value = None
+        if value_list:
+            self.value_list = value_list
+
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.set_value = int(self.get_next_bytes(1).hex(), 16)
+        result = []
+        if self.set_value > 0:
+
+            for value, set_mask in self.value_list.items():
+                if self.set_value & set_mask > 0:
+                    result.append(value)
+        return result
+
+
 class Era(ScaleType):
 
     def process(self):
@@ -843,7 +864,7 @@ class ReportIdOf(Hash):
 
 class StorageHasher(Enum):
 
-    value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
+    value_list = ['Blake2_128', 'Blake2_256', 'Blake2_128Concat', 'Twox128', 'Twox256', 'Twox64Concat']
 
     def is_blake2_128(self):
         return self.index == 0
@@ -851,14 +872,17 @@ class StorageHasher(Enum):
     def is_blake2_256(self):
         return self.index == 1
 
-    def is_twox128(self):
+    def is_twoblake2_128_concat(self):
         return self.index == 2
 
-    def is_twox256(self):
+    def is_twox128(self):
         return self.index == 3
 
-    def is_twox128_concat(self):
+    def is_twox256(self):
         return self.index == 4
+
+    def is_twox64_concat(self):
+        return self.index == 5
 
 
 class VoterInfo(Struct):
@@ -1016,7 +1040,7 @@ class BalanceLock(Struct):
     type_mapping = (
         ('id', 'LockIdentifier'),
         ('amount', 'Balance'),
-        ('until', 'BlockNumber'),
+        ('until', 'U32'),
         ('reasons', 'WithdrawReasons'),
     )
 
