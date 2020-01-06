@@ -210,7 +210,7 @@ class U32(ScaleType):
 
     def process_encode(self, value):
         if 0 <= value <= 2**32 - 1:
-            return  ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
+            return ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
         else:
             raise ValueError('{} out of range for u32'.format(value))
 

@@ -32,17 +32,17 @@ class TestMetadata(unittest.TestCase):
     def test_decode_metadata_v3(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v3_hex))
         metadata_decoder.decode()
-        self.assertEqual(metadata_decoder.version, "MetadataV3Decoder")
+        self.assertEqual(metadata_decoder.version.value, "MetadataV3Decoder")
 
     def test_decode_metadata_v2(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v2_hex))
         metadata_decoder.decode()
-        self.assertEqual(metadata_decoder.version, "MetadataV2Decoder")
+        self.assertEqual(metadata_decoder.version.value, "MetadataV2Decoder")
 
     def test_decode_metadata_v1(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v1_hex))
         metadata_decoder.decode()
-        self.assertEqual(metadata_decoder.version, "MetadataV1Decoder")
+        self.assertEqual(metadata_decoder.version.value, "MetadataV1Decoder")
 
     def test_decode_invalid_metadata_v1(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v1_hex))
@@ -51,7 +51,7 @@ class TestMetadata(unittest.TestCase):
     def test_all_scale_type_supported_v1(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v1_hex))
         metadata_decoder.decode()
-        self.assertEqual(metadata_decoder.version, "MetadataV1Decoder")
+        self.assertEqual(metadata_decoder.version.value, "MetadataV1Decoder")
 
         for module in metadata_decoder.metadata.modules:
             if module.calls:
@@ -63,7 +63,7 @@ class TestMetadata(unittest.TestCase):
     def test_all_scale_type_supported_v2(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v2_hex))
         metadata_decoder.decode()
-        self.assertEqual(metadata_decoder.version, "MetadataV2Decoder")
+        self.assertEqual(metadata_decoder.version.value, "MetadataV2Decoder")
 
         for module in metadata_decoder.metadata.modules:
             if module.calls:
@@ -75,7 +75,7 @@ class TestMetadata(unittest.TestCase):
     def test_all_scale_type_supported_v3(self):
         metadata_decoder = MetadataDecoder(ScaleBytes(self.metadata_v3_hex))
         metadata_decoder.decode()
-        self.assertEqual(metadata_decoder.version, "MetadataV3Decoder")
+        self.assertEqual(metadata_decoder.version.value, "MetadataV3Decoder")
 
         for module in metadata_decoder.metadata.modules:
             if module.calls:

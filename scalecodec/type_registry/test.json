@@ -1,5 +1,6 @@
 {
   "default": {
-    "BlockNumber": "U64"
+    "BlockNumber": "U64",
+    "SpecificTestType": "u32"
   }
 }

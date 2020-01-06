@@ -66,9 +66,9 @@ class TestScaleTypes(unittest.TestCase):
         ])
 
     def test_validatorprefs_struct(self):
-        obj = ScaleDecoder.get_decoder_class('ValidatorPrefs', ScaleBytes("0x0c00"))
+        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', ScaleBytes("0x0c00"))
         obj.decode()
-        self.assertEqual(obj.value, {"col1": 3, "col2": 0})
+        self.assertEqual(obj.value, {'unstakeThreshold': 3, 'validatorPayment': 0})
 
     def test_implied_struct(self):
         obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
@@ -94,12 +94,12 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, 2503000000000000000)
 
     def test_type_registry(self):
-        # Example type SpanIndex only define in type registry 'default'
-        self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'SpanIndex', ScaleBytes("0x01000000"))
+        # Example type SpecificTestType only define in type registry 'default'
+        self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'SpecificTestType', ScaleBytes("0x01000000"))
 
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('SpanIndex', ScaleBytes("0x06000000"))
+        obj = ScaleDecoder.get_decoder_class('SpecificTestType', ScaleBytes("0x06000000"))
         obj.decode()
         self.assertEqual(obj.value, 6)
 
