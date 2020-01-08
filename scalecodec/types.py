@@ -244,6 +244,11 @@ class H256(ScaleType):
     def process(self):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
+    def process_encode(self, value):
+        if value[0:2] != '0x':
+            raise ValueError('Value should start with "0x"')
+        return ScaleBytes(value)
+
 
 class H512(ScaleType):
 

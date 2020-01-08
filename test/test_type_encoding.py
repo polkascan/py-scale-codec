@@ -122,3 +122,17 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj_check = ScaleDecoder.get_decoder_class('HexBytes', data)
 
         self.assertEqual(obj_check.decode(), value)
+
+    def test_accountid_encode_decode(self):
+        value = '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+
+        obj = ScaleDecoder.get_decoder_class('AccountId')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('AccountId', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+
+if __name__ == '__main__':
+    unittest.main()
