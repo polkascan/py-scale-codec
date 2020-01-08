@@ -251,7 +251,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
                     param_value = value['params'][arg.name]
 
                     if arg.type in ['AccountId', 'Address'] and param_value[0:2] != '0x':
-                        if len(param_value) == 49:
+                        if len(param_value) == 47:
                             param_value = '0x{}'.format(ss58_decode(param_value))
                         else:
                             param_value = ss58_decode_account_index(param_value)
