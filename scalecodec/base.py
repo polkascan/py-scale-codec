@@ -161,7 +161,8 @@ class ScaleDecoder(ABC):
         if self.type_mapping is None and self.type_string:
             self.build_type_mapping()
 
-        assert(type(data) == ScaleBytes)
+        if data:
+            assert(type(data) == ScaleBytes)
 
         self.data = data
         self.raw_value = ''

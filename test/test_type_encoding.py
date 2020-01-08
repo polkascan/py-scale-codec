@@ -133,6 +133,19 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
+    def test_compact_balance_encode_decode(self):
+        scale_data = ScaleBytes('0x070010a5d4e8')
+        value = 1000000000000
+
+        obj = ScaleDecoder.get_decoder_class('Compact<Balance>')
+        data = obj.encode(value)
+
+        self.assertEqual(str(scale_data), str(data))
+
+        obj_check = ScaleDecoder.get_decoder_class('Compact<Balance>', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -58,14 +58,33 @@ class Compact(ScaleType):
 
             byte_data = self.get_decoder_class(self.sub_type, ScaleBytes(self.compact_bytes)).process()
 
-            # TODO Assumptions
             if type(byte_data) is int and self.compact_length <= 4:
                 return int(byte_data / 4)
             else:
-                # TODO raise exception?
                 return byte_data
         else:
             return self.compact_bytes
+
+    def process_encode(self, value):
+
+        if value <= 0b00111111:
+            return ScaleBytes(bytearray(int(value << 2).to_bytes(1, 'little')))
+
+        elif value <= 0b0011111111111111:
+            return ScaleBytes(bytearray(int((value << 2) | 0b01).to_bytes(2, 'little')))
+
+        elif value <= 0b00111111111111111111111111111111:
+
+            return ScaleBytes(bytearray(int((value << 2) | 0b10).to_bytes(4, 'little')))
+
+        else:
+            for bytes_length in range(4, 68):
+                if 2 ** (8 * (bytes_length - 1)) <= value < 2 ** (8 * bytes_length):
+                    return ScaleBytes(bytearray(
+                        ((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length,
+                                                                                                'little')))
+            else:
+                raise ValueError('{} out of range'.format(value))
 
 
 # Example of specialized composite implementation for performance improvement
@@ -544,7 +563,7 @@ class BlockNumber(U64):
 
 
 class NewAccountOutcome(CompactU32):
-    pass
+    type_string = 'NewAccountOutcome'
 
 
 class Index(U64):
@@ -643,6 +662,16 @@ class Address(ScaleType):
             self.account_length = self.account_length.hex()
 
             return self.account_index
+
+    def process_encode(self, value):
+        if type(value) == str and value[0:2] == '0x' and len(value) == 66:
+            # value is AccountId
+            return ScaleBytes('0xff{}'.format(value[2:]))
+        elif type(value) == int:
+            # value is AccountIndex
+            raise NotImplementedError('Encoding of AccountIndex Adresses not supported yet')
+        else:
+            raise ValueError('Value is in unsupported format, expected 32 bytes hex-string for AccountIds or int for AccountIndex')
 
 
 class RawAddress(Address):

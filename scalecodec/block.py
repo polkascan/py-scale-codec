@@ -19,6 +19,7 @@ from collections import OrderedDict
 from scalecodec.base import ScaleDecoder, ScaleBytes
 from scalecodec.metadata import MetadataDecoder
 from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct, VecU8Length4
+from scalecodec.utils.ss58 import ss58_decode, ss58_decode_account_index
 
 
 class ExtrinsicsDecoder(ScaleDecoder):
@@ -32,11 +33,12 @@ class ExtrinsicsDecoder(ScaleDecoder):
         ('call_index', '(u8,u8)'),
     )
 
-    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
+    def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, address_type=42):
 
         assert (type(metadata) == MetadataDecoder)
 
         self.metadata = metadata
+        self.address_type = address_type
         self.extrinsic_length = None
         self.extrinsic_hash = None
         self.version_info = None
@@ -211,6 +213,57 @@ class ExtrinsicsDecoder(ScaleDecoder):
         result['params'] = self.params
 
         return result
+
+    def process_encode(self, value):
+        # Check requirements
+        if 'call_index' in value:
+            self.call_index = value['call_index']
+
+        elif 'call_module' in value and 'call_module_function' in value:
+            # Look up call module from metadata
+            for call_index, (call_module, call) in self.metadata.call_index.items():
+                if call_module.name == value['call_module'] and call.name == value['call_module_function']:
+                    self.call_index = call_index
+                    self.call_module = call_module
+                    self.call = call
+                    break
+
+            if not self.call_index:
+                raise ValueError('Specified call module and function not found in metadata')
+
+        elif not self.call_module or not self.call:
+            raise ValueError('No call module and function specified')
+
+        if self.contains_transaction:
+            data = ScaleBytes('0x84')
+            raise NotImplementedError('Encoding of signed extrinsics not supported')
+        else:
+            data = ScaleBytes('0x04')
+
+        data += ScaleBytes(bytearray.fromhex(self.call_index))
+
+        # Encode call params
+        if len(self.call.args) > 0:
+            for arg in self.call.args:
+                if arg.name not in value['params']:
+                    raise ValueError('Call module and function specified')
+                else:
+                    param_value = value['params'][arg.name]
+
+                    if arg.type in ['AccountId', 'Address'] and param_value[0:2] != '0x':
+                        if len(param_value) == 49:
+                            param_value = '0x{}'.format(ss58_decode(param_value))
+                        else:
+                            param_value = ss58_decode_account_index(param_value)
+
+                    arg_obj = ScaleDecoder.get_decoder_class(arg.type)
+                    data += arg_obj.encode(param_value)
+
+        # Wrap payload with een length Compact<u32>
+        length_obj = ScaleDecoder.get_decoder_class('Compact<u32>')
+        data = length_obj.encode(data.length) + data
+
+        return data
 
 
 class ExtrinsicsBlock61181Decoder(ExtrinsicsDecoder):

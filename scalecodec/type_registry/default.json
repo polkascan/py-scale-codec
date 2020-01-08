@@ -68,6 +68,7 @@
     },
     "EgressQueueRoot": "(ParaId, Hash)",
     "EventIndex": "u32",
+    "Extrinsic": "ExtrinsicDecoder",
     "Gas": "u64",
     "IdentityFields": {
       "type": "enum",
