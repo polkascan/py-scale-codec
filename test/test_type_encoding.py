@@ -79,7 +79,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         value = ['test', 'vec']
 
-        obj = Vec()
+        obj = ScaleDecoder.get_decoder_class('Vec<Bytes>')
         data = obj.encode(value)
 
         obj = ScaleDecoder.get_decoder_class('Vec<Bytes>', data)
@@ -94,7 +94,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             '0x88c47944e4aaf9d53a9627400f9a948bb5f355bda38702dbdeda0c5d34553128',
         ]
 
-        obj = Vec()
+        obj = ScaleDecoder.get_decoder_class('Vec<AccountId>')
         data = obj.encode(value)
 
         obj = ScaleDecoder.get_decoder_class('Vec<AccountId>', data)
