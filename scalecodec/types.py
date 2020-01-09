@@ -176,6 +176,12 @@ class String(ScaleType):
 
         return value.decode()
 
+    def process_encode(self, value):
+        string_length_compact = CompactU32()
+        data = string_length_compact.encode(len(value))
+        data += value.encode()
+        return data
+
 
 class HexBytes(ScaleType):
 
@@ -257,6 +263,11 @@ class H160(ScaleType):
     def process(self):
         return '0x{}'.format(self.get_next_bytes(20).hex())
 
+    def process_encode(self, value):
+        if value[0:2] != '0x':
+            raise ValueError('Value should start with "0x"')
+        return ScaleBytes(value)
+
 
 class H256(ScaleType):
 
@@ -273,6 +284,11 @@ class H512(ScaleType):
 
     def process(self):
         return '0x{}'.format(self.get_next_bytes(64).hex())
+
+    def process_encode(self, value):
+        if value[0:2] != '0x':
+            raise ValueError('Value should start with "0x"')
+        return ScaleBytes(value)
 
 
 class VecU8Length64(ScaleType):
@@ -493,7 +509,12 @@ class Linkage(Struct):
 
 
 class AccountId(H256):
-    pass
+
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 47:
+            from scalecodec.utils.ss58 import ss58_decode
+            value = '0x{}'.format(ss58_decode(value))
+        return super().process_encode(value)
 
 
 class AccountIndex(U32):
@@ -597,13 +618,9 @@ class Vec(ScaleType):
         data = element_count_compact.data
 
         for element in value:
-            if type(element) == str:
-                if element[0:2] == '0x':
-                    data += element
-                else:
-                    string_length_compact = CompactU32()
-                    data += string_length_compact.encode(len(element))
-                    data += element.encode()
+
+            element_obj = self.get_decoder_class(self.sub_type)
+            data += element_obj.encode(element)
 
         return data
 
@@ -664,6 +681,17 @@ class Address(ScaleType):
             return self.account_index
 
     def process_encode(self, value):
+
+        if type(value) == str and value[0:2] != '0x':
+            # Assume SS58 encoding address
+            if len(value) == 47:
+                from scalecodec.utils.ss58 import ss58_decode
+                value = '0x{}'.format(ss58_decode(value))
+            else:
+                from scalecodec.utils.ss58 import ss58_decode_account_index
+                index_obj = AccountIndex()
+                value = index_obj.encode(ss58_decode_account_index(value))
+
         if type(value) == str and value[0:2] == '0x' and len(value) == 66:
             # value is AccountId
             return ScaleBytes('0xff{}'.format(value[2:]))
@@ -1066,6 +1094,11 @@ class EcdsaSignature(ScaleType):
     def process(self):
         value = self.get_next_bytes(65)
         return value.hex()
+
+    def process_encode(self, value):
+        if value[0:2] != '0x':
+            raise ValueError('Value should start with "0x"')
+        return ScaleBytes(value)
 
 
 class BalanceLock(Struct):

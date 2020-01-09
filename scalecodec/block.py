@@ -246,15 +246,9 @@ class ExtrinsicsDecoder(ScaleDecoder):
         if len(self.call.args) > 0:
             for arg in self.call.args:
                 if arg.name not in value['params']:
-                    raise ValueError('Call module and function specified')
+                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
                 else:
                     param_value = value['params'][arg.name]
-
-                    if arg.type in ['AccountId', 'Address'] and param_value[0:2] != '0x':
-                        if len(param_value) == 47:
-                            param_value = '0x{}'.format(ss58_decode(param_value))
-                        else:
-                            param_value = ss58_decode_account_index(param_value)
 
                     arg_obj = ScaleDecoder.get_decoder_class(arg.type)
                     data += arg_obj.encode(param_value)

@@ -78,3 +78,90 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(str(payload), "0xa8040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
 
+    def test_encode_balance_transfer_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Balances',
+            'call_module_function': 'transfer',
+            'params': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa8040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
+
+    def test_encode_staking_nominate_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'nominate',
+            'params': {
+                'targets': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9404060504ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_nominate_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'nominate',
+            'params': {
+                'targets': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9404060504ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_claims_claim_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Claims',
+            'call_module_function': 'claim',
+            'params': {
+                'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'ethereum_signature': '0xd7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9101041300586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409d7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500")
+
+    def test_encode_claims_claim_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Claims',
+            'call_module_function': 'claim',
+            'params': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'ethereum_signature': '0xd7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9101041300586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409d7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500")
+
+    def test_encode_democracy_vote_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'vote',
+            'params': {
+                'ref_index': 0,
+                'vote': 128
+            }
+        })
+
+        self.assertEqual(str(payload), "0x14040d020080")
