@@ -63,7 +63,100 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(extrinsic.params[1]['type'], 'Compact<Balance>')
         self.assertEqual(extrinsic.params[1]['value'], 1000000000000)
 
-    def test_encode_balance_transfer_payload(self):
+    def test_encode_attestations_more_attestations_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Attestations',
+            'call_module_function': 'more_attestations',
+            'params': {
+                '_more': {}
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041500")
+
+    # TODO: complicated: {"parentHash":"0x0000000000000000000000000000000000000000000000000000000000000000","number":0,"stateRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","extrinsicsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","digest":{"logs":["0x0000"]}}
+	def test_encode_authorship_set_uncles_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Authorship',
+            'call_module_function': 'set_uncles',
+            'params': {
+                'new_uncles': {"parentHash":"0x0000000000000000000000000000000000000000000000000000000000000000","number":0,"stateRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","extrinsicsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","digest":{"logs":["0x0000"]}}
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa1010405000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000")
+
+    def test_encode_balances_force_transfer_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Balances',
+            'call_module_function': 'force_transfer',
+            'params': {
+                'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'source': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2d01040402ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
+
+    def test_encode_balances_force_transfer_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Balances',
+            'call_module_function': 'force_transfer',
+            'params': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'source': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2d01040402ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
+
+    def test_encode_balances_set_balance_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Balances',
+            'call_module_function': 'set_balance',
+            'params': {
+                'new_free': '1000000000000',
+                'new_reserved': '2000000000000',
+                'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xc4040401ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e80b00204aa9d101")
+
+    def test_encode_balances_set_balance_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Balances',
+            'call_module_function': 'set_balance',
+            'params': {
+                'new_free': '1000000000000',
+                'new_reserved': '2000000000000',
+                'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xc4040401ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e80b00204aa9d101")
+
+    def test_encode_balances_transfer_payload(self):
 
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -93,33 +186,35 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(str(payload), "0xa8040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
 
-    def test_encode_staking_nominate_payload(self):
+    def test_encode_balances_transfer_keep_alive_payload(self):
 
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
         payload = extrinsic.encode({
-            'call_module': 'Staking',
-            'call_module_function': 'nominate',
+            'call_module': 'Balances',
+            'call_module_function': 'transfer_keep_alive',
             'params': {
-                'targets': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
+                'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'value': 1000000000000
             }
         })
 
-        self.assertEqual(str(payload), "0x9404060504ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+        self.assertEqual(str(payload), "0xa8040403ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
 
-    def test_encode_staking_nominate_ss58_payload(self):
+    def test_encode_balances_transfer_keep_alive_ss58_payload(self):
 
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
         payload = extrinsic.encode({
-            'call_module': 'Staking',
-            'call_module_function': 'nominate',
+            'call_module': 'Balances',
+            'call_module_function': 'transfer_keep_alive',
             'params': {
-                'targets': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
             }
         })
 
-        self.assertEqual(str(payload), "0x9404060504ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+        self.assertEqual(str(payload), "0xa8040403ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
 
     def test_encode_claims_claim_payload(self):
 
@@ -151,6 +246,476 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(str(payload), "0x9101041300586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409d7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500")
 
+    def test_encode_claims_mint_claim_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Claims',
+            'call_module_function': 'mint_claim',
+            'params': {
+                'value': 1000000000000,
+                'vesting_schedule': null,
+                'who': '0x0123456789012345678901234567890123456789'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa004130101234567890123456789012345678901234567890010a5d4e8000000000000000000000000")
+
+    def test_encode_claims_mint_claim_withvesting_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Claims',
+            'call_module_function': 'mint_claim',
+            'params': {
+                'value': 1000000000000,
+                'vesting_schedule': [2000000000000,3000000000000,1000000],
+                'who': '0x0123456789012345678901234567890123456789'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x310104130101234567890123456789012345678901234567890010a5d4e800000000000000000000000100204aa9d101000000000000000000000030ef7dba020000000000000000000040420f00")
+		
+	def test_encode_council_execute_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Council',
+            'call_module_function': 'execute',
+            'params': {
+                'proposal': {
+					'call_module': 'System',
+					'call_module_function': '_remark',
+					'params': ['0x0123456789']	
+				}
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2c040e010001140123456789")
+
+    def test_encode_council_propose_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Council',
+            'call_module_function': 'propose',
+            'params': {
+                'proposal': {
+					'call_module': 'System',
+					'call_module_function': '_remark',
+					'params': ['0x0123456789']	
+				},
+                'threshold': 7
+            }
+        })
+
+        self.assertEqual(str(payload), "0x30040e021c0001140123456789")
+
+    def test_encode_council_set_members_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Council',
+            'call_module_function': 'set_members',
+            'params': {
+                'new_members': ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409","0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409"]
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1101040e0008586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_council_set_members_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Council',
+            'call_module_function': 'set_members',
+            'params': {
+                'new_members': ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk","EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk"]
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1101040e0008586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_council_vote_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Council',
+            'call_module_function': 'vote',
+            'params': {
+                'approve': true,
+                'index': 1,
+                'proposal': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x94040e030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0401")
+
+    def test_encode_democracy_cancel_queued_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'cancel_queued',
+            'params': {
+                'which': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c040d0b01000000")
+
+    def test_encode_democracy_cancel_referendum_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'cancel_referendum',
+            'params': {
+                'ref_index': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x10040d0a04")
+
+    def test_encode_democracy_clear_public_proposals_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'clear_public_proposals',
+            'params': {
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c040d11")
+
+    def test_encode_democracy_delegate_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'delegate',
+            'params': {
+                'conviction': null,
+                'to': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90040d0f586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900")
+
+    def test_encode_democracy_delegate_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'delegate',
+            'params': {
+                'conviction': null,
+                'to': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90040d0f586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900")
+
+    def test_encode_democracy_delegate_withconviction_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'delegate',
+            'params': {
+                'conviction': 'Locked5x',
+                'to': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90040d0f586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40905")
+
+    def test_encode_democracy_delegate_withconviction_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'delegate',
+            'params': {
+                'conviction': 'Locked5x',
+                'to': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90040d0f586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40905")
+
+    def test_encode_democracy_emergency_cancel_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'emergency_cancel',
+            'params': {
+                'ref_index': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c040d0401000000")
+
+    def test_encode_democracy_external_propose_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'external_propose',
+            'params': {
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d050123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    def test_encode_democracy_external_propose_default_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'external_propose_default',
+            'params': {
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    def test_encode_democracy_external_propose_majority_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'external_propose_majority',
+            'params': {
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d060123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    def test_encode_democracy_fast_track_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'fast_track',
+            'params': {
+                'delay': 2000,
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'voting_period': 1000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xac040d080123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefe8030000d0070000")
+
+    def test_encode_democracy_note_imminent_preimage_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'note_imminent_preimage',
+            'params': {
+                'encoded_proposal': '0x00'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x14040d130400")
+
+    def test_encode_democracy_note_preimage_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'note_preimage',
+            'params': {
+                'encoded_proposal': '0x00'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x14040d120400")
+
+    def test_encode_democracy_propose_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'propose',
+            'params': {
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa4040d000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef070010a5d4e8")
+
+    def test_encode_democracy_proxy_vote_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'proxy_vote',
+            'params': {
+                'ref_index': 0,
+                'vote': 128
+            }
+        })
+
+        self.assertEqual(str(payload), "0x14040d030080")
+
+    def test_encode_democracy_reap_preimage_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'reap_preimage',
+            'params': {
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d140123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    def test_encode_democracy_remove_proxy_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'remove_proxy',
+            'params': {
+                'proxy': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d0e586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_democracy_remove_proxy_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'remove_proxy',
+            'params': {
+                'proxy': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d0e586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_democracy_resign_proxy_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'resign_proxy',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c040d0d")
+
+    def test_encode_democracy_second_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'second',
+            'params': {
+                'proposal': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x10040d0104")
+
+    def test_encode_democracy_set_proxy_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'set_proxy',
+            'params': {
+                'proxy': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d0c586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_democracy_set_proxy_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'set_proxy',
+            'params': {
+                'proxy': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d0c586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_democracy_undelegate_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'undelegate',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c040d10")
+
+    def test_encode_democracy_veto_external_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Democracy',
+            'call_module_function': 'veto_external',
+            'params': {
+                'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c040d090123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
     def test_encode_democracy_vote_payload(self):
 
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -165,3 +730,1522 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload), "0x14040d020080")
+
+    def test_encode_electionsphragmen_remove_member_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'remove_member',
+            'params': {
+                'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041005ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_electionsphragmen_remove_member_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'remove_member',
+            'params': {
+                'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041005ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_electionsphragmen_remove_voter_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'remove_voter',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041001")
+
+    def test_encode_electionsphragmen_renounce_candidacy_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'renounce_candidacy',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041004")
+
+    def test_encode_electionsphragmen_report_defunct_voter_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'report_defunct_voter',
+            'params': {
+                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041002ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_electionsphragmen_report_defunct_voter_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'report_defunct_voter',
+            'params': {
+                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041002ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_electionsphragmen_submit_candidacy_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'submit_candidacy',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041003")
+
+    def test_encode_electionsphragmen_vote_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'vote',
+            'params': {
+                'value': 1000000000000,
+                'votes': ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409","0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409","0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409"]
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa9010410000c586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
+
+    def test_encode_electionsphragmen_vote_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ElectionsPhragmen',
+            'call_module_function': 'vote',
+            'params': {
+                'value': 1000000000000,
+                'votes': ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk","EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk","EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk"]
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa9010410000c586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
+
+    def test_encode_finalitytracker_final_hint_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'FinalityTracker',
+            'call_module_function': 'final_hint',
+            'params': {
+                'hint': 500000
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c04090082841e00")
+
+    def test_encode_grandpa_report_misbehavior_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Grandpa',
+            'call_module_function': 'report_misbehavior',
+            'params': {
+                '_report': '0x00'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x14040a000400")
+
+    def test_encode_identity_add_registrar_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'add_registrar',
+            'params': {
+                'account': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_identity_add_registrar_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'add_registrar',
+            'params': {
+                'account': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_identity_cancel_request_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'cancel_request',
+            'params': {
+                'reg_index': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c04190501000000")
+
+    def test_encode_identity_clear_identity_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'clear_identity',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041903")
+
+    def test_encode_identity_kill_identity_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'kill_identity',
+            'params': {
+                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9004190aff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_identity_kill_identity_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'kill_identity',
+            'params': {
+                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9004190aff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_identity_provide_judgement_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'provide_judgement',
+            'params': {
+                'judgement': 3,
+                'reg_index': 1,
+                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9804190904ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40903")
+
+    def test_encode_identity_provide_judgement_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'provide_judgement',
+            'params': {
+                'judgement': 3,
+                'reg_index': 1,
+                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9804190904ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40903")
+
+    def test_encode_identity_request_judgement_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'request_judgement',
+            'params': {
+                'max_fee': 2000000000000,
+                'reg_index': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2c041904040b00204aa9d101")
+
+    def test_encode_identity_set_account_id_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_account_id',
+            'params': {
+                'index': 1,
+                'new': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9004190704586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_identity_set_account_id_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_account_id',
+            'params': {
+                'index': 1,
+                'new': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9004190704586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_identity_set_fee_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_fee',
+            'params': {
+                'fee': 1000000000000,
+                'index': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2804190604070010a5d4e8")
+
+    # TODO: Unable to determine default type for {"info":6,"type":"IdentityFields"}
+	def test_encode_identity_set_fields_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_fields',
+            'params': {
+                'fields': 'VALUE1',
+                'index': 0
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
+
+	# TODO: {"additional":[],"display":{"Raw":"0x446973706c6179206e616d65"},"legal":{"Raw":"0x4c6567616c206e616d65"},"web":{"Raw":"0x68747470733a2f2f7765622e73697465"},"riot":{"Raw":"0x4072696f746e616d653a6d61747269782e6f7267"},"email":{"Raw":"0x65406d61696c2e61646472657373"},"pgpFingerprint":null,"image":{"None":null}}
+	def test_encode_identity_set_identity_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_identity',
+            'params': {
+                'info': {}
+            }
+        })		
+		
+        self.assertEqual(str(payload), "0x4d01041901000d446973706c6179206e616d650b4c6567616c206e616d651168747470733a2f2f7765622e73697465154072696f746e616d653a6d61747269782e6f72670f65406d61696c2e616464726573730000")
+
+    def test_encode_identity_set_subs_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_subs',
+            'params': {
+                'subs': [
+					["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409",{"None": null}],
+					["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409",{"Raw": "0x123456"}]
+				]
+            }
+        })
+
+        self.assertEqual(str(payload), "0x250104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40904123456")
+
+    def test_encode_identity_set_subs_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Identity',
+            'call_module_function': 'set_subs',
+            'params': {
+                'subs': [
+					["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk",{"None": null}],
+					["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk",{"Raw": "0x123456"}]
+				]
+            }
+        })
+
+        self.assertEqual(str(payload), "0x250104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40904123456")
+
+    def test_encode_imonline_heartbeat_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'ImOnline',
+            'call_module_function': 'heartbeat',
+            'params': {
+                'heartbeat': {"blockNumber":500000,"networkState":{"peerId":"0x012345","externalAddresses":[]},"sessionIndex":1,"authorityId":"EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk"},
+                '_signature': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xc101040b0020a107000c0123450001000000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    def test_encode_nicks_clear_name_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Nicks',
+            'call_module_function': 'clear_name',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041801")
+
+    def test_encode_nicks_force_name_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Nicks',
+            'call_module_function': 'force_name',
+            'params': {
+                'name': '0x012345',
+                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa0041803ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090c012345")
+
+    def test_encode_nicks_force_name_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Nicks',
+            'call_module_function': 'force_name',
+            'params': {
+                'name': '0x012345',
+                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa0041803ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090c012345")
+
+    def test_encode_nicks_kill_name_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Nicks',
+            'call_module_function': 'kill_name',
+            'params': {
+                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041802ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_nicks_kill_name_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Nicks',
+            'call_module_function': 'kill_name',
+            'params': {
+                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041802ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_nicks_set_name_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Nicks',
+            'call_module_function': 'set_name',
+            'params': {
+                'name': '0x012345'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c0418000c012345")
+
+    # TODO: 0: AttestedCandidate: AttestedCandidate {"candidate":{"parachainIndex":1,"collator":"EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk","signature":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","headData":"0x012345","balanceUploads":[],"egressQueueRoots":[],"fees":1000000000000,"blockDataHash":"0x0000000000000000000000000000000000000000000000000000000000000000"},"validityVotes":[]}
+	def test_encode_parachains_set_heads_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Parachains',
+            'call_module_function': 'set_heads',
+            'params': {
+                'heads': 'VALUE1'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x5d020414000401000000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4091234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef0c01234500000010a5d4e8000000000000000000000000000000000000000000000000000000000000000000000000")
+
+    def test_encode_registrar_deregister_para_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'deregister_para',
+            'params': {
+                'id': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1004170104")
+
+    def test_encode_registrar_deregister_parathread_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'deregister_parathread',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c041705")
+
+    def test_encode_registrar_register_para_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'register_para',
+            'params': {
+                'code': '0x00',
+                'id': 1,
+                'info': {"scheduling":0},
+                'initial_head_data': '0x01'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x24041700040004000401")
+
+    def test_encode_registrar_register_parathread_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'register_parathread',
+            'params': {
+                'code': '0x00',
+                'initial_head_data': '0x01'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c04170304000401")
+
+    def test_encode_registrar_select_parathread_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'select_parathread',
+            'params': {
+                '_collator': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                '_head_hash': '0x0000000000000000000000000000000000000000000000000000000000000000',
+                '_id': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1101041704040123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0000000000000000000000000000000000000000000000000000000000000000")
+
+    def test_encode_registrar_set_thread_count_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'set_thread_count',
+            'params': {
+                'count': 1000
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c041702e8030000")
+
+    def test_encode_registrar_swap_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Registrar',
+            'call_module_function': 'swap',
+            'params': {
+                'other': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1004170604")
+
+    def test_encode_session_set_keys_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Session',
+            'call_module_function': 'set_keys',
+            'params': {
+                'keys': '0x01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef',
+                'proof': '0x01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa50304080001234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef000000000000000000000000000000000000000000000000110101234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef")
+
+    def test_encode_slots_bid_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'bid',
+            'params': {
+                'amount': 1000000000000000,
+                'auction_index': 2,
+                'first_slot': 3,
+                'last_slot': 4,
+                'sub': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x3c04160104080c100f0080c6a47e8d03")
+
+    def test_encode_slots_bid_renew_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'bid_renew',
+            'params': {
+                'amount': 1000000000000000,
+                'auction_index': 1,
+                'first_slot': 2,
+                'last_slot': 3
+            }
+        })
+
+        self.assertEqual(str(payload), "0x3804160204080c0f0080c6a47e8d03")
+
+    def test_encode_slots_elaborate_deploy_data_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'elaborate_deploy_data',
+            'params': {
+                'code': '0x00',
+                'para_id': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x18041605040400")
+
+    def test_encode_slots_fix_deploy_data_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'fix_deploy_data',
+            'params': {
+                'code_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'initial_head_data': '0x00',
+                'para_id': 2,
+                'sub': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9c04160404080123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0400")
+
+    def test_encode_slots_new_auction_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'new_auction',
+            'params': {
+                'duration': 100000,
+                'lease_period_index': 2
+            }
+        })
+
+        self.assertEqual(str(payload), "0x20041600821a060008")
+
+    def test_encode_slots_set_offboarding_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'set_offboarding',
+            'params': {
+                'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041603ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_slots_set_offboarding_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Slots',
+            'call_module_function': 'set_offboarding',
+            'params': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90041603ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_bond_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'bond',
+            'params': {
+                'controller': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'payee': 'Staked',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xac040600ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e800")
+
+    def test_encode_staking_bond_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'bond',
+            'params': {
+                'controller': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'payee': 'Staked',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xac040600ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e800")
+
+    def test_encode_staking_bond_extra_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'bond_extra',
+            'params': {
+                'max_additional': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0x24040601070010a5d4e8")
+
+    def test_encode_staking_cancel_deferred_slash_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'cancel_deferred_slash',
+            'params': {
+                'era': 1,
+                'slash_indices': [0,1,2]
+            }
+        })
+
+        self.assertEqual(str(payload), "0x5004060f010000000c000000000100000002000000")
+
+    def test_encode_staking_chill_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'chill',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c040606")
+
+    def test_encode_staking_force_new_era_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'force_new_era',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
+
+    def test_encode_staking_force_new_era_always_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'force_new_era_always',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c04060b")
+
+    def test_encode_staking_force_no_eras_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'force_no_eras',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c04060e")
+
+    def test_encode_staking_force_unstake_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'force_unstake',
+            'params': {
+                'stash': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c04060d586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_force_unstake_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'force_unstake',
+            'params': {
+                'stash': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c04060d586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_nominate_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'nominate',
+            'params': {
+                'targets': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9404060504ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_nominate_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'nominate',
+            'params': {
+                'targets': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9404060504ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_set_controller_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'set_controller',
+            'params': {
+                'controller': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90040608ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_set_controller_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'set_controller',
+            'params': {
+                'controller': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x90040608ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_set_invulnerables_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'set_invulnerables',
+            'params': {
+                'validators': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409','0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x110104060c08586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_set_invulnerables_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'set_invulnerables',
+            'params': {
+                'validators': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk','EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x110104060c08586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_staking_set_payee_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'set_payee',
+            'params': {
+                'payee': 'Staked'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1004060700")
+
+    def test_encode_staking_set_validator_count_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'set_validator_count',
+            'params': {
+                'new': 150
+            }
+        })
+
+        self.assertEqual(str(payload), "0x140406095902")
+
+    def test_encode_staking_unbond_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'unbond',
+            'params': {
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0x24040602070010a5d4e8")
+
+    def test_encode_staking_validate_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'validate',
+            'params': {
+                'prefs': {"commission": 100}
+            }
+        })
+
+        self.assertEqual(str(payload), "0x140406049101")
+
+    def test_encode_staking_withdraw_unbonded_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Staking',
+            'call_module_function': 'withdraw_unbonded',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c040603")
+
+    def test_encode_system_fill_block_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'fill_block',
+            'params': {
+
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0c040000")
+
+    def test_encode_system_kill_prefix_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'kill_prefix',
+            'params': {
+                'prefix': '0x012345'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c0400060c012345")
+
+    def test_encode_system_kill_storage_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'kill_storage',
+            'params': {
+                'keys': ['0x0123456789abcdef','0x0123456789abcdef']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x5804000508200123456789abcdef200123456789abcdef")
+
+    def test_encode_system_remark_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'remark',
+            'params': {
+                '_remark': '0x012345'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c0400010c012345")
+
+    def test_encode_system_set_code_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'set_code',
+            'params': {
+                'new': '0x012345'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1c0400030c012345")
+
+    def test_encode_system_set_heap_pages_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'set_heap_pages',
+            'params': {
+                'pages': 100
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2c0400026400000000000000")
+
+    # TODO: click to select or drag and drop JSON key/value (hex-encoded) file
+	def test_encode_system_set_storage_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'System',
+            'call_module_function': 'set_storage',
+            'params': {
+                'items': 'VALUE1'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
+
+    def test_encode_technicalcommittee_execute_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalCommittee',
+            'call_module_function': 'execute',
+            'params': {
+                'proposal': {
+					'call_module': 'System',
+					'call_module_function': '_remark',
+					'params': ['0x0123456789']	
+				}
+            }
+        })
+
+        self.assertEqual(str(payload), "0x2c040f010001140123456789")
+
+    def test_encode_technicalcommittee_propose_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalCommittee',
+            'call_module_function': 'propose',
+            'params': {
+                'proposal': {
+					'call_module': 'System',
+					'call_module_function': '_remark',
+					'params': ['0x0123456789']	
+				},
+                'threshold': 7
+            }
+        })
+
+        self.assertEqual(str(payload), "0x30040f021c0001140123456789")
+
+    def test_encode_technicalcommittee_set_members_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalCommittee',
+            'call_module_function': 'set_members',
+            'params': {
+                'new_members': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409','0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1101040f0008586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalcommittee_set_members_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalCommittee',
+            'call_module_function': 'set_members',
+            'params': {
+                'new_members': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk','EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1101040f0008586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalcommittee_vote_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalCommittee',
+            'call_module_function': 'vote',
+            'params': {
+                'approve': true,
+                'index': 1,
+                'proposal': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x94040f030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0401")
+
+    def test_encode_technicalmembership_add_member_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'add_member',
+            'params': {
+                'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041100586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_add_member_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'add_member',
+            'params': {
+                'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041100586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_change_key_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'change_key',
+            'params': {
+                'new': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041104586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_change_key_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'change_key',
+            'params': {
+                'new': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041104586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_remove_member_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'remove_member',
+            'params': {
+                'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041101586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_remove_member_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'remove_member',
+            'params': {
+                'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x8c041101586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_reset_members_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'reset_members',
+            'params': {
+                'members': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409','0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x110104110308586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_reset_members_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'reset_members',
+            'params': {
+                'members': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk','EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
+            }
+        })
+
+        self.assertEqual(str(payload), "0x110104110308586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_swap_member_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'swap_member',
+            'params': {
+                'add': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'remove': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0d01041102586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_technicalmembership_swap_member_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'TechnicalMembership',
+            'call_module_function': 'swap_member',
+            'params': {
+                'add': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'remove': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x0d01041102586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_timestamp_set_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Timestamp',
+            'call_module_function': 'set',
+            'params': {
+                'now': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1004020004")
+
+    def test_encode_treasury_approve_proposal_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Treasury',
+            'call_module_function': 'approve_proposal',
+            'params': {
+                'proposal_id': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1004120204")
+
+    def test_encode_treasury_propose_spend_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Treasury',
+            'call_module_function': 'propose_spend',
+            'params': {
+                'beneficiary': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa8041200070010a5d4e8ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_treasury_propose_spend_ss58_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Treasury',
+            'call_module_function': 'propose_spend',
+            'params': {
+                'beneficiary': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
+            }
+        })
+
+        self.assertEqual(str(payload), "0xa8041200070010a5d4e8ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
+
+    def test_encode_treasury_reject_proposal_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Treasury',
+            'call_module_function': 'reject_proposal',
+            'params': {
+                'proposal_id': 1
+            }
+        })
+
+        self.assertEqual(str(payload), "0x1004120104")
+
+    def test_encode_utility_approve_as_multi_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_module_function': 'approve_as_multi',
+            'params': {
+                'call_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'maybe_timepoint': 'VALUE2',
+                'other_signatories': 'VALUE3',
+                'threshold': 'VALUE4'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
+
+    # TODO: Unable to determine default type for {"info":12,"type":"[u8;32]","ext":{"length":32,"type":"u8"}}
+	def test_encode_utility_as_multi_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_module_function': 'as_multi',
+            'params': {
+                'call': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'maybe_timepoint': null,
+                'other_signatories': [],
+                'threshold': 5
+            }
+        })
+
+        self.assertEqual(str(payload), "0x9c041a03050000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    # TODO: CHANGED IN RECENT UPGRADE
+	def test_encode_utility_as_sub_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_module_function': 'as_sub',
+            'params': {
+                'call': 'VALUE1',
+                'index': 0
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
+
+    # TODO: CHANGED IN RECENT UPGRADE
+    def test_encode_utility_batch_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_module_function': 'batch',
+            'params': {
+                'calls': 'VALUE1'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
+
+    # TODO: CHANGED IN RECENT UPGRADE
+    def test_encode_utility_cancel_as_multi_payload(self):
+
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_module_function': 'cancel_as_multi',
+            'params': {
+                'call_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'other_signatories': [],
+                'threshold': 5,
+                'timepoint': 'VALUE4'
+            }
+        })
+
+        self.assertEqual(str(payload), "0x")
