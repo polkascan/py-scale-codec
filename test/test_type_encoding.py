@@ -147,5 +147,20 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(obj_check.decode(), value)
 
 
+    def test_struct_encode_decode(self):
+
+        value = {'unstakeThreshold': 3, 'validatorPayment': 0}
+        scale_data = ScaleBytes("0x0c00")
+
+        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy')
+        data = obj.encode(value)
+
+        self.assertEqual(str(scale_data), str(data))
+
+        obj_check = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+
 if __name__ == '__main__':
     unittest.main()
