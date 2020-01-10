@@ -79,7 +79,8 @@
         "Riot",
         "Email",
         "PgpFingerprint",
-        "Image"
+        "Image",
+        "Twitter"
       ]
     },
     "IdentityInfoAdditional": "(Data, Data)",
@@ -93,7 +94,8 @@
          ["riot", "Data"],
          ["email", "Data"],
          ["pgpFingerprint", "Option<H160>"],
-         ["image", "Data"]
+         ["image", "Data"],
+         ["twitter", "Data"]
       ]
     },
     "Judgement": {

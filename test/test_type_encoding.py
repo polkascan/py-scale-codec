@@ -79,7 +79,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         value = ['test', 'vec']
 
-        obj = Vec()
+        obj = ScaleDecoder.get_decoder_class('Vec<Bytes>')
         data = obj.encode(value)
 
         obj = ScaleDecoder.get_decoder_class('Vec<Bytes>', data)
@@ -94,7 +94,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             '0x88c47944e4aaf9d53a9627400f9a948bb5f355bda38702dbdeda0c5d34553128',
         ]
 
-        obj = Vec()
+        obj = ScaleDecoder.get_decoder_class('Vec<AccountId>')
         data = obj.encode(value)
 
         obj = ScaleDecoder.get_decoder_class('Vec<AccountId>', data)
@@ -143,6 +143,21 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(str(scale_data), str(data))
 
         obj_check = ScaleDecoder.get_decoder_class('Compact<Balance>', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+
+    def test_struct_encode_decode(self):
+
+        value = {'unstakeThreshold': 3, 'validatorPayment': 0}
+        scale_data = ScaleBytes("0x0c00")
+
+        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy')
+        data = obj.encode(value)
+
+        self.assertEqual(str(scale_data), str(data))
+
+        obj_check = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', data)
 
         self.assertEqual(obj_check.decode(), value)
 

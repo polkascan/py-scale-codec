@@ -366,6 +366,17 @@ class Struct(ScaleType):
 
         return result
 
+    def process_encode(self, value):
+        data = ScaleBytes(bytearray())
+        for key, data_type in self.type_mapping:
+            if key not in value:
+                raise ValueError('Element "{}" of struct is missing in given value'.format(key))
+
+            element_obj = self.get_decoder_class(data_type, metadata=self.metadata)
+            data += element_obj.encode(value[key])
+
+        return data
+
 
 class Set(ScaleType):
     value_list = []
@@ -610,6 +621,9 @@ class Vec(ScaleType):
 
     def process_encode(self, value):
 
+        if type(value) is not list:
+            raise ValueError("Provided value is not a list")
+
         # encode element count to Compact<u32>
         element_count_compact = CompactU32()
 
@@ -844,6 +858,9 @@ class Null(ScaleType):
 
     def process(self):
         return None
+
+    def process_encode(self, value):
+        return ScaleBytes(bytearray())
 
 
 class InherentOfflineReport(Null):
