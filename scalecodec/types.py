@@ -147,8 +147,16 @@ class Bytes(ScaleType):
 
     def process_encode(self, value):
         string_length_compact = CompactU32()
-        data = string_length_compact.encode(len(value))
-        data += value.encode()
+
+        if value[0:2] == '0x':
+            # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
+            value = bytes.fromhex(value[2:])
+            data = string_length_compact.encode(len(value))
+            data += value
+        else:
+            data = string_length_compact.encode(len(value))
+            data += value.encode()
+
         return data
 
 
@@ -256,6 +264,12 @@ class U128(ScaleType):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder='little'))
+
+    def process_encode(self, value):
+        if 0 <= value <= 2**128 - 1:
+            return ScaleBytes(bytearray(int(value).to_bytes(16, 'little')))
+        else:
+            raise ValueError('{} out of range for u128'.format(value))
 
 
 class H160(ScaleType):
@@ -418,6 +432,14 @@ class Bool(ScaleType):
 
     def process(self):
         return self.get_next_bool()
+
+    def process_encode(self, value):
+        if value is True:
+            return ScaleBytes('0x01')
+        elif value is False:
+            return ScaleBytes('0x00')
+        else:
+            raise ValueError("Value must be boolean")
 
 
 class Moment(U64):
@@ -752,6 +774,32 @@ class Enum(ScaleType):
                 return self.value_list[self.index]
             except IndexError:
                 raise ValueError("Index '{}' not present in Enum value list".format(self.index))
+
+    def process_encode(self, value):
+        if self.type_mapping:
+
+            if type(value) != dict:
+                raise ValueError("Value must be a dict when type_mapping is set, not '{}'".format(value))
+
+            if len(value) != 1:
+                raise ValueError("Value for enum with type_mapping can only have one value")
+
+            for enum_key, enum_value in value.items():
+                for idx, (item_key, item_value) in enumerate(self.type_mapping):
+                    if item_key == enum_key:
+                        self.index = idx
+                        struct_obj = self.get_decoder_class('Struct', type_mapping=[self.type_mapping[self.index]])
+                        return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
+
+                raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
+
+        else:
+            for idx, item in enumerate(self.value_list):
+                if item == value:
+                    self.index = idx
+                    return ScaleBytes(bytearray([self.index]))
+
+            raise ValueError("Value '{}' not present in value list of this enum".format(value))
 
 
 class Data(Enum):
@@ -1105,6 +1153,12 @@ class EthereumAddress(ScaleType):
         value = self.get_next_bytes(20)
         return value.hex()
 
+    def process_encode(self, value):
+        if value[0:2] == '0x' and len(value) == 42:
+            return ScaleBytes(value)
+        else:
+            raise ValueError('Value should start with "0x" and must be 20 bytes long')
+
 
 class EcdsaSignature(ScaleType):
 
@@ -1113,9 +1167,10 @@ class EcdsaSignature(ScaleType):
         return value.hex()
 
     def process_encode(self, value):
-        if value[0:2] != '0x':
-            raise ValueError('Value should start with "0x"')
-        return ScaleBytes(value)
+        if value[0:2] == '0x' and len(value) == 132:
+            return ScaleBytes(value)
+        else:
+            raise ValueError('Value should start with "0x" and must be 65 bytes long')
 
 
 class BalanceLock(Struct):

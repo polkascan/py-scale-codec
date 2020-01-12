@@ -18,7 +18,8 @@
 
 import unittest
 
-from scalecodec.base import ScaleBytes, ScaleDecoder
+from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
+from scalecodec.type_registry import load_type_registry_preset
 
 from scalecodec.types import CompactU32, Vec
 
@@ -146,7 +147,6 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
-
     def test_struct_encode_decode(self):
 
         value = {'unstakeThreshold': 3, 'validatorPayment': 0}
@@ -158,6 +158,29 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(str(scale_data), str(data))
 
         obj_check = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+    def test_enum_encode_decode(self):
+
+        value = "Stash"
+
+        obj = ScaleDecoder.get_decoder_class('RewardDestination')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('RewardDestination', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+    def test_enum_type_mapping_encode_decode(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        value = {"AuthoritiesChange": ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409"]}
+
+        obj = ScaleDecoder.get_decoder_class('DigestItem')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('DigestItem', data)
 
         self.assertEqual(obj_check.decode(), value)
 

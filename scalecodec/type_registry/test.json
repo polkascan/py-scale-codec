@@ -1,6 +1,18 @@
 {
   "default": {
     "BlockNumber": "U64",
-    "SpecificTestType": "u32"
+    "SpecificTestType": "u32",
+    "DigestItem": {
+      "type": "enum",
+      "type_mapping": [
+        ["Other", "Vec<u8>"],
+        ["AuthoritiesChange", "Vec<AuthorityId>"],
+        ["ChangesTrieRoot", "Hash"],
+        ["SealV0", "SealV0"],
+        ["Consensus", "Consensus"],
+        ["Seal", "Seal"],
+        ["PreRuntime", "PreRuntime"]
+      ]
+    }
   }
 }
