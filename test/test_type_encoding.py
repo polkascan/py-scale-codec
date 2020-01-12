@@ -184,6 +184,27 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
+    def test_option_empty_encode_decode(self):
+
+        value = None
+
+        obj = ScaleDecoder.get_decoder_class('Option<Bytes>')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('Option<Bytes>', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+    def test_option_bytes_encode_decode(self):
+        value = "Test"
+
+        obj = ScaleDecoder.get_decoder_class('Option<Bytes>')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('Option<Bytes>', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
 
 if __name__ == '__main__':
     unittest.main()

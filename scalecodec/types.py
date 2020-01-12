@@ -130,6 +130,14 @@ class Option(ScaleType):
 
         return None
 
+    def process_encode(self, value):
+
+        if value is not None and self.sub_type:
+            sub_type_obj = self.get_decoder_class(self.sub_type)
+            return ScaleBytes('0x01') + sub_type_obj.encode(value)
+
+        return ScaleBytes('0x00')
+
 
 class Bytes(ScaleType):
 
@@ -595,19 +603,6 @@ class KeyValue(Struct):
     type_mapping = (('key', 'Vec<u8>'), ('value', 'Vec<u8>'))
 
 
-class Signature(ScaleType):
-
-    def process(self):
-        return self.get_next_bytes(64).hex()
-
-
-class AuthoritySignature(ScaleType):
-
-    def process(self):
-        # TODO figure out where remaining data is missing..
-        return self.get_remaining_bytes().hex()
-
-
 class BalanceOf(Balance):
     pass
 
@@ -947,11 +942,11 @@ class SetIndex(U32):
     pass
 
 
-class AuthorityId(H256):
+class AuthorityId(AccountId):
     pass
 
 
-class ValidatorId(H256):
+class ValidatorId(AccountId):
     pass
 
 
@@ -1227,10 +1222,6 @@ class CandidateReceipt(Struct):
         ('fees', 'u64'),
         ('blockDataHash', 'Hash'),
     )
-
-
-class CollatorSignature(Signature):
-    pass
 
 
 class HeadData(Bytes):
