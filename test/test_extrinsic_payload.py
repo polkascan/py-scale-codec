@@ -950,7 +950,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Identity',
             'call_module_function': 'provide_judgement',
             'params': {
-                'judgement': 3,
+                'judgement': {"KnownGood": None},
                 'reg_index': 1,
                 'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
@@ -966,7 +966,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Identity',
             'call_module_function': 'provide_judgement',
             'params': {
-                'judgement': 3,
+                'judgement': {"KnownGood": None},
                 'reg_index': 1,
                 'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
@@ -1054,7 +1054,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Identity',
             'call_module_function': 'set_identity',
             'params': {
-                'info': {}
+                'info': {"additional":[],"display":{"Raw":"0x446973706c6179206e616d65"},"legal":{"Raw":"0x4c6567616c206e616d65"},"web":{"Raw":"0x68747470733a2f2f7765622e73697465"},"riot":{"Raw":"0x4072696f746e616d653a6d61747269782e6f7267"},"email":{"Raw":"0x65406d61696c2e61646472657373"},"pgpFingerprint":None,"image":{"None":None}, "twitter":{"None":None}}
             }
         })
 
@@ -1111,88 +1111,6 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(str(payload),
                          "0xc101040b0020a107000c0123450001000000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 
-    def test_encode_nicks_clear_name_payload(self):
-        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
-
-        payload = extrinsic.encode({
-            'call_module': 'Nicks',
-            'call_module_function': 'clear_name',
-            'params': {
-
-            }
-        })
-
-        self.assertEqual(str(payload), "0x0c041801")
-
-    def test_encode_nicks_force_name_payload(self):
-        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
-
-        payload = extrinsic.encode({
-            'call_module': 'Nicks',
-            'call_module_function': 'force_name',
-            'params': {
-                'name': '0x012345',
-                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
-            }
-        })
-
-        self.assertEqual(str(payload),
-                         "0xa0041803ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090c012345")
-
-    def test_encode_nicks_force_name_ss58_payload(self):
-        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
-
-        payload = extrinsic.encode({
-            'call_module': 'Nicks',
-            'call_module_function': 'force_name',
-            'params': {
-                'name': '0x012345',
-                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
-            }
-        })
-
-        self.assertEqual(str(payload),
-                         "0xa0041803ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090c012345")
-
-    def test_encode_nicks_kill_name_payload(self):
-        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
-
-        payload = extrinsic.encode({
-            'call_module': 'Nicks',
-            'call_module_function': 'kill_name',
-            'params': {
-                'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
-            }
-        })
-
-        self.assertEqual(str(payload), "0x90041802ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
-
-    def test_encode_nicks_kill_name_ss58_payload(self):
-        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
-
-        payload = extrinsic.encode({
-            'call_module': 'Nicks',
-            'call_module_function': 'kill_name',
-            'params': {
-                'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
-            }
-        })
-
-        self.assertEqual(str(payload), "0x90041802ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409")
-
-    def test_encode_nicks_set_name_payload(self):
-        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
-
-        payload = extrinsic.encode({
-            'call_module': 'Nicks',
-            'call_module_function': 'set_name',
-            'params': {
-                'name': '0x012345'
-            }
-        })
-
-        self.assertEqual(str(payload), "0x1c0418000c012345")
-
     # TODO: 0: AttestedCandidate: AttestedCandidate {"candidate":{"parachainIndex":1,"collator":"EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk","signature":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","headData":"0x012345","balanceUploads":[],"egressQueueRoots":[],"fees":1000000000000,"blockDataHash":"0x0000000000000000000000000000000000000000000000000000000000000000"},"validityVotes":[]}
     def test_encode_parachains_set_heads_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1243,7 +1161,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'params': {
                 'code': '0x00',
                 'id': 1,
-                'info': {"scheduling": 0},
+                'info': {"scheduling": "Always"},
                 'initial_head_data': '0x01'
             }
         })
