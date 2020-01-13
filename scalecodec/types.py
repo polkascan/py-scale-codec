@@ -732,6 +732,12 @@ class Address(ScaleType):
         else:
             raise ValueError('Value is in unsupported format, expected 32 bytes hex-string for AccountIds or int for AccountIndex')
 
+    def serialize(self):
+        if self.account_id:
+            return '0x{}'.format(self.value)
+        else:
+            return self.value
+
 
 class RawAddress(Address):
     pass
@@ -1638,3 +1644,40 @@ class TallyResult(Struct):
         ('status', 'ProposalStatus'),
         ('finalized_at', 'BlockNumber'),
     )
+
+
+class Call(ScaleType):
+
+    type_string = "Box<Call>"
+
+    def __init__(self, data, **kwargs):
+        self.call_index = None
+        self.call_function = None
+        self.call_args = {}
+        self.call_module = None
+
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.call_index = self.get_next_bytes(2).hex()
+
+        self.call_function = self.metadata.call_index[self.call_index][1]
+        self.call_module = self.metadata.call_index[self.call_index][0]
+
+        if self.debug:
+            print('Call: ', self.call_function.name)
+            print('Module: ', self.call_module.name)
+
+        for arg in self.call_function.args:
+            if self.debug:
+                print('Param: ', arg.name, arg.type)
+
+            arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+            self.call_args[arg.name] = arg_type_obj.serialize()
+
+        return {
+            "call_index": self.call_index,
+            "call_module": self.call_module.name,
+            "call_function": self.call_function.name,
+            "call_args": self.call_args
+        }
