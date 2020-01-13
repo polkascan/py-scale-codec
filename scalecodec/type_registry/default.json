@@ -7,6 +7,26 @@
          ["balance", "Balance"]
       ]
     },
+    "CandidateReceipt": {
+      "type": "struct",
+      "type_mapping": [
+          ["parachainIndex", "ParaId"],
+          ["collator", "AccountId"],
+          ["signature", "CollatorSignature"],
+          ["headData", "HeadData"],
+          ["balanceUploads", "Vec<BalanceUpload>"],
+          ["egressQueueRoots", "Vec<EgressQueueRoot>"],
+          ["fees", "u64"],
+          ["blockDataHash", "Hash"]
+      ]
+    },
+    "AttestedCandidate": {
+      "type": "struct",
+      "type_mapping": [
+         ["candidate", "CandidateReceipt"],
+         ["validityVotes", "Vec<ValidityVote>"]
+      ]
+    },
     "FullIdentification": {
       "type": "struct",
       "type_mapping": [

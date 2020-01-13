@@ -641,10 +641,6 @@ class SessionIndex(U32):
     pass
 
 
-class AttestedCandidate(H256):
-    pass
-
-
 class Balance(U128):
     pass
 
@@ -1138,17 +1134,6 @@ class SessionKeysSubstrate(Struct):
         ('im_online', 'AccountId'),
     )
 
-
-class SessionKeysPolkadot(Struct):
-
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-        ('babe', 'AccountId'),
-        ('im_online', 'AccountId'),
-        ('parachains', 'AccountId'),
-    )
-
-
 class LegacyKeys(Struct):
 
     type_mapping = (
@@ -1273,21 +1258,6 @@ class IncludedBlocks(Struct):
         ('activeParachains', 'Vec<ParaId>'),
         ('paraBlocks', 'Vec<Hash>'),
     )
-
-
-class CandidateReceipt(Struct):
-
-    type_mapping = (
-        ('parachainIndex', 'ParaId'),
-        ('collator', 'AccountId'),
-        ('signature', 'CollatorSignature'),
-        ('headData', 'HeadData'),
-        ('balanceUploads', 'Vec<BalanceUpload>'),
-        ('egressQueueRoots', 'Vec<EgressQueueRoot>'),
-        ('fees', 'u64'),
-        ('blockDataHash', 'Hash'),
-    )
-
 
 class HeadData(Bytes):
     pass
