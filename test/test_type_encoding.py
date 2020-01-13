@@ -251,6 +251,18 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj.value, value)
 
+    def test_data_encode_decode(self):
+
+        value = {"Raw": "Test"}
+
+        obj = ScaleDecoder.get_decoder_class('Data')
+        scale_data = obj.encode(value)
+
+        obj = ScaleDecoder.get_decoder_class('Data', scale_data)
+        obj.decode()
+
+        self.assertEqual(obj.value, value)
+
 
 if __name__ == '__main__':
     unittest.main()

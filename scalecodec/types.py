@@ -286,8 +286,8 @@ class H160(ScaleType):
         return '0x{}'.format(self.get_next_bytes(20).hex())
 
     def process_encode(self, value):
-        if value[0:2] != '0x':
-            raise ValueError('Value should start with "0x"')
+        if value[0:2] != '0x' and len(value) == 22:
+            raise ValueError('Value should start with "0x" and should be 20 bytes long')
         return ScaleBytes(value)
 
 
@@ -297,8 +297,8 @@ class H256(ScaleType):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
     def process_encode(self, value):
-        if value[0:2] != '0x':
-            raise ValueError('Value should start with "0x"')
+        if value[0:2] != '0x' and len(value) == 66:
+            raise ValueError('Value should start with "0x" and should be 32 bytes long')
         return ScaleBytes(value)
 
 
@@ -308,8 +308,8 @@ class H512(ScaleType):
         return '0x{}'.format(self.get_next_bytes(64).hex())
 
     def process_encode(self, value):
-        if value[0:2] != '0x':
-            raise ValueError('Value should start with "0x"')
+        if value[0:2] != '0x' and len(value) == 130:
+            raise ValueError('Value should start with "0x" and should be 64 bytes long')
         return ScaleBytes(value)
 
 
@@ -319,12 +319,23 @@ class VecU8Length64(ScaleType):
     def process(self):
         return '0x{}'.format(self.get_next_bytes(64).hex())
 
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 130:
+            raise ValueError('Value should start with "0x" and should be 64 bytes long')
+        return ScaleBytes(value)
+
+
 
 class VecU8Length32(ScaleType):
     type_string = '[u8; 32]'
 
     def process(self):
         return '0x{}'.format(self.get_next_bytes(32).hex())
+
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 66:
+            raise ValueError('Value should start with "0x" and should be 32 bytes long')
+        return ScaleBytes(value)
 
 
 class VecU8Length16(ScaleType):
@@ -337,6 +348,11 @@ class VecU8Length16(ScaleType):
         except UnicodeDecodeError:
             return value.hex()
 
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 34:
+            raise ValueError('Value should start with "0x" and should be 16 bytes long')
+        return ScaleBytes(value)
+
 
 class VecU8Length8(ScaleType):
     type_string = '[u8; 8]'
@@ -347,6 +363,11 @@ class VecU8Length8(ScaleType):
             return value.decode()
         except UnicodeDecodeError:
             return value.hex()
+
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 18:
+            raise ValueError('Value should start with "0x" and should be 8 bytes long')
+        return ScaleBytes(value)
 
 
 class VecU8Length4(ScaleType):
@@ -359,6 +380,11 @@ class VecU8Length4(ScaleType):
         except UnicodeDecodeError:
             return value.hex()
 
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 10:
+            raise ValueError('Value should start with "0x" and should be 4 bytes long')
+        return ScaleBytes(value)
+
 
 class VecU8Length2(ScaleType):
     type_string = '[u8; 2]'
@@ -369,6 +395,11 @@ class VecU8Length2(ScaleType):
             return value.decode()
         except UnicodeDecodeError:
             return value.hex()
+
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 6:
+            raise ValueError('Value should start with "0x" and should be 2 bytes long')
+        return ScaleBytes(value)
 
 
 class Struct(ScaleType):
@@ -422,7 +453,7 @@ class Set(ScaleType):
         super().__init__(data, **kwargs)
 
     def process(self):
-        self.set_value = int(self.get_next_bytes(1).hex(), 16)
+        self.set_value = self.process_type('u64').value
         result = []
         if self.set_value > 0:
 
@@ -440,7 +471,9 @@ class Set(ScaleType):
             if item in value:
                 result += set_mask
 
-        return ScaleBytes(bytearray([result]))
+        u64_obj = self.get_decoder_class('u64')
+
+        return u64_obj.encode(result)
 
 
 
@@ -533,7 +566,7 @@ class BoxProposal(ScaleType):
         elif 'call_module' in value and 'call_function' in value:
             # Look up call module from metadata
             for call_index, (call_module, call_function) in self.metadata.call_index.items():
-                print(call_module.name, call_function.name)
+
                 if call_module.name == value['call_module'] and call_function.name == value['call_function']:
                     self.call_index = call_index
                     self.call_module = call_module
@@ -590,7 +623,7 @@ class Proposal(BoxProposal):
 class ValidatorPrefs(Struct):
     type_string = '(Compact<Balance>)'
 
-    type_mapping = (('validatorPayment', 'Compact<Balance>'),)
+    type_mapping = (('commission', 'Compact<Balance>'),)
 
 
 class ValidatorPrefsLegacy(Struct):
@@ -705,7 +738,7 @@ class Vec(ScaleType):
 
         for element in value:
 
-            element_obj = self.get_decoder_class(self.sub_type)
+            element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
             data += element_obj.encode(element)
 
         return data
@@ -892,6 +925,47 @@ class Data(Enum):
             return {enum_value: self.process_type(self.type_mapping[self.index - 32][1]).value}
 
         raise ValueError("Unable to decode Data, invalid indicator byte '{}'".format(self.index))
+
+    def process_encode(self, value):
+
+        if type(value) != dict:
+            raise ValueError("Value must be a dict when type_mapping is set, not '{}'".format(value))
+
+        if len(value) != 1:
+            raise ValueError("Value for enum with type_mapping can only have one value")
+
+        for enum_key, enum_value in value.items():
+
+            for idx, (item_key, item_value) in enumerate(self.type_mapping):
+                if item_key == enum_key:
+                    self.index = idx
+
+                    if item_value == 'Null':
+                        return ScaleBytes(bytearray([0]))
+
+                    elif item_value == 'Bytes':
+
+                        if enum_value[0:2] == '0x':
+
+                            if len(enum_value) > 66:
+                                raise ValueError("Raw type in Data cannot exceed 32 bytes")
+
+                            enum_value = bytes.fromhex(enum_value[2:])
+                            data = bytes([len(enum_value) + 1]) + enum_value
+                            return ScaleBytes(bytearray(data))
+                        else:
+
+                            if len(enum_value) > 32:
+                                raise ValueError("Raw type in Data cannot exceed 32 bytes")
+
+                            data = bytes([len(enum_value) + 1]) + enum_value.encode()
+                            return ScaleBytes(bytearray(data))
+                    else:
+
+                        struct_obj = self.get_decoder_class('Struct', type_mapping=[self.type_mapping[self.index]])
+                        return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
+
+            raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
 
 class RewardDestination(Enum):
@@ -1709,4 +1783,40 @@ class Call(ScaleType):
             'call_module': self.call_module.name,
             'call_args': self.call_args
         }
+
+    def process_encode(self, value):
+        # Check requirements
+        if 'call_index' in value:
+            self.call_index = value['call_index']
+
+        elif 'call_module' in value and 'call_function' in value:
+            # Look up call module from metadata
+            for call_index, (call_module, call_function) in self.metadata.call_index.items():
+
+                if call_module.name == value['call_module'] and call_function.name == value['call_function']:
+                    self.call_index = call_index
+                    self.call_module = call_module
+                    self.call_function = call_function
+                    break
+
+            if not self.call_index:
+                raise ValueError('Specified call module and function not found in metadata')
+
+        elif not self.call_module or not self.call_function:
+            raise ValueError('No call module and function specified')
+
+        data = ScaleBytes(bytearray.fromhex(self.call_index))
+
+        # Encode call params
+        if len(self.call_function.args) > 0:
+            for arg in self.call_function.args:
+                if arg.name not in value['call_args']:
+                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
+                else:
+                    param_value = value['call_args'][arg.name]
+
+                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    data += arg_obj.encode(param_value)
+
+        return data
 

@@ -1044,13 +1044,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_function': 'set_fields',
             'call_args': {
                 'fields': ['Display', 'Legal', 'Email', 'Twitter'],
-                'index': 0
+                'index': 1
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0x30041908049300000000000000")
 
-    # TODO: {"additional":[],"display":{"Raw":"0x446973706c6179206e616d65"},"legal":{"Raw":"0x4c6567616c206e616d65"},"web":{"Raw":"0x68747470733a2f2f7765622e73697465"},"riot":{"Raw":"0x4072696f746e616d653a6d61747269782e6f7267"},"email":{"Raw":"0x65406d61696c2e61646472657373"},"pgpFingerprint":None,"image":{"None":None}}
     def test_encode_identity_set_identity_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -1058,12 +1057,22 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Identity',
             'call_function': 'set_identity',
             'call_args': {
-                'info': {"additional":[],"display":{"Raw":"0x446973706c6179206e616d65"},"legal":{"Raw":"0x4c6567616c206e616d65"},"web":{"Raw":"0x68747470733a2f2f7765622e73697465"},"riot":{"Raw":"0x4072696f746e616d653a6d61747269782e6f7267"},"email":{"Raw":"0x65406d61696c2e61646472657373"},"pgpFingerprint":None,"image":{"None":None}, "twitter":{"None":None}}
+                'info': {
+                    "additional": [],
+                    "display": {"Raw": "Test1"},
+                    "legal": {"Raw": "Test2"},
+                    "web": {"None": None},
+                    "riot": {"Raw": "Test3"},
+                    "email": {"None": None},
+                    "pgpFingerprint": None,
+                    "image": {"None": None},
+                    "twitter": {"None": None}
+                }
             }
         })
 
         self.assertEqual(str(payload),
-                         "0x4d01041901000d446973706c6179206e616d650b4c6567616c206e616d651168747470733a2f2f7765622e73697465154072696f746e616d653a6d61747269782e6f72670f65406d61696c2e616464726573730000")
+                         "0x6c041901000654657374310654657374320006546573743300000000")
 
     def test_encode_identity_set_subs_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1074,13 +1083,13 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'subs': [
                     ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409", {"None": None}],
-                    ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409", {"Raw": "0x123456"}]
+                    ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409", {"Raw": "Test"}]
                 ]
             }
         })
 
         self.assertEqual(str(payload),
-                         "0x250104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40904123456")
+                         "0x290104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090554657374")
 
     def test_encode_identity_set_subs_ss58_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1091,13 +1100,13 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'subs': [
                     ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk", {"None": None}],
-                    ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk", {"Raw": "0x123456"}]
+                    ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk", {"Raw": "Test"}]
                 ]
             }
         })
 
         self.assertEqual(str(payload),
-                         "0x250104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40904123456")
+                         "0x290104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090554657374")
 
     def test_encode_imonline_heartbeat_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1447,7 +1456,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0x0c04060b")
 
     def test_encode_staking_force_new_era_always_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1460,7 +1469,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             }
         })
 
-        self.assertEqual(str(payload), "0x0c04060b")
+        self.assertEqual(str(payload), "0x0c04060e")
 
     def test_encode_staking_force_no_eras_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1473,7 +1482,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             }
         })
 
-        self.assertEqual(str(payload), "0x0c04060e")
+        self.assertEqual(str(payload), "0x0c04060a")
 
     def test_encode_staking_force_unstake_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1726,7 +1735,6 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(str(payload), "0x2c0400026400000000000000")
 
-    # TODO: click to select or drag and drop JSON key/value (hex-encoded) file
     def test_encode_system_set_storage_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -1734,11 +1742,11 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'System',
             'call_function': 'set_storage',
             'call_args': {
-                'items': 'VALUE1'
+                'items': [['key', 'value']]
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0x38040004040c6b65791476616c7565")
 
     def test_encode_technicalcommittee_execute_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
@@ -1749,8 +1757,10 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'proposal': {
                     'call_module': 'System',
-                    'call_function': '_remark',
-                    'call_args': ['0x0123456789']
+                    'call_function': 'remark',
+                    'call_args': {
+                        '_remark': '0x0123456789'
+                    }
                 }
             }
         })
@@ -1766,8 +1776,10 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'proposal': {
                     'call_module': 'System',
-                    'call_function': '_remark',
-                    'call_args': ['0x0123456789']
+                    'call_function': 'remark',
+                    'call_args': {
+                        '_remark': '0x0123456789'
+                    }
                 },
                 'threshold': 7
             }
@@ -2035,15 +2047,17 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_function': 'approve_as_multi',
             'call_args': {
                 'call_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-                'maybe_timepoint': 'VALUE2',
-                'other_signatories': 'VALUE3',
-                'threshold': 'VALUE4'
+                'maybe_timepoint': {
+                    'height': 444,
+                    'index': 10
+                },
+                'other_signatories': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'],
+                'threshold': 4
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0x3d01041803040004586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40901bc0100000a0000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 
-    # TODO: Unable to determine default type for {"info":12,"type":"[u8;32]","ext":{"length":32,"type":"u8"}}
     def test_encode_utility_as_multi_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -2051,7 +2065,13 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Utility',
             'call_function': 'as_multi',
             'call_args': {
-                'call': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                'call': {
+                    'call_module': 'System',
+                    'call_function': 'remark',
+                    'call_args': {
+                        '_remark': '0x0123456789'
+                    }
+                },
                 'maybe_timepoint': None,
                 'other_signatories': [],
                 'threshold': 5
@@ -2059,9 +2079,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload),
-                         "0x9c041a03050000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+                         "0x3c041802050000000001140123456789")
 
-    # TODO: CHANGED IN RECENT UPGRADE
     def test_encode_utility_as_sub_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -2069,14 +2088,19 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Utility',
             'call_function': 'as_sub',
             'call_args': {
-                'call': 'VALUE1',
-                'index': 0
+                'call': {
+                    'call_module': 'System',
+                    'call_function': 'remark',
+                    'call_args': {
+                        '_remark': '0x0123456789'
+                    }
+                },
+                'index': 2
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0x3404180102000001140123456789")
 
-    # TODO: CHANGED IN RECENT UPGRADE
     def test_encode_utility_batch_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -2084,13 +2108,19 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'Utility',
             'call_function': 'batch',
             'call_args': {
-                'calls': 'VALUE1'
+                'calls': [{
+                    'call_module': 'Balances',
+                    'call_function': 'transfer',
+                    'call_args': {
+                        'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                        'value': 1000000000000
+                    }
+                }]
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0xb4041800040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
 
-    # TODO: CHANGED IN RECENT UPGRADE
     def test_encode_utility_cancel_as_multi_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -2101,8 +2131,11 @@ class TestScaleTypeEncoding(unittest.TestCase):
                 'call_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'other_signatories': [],
                 'threshold': 5,
-                'timepoint': 'VALUE4'
+                'timepoint': {
+                    'height': 10000,
+                    'index': 1
+                }
             }
         })
 
-        self.assertEqual(str(payload), "0x")
+        self.assertEqual(str(payload), "0xb804180405000010270000010000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
