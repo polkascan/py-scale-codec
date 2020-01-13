@@ -160,7 +160,7 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(value['call_function'], 'transfer')
         self.assertEqual(value['call_module'], 'Balances')
-        self.assertEqual(value['call_args']['dest'], '0x6e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402')
-        self.assertEqual(value['call_args']['value'], 1000000000000)
+        self.assertEqual(value['call_args'][0]['value'], '0x6e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402')
+        self.assertEqual(value['call_args'][1]['value'], 1000000000000)
 
     # TODO make type_index in Metadatadecoder and add tests if all types are supported

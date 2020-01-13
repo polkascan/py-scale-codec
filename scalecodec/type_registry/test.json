@@ -13,6 +13,19 @@
         ["Seal", "Seal"],
         ["PreRuntime", "PreRuntime"]
       ]
+    },
+    "IdentityFields": {
+      "type": "set",
+      "value_list": {
+        "Display": 1,
+        "Legal": 2,
+        "Web": 4,
+        "Riot":  8,
+        "Email":  16,
+        "PgpFingerprint":  32,
+        "Image": 64,
+        "Twitter": 128
+      }
     }
   }
 }

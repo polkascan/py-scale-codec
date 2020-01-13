@@ -58,7 +58,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         # Check destination address for balance transfer
         self.assertEqual(extrinsic.params[0]['type'], 'Address')
         self.assertEqual(extrinsic.params[0]['value'],
-                         '586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409')
+                         '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409')
 
         # Check value of balance transfer
         self.assertEqual(extrinsic.params[1]['type'], 'Compact<Balance>')
@@ -69,8 +69,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Attestations',
-            'call_module_function': 'more_attestations',
-            'params': {
+            'call_function': 'more_attestations',
+            'call_args': {
                 '_more': {}
             }
         })
@@ -83,8 +83,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Authorship',
-            'call_module_function': 'set_uncles',
-            'params': {
+            'call_function': 'set_uncles',
+            'call_args': {
                 'new_uncles': [
                     {
                         "parent_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -105,8 +105,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'force_transfer',
-            'params': {
+            'call_function': 'force_transfer',
+            'call_args': {
                 'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'source': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'value': 1000000000000
@@ -121,8 +121,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'force_transfer',
-            'params': {
+            'call_function': 'force_transfer',
+            'call_args': {
                 'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'source': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'value': 1000000000000
@@ -137,8 +137,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'set_balance',
-            'params': {
+            'call_function': 'set_balance',
+            'call_args': {
                 'new_free': 1000000000000,
                 'new_reserved': 2000000000000,
                 'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
@@ -153,8 +153,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'set_balance',
-            'params': {
+            'call_function': 'set_balance',
+            'call_args': {
                 'new_free': 1000000000000,
                 'new_reserved': 2000000000000,
                 'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
@@ -169,8 +169,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'transfer',
-            'params': {
+            'call_function': 'transfer',
+            'call_args': {
                 'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'value': 1000000000000
             }
@@ -184,8 +184,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'transfer',
-            'params': {
+            'call_function': 'transfer',
+            'call_args': {
                 'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'value': 1000000000000
             }
@@ -199,8 +199,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'transfer_keep_alive',
-            'params': {
+            'call_function': 'transfer_keep_alive',
+            'call_args': {
                 'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'value': 1000000000000
             }
@@ -214,8 +214,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Balances',
-            'call_module_function': 'transfer_keep_alive',
-            'params': {
+            'call_function': 'transfer_keep_alive',
+            'call_args': {
                 'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'value': 1000000000000
             }
@@ -229,8 +229,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Claims',
-            'call_module_function': 'claim',
-            'params': {
+            'call_function': 'claim',
+            'call_args': {
                 'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'ethereum_signature': '0xd7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500'
             }
@@ -244,8 +244,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Claims',
-            'call_module_function': 'claim',
-            'params': {
+            'call_function': 'claim',
+            'call_args': {
                 'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'ethereum_signature': '0xd7c4955996cf00953e65ec1895825b9c3894041ed8ab6bd671c456d53f5d04c13948a58a5f20c7c0d3f1e0d08c33ff590a8c681f6a9db78477ca83c8ab8711f500'
             }
@@ -259,8 +259,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Claims',
-            'call_module_function': 'mint_claim',
-            'params': {
+            'call_function': 'mint_claim',
+            'call_args': {
                 'value': 1000000000000,
                 'vesting_schedule': None,
                 'who': '0x0123456789012345678901234567890123456789'
@@ -275,8 +275,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Claims',
-            'call_module_function': 'mint_claim',
-            'params': {
+            'call_function': 'mint_claim',
+            'call_args': {
                 'value': 1000000000000,
                 'vesting_schedule': [2000000000000, 3000000000000, 1000000],
                 'who': '0x0123456789012345678901234567890123456789'
@@ -291,12 +291,14 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Council',
-            'call_module_function': 'execute',
-            'params': {
+            'call_function': 'execute',
+            'call_args': {
                 'proposal': {
                     'call_module': 'System',
-                    'call_module_function': '_remark',
-                    'params': ['0x0123456789']
+                    'call_function': 'remark',
+                    'call_args': {
+                        '_remark': '0x0123456789'
+                    }
                 }
             }
         })
@@ -308,12 +310,14 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Council',
-            'call_module_function': 'propose',
-            'params': {
+            'call_function': 'propose',
+            'call_args': {
                 'proposal': {
                     'call_module': 'System',
-                    'call_module_function': '_remark',
-                    'params': ['0x0123456789']
+                    'call_function': 'remark',
+                    'call_args': {
+                        '_remark': '0x0123456789'
+                    }
                 },
                 'threshold': 7
             }
@@ -326,8 +330,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Council',
-            'call_module_function': 'set_members',
-            'params': {
+            'call_function': 'set_members',
+            'call_args': {
                 'new_members': ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409",
                                 "0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409"]
             }
@@ -341,8 +345,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Council',
-            'call_module_function': 'set_members',
-            'params': {
+            'call_function': 'set_members',
+            'call_args': {
                 'new_members': ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk",
                                 "EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk"]
             }
@@ -356,8 +360,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Council',
-            'call_module_function': 'vote',
-            'params': {
+            'call_function': 'vote',
+            'call_args': {
                 'approve': True,
                 'index': 1,
                 'proposal': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
@@ -371,8 +375,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'cancel_queued',
-            'params': {
+            'call_function': 'cancel_queued',
+            'call_args': {
                 'which': 1
             }
         })
@@ -384,8 +388,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'cancel_referendum',
-            'params': {
+            'call_function': 'cancel_referendum',
+            'call_args': {
                 'ref_index': 1
             }
         })
@@ -397,8 +401,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'clear_public_proposals',
-            'params': {
+            'call_function': 'clear_public_proposals',
+            'call_args': {
             }
         })
 
@@ -409,9 +413,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'delegate',
-            'params': {
-                'conviction': None,
+            'call_function': 'delegate',
+            'call_args': {
+                'conviction': 'None',
                 'to': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -423,9 +427,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'delegate',
-            'params': {
-                'conviction': None,
+            'call_function': 'delegate',
+            'call_args': {
+                'conviction': 'None',
                 'to': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -437,8 +441,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'delegate',
-            'params': {
+            'call_function': 'delegate',
+            'call_args': {
                 'conviction': 'Locked5x',
                 'to': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
@@ -451,8 +455,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'delegate',
-            'params': {
+            'call_function': 'delegate',
+            'call_args': {
                 'conviction': 'Locked5x',
                 'to': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
@@ -465,8 +469,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'emergency_cancel',
-            'params': {
+            'call_function': 'emergency_cancel',
+            'call_args': {
                 'ref_index': 1
             }
         })
@@ -478,8 +482,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'external_propose',
-            'params': {
+            'call_function': 'external_propose',
+            'call_args': {
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
@@ -491,8 +495,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'external_propose_default',
-            'params': {
+            'call_function': 'external_propose_default',
+            'call_args': {
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
@@ -504,8 +508,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'external_propose_majority',
-            'params': {
+            'call_function': 'external_propose_majority',
+            'call_args': {
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
@@ -517,8 +521,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'fast_track',
-            'params': {
+            'call_function': 'fast_track',
+            'call_args': {
                 'delay': 2000,
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'voting_period': 1000
@@ -533,8 +537,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'note_imminent_preimage',
-            'params': {
+            'call_function': 'note_imminent_preimage',
+            'call_args': {
                 'encoded_proposal': '0x00'
             }
         })
@@ -546,8 +550,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'note_preimage',
-            'params': {
+            'call_function': 'note_preimage',
+            'call_args': {
                 'encoded_proposal': '0x00'
             }
         })
@@ -559,8 +563,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'propose',
-            'params': {
+            'call_function': 'propose',
+            'call_args': {
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'value': 1000000000000
             }
@@ -574,8 +578,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'proxy_vote',
-            'params': {
+            'call_function': 'proxy_vote',
+            'call_args': {
                 'ref_index': 0,
                 'vote': 128
             }
@@ -588,8 +592,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'reap_preimage',
-            'params': {
+            'call_function': 'reap_preimage',
+            'call_args': {
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
@@ -601,8 +605,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'remove_proxy',
-            'params': {
+            'call_function': 'remove_proxy',
+            'call_args': {
                 'proxy': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -614,8 +618,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'remove_proxy',
-            'params': {
+            'call_function': 'remove_proxy',
+            'call_args': {
                 'proxy': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -627,8 +631,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'resign_proxy',
-            'params': {
+            'call_function': 'resign_proxy',
+            'call_args': {
 
             }
         })
@@ -640,8 +644,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'second',
-            'params': {
+            'call_function': 'second',
+            'call_args': {
                 'proposal': 1
             }
         })
@@ -653,8 +657,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'set_proxy',
-            'params': {
+            'call_function': 'set_proxy',
+            'call_args': {
                 'proxy': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -666,8 +670,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'set_proxy',
-            'params': {
+            'call_function': 'set_proxy',
+            'call_args': {
                 'proxy': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -679,8 +683,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'undelegate',
-            'params': {
+            'call_function': 'undelegate',
+            'call_args': {
 
             }
         })
@@ -692,8 +696,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'veto_external',
-            'params': {
+            'call_function': 'veto_external',
+            'call_args': {
                 'proposal_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
@@ -705,8 +709,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Democracy',
-            'call_module_function': 'vote',
-            'params': {
+            'call_function': 'vote',
+            'call_args': {
                 'ref_index': 0,
                 'vote': 128
             }
@@ -719,8 +723,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'remove_member',
-            'params': {
+            'call_function': 'remove_member',
+            'call_args': {
                 'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -732,8 +736,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'remove_member',
-            'params': {
+            'call_function': 'remove_member',
+            'call_args': {
                 'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -745,8 +749,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'remove_voter',
-            'params': {
+            'call_function': 'remove_voter',
+            'call_args': {
 
             }
         })
@@ -758,8 +762,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'renounce_candidacy',
-            'params': {
+            'call_function': 'renounce_candidacy',
+            'call_args': {
 
             }
         })
@@ -771,8 +775,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'report_defunct_voter',
-            'params': {
+            'call_function': 'report_defunct_voter',
+            'call_args': {
                 'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -784,8 +788,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'report_defunct_voter',
-            'params': {
+            'call_function': 'report_defunct_voter',
+            'call_args': {
                 'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -797,8 +801,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'submit_candidacy',
-            'params': {
+            'call_function': 'submit_candidacy',
+            'call_args': {
 
             }
         })
@@ -810,8 +814,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'vote',
-            'params': {
+            'call_function': 'vote',
+            'call_args': {
                 'value': 1000000000000,
                 'votes': ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409",
                           "0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409",
@@ -827,8 +831,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ElectionsPhragmen',
-            'call_module_function': 'vote',
-            'params': {
+            'call_function': 'vote',
+            'call_args': {
                 'value': 1000000000000,
                 'votes': ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk",
                           "EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk",
@@ -844,8 +848,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'FinalityTracker',
-            'call_module_function': 'final_hint',
-            'params': {
+            'call_function': 'final_hint',
+            'call_args': {
                 'hint': 500000
             }
         })
@@ -857,8 +861,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Grandpa',
-            'call_module_function': 'report_misbehavior',
-            'params': {
+            'call_function': 'report_misbehavior',
+            'call_args': {
                 '_report': '0x00'
             }
         })
@@ -870,8 +874,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'add_registrar',
-            'params': {
+            'call_function': 'add_registrar',
+            'call_args': {
                 'account': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -883,8 +887,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'add_registrar',
-            'params': {
+            'call_function': 'add_registrar',
+            'call_args': {
                 'account': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -896,8 +900,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'cancel_request',
-            'params': {
+            'call_function': 'cancel_request',
+            'call_args': {
                 'reg_index': 1
             }
         })
@@ -909,8 +913,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'clear_identity',
-            'params': {
+            'call_function': 'clear_identity',
+            'call_args': {
 
             }
         })
@@ -922,8 +926,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'kill_identity',
-            'params': {
+            'call_function': 'kill_identity',
+            'call_args': {
                 'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -935,8 +939,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'kill_identity',
-            'params': {
+            'call_function': 'kill_identity',
+            'call_args': {
                 'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -948,8 +952,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'provide_judgement',
-            'params': {
+            'call_function': 'provide_judgement',
+            'call_args': {
                 'judgement': {"KnownGood": None},
                 'reg_index': 1,
                 'target': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
@@ -964,8 +968,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'provide_judgement',
-            'params': {
+            'call_function': 'provide_judgement',
+            'call_args': {
                 'judgement': {"KnownGood": None},
                 'reg_index': 1,
                 'target': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
@@ -980,8 +984,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'request_judgement',
-            'params': {
+            'call_function': 'request_judgement',
+            'call_args': {
                 'max_fee': 2000000000000,
                 'reg_index': 1
             }
@@ -994,8 +998,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_account_id',
-            'params': {
+            'call_function': 'set_account_id',
+            'call_args': {
                 'index': 1,
                 'new': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
@@ -1008,8 +1012,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_account_id',
-            'params': {
+            'call_function': 'set_account_id',
+            'call_args': {
                 'index': 1,
                 'new': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
@@ -1022,8 +1026,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_fee',
-            'params': {
+            'call_function': 'set_fee',
+            'call_args': {
                 'fee': 1000000000000,
                 'index': 1
             }
@@ -1037,9 +1041,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_fields',
-            'params': {
-                'fields': 'VALUE1',
+            'call_function': 'set_fields',
+            'call_args': {
+                'fields': ['Display', 'Legal', 'Email', 'Twitter'],
                 'index': 0
             }
         })
@@ -1052,8 +1056,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_identity',
-            'params': {
+            'call_function': 'set_identity',
+            'call_args': {
                 'info': {"additional":[],"display":{"Raw":"0x446973706c6179206e616d65"},"legal":{"Raw":"0x4c6567616c206e616d65"},"web":{"Raw":"0x68747470733a2f2f7765622e73697465"},"riot":{"Raw":"0x4072696f746e616d653a6d61747269782e6f7267"},"email":{"Raw":"0x65406d61696c2e61646472657373"},"pgpFingerprint":None,"image":{"None":None}, "twitter":{"None":None}}
             }
         })
@@ -1066,8 +1070,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_subs',
-            'params': {
+            'call_function': 'set_subs',
+            'call_args': {
                 'subs': [
                     ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409", {"None": None}],
                     ["0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409", {"Raw": "0x123456"}]
@@ -1083,8 +1087,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Identity',
-            'call_module_function': 'set_subs',
-            'params': {
+            'call_function': 'set_subs',
+            'call_args': {
                 'subs': [
                     ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk", {"None": None}],
                     ["EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk", {"Raw": "0x123456"}]
@@ -1100,8 +1104,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'ImOnline',
-            'call_module_function': 'heartbeat',
-            'params': {
+            'call_function': 'heartbeat',
+            'call_args': {
                 'heartbeat': {"blockNumber": 500000, "networkState": {"peerId": "0x012345", "externalAddresses": []},
                               "sessionIndex": 1, "authorityId": "EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk"},
                 '_signature': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
@@ -1117,8 +1121,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Parachains',
-            'call_module_function': 'set_heads',
-            'params': {
+            'call_function': 'set_heads',
+            'call_args': {
                 'heads': 'VALUE1'
             }
         })
@@ -1131,8 +1135,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'deregister_para',
-            'params': {
+            'call_function': 'deregister_para',
+            'call_args': {
                 'id': 1
             }
         })
@@ -1144,8 +1148,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'deregister_parathread',
-            'params': {
+            'call_function': 'deregister_parathread',
+            'call_args': {
 
             }
         })
@@ -1157,8 +1161,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'register_para',
-            'params': {
+            'call_function': 'register_para',
+            'call_args': {
                 'code': '0x00',
                 'id': 1,
                 'info': {"scheduling": "Always"},
@@ -1173,8 +1177,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'register_parathread',
-            'params': {
+            'call_function': 'register_parathread',
+            'call_args': {
                 'code': '0x00',
                 'initial_head_data': '0x01'
             }
@@ -1187,8 +1191,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'select_parathread',
-            'params': {
+            'call_function': 'select_parathread',
+            'call_args': {
                 '_collator': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 '_head_hash': '0x0000000000000000000000000000000000000000000000000000000000000000',
                 '_id': 1
@@ -1203,8 +1207,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'set_thread_count',
-            'params': {
+            'call_function': 'set_thread_count',
+            'call_args': {
                 'count': 1000
             }
         })
@@ -1216,8 +1220,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Registrar',
-            'call_module_function': 'swap',
-            'params': {
+            'call_function': 'swap',
+            'call_args': {
                 'other': 1
             }
         })
@@ -1229,8 +1233,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Session',
-            'call_module_function': 'set_keys',
-            'params': {
+            'call_function': 'set_keys',
+            'call_args': {
                 'keys': '0x01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef',
                 'proof': '0x01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef01234567890abcdef'
             }
@@ -1244,8 +1248,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'bid',
-            'params': {
+            'call_function': 'bid',
+            'call_args': {
                 'amount': 1000000000000000,
                 'auction_index': 2,
                 'first_slot': 3,
@@ -1261,8 +1265,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'bid_renew',
-            'params': {
+            'call_function': 'bid_renew',
+            'call_args': {
                 'amount': 1000000000000000,
                 'auction_index': 1,
                 'first_slot': 2,
@@ -1277,8 +1281,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'elaborate_deploy_data',
-            'params': {
+            'call_function': 'elaborate_deploy_data',
+            'call_args': {
                 'code': '0x00',
                 'para_id': 1
             }
@@ -1291,8 +1295,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'fix_deploy_data',
-            'params': {
+            'call_function': 'fix_deploy_data',
+            'call_args': {
                 'code_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'initial_head_data': '0x00',
                 'para_id': 2,
@@ -1308,8 +1312,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'new_auction',
-            'params': {
+            'call_function': 'new_auction',
+            'call_args': {
                 'duration': 100000,
                 'lease_period_index': 2
             }
@@ -1322,8 +1326,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'set_offboarding',
-            'params': {
+            'call_function': 'set_offboarding',
+            'call_args': {
                 'dest': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -1335,8 +1339,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Slots',
-            'call_module_function': 'set_offboarding',
-            'params': {
+            'call_function': 'set_offboarding',
+            'call_args': {
                 'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -1348,8 +1352,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'bond',
-            'params': {
+            'call_function': 'bond',
+            'call_args': {
                 'controller': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'payee': 'Staked',
                 'value': 1000000000000
@@ -1364,8 +1368,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'bond',
-            'params': {
+            'call_function': 'bond',
+            'call_args': {
                 'controller': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'payee': 'Staked',
                 'value': 1000000000000
@@ -1380,8 +1384,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'bond_extra',
-            'params': {
+            'call_function': 'bond_extra',
+            'call_args': {
                 'max_additional': 1000000000000
             }
         })
@@ -1393,8 +1397,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'cancel_deferred_slash',
-            'params': {
+            'call_function': 'cancel_deferred_slash',
+            'call_args': {
                 'era': 1,
                 'slash_indices': [0, 1, 2]
             }
@@ -1407,8 +1411,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'chill',
-            'params': {
+            'call_function': 'chill',
+            'call_args': {
 
             }
         })
@@ -1420,8 +1424,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'force_new_era',
-            'params': {
+            'call_function': 'force_new_era',
+            'call_args': {
 
             }
         })
@@ -1433,8 +1437,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'force_new_era_always',
-            'params': {
+            'call_function': 'force_new_era_always',
+            'call_args': {
 
             }
         })
@@ -1446,8 +1450,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'force_no_eras',
-            'params': {
+            'call_function': 'force_no_eras',
+            'call_args': {
 
             }
         })
@@ -1459,8 +1463,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'force_unstake',
-            'params': {
+            'call_function': 'force_unstake',
+            'call_args': {
                 'stash': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -1472,8 +1476,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'force_unstake',
-            'params': {
+            'call_function': 'force_unstake',
+            'call_args': {
                 'stash': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -1485,8 +1489,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'nominate',
-            'params': {
+            'call_function': 'nominate',
+            'call_args': {
                 'targets': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
             }
         })
@@ -1498,8 +1502,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'nominate',
-            'params': {
+            'call_function': 'nominate',
+            'call_args': {
                 'targets': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
             }
         })
@@ -1511,8 +1515,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'set_controller',
-            'params': {
+            'call_function': 'set_controller',
+            'call_args': {
                 'controller': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -1524,8 +1528,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'set_controller',
-            'params': {
+            'call_function': 'set_controller',
+            'call_args': {
                 'controller': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -1537,8 +1541,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'set_invulnerables',
-            'params': {
+            'call_function': 'set_invulnerables',
+            'call_args': {
                 'validators': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                                '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
             }
@@ -1552,8 +1556,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'set_invulnerables',
-            'params': {
+            'call_function': 'set_invulnerables',
+            'call_args': {
                 'validators': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                                'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
             }
@@ -1567,8 +1571,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'set_payee',
-            'params': {
+            'call_function': 'set_payee',
+            'call_args': {
                 'payee': 'Staked'
             }
         })
@@ -1580,8 +1584,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'set_validator_count',
-            'params': {
+            'call_function': 'set_validator_count',
+            'call_args': {
                 'new': 150
             }
         })
@@ -1593,8 +1597,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'unbond',
-            'params': {
+            'call_function': 'unbond',
+            'call_args': {
                 'value': 1000000000000
             }
         })
@@ -1606,8 +1610,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'validate',
-            'params': {
+            'call_function': 'validate',
+            'call_args': {
                 'prefs': {"commission": 100}
             }
         })
@@ -1619,8 +1623,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Staking',
-            'call_module_function': 'withdraw_unbonded',
-            'params': {
+            'call_function': 'withdraw_unbonded',
+            'call_args': {
 
             }
         })
@@ -1632,8 +1636,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'fill_block',
-            'params': {
+            'call_function': 'fill_block',
+            'call_args': {
 
             }
         })
@@ -1645,8 +1649,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'kill_prefix',
-            'params': {
+            'call_function': 'kill_prefix',
+            'call_args': {
                 'prefix': '0x012345'
             }
         })
@@ -1658,8 +1662,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'kill_storage',
-            'params': {
+            'call_function': 'kill_storage',
+            'call_args': {
                 'keys': ['0x0123456789abcdef', '0x0123456789abcdef']
             }
         })
@@ -1671,8 +1675,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'remark',
-            'params': {
+            'call_function': 'remark',
+            'call_args': {
                 '_remark': '0x012345'
             }
         })
@@ -1684,8 +1688,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'set_code',
-            'params': {
+            'call_function': 'set_code',
+            'call_args': {
                 'new': '0x012345'
             }
         })
@@ -1697,8 +1701,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'set_heap_pages',
-            'params': {
+            'call_function': 'set_heap_pages',
+            'call_args': {
                 'pages': 100
             }
         })
@@ -1711,8 +1715,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'System',
-            'call_module_function': 'set_storage',
-            'params': {
+            'call_function': 'set_storage',
+            'call_args': {
                 'items': 'VALUE1'
             }
         })
@@ -1724,12 +1728,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalCommittee',
-            'call_module_function': 'execute',
-            'params': {
+            'call_function': 'execute',
+            'call_args': {
                 'proposal': {
                     'call_module': 'System',
-                    'call_module_function': '_remark',
-                    'params': ['0x0123456789']
+                    'call_function': '_remark',
+                    'call_args': ['0x0123456789']
                 }
             }
         })
@@ -1741,12 +1745,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalCommittee',
-            'call_module_function': 'propose',
-            'params': {
+            'call_function': 'propose',
+            'call_args': {
                 'proposal': {
                     'call_module': 'System',
-                    'call_module_function': '_remark',
-                    'params': ['0x0123456789']
+                    'call_function': '_remark',
+                    'call_args': ['0x0123456789']
                 },
                 'threshold': 7
             }
@@ -1759,8 +1763,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalCommittee',
-            'call_module_function': 'set_members',
-            'params': {
+            'call_function': 'set_members',
+            'call_args': {
                 'new_members': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                                 '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
             }
@@ -1774,8 +1778,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalCommittee',
-            'call_module_function': 'set_members',
-            'params': {
+            'call_function': 'set_members',
+            'call_args': {
                 'new_members': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                                 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
             }
@@ -1789,8 +1793,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalCommittee',
-            'call_module_function': 'vote',
-            'params': {
+            'call_function': 'vote',
+            'call_args': {
                 'approve': True,
                 'index': 1,
                 'proposal': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
@@ -1804,8 +1808,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'add_member',
-            'params': {
+            'call_function': 'add_member',
+            'call_args': {
                 'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -1817,8 +1821,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'add_member',
-            'params': {
+            'call_function': 'add_member',
+            'call_args': {
                 'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -1830,8 +1834,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'change_key',
-            'params': {
+            'call_function': 'change_key',
+            'call_args': {
                 'new': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -1843,8 +1847,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'change_key',
-            'params': {
+            'call_function': 'change_key',
+            'call_args': {
                 'new': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -1856,8 +1860,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'remove_member',
-            'params': {
+            'call_function': 'remove_member',
+            'call_args': {
                 'who': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
         })
@@ -1869,8 +1873,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'remove_member',
-            'params': {
+            'call_function': 'remove_member',
+            'call_args': {
                 'who': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
         })
@@ -1882,8 +1886,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'reset_members',
-            'params': {
+            'call_function': 'reset_members',
+            'call_args': {
                 'members': ['0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                             '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409']
             }
@@ -1897,8 +1901,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'reset_members',
-            'params': {
+            'call_function': 'reset_members',
+            'call_args': {
                 'members': ['EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                             'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk']
             }
@@ -1912,8 +1916,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'swap_member',
-            'params': {
+            'call_function': 'swap_member',
+            'call_args': {
                 'add': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'remove': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
             }
@@ -1927,8 +1931,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'TechnicalMembership',
-            'call_module_function': 'swap_member',
-            'params': {
+            'call_function': 'swap_member',
+            'call_args': {
                 'add': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'remove': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
             }
@@ -1942,8 +1946,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Timestamp',
-            'call_module_function': 'set',
-            'params': {
+            'call_function': 'set',
+            'call_args': {
                 'now': 1
             }
         })
@@ -1955,8 +1959,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Treasury',
-            'call_module_function': 'approve_proposal',
-            'params': {
+            'call_function': 'approve_proposal',
+            'call_args': {
                 'proposal_id': 1
             }
         })
@@ -1968,8 +1972,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Treasury',
-            'call_module_function': 'propose_spend',
-            'params': {
+            'call_function': 'propose_spend',
+            'call_args': {
                 'beneficiary': '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409',
                 'value': 1000000000000
             }
@@ -1983,8 +1987,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Treasury',
-            'call_module_function': 'propose_spend',
-            'params': {
+            'call_function': 'propose_spend',
+            'call_args': {
                 'beneficiary': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'value': 1000000000000
             }
@@ -1998,8 +2002,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Treasury',
-            'call_module_function': 'reject_proposal',
-            'params': {
+            'call_function': 'reject_proposal',
+            'call_args': {
                 'proposal_id': 1
             }
         })
@@ -2011,8 +2015,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Utility',
-            'call_module_function': 'approve_as_multi',
-            'params': {
+            'call_function': 'approve_as_multi',
+            'call_args': {
                 'call_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'maybe_timepoint': 'VALUE2',
                 'other_signatories': 'VALUE3',
@@ -2028,8 +2032,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Utility',
-            'call_module_function': 'as_multi',
-            'params': {
+            'call_function': 'as_multi',
+            'call_args': {
                 'call': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'maybe_timepoint': None,
                 'other_signatories': [],
@@ -2046,8 +2050,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Utility',
-            'call_module_function': 'as_sub',
-            'params': {
+            'call_function': 'as_sub',
+            'call_args': {
                 'call': 'VALUE1',
                 'index': 0
             }
@@ -2061,8 +2065,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Utility',
-            'call_module_function': 'batch',
-            'params': {
+            'call_function': 'batch',
+            'call_args': {
                 'calls': 'VALUE1'
             }
         })
@@ -2075,8 +2079,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         payload = extrinsic.encode({
             'call_module': 'Utility',
-            'call_module_function': 'cancel_as_multi',
-            'params': {
+            'call_function': 'cancel_as_multi',
+            'call_args': {
                 'call_hash': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                 'other_signatories': [],
                 'threshold': 5,

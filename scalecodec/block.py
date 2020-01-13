@@ -198,7 +198,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
             result['call_code'] = self.call_index
-            result['call_module_function'] = self.call.get_identifier()
+            result['call_function'] = self.call.get_identifier()
             result['call_module'] = self.call_module.get_identifier()
 
         if self.nonce:
@@ -219,10 +219,10 @@ class ExtrinsicsDecoder(ScaleDecoder):
         if 'call_index' in value:
             self.call_index = value['call_index']
 
-        elif 'call_module' in value and 'call_module_function' in value:
+        elif 'call_module' in value and 'call_function' in value:
             # Look up call module from metadata
             for call_index, (call_module, call) in self.metadata.call_index.items():
-                if call_module.name == value['call_module'] and call.name == value['call_module_function']:
+                if call_module.name == value['call_module'] and call.name == value['call_function']:
                     self.call_index = call_index
                     self.call_module = call_module
                     self.call = call
@@ -245,16 +245,16 @@ class ExtrinsicsDecoder(ScaleDecoder):
         # Encode call params
         if len(self.call.args) > 0:
             for arg in self.call.args:
-                if arg.name not in value['params']:
+                if arg.name not in value['call_args']:
                     raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
                 else:
-                    param_value = value['params'][arg.name]
+                    param_value = value['call_args'][arg.name]
 
-                    arg_obj = ScaleDecoder.get_decoder_class(arg.type)
+                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
                     data += arg_obj.encode(param_value)
 
         # Wrap payload with een length Compact<u32>
-        length_obj = ScaleDecoder.get_decoder_class('Compact<u32>')
+        length_obj = self.get_decoder_class('Compact<u32>')
         data = length_obj.encode(data.length) + data
 
         return data

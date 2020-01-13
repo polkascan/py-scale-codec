@@ -81,17 +81,17 @@
     "Extrinsic": "ExtrinsicDecoder",
     "Gas": "u64",
     "IdentityFields": {
-      "type": "enum",
-      "value_list": [
-        "Display",
-        "Legal",
-        "Web",
-        "Riot",
-        "Email",
-        "PgpFingerprint",
-        "Image",
-        "Twitter"
-      ]
+      "type": "set",
+      "value_list": {
+        "Display": 1,
+        "Legal": 2,
+        "Web": 4,
+        "Riot":  8,
+        "Email":  16,
+        "PgpFingerprint":  32,
+        "Image": 64,
+        "Twitter": 128
+      }
     },
     "IdentityInfoAdditional": "(Data, Data)",
     "IdentityInfo": {

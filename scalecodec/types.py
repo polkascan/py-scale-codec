@@ -151,7 +151,7 @@ class Bytes(ScaleType):
         try:
             return value.decode()
         except UnicodeDecodeError:
-            return value.hex()
+            return '0x{}'.format(value.hex())
 
     def process_encode(self, value):
         string_length_compact = CompactU32()
@@ -390,12 +390,23 @@ class Struct(ScaleType):
 
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
-        for key, data_type in self.type_mapping:
-            if key not in value:
-                raise ValueError('Element "{}" of struct is missing in given value'.format(key))
 
-            element_obj = self.get_decoder_class(data_type, metadata=self.metadata)
-            data += element_obj.encode(value[key])
+        if type(value) is list:
+            if len(value) != len(self.type_mapping):
+                raise ValueError('Element count of value ({}) doesn\'t match type_mapping ({})'.format(len(value), len(self.type_mapping)))
+
+            for idx, (key, data_type) in enumerate(self.type_mapping):
+
+                element_obj = self.get_decoder_class(data_type, metadata=self.metadata)
+                data += element_obj.encode(value[idx])
+
+        else:
+            for key, data_type in self.type_mapping:
+                if key not in value:
+                    raise ValueError('Element "{}" of struct is missing in given value'.format(key))
+
+                element_obj = self.get_decoder_class(data_type, metadata=self.metadata)
+                data += element_obj.encode(value[key])
 
         return data
 
@@ -419,6 +430,18 @@ class Set(ScaleType):
                 if self.set_value & set_mask > 0:
                     result.append(value)
         return result
+
+    def process_encode(self, value):
+        result = 0
+        if type(value) is not list:
+            raise ValueError('Value for encoding a set must be a list')
+
+        for item, set_mask in self.value_list.items():
+            if item in value:
+                result += set_mask
+
+        return ScaleBytes(bytearray([result]))
+
 
 
 class Era(ScaleType):
@@ -474,21 +497,21 @@ class BoxProposal(ScaleType):
 
     def __init__(self, data, **kwargs):
         self.call_index = None
-        self.call = None
+        self.call_function = None
         self.call_module = None
-        self.params = []
+        self.call_args = []
         super().__init__(data, **kwargs)
 
     def process(self):
 
         self.call_index = self.get_next_bytes(2).hex()
 
-        self.call_module, self.call = self.metadata.call_index[self.call_index]
+        self.call_module, self.call_function = self.metadata.call_index[self.call_index]
 
-        for arg in self.call.args:
+        for arg in self.call_function.args:
             arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
 
-            self.params.append({
+            self.call_args.append({
                 'name': arg.name,
                 'type': arg.type,
                 'value': arg_type_obj.serialize(),
@@ -497,10 +520,46 @@ class BoxProposal(ScaleType):
 
         return {
             'call_index': self.call_index,
-            'call_name': self.call.name,
+            'call_function': self.call_function.name,
             'call_module': self.call_module.name,
-            'params': self.params
+            'call_args': self.call_args
         }
+
+    def process_encode(self, value):
+        # Check requirements
+        if 'call_index' in value:
+            self.call_index = value['call_index']
+
+        elif 'call_module' in value and 'call_function' in value:
+            # Look up call module from metadata
+            for call_index, (call_module, call_function) in self.metadata.call_index.items():
+                print(call_module.name, call_function.name)
+                if call_module.name == value['call_module'] and call_function.name == value['call_function']:
+                    self.call_index = call_index
+                    self.call_module = call_module
+                    self.call_function = call_function
+                    break
+
+            if not self.call_index:
+                raise ValueError('Specified call module and function not found in metadata')
+
+        elif not self.call_module or not self.call_function:
+            raise ValueError('No call module and function specified')
+
+        data = ScaleBytes(bytearray.fromhex(self.call_index))
+
+        # Encode call params
+        if len(self.call_function.args) > 0:
+            for arg in self.call_function.args:
+                if arg.name not in value['call_args']:
+                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
+                else:
+                    param_value = value['call_args'][arg.name]
+
+                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    data += arg_obj.encode(param_value)
+
+        return data
 
 
 class ProposalPreimage(Struct):
@@ -1653,31 +1712,31 @@ class Call(ScaleType):
     def __init__(self, data, **kwargs):
         self.call_index = None
         self.call_function = None
-        self.call_args = {}
+        self.call_args = []
         self.call_module = None
 
         super().__init__(data, **kwargs)
 
     def process(self):
+
         self.call_index = self.get_next_bytes(2).hex()
 
-        self.call_function = self.metadata.call_index[self.call_index][1]
-        self.call_module = self.metadata.call_index[self.call_index][0]
-
-        if self.debug:
-            print('Call: ', self.call_function.name)
-            print('Module: ', self.call_module.name)
+        self.call_module, self.call_function = self.metadata.call_index[self.call_index]
 
         for arg in self.call_function.args:
-            if self.debug:
-                print('Param: ', arg.name, arg.type)
-
             arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
-            self.call_args[arg.name] = arg_type_obj.serialize()
+
+            self.call_args.append({
+                'name': arg.name,
+                'type': arg.type,
+                'value': arg_type_obj.serialize(),
+                'valueRaw': arg_type_obj.raw_value
+            })
 
         return {
-            "call_index": self.call_index,
-            "call_module": self.call_module.name,
-            "call_function": self.call_function.name,
-            "call_args": self.call_args
+            'call_index': self.call_index,
+            'call_function': self.call_function.name,
+            'call_module': self.call_module.name,
+            'call_args': self.call_args
         }
+
