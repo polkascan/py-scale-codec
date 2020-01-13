@@ -1,5 +1,12 @@
 {
   "default": {
+    "(AccountId, Balance)": {
+      "type": "struct",
+      "type_mapping": [
+         ["account", "AccountId"],
+         ["balance", "Balance"]
+      ]
+    },
     "FullIdentification": {
       "type": "struct",
       "type_mapping": [
@@ -135,6 +142,18 @@
       ]
     },
     "Offender": "(ValidatorId, Exposure)",
+    "OpenTipFinder": "(AccountId, Balance)",
+    "OpenTipTip": "(AccountId, Balance)",
+    "OpenTip<AccountId, BalanceOf, BlockNumber, Hash>": {
+      "type": "struct",
+      "type_mapping": [
+         ["reason", "Hash"],
+         ["who", "AccountId"],
+         ["finder", "Option<OpenTipFinder>"],
+         ["closes", "Option<BlockNumber>"],
+         ["tips", "Vec<OpenTipTip>"]
+      ]
+    },
     "ParaIdOf": "ParaId",
     "ParaScheduling": {
       "type": "enum",
@@ -149,6 +168,7 @@
          ["scheduling", "ParaScheduling"]
       ]
     },
+    "Percent": "u8",
     "SlotNumber": "u64",
     "VrfData": "[u8; 32]",
     "VrfProof": "[u8; 64]",
