@@ -194,7 +194,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['account_id'] = self.address.account_id
             result['account_index'] = self.address.account_index
             result['account_idx'] = self.address.account_idx
-            result['signature'] = self.signature.value
+            result['signature'] = self.signature.value.replace('0x', '')
             result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
             result['call_code'] = self.call_index

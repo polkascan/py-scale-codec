@@ -325,7 +325,6 @@ class VecU8Length64(ScaleType):
         return ScaleBytes(value)
 
 
-
 class VecU8Length32(ScaleType):
     type_string = '[u8; 32]'
 
