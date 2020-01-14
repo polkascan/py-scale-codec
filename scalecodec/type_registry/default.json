@@ -49,7 +49,6 @@
     "AuthIndex": "U32",
     "AuthorityIndex": "u64",
     "Signature": "H512",
-    "AuthoritySignature": "Signature",
     "CollatorSignature": "Signature",
     "AuthorityWeight": "u64",
     "NextAuthority": {

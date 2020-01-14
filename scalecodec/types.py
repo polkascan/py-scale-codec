@@ -1820,9 +1820,10 @@ class Call(ScaleType):
         return data
 
 
-class AuthoritySignatureEdgeware(ScaleType):
+class AuthoritySignature(ScaleType):
 
     def process(self):
+        # TODO FIXME Should be a H512 but somehow 36 bytes
         return '0x{}'.format(self.get_next_bytes(36).hex())
 
     def process_encode(self, value):
