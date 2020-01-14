@@ -29,6 +29,7 @@
     "Index": "U32",
     "Kind": "[u8; 16]",
     "OpaqueTimeSlot": "Bytes",
+    "AuthoritySignature": "AuthoritySignatureEdgeware",
     "<AuthorityId as RuntimeAppPublic>::Signature": "AuthoritySignature",
     "Box<<T as Trait<I>>::Proposal>": "BoxProposal",
     "Forcing": {

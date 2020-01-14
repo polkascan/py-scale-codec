@@ -1819,3 +1819,13 @@ class Call(ScaleType):
 
         return data
 
+
+class AuthoritySignatureEdgeware(ScaleType):
+
+    def process(self):
+        return '0x{}'.format(self.get_next_bytes(36).hex())
+
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 74:
+            raise ValueError('Value should start with "0x" and should be 36 bytes long')
+        return ScaleBytes(value)
