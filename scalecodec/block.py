@@ -245,7 +245,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         # Encode call params
         if len(self.call.args) > 0:
             for arg in self.call.args:
-                if arg.name not in value['call_args']:
+                if arg.name not in value.get('call_args', {}):
                     raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
                 else:
                     param_value = value['call_args'][arg.name]
