@@ -113,7 +113,7 @@
       }
     },
     "IdentityInfoAdditional": "(Data, Data)",
-    "IdentityInfo": {
+    "IdentityInfo1032": {
       "type": "struct",
       "type_mapping": [
          ["additional", "Vec<IdentityInfoAdditional>"],
@@ -125,6 +125,19 @@
          ["pgpFingerprint", "Option<H160>"],
          ["image", "Data"],
          ["twitter", "Data"]
+      ]
+    },
+    "IdentityInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["additional", "Vec<IdentityInfoAdditional>"],
+         ["display", "Data"],
+         ["legal", "Data"],
+         ["web", "Data"],
+         ["riot", "Data"],
+         ["email", "Data"],
+         ["pgpFingerprint", "Option<H160>"],
+         ["image", "Data"]
       ]
     },
     "Judgement": {
@@ -414,13 +427,20 @@
          ["error", "u8"]
       ]
     },
-    "DispatchError": {
+    "DispatchError1032": {
       "type": "enum",
       "type_mapping": [
         ["Other", "Null"],
         ["CannotLookup", "Null"],
         ["BadOrigin", "Null"],
         ["Module", "DispatchErrorModule"]
+      ]
+    },
+    "DispatchError": {
+      "type": "struct",
+      "type_mapping": [
+        ["module", "Option<u8>"],
+        ["error", "u8"]
       ]
     },
     "DispatchResult": {
