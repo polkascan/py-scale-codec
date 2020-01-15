@@ -313,6 +313,7 @@
     },
     "OpaqueTimeSlot": "Bytes",
     "Box<<T as Trait<I>>::Proposal>": "BoxProposal",
+    "AuthoritySignature": "Signature",
     "<AuthorityId as RuntimeAppPublic>::Signature": "AuthoritySignature",
     "&[u8]": "Bytes",
     "Forcing": {
@@ -329,7 +330,7 @@
          ["blockNumber", "BlockNumber"],
          ["networkState", "OpaqueNetworkState"],
          ["sessionIndex", "SessionIndex"],
-         ["authorityId", "AuthorityId"]
+         ["authorityIndex", "AuthIndex"]
       ]
     },
     "RewardDestination": {

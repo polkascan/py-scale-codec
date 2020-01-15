@@ -1172,17 +1172,6 @@ class PrefabWasmModule(Struct):
     )
 
 
-class Heartbeat(Struct):
-    type_string = 'Heartbeat<BlockNumber, AuthorityId>'
-
-    type_mapping = (
-        ('blockNumber', 'BlockNumber'),
-        ('networkState', 'OpaqueNetworkState'),
-        ('sessionIndex', 'SessionIndex'),
-        ('authorityId', 'AuthorityId'),
-    )
-
-
 class OpaqueNetworkState(Struct):
 
     type_mapping = (
@@ -1819,14 +1808,3 @@ class Call(ScaleType):
 
         return data
 
-
-class AuthoritySignature(ScaleType):
-
-    def process(self):
-        # TODO FIXME Should be a H512 but somehow 36 bytes
-        return '0x{}'.format(self.get_next_bytes(36).hex())
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 74:
-            raise ValueError('Value should start with "0x" and should be 36 bytes long')
-        return ScaleBytes(value)
