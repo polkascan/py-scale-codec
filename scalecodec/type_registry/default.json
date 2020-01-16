@@ -450,6 +450,53 @@
         ["Error", "DispatchError"],
         ["Ok", "Null"]
       ]
+    },
+    "ActiveRecovery": {
+      "type": "struct",
+      "type_mapping": [
+        ["created", "BlockNumber"],
+        ["deposit", "Balance"],
+        ["friends", "Vec<AccountId>"]
+      ]
+    },
+    "RecoveryConfig": {
+      "type": "struct",
+      "type_mapping": [
+        ["delayPeriod", "BlockNumber"],
+        ["deposit", "Balance"],
+        ["friends", "Vec<AccountId>"],
+        ["threshold", "u16"]
+      ]
+    },
+    "BidKindVouch": {
+      "type": "struct",
+      "type_mapping": [
+        ["account", "AccountId"],
+        ["amount", "Balance"]
+      ]
+    },
+    "BidKind": {
+      "type": "enum",
+      "type_mapping": [
+        ["Deposit", "Balance"],
+        ["Vouch", "BidKindVouch"]
+      ]
+    },
+    "Bid": {
+      "type": "struct",
+      "type_mapping": [
+        ["who", "AccountId"],
+        ["kind", "BidKind"],
+        ["value", "Balance"]
+      ],
+    },
+    "StrikeCount": "u32",
+    "VouchingStatus": {
+      "type": "enum",
+      "value_list": [
+        "Vouching",
+        "Banned"
+      ]
     }
   }
 }
