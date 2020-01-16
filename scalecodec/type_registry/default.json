@@ -128,6 +128,19 @@
          ["twitter", "Data"]
       ]
     },
+    "IdentityInfo1031": {
+      "type": "struct",
+      "type_mapping": [
+         ["additional", "Vec<IdentityInfoAdditional>"],
+         ["display", "Data"],
+         ["legal", "Data"],
+         ["web", "Data"],
+         ["riot", "Data"],
+         ["email", "Data"],
+         ["pgpFingerprint", "Option<H160>"],
+         ["image", "Data"]
+      ]
+    },
     "Judgement": {
       "type": "enum",
       "type_mapping": [
@@ -422,6 +435,13 @@
         ["CannotLookup", "Null"],
         ["BadOrigin", "Null"],
         ["Module", "DispatchErrorModule"]
+      ]
+    },
+    "DispatchError1031": {
+      "type": "struct",
+      "type_mapping": [
+        ["module", "Option<u8>"],
+        ["error", "u8"]
       ]
     },
     "DispatchResult": {
