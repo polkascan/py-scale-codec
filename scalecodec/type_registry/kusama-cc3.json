@@ -1,6 +1,7 @@
 {
   "default": {
     "BlockNumber": "U32",
+    "LeasePeriod": "BlockNumber",
     "SessionKeysPolkadot": {
       "type": "struct",
       "type_mapping": [
