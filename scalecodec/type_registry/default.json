@@ -113,7 +113,7 @@
       }
     },
     "IdentityInfoAdditional": "(Data, Data)",
-    "IdentityInfo1032": {
+    "IdentityInfo": {
       "type": "struct",
       "type_mapping": [
          ["additional", "Vec<IdentityInfoAdditional>"],
@@ -127,7 +127,7 @@
          ["twitter", "Data"]
       ]
     },
-    "IdentityInfo": {
+    "IdentityInfo1031": {
       "type": "struct",
       "type_mapping": [
          ["additional", "Vec<IdentityInfoAdditional>"],
@@ -427,7 +427,7 @@
          ["error", "u8"]
       ]
     },
-    "DispatchError1032": {
+    "DispatchError": {
       "type": "enum",
       "type_mapping": [
         ["Other", "Null"],
@@ -436,7 +436,7 @@
         ["Module", "DispatchErrorModule"]
       ]
     },
-    "DispatchError": {
+    "DispatchError1031": {
       "type": "struct",
       "type_mapping": [
         ["module", "Option<u8>"],
