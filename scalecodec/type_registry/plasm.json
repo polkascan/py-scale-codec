@@ -1,5 +1,5 @@
 {
-  "default": {
+  "types": {
     "Keys": "SessionKeysSubstrate",
     "Index": "U32",
     "BlockNumber": "U32",

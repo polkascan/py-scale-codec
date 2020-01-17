@@ -1,5 +1,5 @@
 {
-  "default": {
+  "types": {
     "EpochDuration": "u64",
     "EraIndex": "u32",
     "Index": "U64",

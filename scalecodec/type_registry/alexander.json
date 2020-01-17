@@ -1,5 +1,6 @@
 {
-  "default": {
+  "runtime_id": 112,
+  "types": {
     "ValidatorPrefs": "ValidatorPrefsLegacy",
     "Index": "U64"
   }

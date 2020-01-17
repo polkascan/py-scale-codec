@@ -1,5 +1,6 @@
 {
-  "default": {
+  "runtime_id": 27,
+  "types": {
     "Keys": {
       "type": "struct",
       "type_mapping": [

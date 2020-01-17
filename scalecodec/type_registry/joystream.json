@@ -1,5 +1,6 @@
 {
-  "default": {
+  "runtime_id": 4,
+  "types": {
     "ValidatorPrefs": "ValidatorPrefsLegacy",
     "Index": "U64",
     "<T as DDTrait>::ContentId": "ContentId",

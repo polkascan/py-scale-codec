@@ -1,5 +1,5 @@
 {
-  "default": {
+  "types": {
     "BlockNumber": "U32",
     "SessionKeysPolkadot": {
       "type": "struct",
