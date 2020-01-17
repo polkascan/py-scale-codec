@@ -33,70 +33,80 @@ class Singleton(type):
 
 class RuntimeConfiguration(metaclass=Singleton):
 
-    type_registry = {}
-    active_spec_version_id = 'default'
-
     @classmethod
     def all_subclasses(cls, class_):
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
     def __init__(self):
-        self.type_registry['default'] = {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if cls.type_string}
-        self.type_registry['default'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+        self.type_registry = {}
+        self.active_spec_version_id = None
+        self.type_registry['types'] = {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if cls.type_string}
+        self.type_registry['types'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
 
     def get_decoder_class(self, type_string, spec_version_id='default'):
         # TODO move ScaleDecoder.get_decoder_class logic to here
-        decoder_class = self.type_registry.get(str(spec_version_id), {}).get(type_string.lower(), None)
+        return self.type_registry.get('types', {}).get(type_string.lower(), None)
 
-        if decoder_class:
-            return decoder_class
-        else:
-            return self.type_registry.get('default', {}).get(type_string.lower(), None)
-
-    def update_type_registry(self, type_registry):
+    def update_type_registry_types(self, types_dict):
         from scalecodec.types import Enum, Struct, Set
 
-        for spec_version_id, type_mapping in type_registry.items():
+        for type_string, decoder_class_data in types_dict.items():
 
-            if spec_version_id not in self.type_registry:
-                self.type_registry[spec_version_id] = {}
+            if type(decoder_class_data) == dict:
+                # Create dynamic decoder class
+                if decoder_class_data['type'] == 'struct':
 
-            for type_string, decoder_class_data in type_mapping.items():
+                    decoder_class = type(type_string, (Struct,), {'type_mapping': decoder_class_data['type_mapping']})
 
-                if type(decoder_class_data) == dict:
-                    # Create dynamic decoder class
-                    if decoder_class_data['type'] == 'struct':
+                elif decoder_class_data['type'] == 'enum':
 
-                        decoder_class = type(type_string, (Struct,), {'type_mapping': decoder_class_data['type_mapping']})
+                    decoder_class = type(type_string, (Enum,), {
+                        'value_list': decoder_class_data.get('value_list'),
+                        'type_mapping': decoder_class_data.get('type_mapping')
+                    })
 
-                    elif decoder_class_data['type'] == 'enum':
+                elif decoder_class_data['type'] == 'set':
 
-                        decoder_class = type(type_string, (Enum,), {
-                            'value_list': decoder_class_data.get('value_list'),
-                            'type_mapping': decoder_class_data.get('type_mapping')
-                        })
+                    decoder_class = type(type_string, (Set,), {
+                        'value_list': decoder_class_data.get('value_list'),
+                    })
 
-                    elif decoder_class_data['type'] == 'set':
-
-                        decoder_class = type(type_string, (Set,), {
-                            'value_list': decoder_class_data.get('value_list'),
-                        })
-
-                    else:
-                        raise NotImplementedError("Dynamic decoding type '{}' not supported".format(
-                            decoder_class_data['type'])
-                        )
                 else:
-                    decoder_class = self.get_decoder_class(decoder_class_data, spec_version_id)
+                    raise NotImplementedError("Dynamic decoding type '{}' not supported".format(
+                        decoder_class_data['type'])
+                    )
+            else:
+                decoder_class = self.get_decoder_class(decoder_class_data)
 
-                self.type_registry[spec_version_id][type_string.lower()] = decoder_class
+            self.type_registry['types'][type_string.lower()] = decoder_class
 
-    def set_type_registry(self, spec_version_id, type_mapping):
-        self.type_registry[spec_version_id] = type_mapping
+    def update_type_registry(self, type_registry):
 
-    def override_type_registry(self, type_string, decoder_class, spec_version_id='default'):
-        self.type_registry[spec_version_id][type_string.lower()] = decoder_class
+        # Set runtime ID if set
+        self.active_spec_version_id = type_registry.get('runtime_id')
+
+        # Set versioning
+        if 'versioning' in type_registry:
+            self.type_registry['versioning'] = type_registry.get('versioning')
+
+        # Update types
+        if 'types' in type_registry:
+            self.update_type_registry_types(type_registry.get('types'))
+
+    def set_active_spec_version_id(self, spec_version_id):
+
+        if spec_version_id != self.active_spec_version_id:
+
+            self.active_spec_version_id = spec_version_id
+
+            # Updated type registry with versioned types
+            for versioning_item in self.type_registry.get('versioning', []):
+                # Check if versioning item is in current version range
+                if versioning_item['runtime_range'][0] <= spec_version_id and \
+                        (not versioning_item['runtime_range'][1] or versioning_item['runtime_range'][1] >= spec_version_id):
+                    # Update types in type registry
+                    self.update_type_registry_types(versioning_item['types'])
 
 
 class ScaleBytes:

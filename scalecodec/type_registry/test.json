@@ -1,5 +1,5 @@
 {
-  "default": {
+  "types": {
     "BlockNumber": "U64",
     "SpecificTestType": "u32",
     "DigestItem": {
