@@ -8,7 +8,7 @@ Most of the data that the Substrate RPCs output is encoded with the SCALE Codec.
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
-RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama-cc3"))
+RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
 obj = ScaleDecoder.get_decoder_class('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
 obj.decode()
 print(obj.value)
