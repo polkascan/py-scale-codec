@@ -488,7 +488,7 @@
         ["who", "AccountId"],
         ["kind", "BidKind"],
         ["value", "Balance"]
-      ],
+      ]
     },
     "StrikeCount": "u32",
     "VouchingStatus": {
