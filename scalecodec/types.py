@@ -18,6 +18,7 @@
 
 from datetime import datetime
 from scalecodec.base import ScaleType, ScaleBytes
+from scalecodec.exceptions import InvalidScaleTypeValueException
 
 
 class Compact(ScaleType):
@@ -29,8 +30,10 @@ class Compact(ScaleType):
 
     def process_compact_bytes(self):
         compact_byte = self.get_next_bytes(1)
-
-        byte_mod = compact_byte[0] % 4
+        try:
+            byte_mod = compact_byte[0] % 4
+        except IndexError:
+            raise InvalidScaleTypeValueException("Invalid byte for Compact")
 
         if byte_mod == 0:
             self.compact_length = 1

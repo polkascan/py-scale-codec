@@ -40,13 +40,17 @@ class RuntimeConfiguration(metaclass=Singleton):
 
     def __init__(self):
         self.type_registry = {}
+        self.clear_type_registry()
         self.active_spec_version_id = None
-        self.type_registry['types'] = {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if cls.type_string}
-        self.type_registry['types'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
 
     def get_decoder_class(self, type_string, spec_version_id='default'):
         # TODO move ScaleDecoder.get_decoder_class logic to here
         return self.type_registry.get('types', {}).get(type_string.lower(), None)
+
+    def clear_type_registry(self):
+        self.type_registry = {'types': {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
+                                        cls.type_string}}
+        self.type_registry['types'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
 
     def update_type_registry_types(self, types_dict):
         from scalecodec.types import Enum, Struct, Set
