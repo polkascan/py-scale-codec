@@ -1,0 +1,18 @@
+{
+  "runtime_id": 1000,
+  "types": {
+    "BlockNumber": "U32",
+    "LeasePeriod": "BlockNumber",
+    "SessionKeysPolkadot": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"],
+         ["parachains", "AccountId"]
+      ]
+    },
+    "Keys": "SessionKeysPolkadot"
+  }
+}
