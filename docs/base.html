@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.4" />
+<title>scalecodec.base API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>scalecodec.base</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Python SCALE Codec Library
+#
+# Copyright 2018-2019 openAware BV (NL).
+# This file is part of Polkascan.
+#
+# Polkascan is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Polkascan is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Polkascan. If not, see &lt;http://www.gnu.org/licenses/&gt;.
+
+import re
+from abc import ABC, abstractmethod
+
+from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class RuntimeConfiguration(metaclass=Singleton):
+
+    @classmethod
+    def all_subclasses(cls, class_):
+        return set(class_.__subclasses__()).union(
+            [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
+
+    def __init__(self):
+        self.type_registry = {}
+        self.clear_type_registry()
+        self.active_spec_version_id = None
+
+    def get_decoder_class(self, type_string, spec_version_id=&#39;default&#39;):
+        # TODO move ScaleDecoder.get_decoder_class logic to here
+        return self.type_registry.get(&#39;types&#39;, {}).get(type_string.lower(), None)
+
+    def clear_type_registry(self):
+        self.type_registry = {&#39;types&#39;: {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
+                                        cls.type_string}}
+        self.type_registry[&#39;types&#39;].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+    def update_type_registry_types(self, types_dict):
+        from scalecodec.types import Enum, Struct, Set
+
+        for type_string, decoder_class_data in types_dict.items():
+
+            if type(decoder_class_data) == dict:
+                # Create dynamic decoder class
+                if decoder_class_data[&#39;type&#39;] == &#39;struct&#39;:
+
+                    decoder_class = type(type_string, (Struct,), {&#39;type_mapping&#39;: decoder_class_data[&#39;type_mapping&#39;]})
+
+                elif decoder_class_data[&#39;type&#39;] == &#39;enum&#39;:
+
+                    decoder_class = type(type_string, (Enum,), {
+                        &#39;value_list&#39;: decoder_class_data.get(&#39;value_list&#39;),
+                        &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                    })
+
+                elif decoder_class_data[&#39;type&#39;] == &#39;set&#39;:
+
+                    decoder_class = type(type_string, (Set,), {
+                        &#39;value_list&#39;: decoder_class_data.get(&#39;value_list&#39;),
+                    })
+
+                else:
+                    raise NotImplementedError(&#34;Dynamic decoding type &#39;{}&#39; not supported&#34;.format(
+                        decoder_class_data[&#39;type&#39;])
+                    )
+            else:
+                decoder_class = self.get_decoder_class(decoder_class_data)
+
+            self.type_registry[&#39;types&#39;][type_string.lower()] = decoder_class
+
+    def update_type_registry(self, type_registry):
+
+        # Set runtime ID if set
+        self.active_spec_version_id = type_registry.get(&#39;runtime_id&#39;)
+
+        # Set versioning
+        if &#39;versioning&#39; in type_registry:
+            self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+
+        # Update types
+        if &#39;types&#39; in type_registry:
+            self.update_type_registry_types(type_registry.get(&#39;types&#39;))
+
+    def set_active_spec_version_id(self, spec_version_id):
+
+        if spec_version_id != self.active_spec_version_id:
+
+            self.active_spec_version_id = spec_version_id
+
+            # Updated type registry with versioned types
+            for versioning_item in self.type_registry.get(&#39;versioning&#39;, []):
+                # Check if versioning item is in current version range
+                if versioning_item[&#39;runtime_range&#39;][0] &lt;= spec_version_id and \
+                        (not versioning_item[&#39;runtime_range&#39;][1] or versioning_item[&#39;runtime_range&#39;][1] &gt;= spec_version_id):
+                    # Update types in type registry
+                    self.update_type_registry_types(versioning_item[&#39;types&#39;])
+
+
+class ScaleBytes:
+
+    def __init__(self, data):
+        self.offset = 0
+
+        if type(data) is bytearray:
+            self.data = data
+        elif data[0:2] == &#39;0x&#39;:
+            self.data = bytearray.fromhex(data[2:])
+        else:
+            raise ValueError(&#34;Provided data is not in supported format: provided &#39;{}&#39;&#34;.format(type(data)))
+
+        self.length = len(self.data)
+
+    def get_next_bytes(self, length):
+        data = self.data[self.offset:self.offset + length]
+        self.offset += length
+        return data
+
+    def get_remaining_bytes(self):
+        data = self.data[self.offset:]
+        self.offset = self.length
+        return data
+
+    def get_remaining_length(self):
+        return self.length - self.offset
+
+    def reset(self):
+        self.offset = 0
+
+    def __str__(self):
+        return &#34;0x{}&#34;.format(self.data.hex())
+
+    def __add__(self, data):
+
+        if type(data) == ScaleBytes:
+            return ScaleBytes(self.data + data.data)
+
+        if type(data) == bytes:
+            data = bytearray(data)
+        elif type(data) == str and data[0:2] == &#39;0x&#39;:
+            data = bytearray.fromhex(data[2:])
+
+        if type(data) == bytearray:
+            return ScaleBytes(self.data + data)
+
+
+class ScaleDecoder(ABC):
+
+    type_string = None
+
+    type_mapping = None
+
+    debug = False
+
+    def __init__(self, data, sub_type=None):
+
+        self.sub_type = sub_type
+
+        if self.type_mapping is None and self.type_string:
+            self.build_type_mapping()
+
+        if data:
+            assert(type(data) == ScaleBytes)
+
+        self.data = data
+        self.raw_value = &#39;&#39;
+        self.value = None
+
+    @classmethod
+    def build_type_mapping(cls):
+
+        if cls.type_string and cls.type_string[0] == &#39;(&#39; and cls.type_string[-1] == &#39;)&#39;:
+            type_mapping = ()
+            n = 1
+            for struct_element in cls.type_string[1:-1].split(&#39;,&#39;):
+                type_mapping += ((&#39;col{}&#39;.format(n), struct_element.strip()),)
+                n += 1
+
+            cls.type_mapping = type_mapping
+
+    def get_next_bytes(self, length):
+        data = self.data.get_next_bytes(length)
+        self.raw_value += data.hex()
+        return data
+
+    def get_next_u8(self):
+        return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;)
+
+    def get_next_bool(self):
+        data = self.get_next_bytes(1)
+        if data not in [b&#39;\x00&#39;, b&#39;\x01&#39;]:
+            raise InvalidScaleTypeValueException(&#39;Invalid value for datatype &#34;bool&#34;&#39;)
+        return data == b&#39;\x01&#39;
+
+    def get_remaining_bytes(self):
+        data = self.data.get_remaining_bytes()
+        self.raw_value += data.hex()
+        return data
+
+    @abstractmethod
+    def process(self):
+        pass
+
+    def decode(self, check_remaining=True):
+        self.value = self.process()
+
+        if check_remaining and self.data.offset != self.data.length:
+            raise RemainingScaleBytesNotEmptyException(&#39;Current offset: {} / length: {}&#39;.format(self.data.offset, self.data.length))
+
+        return self.value
+
+    def __str__(self):
+        return str(self.value) or &#39;&#39;
+
+    def encode(self, value):
+        self.data = self.process_encode(value)
+        return self.data
+
+    def process_encode(self, value):
+        raise NotImplementedError(&#34;Encoding not implemented for this ScaleType&#34;)
+
+    @classmethod
+    def get_decoder_class(cls, type_string, data=None, **kwargs):
+
+        type_parts = None
+
+        type_string = cls.convert_type(type_string)
+
+        if type_string[-1:] == &#39;&gt;&#39;:
+            # Check for specific implementation for composite type
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_string.lower(),
+                spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+            )
+
+            if decoder_class:
+                return decoder_class(data, **kwargs)
+
+            # Extract sub types
+            type_parts = re.match(r&#39;^([^&lt;]*)&lt;(.+)&gt;$&#39;, type_string)
+
+            if type_parts:
+                type_parts = type_parts.groups()
+
+        if type_parts:
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_parts[0].lower(),
+                spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+            )
+            if decoder_class:
+                return decoder_class(data, sub_type=type_parts[1], **kwargs)
+        else:
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_string.lower(),
+                spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+            )
+            if decoder_class:
+                return decoder_class(data, **kwargs)
+
+        # Custom tuple
+        # TODO tuples should be converted to list not dict
+        if type_string != &#39;()&#39; and type_string[0] == &#39;(&#39; and type_string[-1] == &#39;)&#39;:
+            decoder_class = RuntimeConfiguration().get_decoder_class(&#39;struct&#39;)
+            decoder_class.type_string = type_string
+
+            decoder_class.build_type_mapping()
+
+            return decoder_class(data, **kwargs)
+
+        raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))
+
+    # TODO rename to decode_type (confusing when encoding is introduced)
+    def process_type(self, type_string, **kwargs):
+        obj = self.get_decoder_class(type_string, self.data, **kwargs)
+        obj.decode(check_remaining=False)
+        if self.debug:
+            print(&#39;=======================\nClass:\t{}\nType:\t{}\nValue:\t{}\nRaw:\t{}\n\nOffset:\t{} / {}\n&#39;.format(
+                self.__class__.__name__, type_string, obj.value, obj.raw_value, self.data.offset, self.data.length
+            ))
+        return obj
+
+    def serialize(self):
+        return self.value
+
+    # TODO convert to TYPE_ALIAS per class Address: TYPE_ALIAS = (&#39;&lt;Lookup as StaticLookup&gt;::Source&#39;,)
+    @classmethod
+    def convert_type(cls, name):
+
+        name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
+
+        if name == &#39;()&#39;:
+            return &#34;Null&#34;
+        if name == &#39;Vec&lt;u8&gt;&#39;:
+            return &#34;Bytes&#34;
+        if name == &#39;&lt;Lookup as StaticLookup&gt;::Source&#39;:
+            return &#39;Address&#39;
+        if name == &#39;Vec&lt;&lt;Lookup as StaticLookup&gt;::Source&gt;&#39;:
+            return &#39;Vec&lt;Address&gt;&#39;
+        if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;Balance&gt;&#39;
+        if name == &#39;&lt;BlockNumber as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;BlockNumber&gt;&#39;
+        if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;Balance&gt;&#39;
+        if name == &#39;&lt;Moment as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;Moment&gt;&#39;
+        if name == &#39;&lt;InherentOfflineReport as InherentOfflineReport&gt;::Inherent&#39;:
+            return &#39;InherentOfflineReport&#39;
+
+        return name
+
+
+# TODO move type_string and sub_type behaviour to this sub class
+class ScaleType(ScaleDecoder, ABC):
+
+    def __init__(self, data=None, sub_type=None, metadata=None):
+        self.metadata = metadata
+        if not data:
+            data = ScaleBytes(bytearray())
+        super().__init__(data, sub_type)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="scalecodec.base.RuntimeConfiguration"><code class="flex name class">
+<span>class <span class="ident">RuntimeConfiguration</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuntimeConfiguration(metaclass=Singleton):
+
+    @classmethod
+    def all_subclasses(cls, class_):
+        return set(class_.__subclasses__()).union(
+            [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
+
+    def __init__(self):
+        self.type_registry = {}
+        self.clear_type_registry()
+        self.active_spec_version_id = None
+
+    def get_decoder_class(self, type_string, spec_version_id=&#39;default&#39;):
+        # TODO move ScaleDecoder.get_decoder_class logic to here
+        return self.type_registry.get(&#39;types&#39;, {}).get(type_string.lower(), None)
+
+    def clear_type_registry(self):
+        self.type_registry = {&#39;types&#39;: {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
+                                        cls.type_string}}
+        self.type_registry[&#39;types&#39;].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+    def update_type_registry_types(self, types_dict):
+        from scalecodec.types import Enum, Struct, Set
+
+        for type_string, decoder_class_data in types_dict.items():
+
+            if type(decoder_class_data) == dict:
+                # Create dynamic decoder class
+                if decoder_class_data[&#39;type&#39;] == &#39;struct&#39;:
+
+                    decoder_class = type(type_string, (Struct,), {&#39;type_mapping&#39;: decoder_class_data[&#39;type_mapping&#39;]})
+
+                elif decoder_class_data[&#39;type&#39;] == &#39;enum&#39;:
+
+                    decoder_class = type(type_string, (Enum,), {
+                        &#39;value_list&#39;: decoder_class_data.get(&#39;value_list&#39;),
+                        &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                    })
+
+                elif decoder_class_data[&#39;type&#39;] == &#39;set&#39;:
+
+                    decoder_class = type(type_string, (Set,), {
+                        &#39;value_list&#39;: decoder_class_data.get(&#39;value_list&#39;),
+                    })
+
+                else:
+                    raise NotImplementedError(&#34;Dynamic decoding type &#39;{}&#39; not supported&#34;.format(
+                        decoder_class_data[&#39;type&#39;])
+                    )
+            else:
+                decoder_class = self.get_decoder_class(decoder_class_data)
+
+            self.type_registry[&#39;types&#39;][type_string.lower()] = decoder_class
+
+    def update_type_registry(self, type_registry):
+
+        # Set runtime ID if set
+        self.active_spec_version_id = type_registry.get(&#39;runtime_id&#39;)
+
+        # Set versioning
+        if &#39;versioning&#39; in type_registry:
+            self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+
+        # Update types
+        if &#39;types&#39; in type_registry:
+            self.update_type_registry_types(type_registry.get(&#39;types&#39;))
+
+    def set_active_spec_version_id(self, spec_version_id):
+
+        if spec_version_id != self.active_spec_version_id:
+
+            self.active_spec_version_id = spec_version_id
+
+            # Updated type registry with versioned types
+            for versioning_item in self.type_registry.get(&#39;versioning&#39;, []):
+                # Check if versioning item is in current version range
+                if versioning_item[&#39;runtime_range&#39;][0] &lt;= spec_version_id and \
+                        (not versioning_item[&#39;runtime_range&#39;][1] or versioning_item[&#39;runtime_range&#39;][1] &gt;= spec_version_id):
+                    # Update types in type registry
+                    self.update_type_registry_types(versioning_item[&#39;types&#39;])</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.base.RuntimeConfiguration.all_subclasses"><code class="name flex">
+<span>def <span class="ident">all_subclasses</span></span>(<span>class_)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def all_subclasses(cls, class_):
+    return set(class_.__subclasses__()).union(
+        [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.base.RuntimeConfiguration.clear_type_registry"><code class="name flex">
+<span>def <span class="ident">clear_type_registry</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_type_registry(self):
+    self.type_registry = {&#39;types&#39;: {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
+                                    cls.type_string}}
+    self.type_registry[&#39;types&#39;].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfiguration.get_decoder_class"><code class="name flex">
+<span>def <span class="ident">get_decoder_class</span></span>(<span>self, type_string, spec_version_id='default')</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_decoder_class(self, type_string, spec_version_id=&#39;default&#39;):
+    # TODO move ScaleDecoder.get_decoder_class logic to here
+    return self.type_registry.get(&#39;types&#39;, {}).get(type_string.lower(), None)</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfiguration.set_active_spec_version_id"><code class="name flex">
+<span>def <span class="ident">set_active_spec_version_id</span></span>(<span>self, spec_version_id)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_active_spec_version_id(self, spec_version_id):
+
+    if spec_version_id != self.active_spec_version_id:
+
+        self.active_spec_version_id = spec_version_id
+
+        # Updated type registry with versioned types
+        for versioning_item in self.type_registry.get(&#39;versioning&#39;, []):
+            # Check if versioning item is in current version range
+            if versioning_item[&#39;runtime_range&#39;][0] &lt;= spec_version_id and \
+                    (not versioning_item[&#39;runtime_range&#39;][1] or versioning_item[&#39;runtime_range&#39;][1] &gt;= spec_version_id):
+                # Update types in type registry
+                self.update_type_registry_types(versioning_item[&#39;types&#39;])</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfiguration.update_type_registry"><code class="name flex">
+<span>def <span class="ident">update_type_registry</span></span>(<span>self, type_registry)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_type_registry(self, type_registry):
+
+    # Set runtime ID if set
+    self.active_spec_version_id = type_registry.get(&#39;runtime_id&#39;)
+
+    # Set versioning
+    if &#39;versioning&#39; in type_registry:
+        self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+
+    # Update types
+    if &#39;types&#39; in type_registry:
+        self.update_type_registry_types(type_registry.get(&#39;types&#39;))</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfiguration.update_type_registry_types"><code class="name flex">
+<span>def <span class="ident">update_type_registry_types</span></span>(<span>self, types_dict)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_type_registry_types(self, types_dict):
+    from scalecodec.types import Enum, Struct, Set
+
+    for type_string, decoder_class_data in types_dict.items():
+
+        if type(decoder_class_data) == dict:
+            # Create dynamic decoder class
+            if decoder_class_data[&#39;type&#39;] == &#39;struct&#39;:
+
+                decoder_class = type(type_string, (Struct,), {&#39;type_mapping&#39;: decoder_class_data[&#39;type_mapping&#39;]})
+
+            elif decoder_class_data[&#39;type&#39;] == &#39;enum&#39;:
+
+                decoder_class = type(type_string, (Enum,), {
+                    &#39;value_list&#39;: decoder_class_data.get(&#39;value_list&#39;),
+                    &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                })
+
+            elif decoder_class_data[&#39;type&#39;] == &#39;set&#39;:
+
+                decoder_class = type(type_string, (Set,), {
+                    &#39;value_list&#39;: decoder_class_data.get(&#39;value_list&#39;),
+                })
+
+            else:
+                raise NotImplementedError(&#34;Dynamic decoding type &#39;{}&#39; not supported&#34;.format(
+                    decoder_class_data[&#39;type&#39;])
+                )
+        else:
+            decoder_class = self.get_decoder_class(decoder_class_data)
+
+        self.type_registry[&#39;types&#39;][type_string.lower()] = decoder_class</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="scalecodec.base.ScaleBytes"><code class="flex name class">
+<span>class <span class="ident">ScaleBytes</span></span>
+<span>(</span><span>data)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScaleBytes:
+
+    def __init__(self, data):
+        self.offset = 0
+
+        if type(data) is bytearray:
+            self.data = data
+        elif data[0:2] == &#39;0x&#39;:
+            self.data = bytearray.fromhex(data[2:])
+        else:
+            raise ValueError(&#34;Provided data is not in supported format: provided &#39;{}&#39;&#34;.format(type(data)))
+
+        self.length = len(self.data)
+
+    def get_next_bytes(self, length):
+        data = self.data[self.offset:self.offset + length]
+        self.offset += length
+        return data
+
+    def get_remaining_bytes(self):
+        data = self.data[self.offset:]
+        self.offset = self.length
+        return data
+
+    def get_remaining_length(self):
+        return self.length - self.offset
+
+    def reset(self):
+        self.offset = 0
+
+    def __str__(self):
+        return &#34;0x{}&#34;.format(self.data.hex())
+
+    def __add__(self, data):
+
+        if type(data) == ScaleBytes:
+            return ScaleBytes(self.data + data.data)
+
+        if type(data) == bytes:
+            data = bytearray(data)
+        elif type(data) == str and data[0:2] == &#39;0x&#39;:
+            data = bytearray.fromhex(data[2:])
+
+        if type(data) == bytearray:
+            return ScaleBytes(self.data + data)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.base.ScaleBytes.get_next_bytes"><code class="name flex">
+<span>def <span class="ident">get_next_bytes</span></span>(<span>self, length)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_next_bytes(self, length):
+    data = self.data[self.offset:self.offset + length]
+    self.offset += length
+    return data</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleBytes.get_remaining_bytes"><code class="name flex">
+<span>def <span class="ident">get_remaining_bytes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_remaining_bytes(self):
+    data = self.data[self.offset:]
+    self.offset = self.length
+    return data</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleBytes.get_remaining_length"><code class="name flex">
+<span>def <span class="ident">get_remaining_length</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_remaining_length(self):
+    return self.length - self.offset</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleBytes.reset"><code class="name flex">
+<span>def <span class="ident">reset</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset(self):
+    self.offset = 0</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder"><code class="flex name class">
+<span>class <span class="ident">ScaleDecoder</span></span>
+<span>(</span><span>data, sub_type=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScaleDecoder(ABC):
+
+    type_string = None
+
+    type_mapping = None
+
+    debug = False
+
+    def __init__(self, data, sub_type=None):
+
+        self.sub_type = sub_type
+
+        if self.type_mapping is None and self.type_string:
+            self.build_type_mapping()
+
+        if data:
+            assert(type(data) == ScaleBytes)
+
+        self.data = data
+        self.raw_value = &#39;&#39;
+        self.value = None
+
+    @classmethod
+    def build_type_mapping(cls):
+
+        if cls.type_string and cls.type_string[0] == &#39;(&#39; and cls.type_string[-1] == &#39;)&#39;:
+            type_mapping = ()
+            n = 1
+            for struct_element in cls.type_string[1:-1].split(&#39;,&#39;):
+                type_mapping += ((&#39;col{}&#39;.format(n), struct_element.strip()),)
+                n += 1
+
+            cls.type_mapping = type_mapping
+
+    def get_next_bytes(self, length):
+        data = self.data.get_next_bytes(length)
+        self.raw_value += data.hex()
+        return data
+
+    def get_next_u8(self):
+        return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;)
+
+    def get_next_bool(self):
+        data = self.get_next_bytes(1)
+        if data not in [b&#39;\x00&#39;, b&#39;\x01&#39;]:
+            raise InvalidScaleTypeValueException(&#39;Invalid value for datatype &#34;bool&#34;&#39;)
+        return data == b&#39;\x01&#39;
+
+    def get_remaining_bytes(self):
+        data = self.data.get_remaining_bytes()
+        self.raw_value += data.hex()
+        return data
+
+    @abstractmethod
+    def process(self):
+        pass
+
+    def decode(self, check_remaining=True):
+        self.value = self.process()
+
+        if check_remaining and self.data.offset != self.data.length:
+            raise RemainingScaleBytesNotEmptyException(&#39;Current offset: {} / length: {}&#39;.format(self.data.offset, self.data.length))
+
+        return self.value
+
+    def __str__(self):
+        return str(self.value) or &#39;&#39;
+
+    def encode(self, value):
+        self.data = self.process_encode(value)
+        return self.data
+
+    def process_encode(self, value):
+        raise NotImplementedError(&#34;Encoding not implemented for this ScaleType&#34;)
+
+    @classmethod
+    def get_decoder_class(cls, type_string, data=None, **kwargs):
+
+        type_parts = None
+
+        type_string = cls.convert_type(type_string)
+
+        if type_string[-1:] == &#39;&gt;&#39;:
+            # Check for specific implementation for composite type
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_string.lower(),
+                spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+            )
+
+            if decoder_class:
+                return decoder_class(data, **kwargs)
+
+            # Extract sub types
+            type_parts = re.match(r&#39;^([^&lt;]*)&lt;(.+)&gt;$&#39;, type_string)
+
+            if type_parts:
+                type_parts = type_parts.groups()
+
+        if type_parts:
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_parts[0].lower(),
+                spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+            )
+            if decoder_class:
+                return decoder_class(data, sub_type=type_parts[1], **kwargs)
+        else:
+            decoder_class = RuntimeConfiguration().get_decoder_class(
+                type_string.lower(),
+                spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+            )
+            if decoder_class:
+                return decoder_class(data, **kwargs)
+
+        # Custom tuple
+        # TODO tuples should be converted to list not dict
+        if type_string != &#39;()&#39; and type_string[0] == &#39;(&#39; and type_string[-1] == &#39;)&#39;:
+            decoder_class = RuntimeConfiguration().get_decoder_class(&#39;struct&#39;)
+            decoder_class.type_string = type_string
+
+            decoder_class.build_type_mapping()
+
+            return decoder_class(data, **kwargs)
+
+        raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))
+
+    # TODO rename to decode_type (confusing when encoding is introduced)
+    def process_type(self, type_string, **kwargs):
+        obj = self.get_decoder_class(type_string, self.data, **kwargs)
+        obj.decode(check_remaining=False)
+        if self.debug:
+            print(&#39;=======================\nClass:\t{}\nType:\t{}\nValue:\t{}\nRaw:\t{}\n\nOffset:\t{} / {}\n&#39;.format(
+                self.__class__.__name__, type_string, obj.value, obj.raw_value, self.data.offset, self.data.length
+            ))
+        return obj
+
+    def serialize(self):
+        return self.value
+
+    # TODO convert to TYPE_ALIAS per class Address: TYPE_ALIAS = (&#39;&lt;Lookup as StaticLookup&gt;::Source&#39;,)
+    @classmethod
+    def convert_type(cls, name):
+
+        name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
+
+        if name == &#39;()&#39;:
+            return &#34;Null&#34;
+        if name == &#39;Vec&lt;u8&gt;&#39;:
+            return &#34;Bytes&#34;
+        if name == &#39;&lt;Lookup as StaticLookup&gt;::Source&#39;:
+            return &#39;Address&#39;
+        if name == &#39;Vec&lt;&lt;Lookup as StaticLookup&gt;::Source&gt;&#39;:
+            return &#39;Vec&lt;Address&gt;&#39;
+        if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;Balance&gt;&#39;
+        if name == &#39;&lt;BlockNumber as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;BlockNumber&gt;&#39;
+        if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;Balance&gt;&#39;
+        if name == &#39;&lt;Moment as HasCompact&gt;::Type&#39;:
+            return &#39;Compact&lt;Moment&gt;&#39;
+        if name == &#39;&lt;InherentOfflineReport as InherentOfflineReport&gt;::Inherent&#39;:
+            return &#39;InherentOfflineReport&#39;
+
+        return name</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleType" href="#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.block.EventRecord" href="block.html#scalecodec.block.EventRecord">EventRecord</a></li>
+<li><a title="scalecodec.block.ExtrinsicsDecoder" href="block.html#scalecodec.block.ExtrinsicsDecoder">ExtrinsicsDecoder</a></li>
+<li><a title="scalecodec.metadata.MetadataDecoder" href="metadata.html#scalecodec.metadata.MetadataDecoder">MetadataDecoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV0Decoder" href="metadata.html#scalecodec.metadata.MetadataV0Decoder">MetadataV0Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV10Decoder" href="metadata.html#scalecodec.metadata.MetadataV10Decoder">MetadataV10Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV1Decoder" href="metadata.html#scalecodec.metadata.MetadataV1Decoder">MetadataV1Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV2Decoder" href="metadata.html#scalecodec.metadata.MetadataV2Decoder">MetadataV2Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV3Decoder" href="metadata.html#scalecodec.metadata.MetadataV3Decoder">MetadataV3Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV4Decoder" href="metadata.html#scalecodec.metadata.MetadataV4Decoder">MetadataV4Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV5Decoder" href="metadata.html#scalecodec.metadata.MetadataV5Decoder">MetadataV5Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV6Decoder" href="metadata.html#scalecodec.metadata.MetadataV6Decoder">MetadataV6Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV7Decoder" href="metadata.html#scalecodec.metadata.MetadataV7Decoder">MetadataV7Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV7ModuleStorageEntry" href="metadata.html#scalecodec.metadata.MetadataV7ModuleStorageEntry">MetadataV7ModuleStorageEntry</a></li>
+<li><a title="scalecodec.metadata.MetadataV8Decoder" href="metadata.html#scalecodec.metadata.MetadataV8Decoder">MetadataV8Decoder</a></li>
+<li><a title="scalecodec.metadata.MetadataV9Decoder" href="metadata.html#scalecodec.metadata.MetadataV9Decoder">MetadataV9Decoder</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.base.ScaleDecoder.debug"><code class="name">var <span class="ident">debug</span></code></dt>
+<dd>
+<section class="desc"><p>bool(x) -&gt; bool</p>
+<p>Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.</p></section>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.type_mapping"><code class="name">var <span class="ident">type_mapping</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.base.ScaleDecoder.build_type_mapping"><code class="name flex">
+<span>def <span class="ident">build_type_mapping</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def build_type_mapping(cls):
+
+    if cls.type_string and cls.type_string[0] == &#39;(&#39; and cls.type_string[-1] == &#39;)&#39;:
+        type_mapping = ()
+        n = 1
+        for struct_element in cls.type_string[1:-1].split(&#39;,&#39;):
+            type_mapping += ((&#39;col{}&#39;.format(n), struct_element.strip()),)
+            n += 1
+
+        cls.type_mapping = type_mapping</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.convert_type"><code class="name flex">
+<span>def <span class="ident">convert_type</span></span>(<span>name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def convert_type(cls, name):
+
+    name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
+    name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name)
+    name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name)
+    name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
+
+    if name == &#39;()&#39;:
+        return &#34;Null&#34;
+    if name == &#39;Vec&lt;u8&gt;&#39;:
+        return &#34;Bytes&#34;
+    if name == &#39;&lt;Lookup as StaticLookup&gt;::Source&#39;:
+        return &#39;Address&#39;
+    if name == &#39;Vec&lt;&lt;Lookup as StaticLookup&gt;::Source&gt;&#39;:
+        return &#39;Vec&lt;Address&gt;&#39;
+    if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
+        return &#39;Compact&lt;Balance&gt;&#39;
+    if name == &#39;&lt;BlockNumber as HasCompact&gt;::Type&#39;:
+        return &#39;Compact&lt;BlockNumber&gt;&#39;
+    if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
+        return &#39;Compact&lt;Balance&gt;&#39;
+    if name == &#39;&lt;Moment as HasCompact&gt;::Type&#39;:
+        return &#39;Compact&lt;Moment&gt;&#39;
+    if name == &#39;&lt;InherentOfflineReport as InherentOfflineReport&gt;::Inherent&#39;:
+        return &#39;InherentOfflineReport&#39;
+
+    return name</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.get_decoder_class"><code class="name flex">
+<span>def <span class="ident">get_decoder_class</span></span>(<span>type_string, data=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_decoder_class(cls, type_string, data=None, **kwargs):
+
+    type_parts = None
+
+    type_string = cls.convert_type(type_string)
+
+    if type_string[-1:] == &#39;&gt;&#39;:
+        # Check for specific implementation for composite type
+        decoder_class = RuntimeConfiguration().get_decoder_class(
+            type_string.lower(),
+            spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+        )
+
+        if decoder_class:
+            return decoder_class(data, **kwargs)
+
+        # Extract sub types
+        type_parts = re.match(r&#39;^([^&lt;]*)&lt;(.+)&gt;$&#39;, type_string)
+
+        if type_parts:
+            type_parts = type_parts.groups()
+
+    if type_parts:
+        decoder_class = RuntimeConfiguration().get_decoder_class(
+            type_parts[0].lower(),
+            spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+        )
+        if decoder_class:
+            return decoder_class(data, sub_type=type_parts[1], **kwargs)
+    else:
+        decoder_class = RuntimeConfiguration().get_decoder_class(
+            type_string.lower(),
+            spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
+        )
+        if decoder_class:
+            return decoder_class(data, **kwargs)
+
+    # Custom tuple
+    # TODO tuples should be converted to list not dict
+    if type_string != &#39;()&#39; and type_string[0] == &#39;(&#39; and type_string[-1] == &#39;)&#39;:
+        decoder_class = RuntimeConfiguration().get_decoder_class(&#39;struct&#39;)
+        decoder_class.type_string = type_string
+
+        decoder_class.build_type_mapping()
+
+        return decoder_class(data, **kwargs)
+
+    raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.base.ScaleDecoder.decode"><code class="name flex">
+<span>def <span class="ident">decode</span></span>(<span>self, check_remaining=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode(self, check_remaining=True):
+    self.value = self.process()
+
+    if check_remaining and self.data.offset != self.data.length:
+        raise RemainingScaleBytesNotEmptyException(&#39;Current offset: {} / length: {}&#39;.format(self.data.offset, self.data.length))
+
+    return self.value</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.encode"><code class="name flex">
+<span>def <span class="ident">encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encode(self, value):
+    self.data = self.process_encode(value)
+    return self.data</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.get_next_bool"><code class="name flex">
+<span>def <span class="ident">get_next_bool</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_next_bool(self):
+    data = self.get_next_bytes(1)
+    if data not in [b&#39;\x00&#39;, b&#39;\x01&#39;]:
+        raise InvalidScaleTypeValueException(&#39;Invalid value for datatype &#34;bool&#34;&#39;)
+    return data == b&#39;\x01&#39;</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.get_next_bytes"><code class="name flex">
+<span>def <span class="ident">get_next_bytes</span></span>(<span>self, length)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_next_bytes(self, length):
+    data = self.data.get_next_bytes(length)
+    self.raw_value += data.hex()
+    return data</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.get_next_u8"><code class="name flex">
+<span>def <span class="ident">get_next_u8</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_next_u8(self):
+    return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;)</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.get_remaining_bytes"><code class="name flex">
+<span>def <span class="ident">get_remaining_bytes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_remaining_bytes(self):
+    data = self.data.get_remaining_bytes()
+    self.raw_value += data.hex()
+    return data</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def process(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value):
+    raise NotImplementedError(&#34;Encoding not implemented for this ScaleType&#34;)</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.process_type"><code class="name flex">
+<span>def <span class="ident">process_type</span></span>(<span>self, type_string, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_type(self, type_string, **kwargs):
+    obj = self.get_decoder_class(type_string, self.data, **kwargs)
+    obj.decode(check_remaining=False)
+    if self.debug:
+        print(&#39;=======================\nClass:\t{}\nType:\t{}\nValue:\t{}\nRaw:\t{}\n\nOffset:\t{} / {}\n&#39;.format(
+            self.__class__.__name__, type_string, obj.value, obj.raw_value, self.data.offset, self.data.length
+        ))
+    return obj</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serialize(self):
+    return self.value</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="scalecodec.base.ScaleType"><code class="flex name class">
+<span>class <span class="ident">ScaleType</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScaleType(ScaleDecoder, ABC):
+
+    def __init__(self, data=None, sub_type=None, metadata=None):
+        self.metadata = metadata
+        if not data:
+            data = ScaleBytes(bytearray())
+        super().__init__(data, sub_type)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleDecoder" href="#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.metadata.MetadataModule" href="metadata.html#scalecodec.metadata.MetadataModule">MetadataModule</a></li>
+<li><a title="scalecodec.metadata.MetadataModuleCall" href="metadata.html#scalecodec.metadata.MetadataModuleCall">MetadataModuleCall</a></li>
+<li><a title="scalecodec.metadata.MetadataModuleCallArgument" href="metadata.html#scalecodec.metadata.MetadataModuleCallArgument">MetadataModuleCallArgument</a></li>
+<li><a title="scalecodec.metadata.MetadataModuleError" href="metadata.html#scalecodec.metadata.MetadataModuleError">MetadataModuleError</a></li>
+<li><a title="scalecodec.metadata.MetadataModuleEvent" href="metadata.html#scalecodec.metadata.MetadataModuleEvent">MetadataModuleEvent</a></li>
+<li><a title="scalecodec.metadata.MetadataModuleStorage" href="metadata.html#scalecodec.metadata.MetadataModuleStorage">MetadataModuleStorage</a></li>
+<li><a title="scalecodec.metadata.MetadataV0Event" href="metadata.html#scalecodec.metadata.MetadataV0Event">MetadataV0Event</a></li>
+<li><a title="scalecodec.metadata.MetadataV0EventModule" href="metadata.html#scalecodec.metadata.MetadataV0EventModule">MetadataV0EventModule</a></li>
+<li><a title="scalecodec.metadata.MetadataV0Module" href="metadata.html#scalecodec.metadata.MetadataV0Module">MetadataV0Module</a></li>
+<li><a title="scalecodec.metadata.MetadataV0ModuleFunction" href="metadata.html#scalecodec.metadata.MetadataV0ModuleFunction">MetadataV0ModuleFunction</a></li>
+<li><a title="scalecodec.metadata.MetadataV0ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV0ModuleStorage">MetadataV0ModuleStorage</a></li>
+<li><a title="scalecodec.metadata.MetadataV0Section" href="metadata.html#scalecodec.metadata.MetadataV0Section">MetadataV0Section</a></li>
+<li><a title="scalecodec.metadata.MetadataV1Module" href="metadata.html#scalecodec.metadata.MetadataV1Module">MetadataV1Module</a></li>
+<li><a title="scalecodec.metadata.MetadataV1ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV1ModuleStorage">MetadataV1ModuleStorage</a></li>
+<li><a title="scalecodec.metadata.MetadataV4Module" href="metadata.html#scalecodec.metadata.MetadataV4Module">MetadataV4Module</a></li>
+<li><a title="scalecodec.metadata.MetadataV4ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV4ModuleStorage">MetadataV4ModuleStorage</a></li>
+<li><a title="scalecodec.metadata.MetadataV5Module" href="metadata.html#scalecodec.metadata.MetadataV5Module">MetadataV5Module</a></li>
+<li><a title="scalecodec.metadata.MetadataV5ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV5ModuleStorage">MetadataV5ModuleStorage</a></li>
+<li><a title="scalecodec.metadata.MetadataV6Module" href="metadata.html#scalecodec.metadata.MetadataV6Module">MetadataV6Module</a></li>
+<li><a title="scalecodec.metadata.MetadataV6ModuleConstants" href="metadata.html#scalecodec.metadata.MetadataV6ModuleConstants">MetadataV6ModuleConstants</a></li>
+<li><a title="scalecodec.types.Address" href="types.html#scalecodec.types.Address">Address</a></li>
+<li><a title="scalecodec.types.Bool" href="types.html#scalecodec.types.Bool">Bool</a></li>
+<li><a title="scalecodec.types.BoxProposal" href="types.html#scalecodec.types.BoxProposal">BoxProposal</a></li>
+<li><a title="scalecodec.types.Bytes" href="types.html#scalecodec.types.Bytes">Bytes</a></li>
+<li><a title="scalecodec.types.Call" href="types.html#scalecodec.types.Call">Call</a></li>
+<li><a title="scalecodec.types.Compact" href="types.html#scalecodec.types.Compact">Compact</a></li>
+<li><a title="scalecodec.types.EcdsaSignature" href="types.html#scalecodec.types.EcdsaSignature">EcdsaSignature</a></li>
+<li><a title="scalecodec.types.Enum" href="types.html#scalecodec.types.Enum">Enum</a></li>
+<li><a title="scalecodec.types.Era" href="types.html#scalecodec.types.Era">Era</a></li>
+<li><a title="scalecodec.types.EthereumAddress" href="types.html#scalecodec.types.EthereumAddress">EthereumAddress</a></li>
+<li><a title="scalecodec.types.H160" href="types.html#scalecodec.types.H160">H160</a></li>
+<li><a title="scalecodec.types.H256" href="types.html#scalecodec.types.H256">H256</a></li>
+<li><a title="scalecodec.types.H512" href="types.html#scalecodec.types.H512">H512</a></li>
+<li><a title="scalecodec.types.HexBytes" href="types.html#scalecodec.types.HexBytes">HexBytes</a></li>
+<li><a title="scalecodec.types.Null" href="types.html#scalecodec.types.Null">Null</a></li>
+<li><a title="scalecodec.types.Option" href="types.html#scalecodec.types.Option">Option</a></li>
+<li><a title="scalecodec.types.OptionBytes" href="types.html#scalecodec.types.OptionBytes">OptionBytes</a></li>
+<li><a title="scalecodec.types.Set" href="types.html#scalecodec.types.Set">Set</a></li>
+<li><a title="scalecodec.types.String" href="types.html#scalecodec.types.String">String</a></li>
+<li><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.types.U128" href="types.html#scalecodec.types.U128">U128</a></li>
+<li><a title="scalecodec.types.U16" href="types.html#scalecodec.types.U16">U16</a></li>
+<li><a title="scalecodec.types.U32" href="types.html#scalecodec.types.U32">U32</a></li>
+<li><a title="scalecodec.types.U64" href="types.html#scalecodec.types.U64">U64</a></li>
+<li><a title="scalecodec.types.U8" href="types.html#scalecodec.types.U8">U8</a></li>
+<li><a title="scalecodec.types.Vec" href="types.html#scalecodec.types.Vec">Vec</a></li>
+<li><a title="scalecodec.types.VecU8Length16" href="types.html#scalecodec.types.VecU8Length16">VecU8Length16</a></li>
+<li><a title="scalecodec.types.VecU8Length2" href="types.html#scalecodec.types.VecU8Length2">VecU8Length2</a></li>
+<li><a title="scalecodec.types.VecU8Length32" href="types.html#scalecodec.types.VecU8Length32">VecU8Length32</a></li>
+<li><a title="scalecodec.types.VecU8Length4" href="types.html#scalecodec.types.VecU8Length4">VecU8Length4</a></li>
+<li><a title="scalecodec.types.VecU8Length64" href="types.html#scalecodec.types.VecU8Length64">VecU8Length64</a></li>
+<li><a title="scalecodec.types.VecU8Length8" href="types.html#scalecodec.types.VecU8Length8">VecU8Length8</a></li>
+<li><a title="scalecodec.types.VoteOutcome" href="types.html#scalecodec.types.VoteOutcome">VoteOutcome</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.ScaleDecoder" href="#scalecodec.base.ScaleDecoder">ScaleDecoder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.ScaleDecoder.debug" href="#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.base.Singleton"><code class="flex name class">
+<span>class <span class="ident">Singleton</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>type(object_or_name, bases, dict)
+type(object) -&gt; the object's type
+type(name, bases, dict) -&gt; a new type</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.type</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="scalecodec" href="index.html">scalecodec</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="scalecodec.base.RuntimeConfiguration" href="#scalecodec.base.RuntimeConfiguration">RuntimeConfiguration</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.base.RuntimeConfiguration.all_subclasses" href="#scalecodec.base.RuntimeConfiguration.all_subclasses">all_subclasses</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfiguration.clear_type_registry" href="#scalecodec.base.RuntimeConfiguration.clear_type_registry">clear_type_registry</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfiguration.get_decoder_class" href="#scalecodec.base.RuntimeConfiguration.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfiguration.set_active_spec_version_id" href="#scalecodec.base.RuntimeConfiguration.set_active_spec_version_id">set_active_spec_version_id</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfiguration.update_type_registry" href="#scalecodec.base.RuntimeConfiguration.update_type_registry">update_type_registry</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfiguration.update_type_registry_types" href="#scalecodec.base.RuntimeConfiguration.update_type_registry_types">update_type_registry_types</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.base.ScaleBytes" href="#scalecodec.base.ScaleBytes">ScaleBytes</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.base.ScaleBytes.get_next_bytes" href="#scalecodec.base.ScaleBytes.get_next_bytes">get_next_bytes</a></code></li>
+<li><code><a title="scalecodec.base.ScaleBytes.get_remaining_bytes" href="#scalecodec.base.ScaleBytes.get_remaining_bytes">get_remaining_bytes</a></code></li>
+<li><code><a title="scalecodec.base.ScaleBytes.get_remaining_length" href="#scalecodec.base.ScaleBytes.get_remaining_length">get_remaining_length</a></code></li>
+<li><code><a title="scalecodec.base.ScaleBytes.reset" href="#scalecodec.base.ScaleBytes.reset">reset</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.base.ScaleDecoder" href="#scalecodec.base.ScaleDecoder">ScaleDecoder</a></code></h4>
+<ul class="two-column">
+<li><code><a title="scalecodec.base.ScaleDecoder.build_type_mapping" href="#scalecodec.base.ScaleDecoder.build_type_mapping">build_type_mapping</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.convert_type" href="#scalecodec.base.ScaleDecoder.convert_type">convert_type</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.debug" href="#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.decode" href="#scalecodec.base.ScaleDecoder.decode">decode</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.encode" href="#scalecodec.base.ScaleDecoder.encode">encode</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.get_decoder_class" href="#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.get_next_bool" href="#scalecodec.base.ScaleDecoder.get_next_bool">get_next_bool</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.get_next_bytes" href="#scalecodec.base.ScaleDecoder.get_next_bytes">get_next_bytes</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.get_next_u8" href="#scalecodec.base.ScaleDecoder.get_next_u8">get_next_u8</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.get_remaining_bytes" href="#scalecodec.base.ScaleDecoder.get_remaining_bytes">get_remaining_bytes</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.process" href="#scalecodec.base.ScaleDecoder.process">process</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.process_encode" href="#scalecodec.base.ScaleDecoder.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.process_type" href="#scalecodec.base.ScaleDecoder.process_type">process_type</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.serialize" href="#scalecodec.base.ScaleDecoder.serialize">serialize</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.type_mapping" href="#scalecodec.base.ScaleDecoder.type_mapping">type_mapping</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.type_string" href="#scalecodec.base.ScaleDecoder.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.base.ScaleType" href="#scalecodec.base.ScaleType">ScaleType</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scalecodec.base.Singleton" href="#scalecodec.base.Singleton">Singleton</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

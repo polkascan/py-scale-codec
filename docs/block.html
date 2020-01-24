@@ -1,0 +1,1740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.4" />
+<title>scalecodec.block API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>scalecodec.block</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#  Scale Codec
+#  Copyright (C) 2019  openAware B.V.
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+from hashlib import blake2b
+from collections import OrderedDict
+
+from scalecodec.base import ScaleDecoder, ScaleBytes
+from scalecodec.metadata import MetadataDecoder
+from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct, VecU8Length4
+from scalecodec.utils.ss58 import ss58_decode, ss58_decode_account_index
+
+
+class ExtrinsicsDecoder(ScaleDecoder):
+    type_mapping = (
+        (&#39;extrinsic_length&#39;, &#39;Compact&lt;u32&gt;&#39;),
+        (&#39;version_info&#39;, &#39;u8&#39;),
+        (&#39;address&#39;, &#39;Address&#39;),
+        (&#39;signature&#39;, &#39;Signature&#39;),
+        (&#39;nonce&#39;, &#39;Compact&lt;u32&gt;&#39;),
+        (&#39;era&#39;, &#39;Era&#39;),
+        (&#39;call_index&#39;, &#39;(u8,u8)&#39;),
+    )
+
+    def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, address_type=42):
+
+        assert (type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+        self.address_type = address_type
+        self.extrinsic_length = None
+        self.extrinsic_hash = None
+        self.version_info = None
+        self.contains_transaction = False
+        self.address = None
+        self.signature_version = None
+        self.signature = None
+        self.nonce = None
+        self.era = None
+        self.tip = None
+        self.call_index = None
+        self.call_module = None
+        self.call = None
+        self.call_args = None
+        self.params_raw = None
+        self.params = []
+        super().__init__(data, sub_type)
+
+    def generate_hash(self):
+        if self.contains_transaction:
+
+            if self.extrinsic_length:
+                extrinsic_data = self.data.data
+            else:
+                # Fallback for legacy version, prefix additional Compact&lt;u32&gt; with length
+                extrinsic_length_type = CompactU32(ScaleBytes(bytearray()))
+                extrinsic_length_type.encode(self.data.length)
+                extrinsic_data = extrinsic_length_type.data.data + self.data.data
+
+            return blake2b(extrinsic_data, digest_size=32).digest().hex()
+        else:
+            return None
+
+    def process(self):
+        # TODO for all attributes
+        attribute_types = OrderedDict(self.type_mapping)
+
+        self.extrinsic_length = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+
+        if self.extrinsic_length != self.data.get_remaining_length():
+            # Fallback for legacy version
+            self.extrinsic_length = None
+            self.data.reset()
+
+        self.version_info = self.get_next_bytes(1).hex()
+
+        self.contains_transaction = int(self.version_info, 16) &gt;= 80
+
+        if self.version_info == &#39;01&#39; or self.version_info == &#39;81&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.nonce = self.process_type(attribute_types[&#39;nonce&#39;])
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == &#39;02&#39; or self.version_info == &#39;82&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+                self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == &#39;03&#39; or self.version_info == &#39;83&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+                self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == &#39;04&#39; or self.version_info == &#39;84&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature_version = self.process_type(&#39;U8&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+                self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+        else:
+            raise NotImplementedError(&#39;Extrinsics version &#34;{}&#34; is not implemented&#39;.format(self.version_info))
+
+        if self.call_index:
+
+            self.params_raw = self.data.data[self.data.offset:]
+
+            # Decode params
+
+            self.call = self.metadata.call_index[self.call_index][1]
+            self.call_module = self.metadata.call_index[self.call_index][0]
+
+            if self.debug:
+                print(&#39;Call: &#39;, self.call.name)
+                print(&#39;Module: &#39;, self.call_module.name)
+
+            for arg in self.call.args:
+                if self.debug:
+                    print(&#39;Param: &#39;, arg.name, arg.type)
+
+                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+                self.params.append({
+                    &#39;name&#39;: arg.name,
+                    &#39;type&#39;: arg.type,
+                    &#39;value&#39;: arg_type_obj.serialize(),
+                    &#39;valueRaw&#39;: arg_type_obj.raw_value
+                })
+
+        result = {
+            &#39;valueRaw&#39;: self.raw_value,
+            &#39;extrinsic_length&#39;: self.extrinsic_length,
+            &#39;version_info&#39;: self.version_info,
+        }
+
+        if self.contains_transaction:
+            result[&#39;account_length&#39;] = self.address.account_length
+            result[&#39;account_id&#39;] = self.address.account_id
+            result[&#39;account_index&#39;] = self.address.account_index
+            result[&#39;account_idx&#39;] = self.address.account_idx
+            result[&#39;signature&#39;] = self.signature.value.replace(&#39;0x&#39;, &#39;&#39;)
+            result[&#39;extrinsic_hash&#39;] = self.extrinsic_hash
+        if self.call_index:
+            result[&#39;call_code&#39;] = self.call_index
+            result[&#39;call_function&#39;] = self.call.get_identifier()
+            result[&#39;call_module&#39;] = self.call_module.get_identifier()
+
+        if self.nonce:
+            result[&#39;nonce&#39;] = self.nonce.value
+
+        if self.era:
+            result[&#39;era&#39;] = self.era.value
+
+        if self.tip:
+            result[&#39;tip&#39;] = self.tip.value
+
+        result[&#39;params&#39;] = self.params
+
+        return result
+
+    def process_encode(self, value):
+        # Check requirements
+        if &#39;call_index&#39; in value:
+            self.call_index = value[&#39;call_index&#39;]
+
+        elif &#39;call_module&#39; in value and &#39;call_function&#39; in value:
+            # Look up call module from metadata
+            for call_index, (call_module, call) in self.metadata.call_index.items():
+                if call_module.name == value[&#39;call_module&#39;] and call.name == value[&#39;call_function&#39;]:
+                    self.call_index = call_index
+                    self.call_module = call_module
+                    self.call = call
+                    break
+
+            if not self.call_index:
+                raise ValueError(&#39;Specified call module and function not found in metadata&#39;)
+
+        elif not self.call_module or not self.call:
+            raise ValueError(&#39;No call module and function specified&#39;)
+
+        if self.contains_transaction:
+            data = ScaleBytes(&#39;0x84&#39;)
+            raise NotImplementedError(&#39;Encoding of signed extrinsics not supported&#39;)
+        else:
+            data = ScaleBytes(&#39;0x04&#39;)
+
+        data += ScaleBytes(bytearray.fromhex(self.call_index))
+
+        # Encode call params
+        if len(self.call.args) &gt; 0:
+            for arg in self.call.args:
+                if arg.name not in value.get(&#39;call_args&#39;, {}):
+                    raise ValueError(&#39;Parameter \&#39;{}\&#39; not specified&#39;.format(arg.name))
+                else:
+                    param_value = value[&#39;call_args&#39;][arg.name]
+
+                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    data += arg_obj.encode(param_value)
+
+        # Wrap payload with een length Compact&lt;u32&gt;
+        length_obj = self.get_decoder_class(&#39;Compact&lt;u32&gt;&#39;)
+        data = length_obj.encode(data.length) + data
+
+        return data
+
+
+class ExtrinsicsBlock61181Decoder(ExtrinsicsDecoder):
+    type_mapping = (
+        (&#39;extrinsic_length&#39;, &#39;Compact&lt;u32&gt;&#39;),
+        (&#39;version_info&#39;, &#39;u8&#39;),
+        (&#39;address&#39;, &#39;Address&#39;),
+        (&#39;signature&#39;, &#39;Signature&#39;),
+        (&#39;nonce&#39;, &#39;u64&#39;),
+        (&#39;era&#39;, &#39;Era&#39;),
+        (&#39;call_index&#39;, &#39;(u8,u8)&#39;),
+    )
+
+
+class EventsDecoder(Vec):
+    type_string = &#39;Vec&lt;EventRecord&lt;Event, Hash&gt;&gt;&#39;
+
+    def __init__(self, data, metadata=None, **kwargs):
+        assert (not metadata or type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+        self.elements = []
+
+        super().__init__(data, metadata=metadata, **kwargs)
+
+    def process(self):
+        element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+
+        for i in range(0, element_count):
+            element = self.process_type(&#39;EventRecord&#39;, metadata=self.metadata)
+            element.value[&#39;event_idx&#39;] = i
+            self.elements.append(element)
+
+        return [e.value for e in self.elements]
+
+
+class EventRecord(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
+
+        assert (not metadata or type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+
+        self.phase = None
+        self.extrinsic_idx = None
+        self.type = None
+        self.params = []
+        self.event = None
+        self.event_module = None
+        self.topics = []
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        # TODO Create option type
+        self.phase = self.get_next_u8()
+
+        if self.phase == 0:
+            self.extrinsic_idx = self.process_type(&#39;U32&#39;).value
+
+        self.type = self.get_next_bytes(2).hex()
+
+        # Decode params
+
+        self.event = self.metadata.event_index[self.type][1]
+        self.event_module = self.metadata.event_index[self.type][0]
+
+        for arg_type in self.event.args:
+            arg_type_obj = self.process_type(arg_type)
+
+            self.params.append({
+                &#39;type&#39;: arg_type,
+                &#39;value&#39;: arg_type_obj.serialize(),
+                &#39;valueRaw&#39;: arg_type_obj.raw_value
+            })
+
+        # Topics introduced since MetadataV5
+        if self.metadata.version and self.metadata.version.index &gt;= 5:
+            self.topics = self.process_type(&#39;Vec&lt;Hash&gt;&#39;).value
+
+        return {
+            &#39;phase&#39;: self.phase,
+            &#39;extrinsic_idx&#39;: self.extrinsic_idx,
+            &#39;type&#39;: self.type,
+            &#39;module_id&#39;: self.event_module.name,
+            &#39;event_id&#39;: self.event.name,
+            &#39;params&#39;: self.params,
+            &#39;topics&#39;: self.topics
+        }
+
+
+class Other(Bytes):
+    pass
+
+
+class AuthoritiesChange(Vec):
+    type_string = &#39;Vec&lt;AccountId&gt;&#39;
+
+    def __init__(self, data, **kwargs):
+
+        super().__init__(data, sub_type=&#39;AccountId&#39;, **kwargs)
+
+
+class ConsensusEngineId(VecU8Length4):
+    pass
+
+
+class ChangesTrieRoot(Bytes):
+    pass
+
+
+class SealV0(Struct):
+    type_string = &#39;(u64, Signature)&#39;
+
+    type_mapping = ((&#39;slot&#39;, &#39;u64&#39;), (&#39;signature&#39;, &#39;Signature&#39;))
+
+
+class Consensus(Struct):
+    type_string = &#39;(ConsensusEngineId, Vec&lt;u8&gt;)&#39;
+
+    type_mapping = ((&#39;engine&#39;, &#39;ConsensusEngineId&#39;), (&#39;data&#39;, &#39;HexBytes&#39;))
+
+
+class Seal(Struct):
+    type_string = &#39;(ConsensusEngineId, Bytes)&#39;
+
+    type_mapping = ((&#39;engine&#39;, &#39;ConsensusEngineId&#39;), (&#39;data&#39;, &#39;HexBytes&#39;))
+
+
+class PreRuntime(Struct):
+    type_string = &#39;(ConsensusEngineId, Bytes)&#39;
+
+    type_mapping = ((&#39;engine&#39;, &#39;ConsensusEngineId&#39;), (&#39;data&#39;, &#39;HexBytes&#39;))
+
+
+class LogDigest(Enum):
+
+    value_list = [&#39;Other&#39;, &#39;AuthoritiesChange&#39;, &#39;ChangesTrieRoot&#39;, &#39;SealV0&#39;, &#39;Consensus&#39;, &#39;Seal&#39;, &#39;PreRuntime&#39;]
+
+    def __init__(self, data, **kwargs):
+        self.log_type = None
+        self.index_value = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.index = int(self.get_next_bytes(1).hex())
+        self.index_value = self.value_list[self.index]
+        self.log_type = self.process_type(self.value_list[self.index])
+
+        return {&#39;type&#39;: self.log_type.type_string, &#39;value&#39;: self.log_type.value}</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="scalecodec.block.AuthoritiesChange"><code class="flex name class">
+<span>class <span class="ident">AuthoritiesChange</span></span>
+<span>(</span><span>data, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AuthoritiesChange(Vec):
+    type_string = &#39;Vec&lt;AccountId&gt;&#39;
+
+    def __init__(self, data, **kwargs):
+
+        super().__init__(data, sub_type=&#39;AccountId&#39;, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Vec" href="types.html#scalecodec.types.Vec">Vec</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.AuthoritiesChange.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></section>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Vec" href="types.html#scalecodec.types.Vec">Vec</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Vec.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.ChangesTrieRoot"><code class="flex name class">
+<span>class <span class="ident">ChangesTrieRoot</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ChangesTrieRoot(Bytes):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Bytes" href="types.html#scalecodec.types.Bytes">Bytes</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Bytes" href="types.html#scalecodec.types.Bytes">Bytes</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Bytes.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+<li><code><a title="scalecodec.types.Bytes.type_string" href="types.html#scalecodec.types.Bytes.type_string">type_string</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.Consensus"><code class="flex name class">
+<span>class <span class="ident">Consensus</span></span>
+<span>(</span><span>data, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Consensus(Struct):
+    type_string = &#39;(ConsensusEngineId, Vec&lt;u8&gt;)&#39;
+
+    type_mapping = ((&#39;engine&#39;, &#39;ConsensusEngineId&#39;), (&#39;data&#39;, &#39;HexBytes&#39;))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.Consensus.type_mapping"><code class="name">var <span class="ident">type_mapping</span></code></dt>
+<dd>
+<section class="desc"><p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable's items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p></section>
+</dd>
+<dt id="scalecodec.block.Consensus.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></section>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.ConsensusEngineId"><code class="flex name class">
+<span>class <span class="ident">ConsensusEngineId</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConsensusEngineId(VecU8Length4):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.VecU8Length4" href="types.html#scalecodec.types.VecU8Length4">VecU8Length4</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.VecU8Length4" href="types.html#scalecodec.types.VecU8Length4">VecU8Length4</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.VecU8Length4.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+<li><code><a title="scalecodec.types.VecU8Length4.type_string" href="types.html#scalecodec.types.VecU8Length4.type_string">type_string</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.EventRecord"><code class="flex name class">
+<span>class <span class="ident">EventRecord</span></span>
+<span>(</span><span>data, sub_type=None, metadata=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EventRecord(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
+
+        assert (not metadata or type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+
+        self.phase = None
+        self.extrinsic_idx = None
+        self.type = None
+        self.params = []
+        self.event = None
+        self.event_module = None
+        self.topics = []
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        # TODO Create option type
+        self.phase = self.get_next_u8()
+
+        if self.phase == 0:
+            self.extrinsic_idx = self.process_type(&#39;U32&#39;).value
+
+        self.type = self.get_next_bytes(2).hex()
+
+        # Decode params
+
+        self.event = self.metadata.event_index[self.type][1]
+        self.event_module = self.metadata.event_index[self.type][0]
+
+        for arg_type in self.event.args:
+            arg_type_obj = self.process_type(arg_type)
+
+            self.params.append({
+                &#39;type&#39;: arg_type,
+                &#39;value&#39;: arg_type_obj.serialize(),
+                &#39;valueRaw&#39;: arg_type_obj.raw_value
+            })
+
+        # Topics introduced since MetadataV5
+        if self.metadata.version and self.metadata.version.index &gt;= 5:
+            self.topics = self.process_type(&#39;Vec&lt;Hash&gt;&#39;).value
+
+        return {
+            &#39;phase&#39;: self.phase,
+            &#39;extrinsic_idx&#39;: self.extrinsic_idx,
+            &#39;type&#39;: self.type,
+            &#39;module_id&#39;: self.event_module.name,
+            &#39;event_id&#39;: self.event.name,
+            &#39;params&#39;: self.params,
+            &#39;topics&#39;: self.topics
+        }</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.block.EventRecord.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+
+    # TODO Create option type
+    self.phase = self.get_next_u8()
+
+    if self.phase == 0:
+        self.extrinsic_idx = self.process_type(&#39;U32&#39;).value
+
+    self.type = self.get_next_bytes(2).hex()
+
+    # Decode params
+
+    self.event = self.metadata.event_index[self.type][1]
+    self.event_module = self.metadata.event_index[self.type][0]
+
+    for arg_type in self.event.args:
+        arg_type_obj = self.process_type(arg_type)
+
+        self.params.append({
+            &#39;type&#39;: arg_type,
+            &#39;value&#39;: arg_type_obj.serialize(),
+            &#39;valueRaw&#39;: arg_type_obj.raw_value
+        })
+
+    # Topics introduced since MetadataV5
+    if self.metadata.version and self.metadata.version.index &gt;= 5:
+        self.topics = self.process_type(&#39;Vec&lt;Hash&gt;&#39;).value
+
+    return {
+        &#39;phase&#39;: self.phase,
+        &#39;extrinsic_idx&#39;: self.extrinsic_idx,
+        &#39;type&#39;: self.type,
+        &#39;module_id&#39;: self.event_module.name,
+        &#39;event_id&#39;: self.event.name,
+        &#39;params&#39;: self.params,
+        &#39;topics&#39;: self.topics
+    }</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.ScaleDecoder.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.EventsDecoder"><code class="flex name class">
+<span>class <span class="ident">EventsDecoder</span></span>
+<span>(</span><span>data, metadata=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EventsDecoder(Vec):
+    type_string = &#39;Vec&lt;EventRecord&lt;Event, Hash&gt;&gt;&#39;
+
+    def __init__(self, data, metadata=None, **kwargs):
+        assert (not metadata or type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+        self.elements = []
+
+        super().__init__(data, metadata=metadata, **kwargs)
+
+    def process(self):
+        element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+
+        for i in range(0, element_count):
+            element = self.process_type(&#39;EventRecord&#39;, metadata=self.metadata)
+            element.value[&#39;event_idx&#39;] = i
+            self.elements.append(element)
+
+        return [e.value for e in self.elements]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Vec" href="types.html#scalecodec.types.Vec">Vec</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.EventsDecoder.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></section>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.block.EventsDecoder.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+
+    for i in range(0, element_count):
+        element = self.process_type(&#39;EventRecord&#39;, metadata=self.metadata)
+        element.value[&#39;event_idx&#39;] = i
+        self.elements.append(element)
+
+    return [e.value for e in self.elements]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Vec" href="types.html#scalecodec.types.Vec">Vec</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Vec.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.ExtrinsicsBlock61181Decoder"><code class="flex name class">
+<span>class <span class="ident">ExtrinsicsBlock61181Decoder</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, address_type=42)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ExtrinsicsBlock61181Decoder(ExtrinsicsDecoder):
+    type_mapping = (
+        (&#39;extrinsic_length&#39;, &#39;Compact&lt;u32&gt;&#39;),
+        (&#39;version_info&#39;, &#39;u8&#39;),
+        (&#39;address&#39;, &#39;Address&#39;),
+        (&#39;signature&#39;, &#39;Signature&#39;),
+        (&#39;nonce&#39;, &#39;u64&#39;),
+        (&#39;era&#39;, &#39;Era&#39;),
+        (&#39;call_index&#39;, &#39;(u8,u8)&#39;),
+    )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.block.ExtrinsicsDecoder" href="#scalecodec.block.ExtrinsicsDecoder">ExtrinsicsDecoder</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.block.ExtrinsicsDecoder" href="#scalecodec.block.ExtrinsicsDecoder">ExtrinsicsDecoder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.block.ExtrinsicsDecoder.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+<li><code><a title="scalecodec.block.ExtrinsicsDecoder.type_mapping" href="#scalecodec.block.ExtrinsicsDecoder.type_mapping">type_mapping</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.ExtrinsicsDecoder"><code class="flex name class">
+<span>class <span class="ident">ExtrinsicsDecoder</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, address_type=42)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ExtrinsicsDecoder(ScaleDecoder):
+    type_mapping = (
+        (&#39;extrinsic_length&#39;, &#39;Compact&lt;u32&gt;&#39;),
+        (&#39;version_info&#39;, &#39;u8&#39;),
+        (&#39;address&#39;, &#39;Address&#39;),
+        (&#39;signature&#39;, &#39;Signature&#39;),
+        (&#39;nonce&#39;, &#39;Compact&lt;u32&gt;&#39;),
+        (&#39;era&#39;, &#39;Era&#39;),
+        (&#39;call_index&#39;, &#39;(u8,u8)&#39;),
+    )
+
+    def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, address_type=42):
+
+        assert (type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+        self.address_type = address_type
+        self.extrinsic_length = None
+        self.extrinsic_hash = None
+        self.version_info = None
+        self.contains_transaction = False
+        self.address = None
+        self.signature_version = None
+        self.signature = None
+        self.nonce = None
+        self.era = None
+        self.tip = None
+        self.call_index = None
+        self.call_module = None
+        self.call = None
+        self.call_args = None
+        self.params_raw = None
+        self.params = []
+        super().__init__(data, sub_type)
+
+    def generate_hash(self):
+        if self.contains_transaction:
+
+            if self.extrinsic_length:
+                extrinsic_data = self.data.data
+            else:
+                # Fallback for legacy version, prefix additional Compact&lt;u32&gt; with length
+                extrinsic_length_type = CompactU32(ScaleBytes(bytearray()))
+                extrinsic_length_type.encode(self.data.length)
+                extrinsic_data = extrinsic_length_type.data.data + self.data.data
+
+            return blake2b(extrinsic_data, digest_size=32).digest().hex()
+        else:
+            return None
+
+    def process(self):
+        # TODO for all attributes
+        attribute_types = OrderedDict(self.type_mapping)
+
+        self.extrinsic_length = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+
+        if self.extrinsic_length != self.data.get_remaining_length():
+            # Fallback for legacy version
+            self.extrinsic_length = None
+            self.data.reset()
+
+        self.version_info = self.get_next_bytes(1).hex()
+
+        self.contains_transaction = int(self.version_info, 16) &gt;= 80
+
+        if self.version_info == &#39;01&#39; or self.version_info == &#39;81&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.nonce = self.process_type(attribute_types[&#39;nonce&#39;])
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == &#39;02&#39; or self.version_info == &#39;82&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+                self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == &#39;03&#39; or self.version_info == &#39;83&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+                self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+        elif self.version_info == &#39;04&#39; or self.version_info == &#39;84&#39;:
+
+            if self.contains_transaction:
+                self.address = self.process_type(&#39;Address&#39;)
+
+                self.signature_version = self.process_type(&#39;U8&#39;)
+
+                self.signature = self.process_type(&#39;Signature&#39;)
+
+                self.era = self.process_type(&#39;Era&#39;)
+
+                self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+                self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+                self.extrinsic_hash = self.generate_hash()
+
+            self.call_index = self.get_next_bytes(2).hex()
+        else:
+            raise NotImplementedError(&#39;Extrinsics version &#34;{}&#34; is not implemented&#39;.format(self.version_info))
+
+        if self.call_index:
+
+            self.params_raw = self.data.data[self.data.offset:]
+
+            # Decode params
+
+            self.call = self.metadata.call_index[self.call_index][1]
+            self.call_module = self.metadata.call_index[self.call_index][0]
+
+            if self.debug:
+                print(&#39;Call: &#39;, self.call.name)
+                print(&#39;Module: &#39;, self.call_module.name)
+
+            for arg in self.call.args:
+                if self.debug:
+                    print(&#39;Param: &#39;, arg.name, arg.type)
+
+                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+                self.params.append({
+                    &#39;name&#39;: arg.name,
+                    &#39;type&#39;: arg.type,
+                    &#39;value&#39;: arg_type_obj.serialize(),
+                    &#39;valueRaw&#39;: arg_type_obj.raw_value
+                })
+
+        result = {
+            &#39;valueRaw&#39;: self.raw_value,
+            &#39;extrinsic_length&#39;: self.extrinsic_length,
+            &#39;version_info&#39;: self.version_info,
+        }
+
+        if self.contains_transaction:
+            result[&#39;account_length&#39;] = self.address.account_length
+            result[&#39;account_id&#39;] = self.address.account_id
+            result[&#39;account_index&#39;] = self.address.account_index
+            result[&#39;account_idx&#39;] = self.address.account_idx
+            result[&#39;signature&#39;] = self.signature.value.replace(&#39;0x&#39;, &#39;&#39;)
+            result[&#39;extrinsic_hash&#39;] = self.extrinsic_hash
+        if self.call_index:
+            result[&#39;call_code&#39;] = self.call_index
+            result[&#39;call_function&#39;] = self.call.get_identifier()
+            result[&#39;call_module&#39;] = self.call_module.get_identifier()
+
+        if self.nonce:
+            result[&#39;nonce&#39;] = self.nonce.value
+
+        if self.era:
+            result[&#39;era&#39;] = self.era.value
+
+        if self.tip:
+            result[&#39;tip&#39;] = self.tip.value
+
+        result[&#39;params&#39;] = self.params
+
+        return result
+
+    def process_encode(self, value):
+        # Check requirements
+        if &#39;call_index&#39; in value:
+            self.call_index = value[&#39;call_index&#39;]
+
+        elif &#39;call_module&#39; in value and &#39;call_function&#39; in value:
+            # Look up call module from metadata
+            for call_index, (call_module, call) in self.metadata.call_index.items():
+                if call_module.name == value[&#39;call_module&#39;] and call.name == value[&#39;call_function&#39;]:
+                    self.call_index = call_index
+                    self.call_module = call_module
+                    self.call = call
+                    break
+
+            if not self.call_index:
+                raise ValueError(&#39;Specified call module and function not found in metadata&#39;)
+
+        elif not self.call_module or not self.call:
+            raise ValueError(&#39;No call module and function specified&#39;)
+
+        if self.contains_transaction:
+            data = ScaleBytes(&#39;0x84&#39;)
+            raise NotImplementedError(&#39;Encoding of signed extrinsics not supported&#39;)
+        else:
+            data = ScaleBytes(&#39;0x04&#39;)
+
+        data += ScaleBytes(bytearray.fromhex(self.call_index))
+
+        # Encode call params
+        if len(self.call.args) &gt; 0:
+            for arg in self.call.args:
+                if arg.name not in value.get(&#39;call_args&#39;, {}):
+                    raise ValueError(&#39;Parameter \&#39;{}\&#39; not specified&#39;.format(arg.name))
+                else:
+                    param_value = value[&#39;call_args&#39;][arg.name]
+
+                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    data += arg_obj.encode(param_value)
+
+        # Wrap payload with een length Compact&lt;u32&gt;
+        length_obj = self.get_decoder_class(&#39;Compact&lt;u32&gt;&#39;)
+        data = length_obj.encode(data.length) + data
+
+        return data</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.block.ExtrinsicsBlock61181Decoder" href="#scalecodec.block.ExtrinsicsBlock61181Decoder">ExtrinsicsBlock61181Decoder</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.ExtrinsicsDecoder.type_mapping"><code class="name">var <span class="ident">type_mapping</span></code></dt>
+<dd>
+<section class="desc"><p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable's items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p></section>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.block.ExtrinsicsDecoder.generate_hash"><code class="name flex">
+<span>def <span class="ident">generate_hash</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_hash(self):
+    if self.contains_transaction:
+
+        if self.extrinsic_length:
+            extrinsic_data = self.data.data
+        else:
+            # Fallback for legacy version, prefix additional Compact&lt;u32&gt; with length
+            extrinsic_length_type = CompactU32(ScaleBytes(bytearray()))
+            extrinsic_length_type.encode(self.data.length)
+            extrinsic_data = extrinsic_length_type.data.data + self.data.data
+
+        return blake2b(extrinsic_data, digest_size=32).digest().hex()
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.block.ExtrinsicsDecoder.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    # TODO for all attributes
+    attribute_types = OrderedDict(self.type_mapping)
+
+    self.extrinsic_length = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+
+    if self.extrinsic_length != self.data.get_remaining_length():
+        # Fallback for legacy version
+        self.extrinsic_length = None
+        self.data.reset()
+
+    self.version_info = self.get_next_bytes(1).hex()
+
+    self.contains_transaction = int(self.version_info, 16) &gt;= 80
+
+    if self.version_info == &#39;01&#39; or self.version_info == &#39;81&#39;:
+
+        if self.contains_transaction:
+            self.address = self.process_type(&#39;Address&#39;)
+
+            self.signature = self.process_type(&#39;Signature&#39;)
+
+            self.nonce = self.process_type(attribute_types[&#39;nonce&#39;])
+
+            self.era = self.process_type(&#39;Era&#39;)
+
+            self.extrinsic_hash = self.generate_hash()
+
+        self.call_index = self.get_next_bytes(2).hex()
+
+    elif self.version_info == &#39;02&#39; or self.version_info == &#39;82&#39;:
+
+        if self.contains_transaction:
+            self.address = self.process_type(&#39;Address&#39;)
+
+            self.signature = self.process_type(&#39;Signature&#39;)
+
+            self.era = self.process_type(&#39;Era&#39;)
+
+            self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+            self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+            self.extrinsic_hash = self.generate_hash()
+
+        self.call_index = self.get_next_bytes(2).hex()
+
+    elif self.version_info == &#39;03&#39; or self.version_info == &#39;83&#39;:
+
+        if self.contains_transaction:
+            self.address = self.process_type(&#39;Address&#39;)
+
+            self.signature = self.process_type(&#39;Signature&#39;)
+
+            self.era = self.process_type(&#39;Era&#39;)
+
+            self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+            self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+            self.extrinsic_hash = self.generate_hash()
+
+        self.call_index = self.get_next_bytes(2).hex()
+
+    elif self.version_info == &#39;04&#39; or self.version_info == &#39;84&#39;:
+
+        if self.contains_transaction:
+            self.address = self.process_type(&#39;Address&#39;)
+
+            self.signature_version = self.process_type(&#39;U8&#39;)
+
+            self.signature = self.process_type(&#39;Signature&#39;)
+
+            self.era = self.process_type(&#39;Era&#39;)
+
+            self.nonce = self.process_type(&#39;Compact&lt;U64&gt;&#39;)
+
+            self.tip = self.process_type(&#39;Compact&lt;Balance&gt;&#39;)
+
+            self.extrinsic_hash = self.generate_hash()
+
+        self.call_index = self.get_next_bytes(2).hex()
+    else:
+        raise NotImplementedError(&#39;Extrinsics version &#34;{}&#34; is not implemented&#39;.format(self.version_info))
+
+    if self.call_index:
+
+        self.params_raw = self.data.data[self.data.offset:]
+
+        # Decode params
+
+        self.call = self.metadata.call_index[self.call_index][1]
+        self.call_module = self.metadata.call_index[self.call_index][0]
+
+        if self.debug:
+            print(&#39;Call: &#39;, self.call.name)
+            print(&#39;Module: &#39;, self.call_module.name)
+
+        for arg in self.call.args:
+            if self.debug:
+                print(&#39;Param: &#39;, arg.name, arg.type)
+
+            arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+            self.params.append({
+                &#39;name&#39;: arg.name,
+                &#39;type&#39;: arg.type,
+                &#39;value&#39;: arg_type_obj.serialize(),
+                &#39;valueRaw&#39;: arg_type_obj.raw_value
+            })
+
+    result = {
+        &#39;valueRaw&#39;: self.raw_value,
+        &#39;extrinsic_length&#39;: self.extrinsic_length,
+        &#39;version_info&#39;: self.version_info,
+    }
+
+    if self.contains_transaction:
+        result[&#39;account_length&#39;] = self.address.account_length
+        result[&#39;account_id&#39;] = self.address.account_id
+        result[&#39;account_index&#39;] = self.address.account_index
+        result[&#39;account_idx&#39;] = self.address.account_idx
+        result[&#39;signature&#39;] = self.signature.value.replace(&#39;0x&#39;, &#39;&#39;)
+        result[&#39;extrinsic_hash&#39;] = self.extrinsic_hash
+    if self.call_index:
+        result[&#39;call_code&#39;] = self.call_index
+        result[&#39;call_function&#39;] = self.call.get_identifier()
+        result[&#39;call_module&#39;] = self.call_module.get_identifier()
+
+    if self.nonce:
+        result[&#39;nonce&#39;] = self.nonce.value
+
+    if self.era:
+        result[&#39;era&#39;] = self.era.value
+
+    if self.tip:
+        result[&#39;tip&#39;] = self.tip.value
+
+    result[&#39;params&#39;] = self.params
+
+    return result</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.block.ExtrinsicsDecoder.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value):
+    # Check requirements
+    if &#39;call_index&#39; in value:
+        self.call_index = value[&#39;call_index&#39;]
+
+    elif &#39;call_module&#39; in value and &#39;call_function&#39; in value:
+        # Look up call module from metadata
+        for call_index, (call_module, call) in self.metadata.call_index.items():
+            if call_module.name == value[&#39;call_module&#39;] and call.name == value[&#39;call_function&#39;]:
+                self.call_index = call_index
+                self.call_module = call_module
+                self.call = call
+                break
+
+        if not self.call_index:
+            raise ValueError(&#39;Specified call module and function not found in metadata&#39;)
+
+    elif not self.call_module or not self.call:
+        raise ValueError(&#39;No call module and function specified&#39;)
+
+    if self.contains_transaction:
+        data = ScaleBytes(&#39;0x84&#39;)
+        raise NotImplementedError(&#39;Encoding of signed extrinsics not supported&#39;)
+    else:
+        data = ScaleBytes(&#39;0x04&#39;)
+
+    data += ScaleBytes(bytearray.fromhex(self.call_index))
+
+    # Encode call params
+    if len(self.call.args) &gt; 0:
+        for arg in self.call.args:
+            if arg.name not in value.get(&#39;call_args&#39;, {}):
+                raise ValueError(&#39;Parameter \&#39;{}\&#39; not specified&#39;.format(arg.name))
+            else:
+                param_value = value[&#39;call_args&#39;][arg.name]
+
+                arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                data += arg_obj.encode(param_value)
+
+    # Wrap payload with een length Compact&lt;u32&gt;
+    length_obj = self.get_decoder_class(&#39;Compact&lt;u32&gt;&#39;)
+    data = length_obj.encode(data.length) + data
+
+    return data</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.ScaleDecoder.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.LogDigest"><code class="flex name class">
+<span>class <span class="ident">LogDigest</span></span>
+<span>(</span><span>data, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LogDigest(Enum):
+
+    value_list = [&#39;Other&#39;, &#39;AuthoritiesChange&#39;, &#39;ChangesTrieRoot&#39;, &#39;SealV0&#39;, &#39;Consensus&#39;, &#39;Seal&#39;, &#39;PreRuntime&#39;]
+
+    def __init__(self, data, **kwargs):
+        self.log_type = None
+        self.index_value = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.index = int(self.get_next_bytes(1).hex())
+        self.index_value = self.value_list[self.index]
+        self.log_type = self.process_type(self.value_list[self.index])
+
+        return {&#39;type&#39;: self.log_type.type_string, &#39;value&#39;: self.log_type.value}</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Enum" href="types.html#scalecodec.types.Enum">Enum</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.block.LogDigest.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    self.index = int(self.get_next_bytes(1).hex())
+    self.index_value = self.value_list[self.index]
+    self.log_type = self.process_type(self.value_list[self.index])
+
+    return {&#39;type&#39;: self.log_type.type_string, &#39;value&#39;: self.log_type.value}</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Enum" href="types.html#scalecodec.types.Enum">Enum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Enum.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+<li><code><a title="scalecodec.types.Enum.value_list" href="types.html#scalecodec.types.Enum.value_list">value_list</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.Other"><code class="flex name class">
+<span>class <span class="ident">Other</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Other(Bytes):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Bytes" href="types.html#scalecodec.types.Bytes">Bytes</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Bytes" href="types.html#scalecodec.types.Bytes">Bytes</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Bytes.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+<li><code><a title="scalecodec.types.Bytes.type_string" href="types.html#scalecodec.types.Bytes.type_string">type_string</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.PreRuntime"><code class="flex name class">
+<span>class <span class="ident">PreRuntime</span></span>
+<span>(</span><span>data, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PreRuntime(Struct):
+    type_string = &#39;(ConsensusEngineId, Bytes)&#39;
+
+    type_mapping = ((&#39;engine&#39;, &#39;ConsensusEngineId&#39;), (&#39;data&#39;, &#39;HexBytes&#39;))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.PreRuntime.type_mapping"><code class="name">var <span class="ident">type_mapping</span></code></dt>
+<dd>
+<section class="desc"><p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable's items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p></section>
+</dd>
+<dt id="scalecodec.block.PreRuntime.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></section>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.Seal"><code class="flex name class">
+<span>class <span class="ident">Seal</span></span>
+<span>(</span><span>data, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Seal(Struct):
+    type_string = &#39;(ConsensusEngineId, Bytes)&#39;
+
+    type_mapping = ((&#39;engine&#39;, &#39;ConsensusEngineId&#39;), (&#39;data&#39;, &#39;HexBytes&#39;))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.Seal.type_mapping"><code class="name">var <span class="ident">type_mapping</span></code></dt>
+<dd>
+<section class="desc"><p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable's items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p></section>
+</dd>
+<dt id="scalecodec.block.Seal.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></section>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.block.SealV0"><code class="flex name class">
+<span>class <span class="ident">SealV0</span></span>
+<span>(</span><span>data, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SealV0(Struct):
+    type_string = &#39;(u64, Signature)&#39;
+
+    type_mapping = ((&#39;slot&#39;, &#39;u64&#39;), (&#39;signature&#39;, &#39;Signature&#39;))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.block.SealV0.type_mapping"><code class="name">var <span class="ident">type_mapping</span></code></dt>
+<dd>
+<section class="desc"><p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable's items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p></section>
+</dd>
+<dt id="scalecodec.block.SealV0.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<section class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></section>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.debug" href="base.html#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="scalecodec" href="index.html">scalecodec</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="scalecodec.block.AuthoritiesChange" href="#scalecodec.block.AuthoritiesChange">AuthoritiesChange</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.AuthoritiesChange.type_string" href="#scalecodec.block.AuthoritiesChange.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.ChangesTrieRoot" href="#scalecodec.block.ChangesTrieRoot">ChangesTrieRoot</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.Consensus" href="#scalecodec.block.Consensus">Consensus</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.Consensus.type_mapping" href="#scalecodec.block.Consensus.type_mapping">type_mapping</a></code></li>
+<li><code><a title="scalecodec.block.Consensus.type_string" href="#scalecodec.block.Consensus.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.ConsensusEngineId" href="#scalecodec.block.ConsensusEngineId">ConsensusEngineId</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.EventRecord" href="#scalecodec.block.EventRecord">EventRecord</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.EventRecord.process" href="#scalecodec.block.EventRecord.process">process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.EventsDecoder" href="#scalecodec.block.EventsDecoder">EventsDecoder</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.EventsDecoder.process" href="#scalecodec.block.EventsDecoder.process">process</a></code></li>
+<li><code><a title="scalecodec.block.EventsDecoder.type_string" href="#scalecodec.block.EventsDecoder.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.ExtrinsicsBlock61181Decoder" href="#scalecodec.block.ExtrinsicsBlock61181Decoder">ExtrinsicsBlock61181Decoder</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.ExtrinsicsDecoder" href="#scalecodec.block.ExtrinsicsDecoder">ExtrinsicsDecoder</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.ExtrinsicsDecoder.generate_hash" href="#scalecodec.block.ExtrinsicsDecoder.generate_hash">generate_hash</a></code></li>
+<li><code><a title="scalecodec.block.ExtrinsicsDecoder.process" href="#scalecodec.block.ExtrinsicsDecoder.process">process</a></code></li>
+<li><code><a title="scalecodec.block.ExtrinsicsDecoder.process_encode" href="#scalecodec.block.ExtrinsicsDecoder.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.block.ExtrinsicsDecoder.type_mapping" href="#scalecodec.block.ExtrinsicsDecoder.type_mapping">type_mapping</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.LogDigest" href="#scalecodec.block.LogDigest">LogDigest</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.LogDigest.process" href="#scalecodec.block.LogDigest.process">process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.Other" href="#scalecodec.block.Other">Other</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.PreRuntime" href="#scalecodec.block.PreRuntime">PreRuntime</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.PreRuntime.type_mapping" href="#scalecodec.block.PreRuntime.type_mapping">type_mapping</a></code></li>
+<li><code><a title="scalecodec.block.PreRuntime.type_string" href="#scalecodec.block.PreRuntime.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.Seal" href="#scalecodec.block.Seal">Seal</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.Seal.type_mapping" href="#scalecodec.block.Seal.type_mapping">type_mapping</a></code></li>
+<li><code><a title="scalecodec.block.Seal.type_string" href="#scalecodec.block.Seal.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.block.SealV0" href="#scalecodec.block.SealV0">SealV0</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.block.SealV0.type_mapping" href="#scalecodec.block.SealV0.type_mapping">type_mapping</a></code></li>
+<li><code><a title="scalecodec.block.SealV0.type_string" href="#scalecodec.block.SealV0.type_string">type_string</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
