@@ -143,6 +143,21 @@
     "Judgement<BalanceOf>": "Judgement",
     "LeasePeriod": "BlockNumber",
     "LeasePeriodOf": "LeasePeriod",
+    "(LeasePeriodOf, IncomingParachain<AccountId, Hash>)": {
+      "type": "struct",
+      "type_mapping": [
+         ["leasePeriod", "LeasePeriodOf"],
+         ["incomingParachain", "IncomingParachain"]
+      ]
+    },
+    "(ParaId, Option<(CollatorId, Retriable)>)": {
+      "type": "struct",
+      "type_mapping": [
+         ["ParaId", "ParaId"],
+         ["CollatorId-Retriable", "Option<(CollatorId, Retriable)>"]
+      ]
+    },
+    "LockIdentifier": "[u8; 8]",
     "MaybeVrf": "[u8; 32]",
     "MemberCount": "u32",
     "MomentOf": "Moment",
@@ -164,7 +179,21 @@
          ["approvals", "Vec<AccountId>"]
       ]
     },
-    "Offender": "(ValidatorId, Exposure)",
+    "Offender": {
+      "type": "struct",
+      "type_mapping": [
+         ["validatorId", "ValidatorId"],
+         ["exposure", "Exposure"]
+      ]
+    },
+    "Reporter": "AccountId",
+    "OffenceDetails<AccountId, IdentificationTuple>": {
+      "type": "struct",
+      "type_mapping": [
+         ["offender", "Offender"],
+         ["reporters", "Vec<Reporter>"]
+      ]
+    },
     "OpenTipFinder": "(AccountId, Balance)",
     "OpenTipTip": "(AccountId, Balance)",
     "OpenTip<AccountId, BalanceOf, BlockNumber, Hash>": {
@@ -287,7 +316,31 @@
          ["max_subject_len", "u32"]
       ]
     },
+    "StakingLedger<AccountId, BalanceOf>": {
+      "type": "struct",
+      "type_mapping": [
+         ["stash", "AccountId"],
+         ["total", "Compact<Balance>"],
+         ["active", "Compact<Balance>"],
+         ["unlocking", "Vec<UnlockChunk<Balance>>"]
+      ]
+    },
     "SubId": "u32",
+    "UncleEntryItem<BlockNumber, Hash, AccountId>": {
+      "type": "enum",
+      "value_list": [
+        "InclusionHeight",
+        "Uncle"
+      ]
+    },
+    "VestingSchedule<Balance, BlockNumber>": {
+      "type": "struct",
+      "type_mapping": [
+         ["offset", "Balance"],
+         ["perBlock", "Balance"],
+         ["startingBlock", "BlockNumber"]
+      ]
+    },
     "Weight": "u32",
     "WeightMultiplier": "u64",
     "WinningDataEntry": "(AccountId, ParaIdOf, BalanceOf)",
@@ -370,6 +423,7 @@
     },
     "DigestOf": "Digest",
     "SpanIndex": "u32",
+    "slashing::SpanIndex": "SpanIndex",
     "SlashingSpans": {
       "type": "struct",
       "type_mapping": [
@@ -394,7 +448,7 @@
          ["amount", "Balance"]
       ]
     },
-    "UnappliedSlash": {
+    "UnappliedSlash<AccountId, BalanceOf>": {
       "type": "struct",
       "type_mapping": [
          ["validator", "AccountId"],

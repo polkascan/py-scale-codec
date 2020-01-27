@@ -1098,25 +1098,6 @@ class StoredPendingChange(Struct):
     )
 
 
-class OffenceDetails(Struct):
-    type_mapping = (
-        ('offender', 'Offender'),
-        ('reporters', 'Vec<Reporter>'),
-    )
-
-
-class VestingSchedule(Struct):
-    type_mapping = (
-        ('offset', 'Balance'),
-        ('perBlock', 'Balance'),
-        ('startingBlock', 'BlockNumber'),
-    )
-
-
-class Reporter(AccountId):
-    pass
-
-
 class ReportIdOf(Hash):
     pass
 
@@ -1364,10 +1345,6 @@ class ParachainDispatchOrigin(Enum):
 
 class StoredState(Enum):
     value_list = ['Live', 'PendingPause', 'Paused', 'PendingResume']
-
-
-class UncleEntryItem(Enum):
-    value_list = ['InclusionHeight', 'Uncle']
 
 
 class Votes(Struct):

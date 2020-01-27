@@ -168,6 +168,9 @@ class ScaleDecoder(ABC):
 
     debug = False
 
+    PRIMITIVES = ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 's8', 's16', 's32', 's64', 's128', 's256', 'h160',
+                  'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]', '&[u8]')
+
     def __init__(self, data, sub_type=None):
 
         self.sub_type = sub_type
@@ -253,7 +256,10 @@ class ScaleDecoder(ABC):
                 return decoder_class(data, **kwargs)
 
             # Extract sub types
-            type_parts = re.match(r'^([^<]*)<(.+)>$', type_string).groups()
+            type_parts = re.match(r'^([^<]*)<(.+)>$', type_string)
+
+            if type_parts:
+                type_parts = type_parts.groups()
 
         if type_parts:
             decoder_class = RuntimeConfiguration().get_decoder_class(
