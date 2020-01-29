@@ -229,6 +229,10 @@ class U8(ScaleType):
         return self.get_next_u8()
 
     def process_encode(self, value):
+
+        if not value or not value.isnumeric():
+            raise ValueError("Value is not numeric")
+
         if 0 <= value <= 2**8 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(1, 'little')))
         else:
@@ -241,6 +245,10 @@ class U16(ScaleType):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little')
 
     def process_encode(self, value):
+
+        if not value or not value.isnumeric():
+            raise ValueError("Value is not numeric")
+
         if 0 <= value <= 2**16 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(2, 'little')))
         else:
@@ -253,6 +261,9 @@ class U32(ScaleType):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
     def process_encode(self, value):
+        if not value or not value.isnumeric():
+            raise ValueError("Value is not numeric")
+
         if 0 <= value <= 2**32 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
         else:
@@ -265,6 +276,10 @@ class U64(ScaleType):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder='little'))
 
     def process_encode(self, value):
+
+        if not value or not value.isnumeric():
+            raise ValueError("Value is not numeric")
+
         if 0 <= value <= 2**64 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(8, 'little')))
         else:
@@ -277,6 +292,10 @@ class U128(ScaleType):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder='little'))
 
     def process_encode(self, value):
+
+        if not value or not value.isnumeric():
+            raise ValueError("Value is not numeric")
+
         if 0 <= value <= 2**128 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(16, 'little')))
         else:
