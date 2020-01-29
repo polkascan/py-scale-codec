@@ -230,10 +230,7 @@ class U8(ScaleType):
 
     def process_encode(self, value):
 
-        if value is None or not value.isnumeric():
-            raise ValueError("Value is not numeric")
-
-        if 0 <= value <= 2**8 - 1:
+        if 0 <= int(value) <= 2**8 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(1, 'little')))
         else:
             raise ValueError('{} out of range for u8'.format(value))
@@ -246,10 +243,7 @@ class U16(ScaleType):
 
     def process_encode(self, value):
 
-        if value is None or not value.isnumeric():
-            raise ValueError("Value is not numeric")
-
-        if 0 <= value <= 2**16 - 1:
+        if 0 <= int(value) <= 2**16 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(2, 'little')))
         else:
             raise ValueError('{} out of range for u16'.format(value))
@@ -261,10 +255,8 @@ class U32(ScaleType):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
     def process_encode(self, value):
-        if value is None or not value.isnumeric():
-            raise ValueError("Value is not numeric")
 
-        if 0 <= value <= 2**32 - 1:
+        if 0 <= int(value) <= 2**32 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
         else:
             raise ValueError('{} out of range for u32'.format(value))
@@ -277,10 +269,7 @@ class U64(ScaleType):
 
     def process_encode(self, value):
 
-        if value is None or not value.isnumeric():
-            raise ValueError("Value is not numeric")
-
-        if 0 <= value <= 2**64 - 1:
+        if 0 <= int(value) <= 2**64 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(8, 'little')))
         else:
             raise ValueError('{} out of range for u64'.format(value))
@@ -293,10 +282,7 @@ class U128(ScaleType):
 
     def process_encode(self, value):
 
-        if value is None or not value.isnumeric():
-            raise ValueError("Value is not numeric")
-
-        if 0 <= value <= 2**128 - 1:
+        if 0 <= int(value) <= 2**128 - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(16, 'little')))
         else:
             raise ValueError('{} out of range for u128'.format(value))
