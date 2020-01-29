@@ -230,7 +230,7 @@ class U8(ScaleType):
 
     def process_encode(self, value):
 
-        if not value or not value.isnumeric():
+        if value is None or not value.isnumeric():
             raise ValueError("Value is not numeric")
 
         if 0 <= value <= 2**8 - 1:
@@ -246,7 +246,7 @@ class U16(ScaleType):
 
     def process_encode(self, value):
 
-        if not value or not value.isnumeric():
+        if value is None or not value.isnumeric():
             raise ValueError("Value is not numeric")
 
         if 0 <= value <= 2**16 - 1:
@@ -261,7 +261,7 @@ class U32(ScaleType):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
     def process_encode(self, value):
-        if not value or not value.isnumeric():
+        if value is None or not value.isnumeric():
             raise ValueError("Value is not numeric")
 
         if 0 <= value <= 2**32 - 1:
@@ -277,7 +277,7 @@ class U64(ScaleType):
 
     def process_encode(self, value):
 
-        if not value or not value.isnumeric():
+        if value is None or not value.isnumeric():
             raise ValueError("Value is not numeric")
 
         if 0 <= value <= 2**64 - 1:
@@ -293,7 +293,7 @@ class U128(ScaleType):
 
     def process_encode(self, value):
 
-        if not value or not value.isnumeric():
+        if value is None or not value.isnumeric():
             raise ValueError("Value is not numeric")
 
         if 0 <= value <= 2**128 - 1:
