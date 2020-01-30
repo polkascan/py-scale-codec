@@ -113,7 +113,13 @@
         "Twitter": 128
       }
     },
-    "IdentityInfoAdditional": "(Data, Data)",
+    "IdentityInfoAdditional": {
+      "type": "struct",
+      "type_mapping": [
+         ["field", "Data"],
+         ["value", "Data"]
+      ]
+    },
     "IdentityInfo": {
       "type": "struct",
       "type_mapping": [
