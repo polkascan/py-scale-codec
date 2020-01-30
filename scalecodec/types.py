@@ -70,6 +70,8 @@ class Compact(ScaleType):
 
     def process_encode(self, value):
 
+        value = int(value)
+
         if value <= 0b00111111:
             return ScaleBytes(bytearray(int(value << 2).to_bytes(1, 'little')))
 
