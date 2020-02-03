@@ -42,7 +42,8 @@ class MetadataDecoder(ScaleDecoder):
                 "MetadataV7Decoder",
                 "MetadataV8Decoder",
                 "MetadataV9Decoder",
-                "MetadataV10Decoder"
+                "MetadataV10Decoder",
+                "MetadataV11Decoder"
             ])
 
             self.metadata = self.process_type(self.version.value)
@@ -919,6 +920,52 @@ class MetadataV10Decoder(ScaleDecoder):
                 event_module_index += 1
 
         result_data["metadata"]["MetadataV10"]["modules"] = [m.value for m in self.modules]
+
+        return result_data
+
+
+class MetadataV11Decoder(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None):
+        self.version = None
+        self.modules = []
+        self.call_index = {}
+        self.event_index = {}
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+        result_data = {
+            "magicNumber": 1635018093,  # struct.unpack('<L', bytearray.fromhex("6174656d")),
+            "metadata": {
+                "MetadataV11": {
+                    "modules": [],
+                }
+            }
+        }
+
+        self.modules = self.process_type('Vec<MetadataV8Module>').elements
+
+        # Build call and event index
+
+        call_module_index = 0
+        event_module_index = 0
+
+        for module in self.modules:
+            if module.calls is not None:
+                for call_index, call in enumerate(module.calls):
+                    call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                    self.call_index[call.lookup] = (module, call)
+                call_module_index += 1
+
+            if module.events is not None:
+                for event_index, event in enumerate(module.events):
+                    event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                    self.event_index[event.lookup] = (module, event)
+                event_module_index += 1
+
+        result_data["metadata"]["MetadataV11"]["modules"] = [m.value for m in self.modules]
+        result_data["metadata"]["MetadataV11"]["extrinsic"] = self.process_type("ExtrinsicMetadata").value
 
         return result_data
 
