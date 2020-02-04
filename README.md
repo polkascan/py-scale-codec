@@ -12,7 +12,14 @@ Most of the data that the Substrate RPCs output is encoded with the SCALE Codec.
 ## Documentation
 https://polkascan.github.io/py-scale-codec/
 
-## Example
+## Installation
+```bash
+pip install scalecodec
+```
+
+## Examples
+
+Decode a SCALE-encoded Compact\<Balance\> 
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
@@ -20,6 +27,34 @@ RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
 obj = ScaleDecoder.get_decoder_class('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
 obj.decode()
 print(obj.value)
+```
+
+Add custom types to type registry
+
+```python
+RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+
+custom_types = {
+    "types": {
+        "MyCustomType": "u32",
+        "CustomNextAuthority": {
+          "type": "struct",
+          "type_mapping": [
+             ["AuthorityId", "AuthorityId"],
+             ["weight", "AuthorityWeight"]
+          ]
+        }
+    }   
+}
+
+RuntimeConfiguration().update_type_registry(custom_types)
+```
+
+Or from a custom JSON file
+
+```python
+RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+RuntimeConfiguration().update_type_registry(load_type_registry_file("/path/to/type_registry.json"))
 ```
 
 ## License
