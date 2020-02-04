@@ -163,4 +163,13 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(value['call_args'][0]['value'], '0x6e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402')
         self.assertEqual(value['call_args'][1]['value'], 1000000000000)
 
+    def test_parse_subtype(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+
+        obj = ScaleDecoder.get_decoder_class('(BalanceOf, Vec<(AccountId, Data)>)')
+
+        self.assertEqual(obj.type_mapping[0][1], "BalanceOf")
+        self.assertEqual(obj.type_mapping[1][1], "Vec<(AccountId, Data)>")
+
+
     # TODO make type_index in Metadatadecoder and add tests if all types are supported

@@ -190,9 +190,19 @@ class ScaleDecoder(ABC):
 
         if cls.type_string and cls.type_string[0] == '(' and cls.type_string[-1] == ')':
             type_mapping = ()
+
+            tuple_contents = cls.type_string[1:-1]
+
+            # replace subtype types
+            sub_types = re.search(r'([A-Za-z]+[<][^>]*[>])', tuple_contents)
+            if sub_types:
+                sub_types = sub_types.groups()
+                for sub_type in sub_types:
+                    tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(',', ';'))
+
             n = 1
-            for struct_element in cls.type_string[1:-1].split(','):
-                type_mapping += (('col{}'.format(n), struct_element.strip()),)
+            for struct_element in tuple_contents.split(','):
+                type_mapping += (('col{}'.format(n), struct_element.strip().replace(';', ',')),)
                 n += 1
 
             cls.type_mapping = type_mapping
