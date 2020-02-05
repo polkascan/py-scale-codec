@@ -727,7 +727,7 @@ class Vec(ScaleType):
 
         result = []
         for _ in range(0, element_count):
-            element = self.process_type(self.sub_type)
+            element = self.process_type(self.sub_type, metadata=self.metadata)
             self.elements.append(element)
             result.append(element.value)
 
