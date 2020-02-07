@@ -290,6 +290,84 @@ class U128(ScaleType):
             raise ValueError('{} out of range for u128'.format(value))
 
 
+class I8(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(1), byteorder='little', signed=True)
+
+    def process_encode(self, value):
+
+        if -128 <= int(value) <= 127:
+            return ScaleBytes(bytearray(int(value).to_bytes(1, 'little', signed=True)))
+        else:
+            raise ValueError('{} out of range for i8'.format(value))
+
+
+class I16(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(2), byteorder='little', signed=True)
+
+    def process_encode(self, value):
+
+        if -32768 <= int(value) <= 32767:
+            return ScaleBytes(bytearray(int(value).to_bytes(2, 'little', signed=True)))
+        else:
+            raise ValueError('{} out of range for i16'.format(value))
+
+
+class I32(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(4), byteorder='little', signed=True)
+
+    def process_encode(self, value):
+
+        if -2147483648 <= int(value) <= 2147483647:
+            return ScaleBytes(bytearray(int(value).to_bytes(4, 'little', signed=True)))
+        else:
+            raise ValueError('{} out of range for i32'.format(value))
+
+
+class I64(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(8), byteorder='little', signed=True)
+
+    def process_encode(self, value):
+
+        if -2**64 <= int(value) <= 2**64-1:
+            return ScaleBytes(bytearray(int(value).to_bytes(8, 'little', signed=True)))
+        else:
+            raise ValueError('{} out of range for i64'.format(value))
+
+
+class I128(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(16), byteorder='little', signed=True)
+
+    def process_encode(self, value):
+
+        if -2**128 <= int(value) <= 2**128-1:
+            return ScaleBytes(bytearray(int(value).to_bytes(16, 'little', signed=True)))
+        else:
+            raise ValueError('{} out of range for i128'.format(value))
+
+
+class I256(ScaleType):
+
+    def process(self):
+        return int.from_bytes(self.get_next_bytes(32), byteorder='little', signed=True)
+
+    def process_encode(self, value):
+
+        if -2**256 <= int(value) <= 2**256-1:
+            return ScaleBytes(bytearray(int(value).to_bytes(32, 'little', signed=True)))
+        else:
+            raise ValueError('{} out of range for i256'.format(value))
+
+
 class H160(ScaleType):
 
     def process(self):
@@ -1280,11 +1358,6 @@ class BalanceLock(Struct):
         ('until', 'U32'),
         ('reasons', 'WithdrawReasons'),
     )
-
-
-class WithdrawReasons(Enum):
-
-    value_list = ['TransactionPayment', 'Transfer', 'Reserve', 'Fee']
 
 
 class Bidder(Enum):

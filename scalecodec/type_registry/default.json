@@ -7,6 +7,15 @@
          ["balance", "Balance"]
       ]
     },
+    "AccountData": {
+      "type": "struct",
+      "type_mapping": [
+          ["free", "Balance"],
+          ["reserved", "Balance"],
+          ["miscFrozen", "Balance"],
+          ["feeFrozen", "Balance"]
+      ]
+    },
     "BlockNumber": "U64",
     "CandidateReceipt": {
       "type": "struct",
@@ -28,6 +37,16 @@
          ["validityVotes", "Vec<ValidityVote>"]
       ]
     },
+    "LockIdentifier": "[u8; 8]",
+    "BalanceLock": {
+      "type": "struct",
+      "type_mapping": [
+         ["id", "LockIdentifier"],
+         ["amount", "Balance"],
+         ["until", "BlockNumber"],
+         ["reasons", "WithdrawReasons"]
+      ]
+    },
     "FullIdentification": {
       "type": "struct",
       "type_mapping": [
@@ -44,6 +63,14 @@
       ]
     },
     "SetId": "U64",
+    "Reasons": {
+      "type": "enum",
+      "value_list": [
+        "Fee",
+        "Misc",
+        "All"
+      ]
+    },
     "RoundNumber": "U64",
     "SessionIndex": "U32",
     "AuctionIndex": "U32",
@@ -163,7 +190,6 @@
          ["CollatorId-Retriable", "Option<(CollatorId, Retriable)>"]
       ]
     },
-    "LockIdentifier": "[u8; 8]",
     "MaybeVrf": "[u8; 32]",
     "MemberCount": "u32",
     "MomentOf": "Moment",
@@ -192,6 +218,8 @@
          ["exposure", "Exposure"]
       ]
     },
+    "PhantomData": "Null",
+    "sp_std::marker::PhantomData<(AccountId, Event)>": "PhantomData",
     "Reporter": "AccountId",
     "OffenceDetails<AccountId, IdentificationTuple>": {
       "type": "struct",

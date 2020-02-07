@@ -1,6 +1,7 @@
 {
-  "runtime_id": 20,
+  "runtime_id": 23,
   "types": {
+    "FixedU128": "u128",
     "AuctionId": "u32",
     "AuctionIdOf": "AuctionId",
     "CurrencyId": {
@@ -29,7 +30,7 @@
     },
     "ExchangeRate": "FixedU128",
     "OracleKey": "CurrencyId",
-    "OracleValue": "Price",
+    "OracleValue": "FixedU128",
     "Rate": "FixedU128",
     "Ratio": "FixedU128",
     "Share": "u128",
@@ -67,6 +68,24 @@
         ["amount", "Balance"],
         ["startTime", "BlockNumber"]
       ]
+    },
+    "TimestampedValue": {
+      "type": "struct",
+      "type_mapping": [
+        ["value", "OracleValue"],
+        ["timestamp", "Moment"]
+      ]
+    },
+    "TimestampedValueOf": "TimestampedValue",
+    "Price": "FixedU128",
+    "AuctionInfo": {
+      "type": "struct",
+      "type_mapping": [
+        ["bid", "Option<(AccountId, Balance)>"],
+        ["start", "BlockNumber"],
+        ["end", "Option<BlockNumber>"]
+      ]
     }
+
   }
 }
