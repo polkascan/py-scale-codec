@@ -1,6 +1,13 @@
 {
   "runtime_id": 23,
   "types": {
+    "Keys": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"]
+      ]
+    },
     "FixedU128": "u128",
     "AuctionId": "u32",
     "AuctionIdOf": "AuctionId",
