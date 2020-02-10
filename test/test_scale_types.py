@@ -52,6 +52,11 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x02093d0001"))
         self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
 
+    def test_compact_u32_invalid(self):
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x"))
+        self.assertRaises(InvalidScaleTypeValueException, obj.decode)
+
+
     def test_u16(self):
         obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
         obj.decode()

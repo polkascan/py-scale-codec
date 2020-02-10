@@ -425,6 +425,18 @@ class VecU8Length32(ScaleType):
         return ScaleBytes(value)
 
 
+class VecU8Length20(ScaleType):
+    type_string = '[u8; 20]'
+
+    def process(self):
+        return '0x{}'.format(self.get_next_bytes(20).hex())
+
+    def process_encode(self, value):
+        if value[0:2] != '0x' and len(value) == 42:
+            raise ValueError('Value should start with "0x" and should be 20 bytes long')
+        return ScaleBytes(value)
+
+
 class VecU8Length16(ScaleType):
     type_string = '[u8; 16]'
 
@@ -487,6 +499,25 @@ class VecU8Length2(ScaleType):
         if value[0:2] != '0x' and len(value) == 6:
             raise ValueError('Value should start with "0x" and should be 2 bytes long')
         return ScaleBytes(value)
+
+
+class VecH256Length3(ScaleType):
+    type_string = '[H256; 3]'
+
+    def process(self):
+        return [self.process_type('H256').value, self.process_type('H256').value, self.process_type('H256').value]
+
+    def process_encode(self, value):
+        if type(value) is not list:
+            raise ValueError("Provided value is not a list")
+
+        data = None
+
+        for element in value:
+            element_obj = self.get_decoder_class('H256', metadata=self.metadata)
+            data += element_obj.encode(element)
+
+        return data
 
 
 class Struct(ScaleType):
@@ -782,16 +813,8 @@ class BalanceOf(Balance):
     pass
 
 
-class BlockNumber(U64):
-    pass
-
-
 class NewAccountOutcome(CompactU32):
     type_string = 'NewAccountOutcome'
-
-
-class Index(U64):
-    pass
 
 
 class Vec(ScaleType):
