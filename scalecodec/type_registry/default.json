@@ -522,8 +522,8 @@
     "DispatchResult": {
       "type": "enum",
       "type_mapping": [
-        ["Error", "DispatchError"],
-        ["Ok", "Null"]
+        ["Ok", "Null"],
+        ["Error", "DispatchError"]
       ]
     },
     "ActiveRecovery": {
