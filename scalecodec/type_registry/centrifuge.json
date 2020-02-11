@@ -2,7 +2,6 @@
   "runtime_id": 198,
   "types": {
     "BlockNumber": "u32",
-    "Index": "u64",
     "Keys": {
       "type": "struct",
       "type_mapping": [
