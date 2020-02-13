@@ -1,4 +1,4 @@
-image: python:3.6-alpine
+image: python:3.6
 
 stages:
   - test
@@ -16,10 +16,8 @@ deploy_pypi:
     TWINE_USERNAME: $TWINE_USERNAME
     TWINE_PASSWORD: $TWINE_PASSWORD
   script:
-    - apk add --no-cache --virtual .build-deps gcc musl-dev \
-      && pip install twine \
-      && apk del .build-deps gcc musl-dev
+    - pip install -U twine
     - python setup.py sdist bdist_wheel
-    - python -m twine upload  dist/*
+    - twine upload  dist/*
   only:
     - tags
