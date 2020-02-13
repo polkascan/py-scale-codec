@@ -16,10 +16,9 @@ deploy_pypi:
     TWINE_USERNAME: $TWINE_USERNAME
     TWINE_PASSWORD: $TWINE_PASSWORD
   script:
-    - apk --update add --virtual build-dependencies gcc libffi-dev openssl-dev python-dev py-pip build-base \
-      && pip install --upgrade pip \
+    - apk add --no-cache --virtual .build-deps gcc musl-dev \
       && pip install twine \
-      && apk del build-dependencies
+      && apk del .build-deps gcc musl-dev
     - python setup.py sdist bdist_wheel
     - python -m twine upload  dist/*
   only:
