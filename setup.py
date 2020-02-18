@@ -14,7 +14,10 @@ from os import path, environ
 # Python 3 only projects can skip this import
 from io import open
 
-if environ.get('CI_COMMIT_TAG'):
+
+if environ.get('TRAVIS_TAG'):
+    version = environ['TRAVIS_TAG']
+elif environ.get('CI_COMMIT_TAG'):
     version = environ['CI_COMMIT_TAG']
 else:
     raise ValueError('Missing commit tag, can\'t set version')

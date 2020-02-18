@@ -93,6 +93,5 @@
         ["end", "Option<BlockNumber>"]
       ]
     }
-
   }
 }
