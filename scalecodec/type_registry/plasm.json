@@ -78,9 +78,9 @@
     "Parameters": {
       "type": "struct",
       "type_mapping": [
-         ["canBeNominated", "bool"],
-         ["optionExpired", "u128"],
-         ["optionP", "u128"]
+         ["can_be_nominated", "bool"],
+         ["option_expired", "u128"],
+         ["option_p", "u32"]
       ]
     }
   }
