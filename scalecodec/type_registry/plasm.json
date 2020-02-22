@@ -7,7 +7,9 @@
          ["babe", "AccountId"]
       ]
     },
+    "Balance": "u64",
     "Index": "U32",
+    "Era": "[u8; 2]",
     "BlockNumber": "U32",
     "Range": {
       "type": "struct",
