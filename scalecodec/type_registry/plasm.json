@@ -7,7 +7,7 @@
          ["babe", "AccountId"]
       ]
     },
-    "Balance": "u64",
+    "Balance": "u128",
     "Index": "U32",
     "Era": "[u8; 2]",
     "BlockNumber": "U32",
