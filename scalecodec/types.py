@@ -913,7 +913,7 @@ class Address(ScaleType):
 
         if type(value) == str and value[0:2] != '0x':
             # Assume SS58 encoding address
-            if len(value) == 47:
+            if len(value) >= 46:
                 from scalecodec.utils.ss58 import ss58_decode
                 value = '0x{}'.format(ss58_decode(value))
             else:
