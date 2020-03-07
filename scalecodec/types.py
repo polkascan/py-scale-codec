@@ -374,7 +374,7 @@ class H160(ScaleType):
         return '0x{}'.format(self.get_next_bytes(20).hex())
 
     def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 22:
+        if value[0:2] != '0x' or len(value) != 42:
             raise ValueError('Value should start with "0x" and should be 20 bytes long')
         return ScaleBytes(value)
 
@@ -385,7 +385,7 @@ class H256(ScaleType):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
     def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 66:
+        if value[0:2] != '0x' or len(value) != 66:
             raise ValueError('Value should start with "0x" and should be 32 bytes long')
         return ScaleBytes(value)
 
@@ -396,7 +396,7 @@ class H512(ScaleType):
         return '0x{}'.format(self.get_next_bytes(64).hex())
 
     def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 130:
+        if value[0:2] != '0x' or len(value) != 130:
             raise ValueError('Value should start with "0x" and should be 64 bytes long')
         return ScaleBytes(value)
 
