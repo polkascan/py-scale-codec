@@ -1,4 +1,4 @@
-kusamaimport unittest
+import unittest
 
 from scalecodec.block import EventsDecoder, ExtrinsicsDecoder
 
