@@ -1,5 +1,5 @@
 {
-  "runtime_id": 1040,
+  "runtime_id": 1050,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -78,6 +78,18 @@
              ["twitter", "Data"]
           ]
         }
+      }
+    },
+    {
+      "runtime_range": [1019, 1045],
+      "types": {
+        "Address": "Address"
+      }
+    },
+    {
+      "runtime_range": [1050, null],
+      "types": {
+        "Address": "AccountIdAddress"
       }
     }
 
