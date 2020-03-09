@@ -1,0 +1,85 @@
+{
+  "runtime_id": 1040,
+  "types": {
+    "Address": "AccountId",
+    "BlockNumber": "U32",
+    "LeasePeriod": "BlockNumber",
+    "SessionKeysPolkadot": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"],
+         ["parachains", "AccountId"]
+      ]
+    },
+    "Keys": "SessionKeysPolkadot"
+  },
+  "versioning": [
+    {
+      "runtime_range": [1019, 1031],
+      "types": {
+        "DispatchError": {
+          "type": "struct",
+          "type_mapping": [
+            ["module", "Option<u8>"],
+            ["error", "u8"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1032, null],
+      "types": {
+        "DispatchError": {
+          "type": "enum",
+          "type_mapping": [
+            ["Other", "Null"],
+            ["CannotLookup", "Null"],
+            ["BadOrigin", "Null"],
+            ["Module", "DispatchErrorModule"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1019, 1037],
+      "types": {
+        "IdentityInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["additional", "Vec<IdentityInfoAdditional>"],
+             ["display", "Data"],
+             ["legal", "Data"],
+             ["web", "Data"],
+             ["riot", "Data"],
+             ["email", "Data"],
+             ["pgpFingerprint", "Option<H160>"],
+             ["image", "Data"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1038, null],
+      "types": {
+        "IdentityInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["additional", "Vec<IdentityInfoAdditional>"],
+             ["display", "Data"],
+             ["legal", "Data"],
+             ["web", "Data"],
+             ["riot", "Data"],
+             ["email", "Data"],
+             ["pgpFingerprint", "Option<H160>"],
+             ["image", "Data"],
+             ["twitter", "Data"]
+          ]
+        }
+      }
+    }
+
+  ]
+}
