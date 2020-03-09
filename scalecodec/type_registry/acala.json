@@ -9,7 +9,7 @@
       ]
     },
     "FixedU128": "u128",
-    "AirDropCurrencyId": "u32",
+    "AirDropCurrencyId": "Compact<u32>",
     "AuctionId": "u32",
     "AuctionIdOf": "AuctionId",
     "CurrencyId": {
