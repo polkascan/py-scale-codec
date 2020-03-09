@@ -937,6 +937,34 @@ class Address(ScaleType):
             return self.value
 
 
+class AccountIdAddress(Address):
+
+    def process(self):
+        self.account_id = self.process_type('AccountId').value.replace('0x', '')
+        self.account_length = 'ff'
+        return self.account_id
+
+    def process_encode(self, value):
+        if type(value) == str and value[0:2] != '0x':
+            # Assume SS58 encoding address
+            if len(value) >= 46:
+                from scalecodec.utils.ss58 import ss58_decode
+                value = '0x{}'.format(ss58_decode(value))
+            else:
+                from scalecodec.utils.ss58 import ss58_decode_account_index
+                index_obj = AccountIndex()
+                value = index_obj.encode(ss58_decode_account_index(value))
+
+        if type(value) == str and value[0:2] == '0x' and len(value) == 66:
+            # value is AccountId
+            return ScaleBytes('0x{}'.format(value[2:]))
+        elif type(value) == int:
+            # value is AccountIndex
+            raise NotImplementedError('Encoding of AccountIndex Adresses not supported yet')
+        else:
+            raise ValueError('Value is in unsupported format, expected 32 bytes hex-string for AccountIds or int for AccountIndex')
+
+
 class RawAddress(Address):
     pass
 

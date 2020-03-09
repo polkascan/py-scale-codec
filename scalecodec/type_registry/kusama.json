@@ -1,6 +1,7 @@
 {
   "runtime_id": 1040,
   "types": {
+    "Address": "AccountIdAddress",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "SessionKeysPolkadot": {
