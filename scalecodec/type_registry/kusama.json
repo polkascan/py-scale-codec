@@ -83,7 +83,7 @@
     {
       "runtime_range": [1019, 1045],
       "types": {
-        "Address": "Address"
+        "Address": "RawAddress"
       }
     },
     {
