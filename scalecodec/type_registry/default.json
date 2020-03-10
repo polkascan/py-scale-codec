@@ -8,6 +8,7 @@
       ]
     },
     "RefCount": "u8",
+    "Moment": "u64",
     "AccountData": {
       "type": "struct",
       "type_mapping": [
@@ -25,6 +26,13 @@
          ["data", "AccountData"]
       ]
     },
+    "ActiveEraInfo": {
+      "type": "struct",
+      "type_mapping": [
+          ["index", "EraIndex"],
+          ["start", "Option<Moment>"]
+      ]
+    },
     "BlockNumber": "U64",
     "CandidateReceipt": {
       "type": "struct",
@@ -37,6 +45,13 @@
           ["egressQueueRoots", "Vec<EgressQueueRoot>"],
           ["fees", "u64"],
           ["blockDataHash", "Hash"]
+      ]
+    },
+    "ValidityVote": {
+      "type": "struct",
+      "type_mapping": [
+         ["accountId", "AccountId"],
+         ["validityAttestation", "ValidityAttestation"]
       ]
     },
     "AttestedCandidate": {
@@ -96,7 +111,13 @@
       ]
     },
     "AuthorityList": "VecNextAuthority",
-    "BalanceUpload": "(AccountId, u64)",
+    "BalanceUpload": {
+      "type": "struct",
+      "type_mapping": [
+         ["accountId", "AccountId"],
+         ["balance", "u64"]
+      ]
+    },
     "CollatorId": "H256",
     "ContractInfo": {
       "type": "enum",
@@ -132,7 +153,13 @@
          ["paysFee", "bool"]
       ]
     },
-    "EgressQueueRoot": "(ParaId, Hash)",
+    "EgressQueueRoot": {
+      "type": "struct",
+      "type_mapping": [
+         ["paraId", "ParaId"],
+         ["hash", "Hash"]
+      ]
+    },
     "EventIndex": "u32",
     "Extrinsic": "ExtrinsicDecoder",
     "Gas": "u64",
@@ -170,7 +197,7 @@
          ["twitter", "Data"]
       ]
     },
-    "Judgement": {
+    "IdentityJudgement": {
       "type": "enum",
       "type_mapping": [
         ["Unknown", "Null"],
@@ -182,7 +209,8 @@
         ["Erroneous", "Null"]
       ]
     },
-    "Judgement<BalanceOf>": "Judgement",
+    "Judgement": "IdentityJudgement",
+    "Judgement<BalanceOf>": "IdentityJudgement",
     "LeasePeriod": "BlockNumber",
     "LeasePeriodOf": "LeasePeriod",
     "(LeasePeriodOf, IncomingParachain<AccountId, Hash>)": {
@@ -249,6 +277,7 @@
          ["tips", "Vec<OpenTipTip>"]
       ]
     },
+    "ParaId": "u32",
     "ParaIdOf": "ParaId",
     "ParaScheduling": {
       "type": "enum",
@@ -326,6 +355,13 @@
          ["fields", "IdentityFields"]
       ]
     },
+    "RegistrationJudgement": {
+      "type": "struct",
+      "type_mapping": [
+         ["registrarIndex", "RegistrarIndex"],
+         ["judgement", "Judgement"]
+      ]
+    },
     "Registration": {
       "type": "struct",
       "type_mapping": [
@@ -334,7 +370,6 @@
          ["info", "IdentityInfo"]
       ]
     },
-    "RegistrationJudgement": "(RegistrarIndex, Judgement)",
     "ReportIdOf": "Hash",
     "Schedule": {
       "type": "struct",
@@ -386,7 +421,14 @@
     },
     "Weight": "u32",
     "WeightMultiplier": "u64",
-    "WinningDataEntry": "(AccountId, ParaIdOf, BalanceOf)",
+    "WinningDataEntry": {
+      "type": "struct",
+      "type_mapping": [
+         ["accountId", "AccountId"],
+         ["paraId", "ParaId"],
+         ["balance", "Balance"]
+      ]
+    },
     "WinningData": "Vec<WinningDataEntry>",
     "WithdrawReasons": {
       "type": "set",
@@ -566,6 +608,7 @@
         ["Vouch", "BidKindVouch"]
       ]
     },
+    "BidKind<AccountId,Balance>": "Bidkind",
     "Bid": {
       "type": "struct",
       "type_mapping": [
@@ -587,6 +630,89 @@
       "type_mapping": [
         ["version", "u8"],
         ["signedExtensions", "Vec<Bytes>"]
+      ]
+    },
+    "RewardPoint": "u32",
+    "EraRewardPoints": {
+      "type": "struct",
+      "type_mapping": [
+        ["total", "RewardPoint"],
+        ["individual", "Vec<(AccountId, RewardPoint)>"]
+      ]
+    },
+    "IncomingParachainDeploy": {
+      "type": "struct",
+      "type_mapping": [
+        ["code", "Bytes"],
+        ["initialHeadData", "Bytes"]
+      ]
+    },
+    "NewBidder": {
+      "type": "struct",
+      "type_mapping": [
+        ["who", "AccountId"],
+        ["sub", "SubId"]
+      ]
+    },
+    "IncomingParachainFixed": {
+      "type": "struct",
+      "type_mapping": [
+        ["codeHash", "Hash"],
+        ["initialHeadData", "Bytes"]
+      ]
+    },
+    "IncomingParachain": {
+      "type": "enum",
+      "type_mapping": [
+        ["Unset", "NewBidder"],
+        ["Fixed", "IncomingParachainFixed"],
+        ["Deploy", "IncomingParachainDeploy"]
+      ]
+    },
+    "ProxyState": {
+      "type": "struct",
+      "type_mapping": [
+        ["Open", "AccountId"],
+        ["Active", "AccountId"]
+      ]
+    },
+    "ReleasesBalances": {
+      "type": "enum",
+      "value_list": [
+        "V1_0_0",
+        "V2_0_0"
+      ]
+    },
+    "Releases": "ReleasesBalances",
+    "SlotRange": {
+      "type": "enum",
+      "value_list": [
+        "ZeroZero",
+        "ZeroOne",
+        "ZeroTwo",
+        "ZeroThree",
+        "OneOne",
+        "OneTwo",
+        "OneThree",
+        "TwoTwo",
+        "TwoThree",
+        "ThreeThree"
+      ]
+    },
+    "ValidityAttestation": {
+      "type": "enum",
+      "type_mapping": [
+        ["None", "Null"],
+        ["Implicit", "CollatorSignature"],
+        ["Explicit", "CollatorSignature"]
+      ]
+    },
+    "VestingInfo": {
+      "type": "struct",
+      "type_mapping": [
+        ["locked", "Balance"],
+        ["perBlock", "Balance"],
+        ["startingBlock", "BlockNumber"]
       ]
     }
   }
