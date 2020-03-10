@@ -9,7 +9,13 @@
       ]
     },
     "FixedU128": "u128",
-    "AirDropCurrencyId": "Compact<u32>",
+    "AirDropCurrencyId": {
+      "type": "enum",
+      "value_list": [
+        "KAR",
+        "ACA"
+      ]
+    },
     "AuctionId": "u32",
     "AuctionIdOf": "AuctionId",
     "CurrencyId": {
