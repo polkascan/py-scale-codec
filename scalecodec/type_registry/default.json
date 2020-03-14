@@ -411,6 +411,12 @@
         "Uncle"
       ]
     },
+    "ValidatorPrefs":  {
+      "type": "struct",
+      "type_mapping": [
+         ["commission", "Compact<Perbill>"]
+      ]
+    },
     "VestingSchedule<Balance, BlockNumber>": {
       "type": "struct",
       "type_mapping": [
