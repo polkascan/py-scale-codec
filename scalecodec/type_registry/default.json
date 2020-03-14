@@ -125,7 +125,7 @@
     },
     "EgressQueueRoot": "(ParaId, Hash)",
     "EventIndex": "u32",
-    "Extrinsic": "ExtrinsicDecoder",
+    "Extrinsic": "ExtrinsicsDecoder",
     "Gas": "u64",
     "IdentityFields": {
       "type": "set",
