@@ -57,7 +57,6 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x"))
         self.assertRaises(InvalidScaleTypeValueException, obj.decode)
 
-
     def test_u16(self):
         obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
         obj.decode()
@@ -165,6 +164,44 @@ class TestScaleTypes(unittest.TestCase):
         obj.decode()
 
         self.assertEqual(obj.value, ["Transfer", "Reserve", "Tip"])
+
+    def test_set_value_type_u32(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+
+        # Create set type with u32
+        RuntimeConfiguration().update_type_registry({
+            "types": {
+                "CustomU32Set": {
+                    "type": "set",
+                    "value_type": "u32",
+                    "value_list": {
+                        "Value1": 1,
+                        "Value2": 2,
+                        "Value3": 4,
+                        "Value4": 8,
+                        "Value5": 16
+                    }
+                }
+            }
+        })
+
+        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x0100000000000000"))
+        self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
+
+        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x01000000"))
+        obj.decode()
+
+        self.assertEqual(obj.value, ["Value1"])
+
+        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x03000000"))
+        obj.decode()
+
+        self.assertEqual(obj.value, ["Value1", "Value2"])
+
+        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x16000000"))
+        obj.decode()
+
+        self.assertEqual(obj.value, ["Value2", "Value3", "Value5"])
 
     def test_box_call(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))

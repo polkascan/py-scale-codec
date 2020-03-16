@@ -165,6 +165,7 @@
     "Gas": "u64",
     "IdentityFields": {
       "type": "set",
+      "value_type": "u64",
       "value_list": {
         "Display": 1,
         "Legal": 2,
@@ -438,6 +439,7 @@
     "WinningData": "Vec<WinningDataEntry>",
     "WithdrawReasons": {
       "type": "set",
+      "value_type": "u64",
       "value_list": {
         "TransactionPayment": 1,
         "Transfer": 2,

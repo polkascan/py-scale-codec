@@ -562,16 +562,18 @@ class Struct(ScaleType):
 
 class Set(ScaleType):
     value_list = []
+    value_type = 'u64'
 
     def __init__(self, data, value_list=None, **kwargs):
         self.set_value = None
+
         if value_list:
             self.value_list = value_list
 
         super().__init__(data, **kwargs)
 
     def process(self):
-        self.set_value = self.process_type('u64').value
+        self.set_value = self.process_type(self.value_type).value
         result = []
         if self.set_value > 0:
 
@@ -589,10 +591,9 @@ class Set(ScaleType):
             if item in value:
                 result += set_mask
 
-        u64_obj = self.get_decoder_class('u64')
+        u64_obj = self.get_decoder_class(self.value_type)
 
         return u64_obj.encode(result)
-
 
 
 class Era(ScaleType):

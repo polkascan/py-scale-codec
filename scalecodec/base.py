@@ -58,6 +58,7 @@ class RuntimeConfiguration(metaclass=Singleton):
         for type_string, decoder_class_data in types_dict.items():
 
             if type(decoder_class_data) == dict:
+
                 # Create dynamic decoder class
                 if decoder_class_data['type'] == 'struct':
 
@@ -74,6 +75,7 @@ class RuntimeConfiguration(metaclass=Singleton):
 
                     decoder_class = type(type_string, (Set,), {
                         'value_list': decoder_class_data.get('value_list'),
+                        'value_type': decoder_class_data.get('value_type', 'u64')
                     })
 
                 else:
