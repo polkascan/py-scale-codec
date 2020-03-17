@@ -1241,7 +1241,7 @@ class ReportIdOf(Hash):
 
 class StorageHasher(Enum):
 
-    value_list = ['Blake2_128', 'Blake2_256', 'Blake2_128Concat', 'Twox128', 'Twox256', 'Twox64Concat']
+    value_list = ['Blake2_128', 'Blake2_256', 'Blake2_128Concat', 'Twox128', 'Twox256', 'Twox64Concat', 'Identity']
 
     def is_blake2_128(self):
         return self.index == 0
@@ -1260,6 +1260,9 @@ class StorageHasher(Enum):
 
     def is_twox64_concat(self):
         return self.index == 5
+
+    def is_identity(self):
+        return self.index == 6
 
 
 class VoterInfo(Struct):
