@@ -81,15 +81,78 @@
       }
     },
     {
+      "runtime_range": [1019, 1042],
+      "types": {
+        "SlashingSpans": {
+          "type": "struct",
+          "type_mapping": [
+             ["spanIndex", "SpanIndex"],
+             ["lastStart", "EraIndex"],
+             ["prior", "Vec<EraIndex>"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1043, null],
+      "types": {
+        "SlashingSpans": {
+          "type": "struct",
+          "type_mapping": [
+             ["spanIndex", "SpanIndex"],
+             ["lastStart", "EraIndex"],
+             ["lastNonzeroSlash", "EraIndex"],
+             ["prior", "Vec<EraIndex>"]
+          ]
+        }
+      }
+    },
+    {
       "runtime_range": [1019, 1045],
       "types": {
-        "Address": "RawAddress"
+        "Address": "RawAddress",
+        "StakingLedger<AccountId, BalanceOf>": {
+          "type": "struct",
+          "type_mapping": [
+             ["stash", "AccountId"],
+             ["total", "Compact<Balance>"],
+             ["active", "Compact<Balance>"],
+             ["unlocking", "Vec<UnlockChunk<Balance>>"]
+          ]
+        },
+        "BalanceLock": {
+          "type": "struct",
+          "type_mapping": [
+             ["id", "LockIdentifier"],
+             ["amount", "Balance"],
+             ["until", "BlockNumber"],
+             ["reasons", "WithdrawReasons"]
+          ]
+        }
       }
     },
     {
       "runtime_range": [1050, null],
       "types": {
-        "Address": "AccountIdAddress"
+        "Address": "AccountIdAddress",
+        "StakingLedger<AccountId, BalanceOf>": {
+          "type": "struct",
+          "type_mapping": [
+            ["stash", "AccountId"],
+            ["total", "Compact<Balance>"],
+            ["active", "Compact<Balance>"],
+            ["unlocking", "Vec<UnlockChunk<Balance>>"],
+            ["lastReward", "Option<EraIndex>"]
+          ]
+        },
+        "BalanceLock": {
+          "type": "struct",
+          "type_mapping": [
+             ["id", "LockIdentifier"],
+             ["amount", "Balance"],
+             ["reasons", "Reasons"]
+          ]
+        }
       }
     }
 

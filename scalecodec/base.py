@@ -238,6 +238,10 @@ class ScaleDecoder(ABC):
         if check_remaining and self.data.offset != self.data.length:
             raise RemainingScaleBytesNotEmptyException('Current offset: {} / length: {}'.format(self.data.offset, self.data.length))
 
+        if self.data.offset > self.data.length:
+            raise RemainingScaleBytesNotEmptyException(
+                'No more bytes available (offset: {} / length: {})'.format(self.data.offset, self.data.length))
+
         return self.value
 
     def __str__(self):

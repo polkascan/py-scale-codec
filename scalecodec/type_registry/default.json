@@ -7,6 +7,13 @@
          ["balance", "Balance"]
       ]
     },
+    "(BalanceOf<T, I>, BidKind<AccountId, BalanceOf<T, I>>)": {
+      "type": "struct",
+      "type_mapping": [
+        ["balance", "Balance"],
+        ["bidkind", "BidKind"]
+      ]
+    },
     "RefCount": "u8",
     "Moment": "u64",
     "AccountData": {
@@ -67,8 +74,7 @@
       "type_mapping": [
          ["id", "LockIdentifier"],
          ["amount", "Balance"],
-         ["until", "BlockNumber"],
-         ["reasons", "WithdrawReasons"]
+         ["reasons", "Reasons"]
       ]
     },
     "FullIdentification": {
@@ -401,7 +407,8 @@
          ["stash", "AccountId"],
          ["total", "Compact<Balance>"],
          ["active", "Compact<Balance>"],
-         ["unlocking", "Vec<UnlockChunk<Balance>>"]
+         ["unlocking", "Vec<UnlockChunk<Balance>>"],
+         ["lastReward", "Option<EraIndex>"]
       ]
     },
     "SubId": "u32",
@@ -522,6 +529,7 @@
       "type_mapping": [
          ["spanIndex", "SpanIndex"],
          ["lastStart", "EraIndex"],
+         ["lastNonzeroSlash", "EraIndex"],
          ["prior", "Vec<EraIndex>"]
       ]
     },
@@ -617,6 +625,7 @@
       ]
     },
     "BidKind<AccountId,Balance>": "Bidkind",
+    "BidKind<AccountId, BalanceOf<T, I>>": "Bidkind",
     "Bid": {
       "type": "struct",
       "type_mapping": [
@@ -675,6 +684,13 @@
         ["Unset", "NewBidder"],
         ["Fixed", "IncomingParachainFixed"],
         ["Deploy", "IncomingParachainDeploy"]
+      ]
+    },
+    "LastRuntimeUpgradeInfo": {
+      "type": "struct",
+      "type_mapping": [
+        ["specVersion", "Compact<u32>"],
+        ["specName", "Bytes"]
       ]
     },
     "ProxyState": {
