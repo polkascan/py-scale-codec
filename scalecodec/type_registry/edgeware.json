@@ -110,6 +110,15 @@
         ["ProposalContents", "Vec<u8>"]
       ]
     },
-    "Balance2": "Balance"
+    "Balance2": "Balance",
+    "ReferendumInfo<BlockNumber, Proposal>": {
+      "type": "struct",
+      "type_mapping": [
+         ["end", "BlockNumber"],
+         ["proposal", "Proposal"],
+         ["threshold", "VoteThreshold"],
+         ["delay", "BlockNumber"]
+      ]
+    }
   }
 }

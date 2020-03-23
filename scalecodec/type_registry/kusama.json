@@ -1,5 +1,5 @@
 {
-  "runtime_id": 1050,
+  "runtime_id": 1054,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -151,6 +151,32 @@
              ["id", "LockIdentifier"],
              ["amount", "Balance"],
              ["reasons", "Reasons"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1019, 1054],
+      "types": {
+        "ReferendumInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["end", "BlockNumber"],
+             ["proposal", "Proposal"],
+             ["threshold", "VoteThreshold"],
+             ["delay", "BlockNumber"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1054, null],
+      "types": {
+        "ReferendumInfo": {
+          "type": "enum",
+          "type_mapping": [
+            ["Ongoing", "ReferendumStatus"],
+            ["Finished", "ReferendumInfoFinished"]
           ]
         }
       }

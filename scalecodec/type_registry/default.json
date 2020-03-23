@@ -1,5 +1,104 @@
 {
   "types": {
+    "AccountVoteSplit": {
+      "type": "struct",
+      "type_mapping": [
+         ["aye", "Balance"],
+         ["nay", "Balance"]
+      ]
+    },
+    "AccountVoteStandard": {
+      "type": "struct",
+      "type_mapping": [
+         ["vote", "Vote"],
+         ["balance", "Balance"]
+      ]
+    },
+    "AccountVote": {
+      "type": "enum",
+      "type_mapping": [
+        ["Standard", "AccountVoteStandard"],
+        ["Split", "AccountVoteSplit"]
+      ]
+    },
+    "Delegations": {
+      "type": "struct",
+      "type_mapping": [
+         ["votes", "Balance"],
+         ["capital", "Balance"]
+      ]
+    },
+    "PriorLock": {
+      "type": "struct",
+      "type_mapping": [
+         ["blockNumber", "BlockNumber"],
+         ["balance", "Balance"]
+      ]
+    },
+    "ReferendumInfo<BlockNumber, Hash, Balance>": {
+      "type": "enum",
+      "type_mapping": [
+        ["Ongoing", "ReferendumStatus"],
+        ["Finished", "ReferendumInfoFinished"]
+      ]
+    },
+    "ReferendumInfoFinished": {
+      "type": "struct",
+      "type_mapping": [
+         ["approved", "bool"],
+         ["end", "BlockNumber"]
+      ]
+    },
+    "Tally": {
+      "type": "struct",
+      "type_mapping": [
+         ["ayes", "Balance"],
+         ["nays", "Balance"],
+         ["turnout", "Balance"]
+      ]
+    },
+    "ReferendumStatus": {
+      "type": "struct",
+      "type_mapping": [
+         ["end", "BlockNumber"],
+         ["proposalHash", "Hash"],
+         ["threshold", "VoteThreshold"],
+         ["delay", "BlockNumber"],
+         ["tally", "Tally"]
+      ]
+    },
+    "VotingDirectVote": {
+      "type": "struct",
+      "type_mapping": [
+         ["referendumIndex", "ReferendumIndex"],
+         ["accountVote", "AccountVote"]
+      ]
+    },
+    "VotingDirect": {
+      "type": "struct",
+      "type_mapping": [
+         ["votes", "Vec<VotingDirectVote>"],
+         ["delegations", "Delegations"],
+         ["prior", "PriorLock"]
+      ]
+    },
+    "VotingDelegating": {
+      "type": "struct",
+      "type_mapping": [
+         ["balance", "Balance"],
+         ["target", "AccountId"],
+         ["conviction", "Conviction"],
+         ["delegations", "Delegations"],
+         ["prior", "PriorLock"]
+      ]
+    },
+    "Voting": {
+      "type": "enum",
+      "type_mapping": [
+        ["Direct", "VotingDirect"],
+        ["Delegating", "VotingDelegating"]
+      ]
+    },
     "(AccountId, Balance)": {
       "type": "struct",
       "type_mapping": [
