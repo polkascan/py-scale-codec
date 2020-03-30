@@ -1,6 +1,7 @@
 {
   "runtime_id": 198,
   "types": {
+    "Address": "AccountIdAddress",
     "BlockNumber": "u32",
     "Keys": {
       "type": "struct",
