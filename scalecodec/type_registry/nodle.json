@@ -1,0 +1,15 @@
+{
+  "runtime_id": 198,
+  "types": {
+    "BlockNumber": "u32",
+    "Keys": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"]
+      ]
+    }
+  }
+}
