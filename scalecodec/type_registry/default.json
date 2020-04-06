@@ -35,13 +35,6 @@
          ["balance", "Balance"]
       ]
     },
-    "ReferendumInfo<BlockNumber, Hash, Balance>": {
-      "type": "enum",
-      "type_mapping": [
-        ["Ongoing", "ReferendumStatus"],
-        ["Finished", "ReferendumInfoFinished"]
-      ]
-    },
     "ReferendumInfoFinished": {
       "type": "struct",
       "type_mapping": [
@@ -65,6 +58,13 @@
          ["threshold", "VoteThreshold"],
          ["delay", "BlockNumber"],
          ["tally", "Tally"]
+      ]
+    },
+    "ReferendumInfo": {
+      "type": "enum",
+      "type_mapping": [
+        ["Ongoing", "ReferendumStatus"],
+        ["Finished", "ReferendumInfoFinished"]
       ]
     },
     "VotingDirectVote": {
