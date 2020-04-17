@@ -180,7 +180,18 @@
           ]
         }
       }
+    },
+    {
+      "runtime_range": [1019, 1056],
+      "types": {
+        "Weight": "u32"
+      }
+    },
+    {
+      "runtime_range": [1057, null],
+      "types": {
+        "Weight": "u64"
+      }
     }
-
   ]
 }

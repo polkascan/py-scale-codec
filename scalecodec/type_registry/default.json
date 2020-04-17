@@ -247,7 +247,8 @@
       "type": "enum",
       "value_list": [
         "Normal",
-        "Operational"
+        "Operational",
+        "Mandatory"
       ]
     },
     "DispatchInfo": {
