@@ -74,6 +74,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
     def process(self):
         # TODO for all attributes
+
         attribute_types = OrderedDict(self.type_mapping)
 
         self.extrinsic_length = self.process_type('Compact<u32>').value
