@@ -226,7 +226,7 @@ class TestScaleTypes(unittest.TestCase):
 
         obj = ScaleDecoder.get_decoder_class('Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>')
 
-        self.assertEqual(obj.sub_type, "UncleEntryItem<BlockNumber, Hash, AccountId>")
+        self.assertEqual(obj.sub_type, "UncleEntryItem<BlockNumber, Hash, AccountId>".lower())
 
 
     # TODO make type_index in Metadatadecoder and add tests if all types are supported
