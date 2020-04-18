@@ -520,6 +520,25 @@ class VecH256Length3(ScaleType):
         return data
 
 
+class VecU128Length3(ScaleType):
+    type_string = '[u128; 3]'
+
+    def process(self):
+        return [self.process_type('u128').value, self.process_type('u128').value, self.process_type('u128').value]
+
+    def process_encode(self, value):
+        if type(value) is not list:
+            raise ValueError("Provided value is not a list")
+
+        data = None
+
+        for element in value:
+            element_obj = self.get_decoder_class('u128', metadata=self.metadata)
+            data += element_obj.encode(element)
+
+        return data
+
+
 class Struct(ScaleType):
 
     def __init__(self, data, type_mapping=None, **kwargs):
@@ -1488,14 +1507,6 @@ class Votes(Struct):
         ('threshold', 'MemberCount'),
         ('ayes', 'Vec<AccountId>'),
         ('nays', 'Vec<AccountId>'),
-    )
-
-
-class WinningDataEntry(Struct):
-    type_mapping = (
-        ('AccountId', 'AccountId'),
-        ('ParaIdOf', 'ParaIdOf'),
-        ('BalanceOf', 'BalanceOf'),
     )
 
 # Edgeware types
