@@ -19,3 +19,4 @@
 # TODO temp import all to make sure types classes are registered with RuntimeConfiguration.
 # TODO implemented type mapping registry per spec version id (/runtime)
 from .types import *
+from .block import *
