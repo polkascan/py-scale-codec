@@ -991,6 +991,14 @@
         ["upgrade_times", "Vec<BlockNumber>"],
         ["last_pruned", "Option<BlockNumber>"]
       ]
+    },
+    "ModuleId": "LockIdentifier",
+    "RuntimeDbWeight": {
+      "type": "struct",
+      "type_mapping": [
+        ["read", "Weight"],
+        ["write", "Weight"]
+      ]
     }
   }
 }
