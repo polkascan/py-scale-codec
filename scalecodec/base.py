@@ -47,19 +47,42 @@ class RuntimeConfiguration(metaclass=Singleton):
 
         decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
 
-        if not decoder_class and type_string[-1:] == '>':
+        if not decoder_class:
 
-            # Extract sub types
-            type_parts = re.match(r'^([^<]*)<(.+)>$', type_string)
+            # Type string containg subtype
+            if type_string[-1:] == '>':
 
-            if type_parts:
-                type_parts = type_parts.groups()
+                # Extract sub types
+                type_parts = re.match(r'^([^<]*)<(.+)>$', type_string)
 
-            if type_parts:
-                # Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as sub_type
-                base_class = self.type_registry.get('types', {}).get(type_parts[0].lower(), None)
-                if base_class:
-                    decoder_class = type(type_string, (base_class,), {'sub_type': type_parts[1]})
+                if type_parts:
+                    type_parts = type_parts.groups()
+
+                if type_parts:
+                    # Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as sub_type
+                    base_class = self.type_registry.get('types', {}).get(type_parts[0].lower(), None)
+                    if base_class:
+                        decoder_class = type(type_string, (base_class,), {'sub_type': type_parts[1]})
+
+            # Custom tuples
+            elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
+                decoder_class = RuntimeConfiguration().get_decoder_class('struct')
+                decoder_class.type_string = type_string
+
+                decoder_class.build_type_mapping()
+
+            elif type_string[0] == '[' and type_string[-1] == ']':
+                type_parts = re.match(r'^\[([A-Za-z0-9]+); ([0-9]+)\]$', type_string)
+
+                if type_parts:
+                    type_parts = type_parts.groups()
+
+                if type_parts:
+                    # Create dynamic class for e.g. [u8; 4] resulting in array of u8 with 4 elements
+                    decoder_class = type(type_string, (FixedLengthArray,), {
+                        'sub_type': type_parts[0],
+                        'element_count': int(type_parts[1])
+                    })
 
         return decoder_class
 
@@ -219,11 +242,11 @@ class ScaleDecoder(ABC):
             if sub_types:
                 sub_types = sub_types.groups()
                 for sub_type in sub_types:
-                    tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(',', ';'))
+                    tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(',', '|'))
 
             n = 1
             for struct_element in tuple_contents.split(','):
-                type_mapping += (('col{}'.format(n), struct_element.strip().replace(';', ',')),)
+                type_mapping += (('col{}'.format(n), struct_element.strip().replace('|', ',')),)
                 n += 1
 
             cls.type_mapping = type_mapping
@@ -378,3 +401,32 @@ class ScaleType(ScaleDecoder, ABC):
         if not data:
             data = ScaleBytes(bytearray())
         super().__init__(data, sub_type)
+
+
+class FixedLengthArray(ScaleType):
+
+    element_count = 0
+
+    def process(self):
+        result = []
+
+        if self.element_count:
+
+            for idx in range(self.element_count):
+                result.append(self.process_type(self.sub_type).value)
+        else:
+            self.get_next_u8()
+
+        return result
+
+    def process_encode(self, value):
+        data = ScaleBytes(bytearray())
+
+        if not type(value) is list:
+            raise ValueError('Given value is not a list')
+
+        for element_value in value:
+            element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
+            data += element_obj.encode(element_value)
+
+        return data
