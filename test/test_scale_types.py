@@ -221,8 +221,8 @@ class TestScaleTypes(unittest.TestCase):
 
         obj = ScaleDecoder.get_decoder_class('(BalanceOf, Vec<(AccountId, Data)>)')
 
-        self.assertEqual(obj.type_mapping[0][1], "BalanceOf")
-        self.assertEqual(obj.type_mapping[1][1], "Vec<(AccountId, Data)>")
+        self.assertEqual(obj.type_mapping[0][1].lower(), "BalanceOf".lower())
+        self.assertEqual(obj.type_mapping[1][1].lower(), "Vec<(AccountId, Data)>".lower())
 
         obj = ScaleDecoder.get_decoder_class('Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>')
 
