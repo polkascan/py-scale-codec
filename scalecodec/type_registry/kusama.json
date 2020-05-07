@@ -4,6 +4,7 @@
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
+    "Weight": "u64",
     "SessionKeysPolkadot": {
       "type": "struct",
       "type_mapping": [
