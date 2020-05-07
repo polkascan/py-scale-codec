@@ -1,5 +1,5 @@
 {
-  "runtime_id": 1054,
+  "runtime_id": 1062,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -191,6 +191,35 @@
       "runtime_range": [1057, null],
       "types": {
         "Weight": "u64"
+      }
+    },
+    {
+      "runtime_range": [1019, 1058],
+      "types": {
+        "Heartbeat": {
+          "type": "struct",
+          "type_mapping": [
+             ["blockNumber", "BlockNumber"],
+             ["networkState", "OpaqueNetworkState"],
+             ["sessionIndex", "SessionIndex"],
+             ["authorityIndex", "AuthIndex"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1062, null],
+      "types": {
+        "Heartbeat": {
+          "type": "struct",
+          "type_mapping": [
+             ["blockNumber", "BlockNumber"],
+             ["networkState", "OpaqueNetworkState"],
+             ["sessionIndex", "SessionIndex"],
+             ["authorityIndex", "AuthIndex"],
+             ["validatorsLen", "u32"]
+          ]
+        }
       }
     }
   ]
