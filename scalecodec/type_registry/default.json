@@ -585,7 +585,8 @@
          ["blockNumber", "BlockNumber"],
          ["networkState", "OpaqueNetworkState"],
          ["sessionIndex", "SessionIndex"],
-         ["authorityIndex", "AuthIndex"]
+         ["authorityIndex", "AuthIndex"],
+         ["validatorsLen", "u32"]
       ]
     },
     "RewardDestination": {
@@ -971,6 +972,8 @@
         ["Available", "PreimageStatusAvailable"]
       ]
     },
+    "Randomness": "Hash",
+    "MaybeRandomness": "Option<Randomness>",
     "schnorrkel::Randomness": "Hash",
     "schnorrkel::RawVRFOutput": "[u8; 32]",
     "TaskAddress": {
