@@ -534,7 +534,7 @@
          ["startingBlock", "BlockNumber"]
       ]
     },
-    "Weight": "u32",
+    "Weight": "u64",
     "WeightMultiplier": "u64",
     "WinningDataEntry": {
       "type": "struct",
