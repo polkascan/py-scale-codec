@@ -1,5 +1,5 @@
 {
-  "runtime_id": 23,
+  "runtime_id": 402,
   "types": {
     "Keys": {
       "type": "struct",
@@ -24,7 +24,8 @@
         "ACA",
         "AUSD",
         "DOT",
-        "XBTC"
+        "XBTC",
+        "LDOT"
       ]
     },
     "CurrencyIdOf": "CurrencyId",
