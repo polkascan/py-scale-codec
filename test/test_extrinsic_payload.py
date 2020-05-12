@@ -2140,3 +2140,35 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload), "0xb804180405000010270000010000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+
+    def test_signed_extrinsic(self):
+        extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
+
+        extrinsic_value = {
+            'account_id': '5E9oDs9PjpsBbxXxRE9uMaZZhnBAV38n2ouLB28oecBDdeQo',
+            'signature_version': 1,
+            'signature': '728b4057661816aa24918219ff90d10a34f1db4e81494d23c83ef54991980f77cf901acd970cb36d3c9c9e166d27a83a3aee648d4085e2bdb9e7622c0538e381',
+            'call_function': 'transfer',
+            'call_module': 'balances',
+            'nonce': 0,
+            'era': '00',
+            'tip': 0,
+            'params': [
+                {'name': 'dest', 'type': 'Address',
+                 'value': '0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d'},
+                {'name': 'value', 'type': 'Compact<Balance>', 'value': 1000000000000}
+            ]
+        }
+
+        extrinsic_hex = extrinsic.encode(extrinsic_value)
+
+        obj = ScaleDecoder.get_decoder_class(
+            "ExtrinsicsDecoder",
+            data=extrinsic_hex,
+            metadata=self.metadata_decoder
+        )
+
+        decoded_extrinsic = obj.decode()
+
+        self.assertEqual(extrinsic_value['signature'], decoded_extrinsic['signature'])
+        self.assertEqual(extrinsic_value['params'][0]['value'], decoded_extrinsic['params'][0]['value'])

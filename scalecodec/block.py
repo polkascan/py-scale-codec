@@ -112,7 +112,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
                 self.era = self.process_type('Era')
 
-                self.nonce = self.process_type('Compact<U64>')
+                self.nonce = self.process_type('Compact<Index>')
 
                 self.tip = self.process_type('Compact<Balance>')
 
@@ -129,7 +129,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
                 self.era = self.process_type('Era')
 
-                self.nonce = self.process_type('Compact<U64>')
+                self.nonce = self.process_type('Compact<Index>')
 
                 self.tip = self.process_type('Compact<Balance>')
 
@@ -148,7 +148,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
                 self.era = self.process_type('Era')
 
-                self.nonce = self.process_type('Compact<U64>')
+                self.nonce = self.process_type('Compact<Index>')
 
                 self.tip = self.process_type('Compact<Balance>')
 
@@ -195,6 +195,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['account_id'] = self.address.account_id
             result['account_index'] = self.address.account_index
             result['account_idx'] = self.address.account_idx
+            result['signature_version'] = self.signature_version.value
             result['signature'] = self.signature.value.replace('0x', '')
             result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
@@ -216,14 +217,14 @@ class ExtrinsicsDecoder(ScaleDecoder):
         return result
 
     def process_encode(self, value):
-        # Check requirements
+
         if 'call_index' in value:
             self.call_index = value['call_index']
 
         elif 'call_module' in value and 'call_function' in value:
             # Look up call module from metadata
             for call_index, (call_module, call) in self.metadata.call_index.items():
-                if call_module.name == value['call_module'] and call.name == value['call_function']:
+                if call_module.name.lower() == value['call_module'].lower() and call.name == value['call_function']:
                     self.call_index = call_index
                     self.call_module = call_module
                     self.call = call
@@ -235,13 +236,43 @@ class ExtrinsicsDecoder(ScaleDecoder):
         elif not self.call_module or not self.call:
             raise ValueError('No call module and function specified')
 
+        # Determine version (Fixed to V4 for now)
+        if 'account_id' in value:
+            self.version_info = '84'
+            self.contains_transaction = True
+        else:
+            self.version_info = '04'
+            self.contains_transaction = False
+
         if self.contains_transaction:
             data = ScaleBytes('0x84')
-            raise NotImplementedError('Encoding of signed extrinsics not supported')
+
+            self.address = self.get_decoder_class('Address', metadata=self.metadata)
+            data += self.address.encode(value['account_id'])
+
+            self.signature_version = self.get_decoder_class('U8', metadata=self.metadata)
+            data += self.signature_version.encode(value['signature_version'])
+
+            self.signature = self.get_decoder_class('Signature', metadata=self.metadata)
+            data += self.signature.encode('0x{}'.format(value['signature'].replace('0x', '')))
+
+            self.era = self.get_decoder_class('Era', metadata=self.metadata)
+            data += self.era.encode(value['era'])
+
+            self.nonce = self.get_decoder_class('Compact<Index>', metadata=self.metadata)
+            data += self.nonce.encode(value['nonce'])
+
+            self.tip = self.get_decoder_class('Compact<Balance>', metadata=self.metadata)
+            data += self.tip.encode(value['tip'])
+
         else:
             data = ScaleBytes('0x04')
 
         data += ScaleBytes(bytearray.fromhex(self.call_index))
+
+        # Convert params to call_args TODO refactor
+        if not value.get('call_args') and value.get('params'):
+            value['call_args'] = {call_arg['name']: call_arg['value'] for call_arg in value.get('params')}
 
         # Encode call params
         if len(self.call.args) > 0:
@@ -254,7 +285,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
                     arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
                     data += arg_obj.encode(param_value)
 
-        # Wrap payload with een length Compact<u32>
+        # Wrap payload with a length Compact<u32>
         length_obj = self.get_decoder_class('Compact<u32>')
         data = length_obj.encode(data.length) + data
 

@@ -290,6 +290,7 @@ class ScaleDecoder(ABC):
         return str(self.value) or ''
 
     def encode(self, value):
+        self.value = value
         self.data = self.process_encode(value)
         return self.data
 
@@ -298,6 +299,12 @@ class ScaleDecoder(ABC):
 
     @classmethod
     def get_decoder_class(cls, type_string, data=None, **kwargs):
+        """
+        :param type_string:
+        :param data:
+        :param kwargs:
+        :return: ScaleType
+        """
 
         type_parts = None
 

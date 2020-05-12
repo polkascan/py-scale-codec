@@ -225,6 +225,15 @@ class HexBytes(ScaleType):
         return data
 
 
+class CallBytes(ScaleType):
+
+    def process(self):
+        raise NotImplementedError()
+
+    def process_encode(self, value):
+        return bytes.fromhex(value[2:])
+
+
 class U8(ScaleType):
 
     def process(self):
@@ -624,6 +633,12 @@ class Era(ScaleType):
             return option_byte
         else:
             return option_byte + self.get_next_bytes(1).hex()
+
+    def process_encode(self, value):
+        if value == '00':
+            return ScaleBytes('0x00')
+        else:
+            raise NotImplementedError('Mortal Era not implemented')
 
 
 class EraIndex(U32):

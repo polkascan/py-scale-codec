@@ -267,7 +267,19 @@
       ]
     },
     "EventIndex": "u32",
-    "Extrinsic": "ExtrinsicDecoder",
+    "Extrinsic": "ExtrinsicsDecoder",
+    "ExtrinsicPayloadValue": {
+      "type": "struct",
+      "type_mapping": [
+        ["call", "CallBytes"],
+        ["era", "Era"],
+        ["nonce", "Compact<Index>"],
+        ["tip", "Compact<Balance>"],
+        ["specVersion", "u32"],
+        ["genesisHash", "Hash"],
+        ["blockHash", "Hash"]
+      ]
+    },
     "Gas": "u64",
     "IdentityFields": {
       "type": "set",
