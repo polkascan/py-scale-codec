@@ -1,6 +1,14 @@
 {
   "runtime_id": 3,
   "types": {
-    "Weight": "u64"
+    "Weight": "u64",
+    "DispatchInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["weight", "Weight"],
+         ["class", "DispatchClass"],
+         ["paysFee", "Pays"]
+      ]
+    }
   }
 }

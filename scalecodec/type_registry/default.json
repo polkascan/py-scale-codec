@@ -243,6 +243,13 @@
          ["last_write", "Option<BlockNumber>"]
       ]
     },
+    "Pays": {
+      "type": "enum",
+      "value_list": [
+        "Yes",
+        "No"
+      ]
+    },
     "DispatchClass": {
       "type": "enum",
       "value_list": [

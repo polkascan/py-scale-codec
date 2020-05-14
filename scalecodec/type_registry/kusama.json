@@ -15,7 +15,15 @@
          ["parachains", "AccountId"]
       ]
     },
-    "Keys": "SessionKeysPolkadot"
+    "Keys": "SessionKeysPolkadot",
+    "DispatchInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["weight", "Weight"],
+         ["class", "DispatchClass"],
+         ["paysFee", "Pays"]
+      ]
+    }
   },
   "versioning": [
     {
@@ -195,7 +203,7 @@
       }
     },
     {
-      "runtime_range": [1019, 1058],
+      "runtime_range": [1019, 1061],
       "types": {
         "Heartbeat": {
           "type": "struct",
@@ -204,6 +212,14 @@
              ["networkState", "OpaqueNetworkState"],
              ["sessionIndex", "SessionIndex"],
              ["authorityIndex", "AuthIndex"]
+          ]
+        },
+        "DispatchInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["weight", "Weight"],
+             ["class", "DispatchClass"],
+             ["paysFee", "bool"]
           ]
         }
       }
@@ -219,6 +235,14 @@
              ["sessionIndex", "SessionIndex"],
              ["authorityIndex", "AuthIndex"],
              ["validatorsLen", "u32"]
+          ]
+        },
+        "DispatchInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["weight", "Weight"],
+             ["class", "DispatchClass"],
+             ["paysFee", "Pays"]
           ]
         }
       }
