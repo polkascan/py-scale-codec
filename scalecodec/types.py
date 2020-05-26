@@ -17,6 +17,8 @@
 # along with Polkascan. If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
+from hashlib import blake2b
+
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException
 
@@ -796,9 +798,14 @@ class Linkage(Struct):
 
 class AccountId(H256):
 
+    def __init__(self, data=None, sub_type=None, metadata=None):
+        self.ss58_address = None
+        super().__init__(data, sub_type, metadata)
+
     def process_encode(self, value):
         if value[0:2] != '0x' and len(value) == 47:
             from scalecodec.utils.ss58 import ss58_decode
+            self.ss58_address = value
             value = '0x{}'.format(ss58_decode(value))
         return super().process_encode(value)
 
@@ -1949,3 +1956,28 @@ class Call(ScaleType):
 
         return data
 
+
+class MultiAccountId(AccountId):
+
+    @classmethod
+    def create_from_account_list(cls, accounts, threshold):
+        from scalecodec.utils.ss58 import ss58_decode
+
+        account_ids = []
+        for account in accounts:
+            if account[0:2] != '0x':
+                account = '0x{}'.format(ss58_decode(account))
+            account_ids.append(account)
+
+        account_list_cls = cls.get_decoder_class('Vec<AccountId>')
+        account_list_data = account_list_cls.encode(sorted(account_ids))
+        threshold_data = cls.get_decoder_class("u16").encode(threshold)
+
+        multi_account_id = "0x{}".format(blake2b(
+            b"modlpy/utilisuba" + bytes(account_list_data.data) + bytes(threshold_data.data), digest_size=32
+        ).digest().hex())
+
+        multi_account_obj = cls()
+        multi_account_obj.encode(multi_account_id)
+
+        return multi_account_obj

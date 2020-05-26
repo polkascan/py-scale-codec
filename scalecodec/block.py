@@ -59,16 +59,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
     def generate_hash(self):
         if self.contains_transaction:
-
-            if self.extrinsic_length:
-                extrinsic_data = self.data.data
-            else:
-                # Fallback for legacy version, prefix additional Compact<u32> with length
-                extrinsic_length_type = CompactU32(ScaleBytes(bytearray()))
-                extrinsic_length_type.encode(self.data.length)
-                extrinsic_data = extrinsic_length_type.data.data + self.data.data
-
-            return blake2b(extrinsic_data, digest_size=32).digest().hex()
+            return blake2b(self.data.data, digest_size=32).digest().hex()
         else:
             return None
 

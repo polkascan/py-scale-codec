@@ -24,6 +24,7 @@ from scalecodec.metadata import MetadataDecoder
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException, RuntimeConfiguration
 from scalecodec.type_registry import load_type_registry_preset
+from scalecodec.utils.ss58 import ss58_encode
 
 
 class TestScaleTypes(unittest.TestCase):
@@ -228,5 +229,15 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(obj.sub_type, "UncleEntryItem<BlockNumber, Hash, AccountId>".lower())
 
+    def test_create_multi_sig_address(self):
+        MultiAccountId = RuntimeConfiguration().get_decoder_class("MultiAccountId")
 
-    # TODO make type_index in Metadatadecoder and add tests if all types are supported
+        multi_sig_account = MultiAccountId.create_from_account_list(
+            ["CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo",
+             "J9aQobenjZjwWtU2MsnYdGomvcYbgauCnBeb8xGrcqznvJc",
+             "HvqnQxDQbi3LL2URh7WQfcmi8b2ZWfBhu7TEDmyyn5VK8e2"], 2)
+
+        multi_sig_address = ss58_encode(multi_sig_account.value.replace('0x', ''), 2)
+
+        self.assertEqual(multi_sig_address, "HFXXfXavDuKhLLBhFQTat2aaRQ5CMMw9mwswHzWi76m6iLt")
+
