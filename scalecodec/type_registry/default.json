@@ -434,7 +434,8 @@
       "type_mapping": [
         ["value", "Null"],
         ["value", "RawBabePreDigestPrimary"],
-        ["value", "RawBabePreDigestSecondary"]
+        ["value", "RawBabePreDigestSecondaryPlain"],
+        ["value", "RawBabePreDigestSecondaryVRF"]
       ]
     },
     "RawBabePreDigestPrimary": {
@@ -446,11 +447,20 @@
          ["vrfProof", "VrfProof"]
       ]
     },
-    "RawBabePreDigestSecondary": {
+    "RawBabePreDigestSecondaryPlain": {
       "type": "struct",
       "type_mapping": [
          ["authorityIndex", "u32"],
          ["slotNumber", "SlotNumber"]
+      ]
+    },
+    "RawBabePreDigestSecondaryVRF": {
+      "type": "struct",
+      "type_mapping": [
+         ["authorityIndex", "u32"],
+         ["slotNumber", "SlotNumber"],
+         ["vrfOutput", "VrfData"],
+         ["vrfProof", "VrfProof"]
       ]
     },
     "ReferendumInfo<BlockNumber, Proposal>": {
@@ -1016,6 +1026,105 @@
       "type_mapping": [
         ["read", "Weight"],
         ["write", "Weight"]
+      ]
+    },
+    "Renouncing": {
+      "type": "enum",
+      "type_mapping": [
+        ["Member", "Null"],
+        ["RunnerUp", "Null"],
+        ["Candidate", "Compact<u32>"]
+      ]
+    },
+    "ExtrinsicsWeight": {
+      "type": "struct",
+      "type_mapping": [
+        ["normal", "Weight"],
+        ["operational", "Weight"]
+      ]
+    },
+    "ValidatorCount": "u32",
+    "KeyOwnerProof": {
+      "type": "struct",
+      "type_mapping": [
+        ["session", "SessionIndex"],
+        ["trieNodes", "Vec<Bytes>"],
+        ["validatorCount", "ValidatorCount"]
+      ]
+    },
+    "DefunctVoter": {
+      "type": "struct",
+      "type_mapping": [
+        ["who", "AccountId"],
+        ["voteCount", "Compact<u32>"],
+        ["candidateCount", "Compact<u32>"]
+      ]
+    },
+    "ElectionSize": {
+      "type": "struct",
+      "type_mapping": [
+        ["validators", "ValidatorIndex"],
+        ["nominators", "NominatorIndex"]
+      ]
+    },
+    "AllowedSlots": {
+      "type": "enum",
+      "value_list": [
+        "PrimarySlots",
+        "PrimaryAndSecondaryPlainSlots",
+        "PrimaryAndSecondaryVRFSlots"
+      ]
+    },
+    "NextConfigDescriptorV1": {
+      "type": "struct",
+      "type_mapping": [
+        ["c", "(u64, u64)"],
+        ["allowedSlots", "AllowedSlots"]
+      ]
+    },
+    "NextConfigDescriptor": {
+      "type": "enum",
+      "type_mapping": [
+        ["V0", "Null"],
+        ["V1", "NextConfigDescriptorV1"]
+      ]
+    },
+    "StatementKind": {
+      "type": "enum",
+      "value_list": [
+        "Regular",
+        "Saft"
+      ]
+    },
+    "schedule::Priority": "u8",
+    "GrandpaEquivocation": {
+      "type": "struct",
+      "type_mapping": [
+        ["roundNumber", "u64"],
+        ["identity", "AuthorityId"],
+        ["first", "(GrandpaPrevote, AuthoritySignature)"],
+        ["second", "(GrandpaPrevote, AuthoritySignature)"]
+      ]
+    },
+    "GrandpaPrevote": {
+      "type": "struct",
+      "type_mapping": [
+        ["targetHash", "Hash"],
+        ["targetNumber", "BlockNumber"]
+      ]
+    },
+    "Equivocation": {
+      "type": "enum",
+      "type_mapping": [
+        ["Prevote", "GrandpaEquivocation"],
+        ["Precommit", "GrandpaEquivocation"]
+      ]
+    },
+    "EquivocationProof": {
+      "type": "struct",
+      "type_mapping": [
+        ["setId", "SetId"],
+        ["equivocation", "Equivocation"]
       ]
     }
   }
