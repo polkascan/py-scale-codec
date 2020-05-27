@@ -1063,8 +1063,8 @@
     "ElectionSize": {
       "type": "struct",
       "type_mapping": [
-        ["validators", "ValidatorIndex"],
-        ["nominators", "NominatorIndex"]
+        ["validators", "Compact<ValidatorIndex>"],
+        ["nominators", "Compact<NominatorIndex>"]
       ]
     },
     "AllowedSlots": {
