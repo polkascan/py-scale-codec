@@ -1,6 +1,7 @@
 {
   "runtime_id": 3,
   "types": {
+    "BlockNumber": "U32",
     "Weight": "u64",
     "DispatchInfo": {
       "type": "struct",
