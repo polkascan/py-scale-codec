@@ -1060,6 +1060,7 @@
         ["candidateCount", "Compact<u32>"]
       ]
     },
+    "ElectionScore": "[u128; 3]",
     "ElectionSize": {
       "type": "struct",
       "type_mapping": [
