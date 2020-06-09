@@ -1126,6 +1126,15 @@
         ["setId", "SetId"],
         ["equivocation", "Equivocation"]
       ]
+    },
+    "ProxyType": {
+      "type": "enum",
+      "value_list": [
+        "Any",
+        "NonTransfer",
+        "Governance",
+        "Staking"
+      ]
     }
   }
 }

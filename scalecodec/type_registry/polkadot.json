@@ -1,5 +1,5 @@
 {
-  "runtime_id": 1,
+  "runtime_id": 5,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -22,6 +22,16 @@
          ["weight", "Weight"],
          ["class", "DispatchClass"],
          ["paysFee", "Pays"]
+      ]
+    },
+    "ProxyType": {
+      "type": "enum",
+      "value_list": [
+        "Any",
+        "NonTransfer",
+        "Governance",
+        "Staking",
+        "SudoBalances"
       ]
     }
   },
