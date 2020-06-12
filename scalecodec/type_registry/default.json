@@ -283,6 +283,7 @@
         ["nonce", "Compact<Index>"],
         ["tip", "Compact<Balance>"],
         ["specVersion", "u32"],
+        ["transactionVersion", "u32"],
         ["genesisHash", "Hash"],
         ["blockHash", "Hash"]
       ]
