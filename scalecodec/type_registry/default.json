@@ -1060,6 +1060,7 @@
         ["candidateCount", "Compact<u32>"]
       ]
     },
+    "ElectionScore": "[u128; 3]",
     "ElectionSize": {
       "type": "struct",
       "type_mapping": [
@@ -1125,6 +1126,15 @@
       "type_mapping": [
         ["setId", "SetId"],
         ["equivocation", "Equivocation"]
+      ]
+    },
+    "ProxyType": {
+      "type": "enum",
+      "value_list": [
+        "Any",
+        "NonTransfer",
+        "Governance",
+        "Staking"
       ]
     }
   }
