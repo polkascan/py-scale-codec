@@ -415,25 +415,38 @@ class FixedLengthArray(ScaleType):
     element_count = 0
 
     def process(self):
-        result = []
 
         if self.element_count:
-
-            for idx in range(self.element_count):
-                result.append(self.process_type(self.sub_type).value)
+            if self.sub_type == 'u8':
+                return '0x{}'.format(self.get_next_bytes(self.element_count).hex())
+            else:
+                result = []
+                for idx in range(self.element_count):
+                    result.append(self.process_type(self.sub_type).value)
         else:
-            self.get_next_u8()
+            result = []
 
         return result
 
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
 
-        if not type(value) is list:
-            raise ValueError('Given value is not a list')
+        value = value or []
 
-        for element_value in value:
-            element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
-            data += element_obj.encode(element_value)
+        if self.sub_type == 'u8':
+            # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
+            if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
+                raise ValueError('Value should start with "0x" and should be 64 bytes long')
 
-        return data
+            return ScaleBytes(value)
+
+        else:
+
+            if not type(value) is list:
+                raise ValueError('Given value is not a list')
+
+            for element_value in value:
+                element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
+                data += element_obj.encode(element_value)
+
+            return data
