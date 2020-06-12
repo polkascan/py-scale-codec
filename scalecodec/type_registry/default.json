@@ -1136,6 +1136,17 @@
         "Governance",
         "Staking"
       ]
+    },
+    "EcdsaSignature": "[u8; 65]",
+    "Ed25519Signature": "H512",
+    "Sr25519Signature": "H512",
+    "MultiSignature": {
+      "type": "enum",
+      "type_mapping": [
+        ["Ed25519", "Ed25519Signature"],
+        ["Sr25519", "Sr25519Signature"],
+        ["Ecdsa", "EcdsaSignature"]
+      ]
     }
   }
 }

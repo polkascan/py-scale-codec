@@ -1070,6 +1070,14 @@ class Enum(ScaleType):
 
             raise ValueError("Value '{}' not present in value list of this enum".format(value))
 
+    def get_enum_value(self):
+        if self.value:
+
+            if self.type_mapping:
+                return list(self.value.values())[0]
+            else:
+                return self.value_list[self.index]
+
 
 class Data(Enum):
     type_mapping = [

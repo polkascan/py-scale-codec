@@ -84,7 +84,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             if self.contains_transaction:
                 self.address = self.process_type('Address')
 
-                self.signature = self.process_type('Signature')
+                self.signature = self.process_type('Signature').value
 
                 self.nonce = self.process_type(attribute_types['nonce'])
 
@@ -99,7 +99,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             if self.contains_transaction:
                 self.address = self.process_type('Address')
 
-                self.signature = self.process_type('Signature')
+                self.signature = self.process_type('Signature').value
 
                 self.era = self.process_type('Era')
 
@@ -116,7 +116,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             if self.contains_transaction:
                 self.address = self.process_type('Address')
 
-                self.signature = self.process_type('Signature')
+                self.signature = self.process_type('Signature').value
 
                 self.era = self.process_type('Era')
 
@@ -133,9 +133,11 @@ class ExtrinsicsDecoder(ScaleDecoder):
             if self.contains_transaction:
                 self.address = self.process_type('Address')
 
-                self.signature_version = self.process_type('U8')
+                multi_signature = self.process_type("MultiSignature")
 
-                self.signature = self.process_type('Signature')
+                self.signature_version = multi_signature.index
+
+                self.signature = multi_signature.get_enum_value()
 
                 self.era = self.process_type('Era')
 
@@ -186,8 +188,8 @@ class ExtrinsicsDecoder(ScaleDecoder):
             result['account_id'] = self.address.account_id
             result['account_index'] = self.address.account_index
             result['account_idx'] = self.address.account_idx
-            result['signature_version'] = self.signature_version.value
-            result['signature'] = self.signature.value.replace('0x', '')
+            result['signature_version'] = self.signature_version
+            result['signature'] = self.signature.replace('0x', '')
             result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
             result['call_code'] = self.call_index
