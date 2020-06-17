@@ -1138,6 +1138,14 @@
         "Staking"
       ]
     },
+    "BalanceStatus": {
+      "type": "enum",
+      "value_list": [
+        "Free",
+        "Reserved"
+      ]
+    },
+    "Status": "BalanceStatus",
     "EcdsaSignature": "[u8; 65]",
     "Ed25519Signature": "H512",
     "Sr25519Signature": "H512",
