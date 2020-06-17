@@ -139,7 +139,7 @@
           ["start", "Option<Moment>"]
       ]
     },
-    "BlockNumber": "U64",
+    "BlockNumber": "U32",
     "CandidateReceipt": {
       "type": "struct",
       "type_mapping": [
@@ -564,7 +564,7 @@
          ["startingBlock", "BlockNumber"]
       ]
     },
-    "Weight": "u32",
+    "Weight": "u64",
     "WeightMultiplier": "u64",
     "WinningDataEntry": {
       "type": "struct",
