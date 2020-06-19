@@ -1156,6 +1156,7 @@
         ["Sr25519", "Sr25519Signature"],
         ["Ecdsa", "EcdsaSignature"]
       ]
-    }
+    },
+    "schedule::period<blocknumber>": "(BlockNumber, u32)"
   }
 }
