@@ -1044,6 +1044,7 @@
         ["operational", "Weight"]
       ]
     },
+    "weights::ExtrinsicsWeight": "ExtrinsicsWeight",
     "ValidatorCount": "u32",
     "KeyOwnerProof": {
       "type": "struct",
