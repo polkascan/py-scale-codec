@@ -18,7 +18,7 @@ from collections import OrderedDict
 
 from scalecodec.base import ScaleDecoder, ScaleBytes
 from scalecodec.metadata import MetadataDecoder
-from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct, VecU8Length4
+from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct
 from scalecodec.utils.ss58 import ss58_decode, ss58_decode_account_index
 
 
@@ -60,8 +60,6 @@ class ExtrinsicsDecoder(ScaleDecoder):
     def generate_hash(self):
         if self.contains_transaction:
             return blake2b(self.data.data, digest_size=32).digest().hex()
-        else:
-            return None
 
     def process(self):
         # TODO for all attributes
@@ -160,13 +158,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
             self.call = self.metadata.call_index[self.call_index][1]
             self.call_module = self.metadata.call_index[self.call_index][0]
 
-            if self.debug:
-                print('Call: ', self.call.name)
-                print('Module: ', self.call_module.name)
-
             for arg in self.call.args:
-                if self.debug:
-                    print('Param: ', arg.name, arg.type)
 
                 arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
 
@@ -386,10 +378,6 @@ class AuthoritiesChange(Vec):
     def __init__(self, data, **kwargs):
 
         super().__init__(data, sub_type='AccountId', **kwargs)
-
-
-class ConsensusEngineId(VecU8Length4):
-    pass
 
 
 class ChangesTrieRoot(Bytes):

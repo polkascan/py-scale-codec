@@ -277,5 +277,3 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(obj.value, value)
 
 
-if __name__ == '__main__':
-    unittest.main()

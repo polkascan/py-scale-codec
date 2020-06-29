@@ -161,7 +161,9 @@ class ScaleBytes:
 
         if type(data) is bytearray:
             self.data = data
-        elif data[0:2] == '0x':
+        elif type(data) is bytes:
+            self.data = bytearray(data)
+        elif type(data) is str and data[0:2] == '0x':
             self.data = bytearray.fromhex(data[2:])
         else:
             raise ValueError("Provided data is not in supported format: provided '{}'".format(type(data)))
@@ -272,7 +274,7 @@ class ScaleDecoder(ABC):
 
     @abstractmethod
     def process(self):
-        pass
+        raise NotImplementedError
 
     def decode(self, check_remaining=True):
         self.value = self.process()
@@ -306,49 +308,13 @@ class ScaleDecoder(ABC):
         :return: ScaleType
         """
 
-        type_parts = None
-
         type_string = cls.convert_type(type_string)
 
-        if type_string[-1:] == '>':
-            # Check for specific implementation for composite type
-            decoder_class = RuntimeConfiguration().get_decoder_class(
-                type_string.lower(),
-                spec_version_id=kwargs.get('spec_version_id', 'default')
-            )
-
-            if decoder_class:
-                return decoder_class(data, **kwargs)
-
-            # Extract sub types
-            type_parts = re.match(r'^([^<]*)<(.+)>$', type_string)
-
-            if type_parts:
-                type_parts = type_parts.groups()
-
-        if type_parts:
-            decoder_class = RuntimeConfiguration().get_decoder_class(
-                type_parts[0].lower(),
-                spec_version_id=kwargs.get('spec_version_id', 'default')
-            )
-            if decoder_class:
-                return decoder_class(data, sub_type=type_parts[1], **kwargs)
-        else:
-            decoder_class = RuntimeConfiguration().get_decoder_class(
-                type_string.lower(),
-                spec_version_id=kwargs.get('spec_version_id', 'default')
-            )
-            if decoder_class:
-                return decoder_class(data, **kwargs)
-
-        # Custom tuple
-        # TODO tuples should be converted to list not dict
-        if type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
-            decoder_class = RuntimeConfiguration().get_decoder_class('struct')
-            decoder_class.type_string = type_string
-
-            decoder_class.build_type_mapping()
-
+        decoder_class = RuntimeConfiguration().get_decoder_class(
+            type_string.lower(),
+            spec_version_id=kwargs.get('spec_version_id', 'default')
+        )
+        if decoder_class:
             return decoder_class(data, **kwargs)
 
         raise NotImplementedError('Decoder class for "{}" not found'.format(type_string))
@@ -357,10 +323,6 @@ class ScaleDecoder(ABC):
     def process_type(self, type_string, **kwargs):
         obj = self.get_decoder_class(type_string, self.data, **kwargs)
         obj.decode(check_remaining=False)
-        if self.debug:
-            print('=======================\nClass:\t{}\nType:\t{}\nValue:\t{}\nRaw:\t{}\n\nOffset:\t{} / {}\n'.format(
-                self.__class__.__name__, type_string, obj.value, obj.raw_value, self.data.offset, self.data.length
-            ))
         return obj
 
     def serialize(self):
@@ -388,8 +350,6 @@ class ScaleDecoder(ABC):
             return 'Compact<Balance>'
         if name == '<BlockNumber as HasCompact>::Type':
             return 'Compact<BlockNumber>'
-        if name == '<Balance as HasCompact>::Type':
-            return 'Compact<Balance>'
         if name == '<Moment as HasCompact>::Type':
             return 'Compact<Moment>'
         if name == '<InherentOfflineReport as InherentOfflineReport>::Inherent':
@@ -436,7 +396,7 @@ class FixedLengthArray(ScaleType):
         if self.sub_type == 'u8':
             # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
             if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
-                raise ValueError('Value should start with "0x" and should be 64 bytes long')
+                raise ValueError('Value should start with "0x" and should be {} bytes long'.format(self.element_count))
 
             return ScaleBytes(value)
 

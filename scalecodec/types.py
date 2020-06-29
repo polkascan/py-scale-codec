@@ -94,8 +94,10 @@ class Compact(ScaleType):
                 raise ValueError('{} out of range'.format(value))
 
 
-# Example of specialized composite implementation for performance improvement
 class CompactU32(Compact):
+    """
+    Specialized composite implementation for performance improvement
+    """
 
     type_string = 'Compact<u32>'
 
@@ -410,144 +412,6 @@ class H512(ScaleType):
         if value[0:2] != '0x' or len(value) != 130:
             raise ValueError('Value should start with "0x" and should be 64 bytes long')
         return ScaleBytes(value)
-
-
-class VecU8Length64(ScaleType):
-    type_string = '[u8; 64]'
-
-    def process(self):
-        return '0x{}'.format(self.get_next_bytes(64).hex())
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 130:
-            raise ValueError('Value should start with "0x" and should be 64 bytes long')
-        return ScaleBytes(value)
-
-
-class VecU8Length32(ScaleType):
-    type_string = '[u8; 32]'
-
-    def process(self):
-        return '0x{}'.format(self.get_next_bytes(32).hex())
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 66:
-            raise ValueError('Value should start with "0x" and should be 32 bytes long')
-        return ScaleBytes(value)
-
-
-class VecU8Length20(ScaleType):
-    type_string = '[u8; 20]'
-
-    def process(self):
-        return '0x{}'.format(self.get_next_bytes(20).hex())
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 42:
-            raise ValueError('Value should start with "0x" and should be 20 bytes long')
-        return ScaleBytes(value)
-
-
-class VecU8Length16(ScaleType):
-    type_string = '[u8; 16]'
-
-    def process(self):
-        value = self.get_next_bytes(16)
-        try:
-            return value.decode()
-        except UnicodeDecodeError:
-            return value.hex()
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 34:
-            raise ValueError('Value should start with "0x" and should be 16 bytes long')
-        return ScaleBytes(value)
-
-
-class VecU8Length8(ScaleType):
-    type_string = '[u8; 8]'
-
-    def process(self):
-        value = self.get_next_bytes(8)
-        try:
-            return value.decode()
-        except UnicodeDecodeError:
-            return value.hex()
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 18:
-            raise ValueError('Value should start with "0x" and should be 8 bytes long')
-        return ScaleBytes(value)
-
-
-class VecU8Length4(ScaleType):
-    type_string = '[u8; 4]'
-
-    def process(self):
-        value = self.get_next_bytes(4)
-        try:
-            return value.decode()
-        except UnicodeDecodeError:
-            return value.hex()
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 10:
-            raise ValueError('Value should start with "0x" and should be 4 bytes long')
-        return ScaleBytes(value)
-
-
-class VecU8Length2(ScaleType):
-    type_string = '[u8; 2]'
-
-    def process(self):
-        value = self.get_next_bytes(2)
-        try:
-            return value.decode()
-        except UnicodeDecodeError:
-            return value.hex()
-
-    def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 6:
-            raise ValueError('Value should start with "0x" and should be 2 bytes long')
-        return ScaleBytes(value)
-
-
-class VecH256Length3(ScaleType):
-    type_string = '[H256; 3]'
-
-    def process(self):
-        return [self.process_type('H256').value, self.process_type('H256').value, self.process_type('H256').value]
-
-    def process_encode(self, value):
-        if type(value) is not list:
-            raise ValueError("Provided value is not a list")
-
-        data = None
-
-        for element in value:
-            element_obj = self.get_decoder_class('H256', metadata=self.metadata)
-            data += element_obj.encode(element)
-
-        return data
-
-
-class VecU128Length3(ScaleType):
-    type_string = '[u128; 3]'
-
-    def process(self):
-        return [self.process_type('u128').value, self.process_type('u128').value, self.process_type('u128').value]
-
-    def process_encode(self, value):
-        if type(value) is not list:
-            raise ValueError("Provided value is not a list")
-
-        data = None
-
-        for element in value:
-            element_obj = self.get_decoder_class('u128', metadata=self.metadata)
-            data += element_obj.encode(element)
-
-        return data
 
 
 class Struct(ScaleType):
@@ -910,12 +774,6 @@ class VecNextAuthority(Vec):
 
         return result
 
-# class BalanceTransferExtrinsic(Decoder):
-#
-#     type_string = '(Address,Compact<Balance>)'
-#
-#     type_mapping = {'to': 'Address', 'balance': 'Compact<Balance>'}
-
 
 class Address(ScaleType):
 
@@ -1197,10 +1055,6 @@ class IndividualExposure(Struct):
 
 
 class BabeAuthorityWeight(U64):
-    pass
-
-
-class KeyTypeId(VecU8Length4):
     pass
 
 
@@ -1961,7 +1815,6 @@ class Call(ScaleType):
 
                     arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
                     data += arg_obj.encode(param_value)
-
         return data
 
 

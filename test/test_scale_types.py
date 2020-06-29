@@ -147,6 +147,23 @@ class TestScaleTypes(unittest.TestCase):
     def test_unknown_decoder_class(self):
         self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'UnknownType123', ScaleBytes("0x0c00"))
 
+    def test_unknown_dynamic_type(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+
+        # Create set type with u32
+        self.assertRaises(NotImplementedError, RuntimeConfiguration().update_type_registry, {
+            "types": {
+                "UnknownType": {
+                    "type": "unknown",
+                    "value_a": "u32",
+                    "value_b": {
+                        "Value1": 1,
+                        "Value2": 2
+                    }
+                }
+            }
+        })
+
     def test_dynamic_set(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
@@ -235,6 +252,9 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('[u32; 3]', data=ScaleBytes("0x010000000200000003000000"))
         self.assertEqual([1, 2, 3], obj.decode())
 
+        obj = ScaleDecoder.get_decoder_class('[u32; 0]', data=ScaleBytes(bytes()))
+        self.assertEqual([], obj.decode())
+
     def test_dynamic_fixed_array_type_decode_u8(self):
         obj = ScaleDecoder.get_decoder_class('[u8; 65]', data=ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
         self.assertEqual('0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01', obj.decode())
@@ -247,8 +267,19 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('[u32; 1]')
         self.assertEqual('0x0100000002000000', str(obj.encode([1, 2])))
 
-        # obj = ScaleDecoder.get_decoder_class('[u8; 3]', data=ScaleBytes("0x010203"))
-        # self.assertEqual([1, 2, 3], obj.decode())
+        obj = ScaleDecoder.get_decoder_class('[u8; 3]')
+        self.assertEqual('0x010203', str(obj.encode('0x010203')))
+
+    def test_invalid_fixed_array_type_encode(self):
+        obj = ScaleDecoder.get_decoder_class('[u8; 3]')
+        self.assertRaises(ValueError, obj.encode, '0x0102')
+
+        obj = ScaleDecoder.get_decoder_class('[u32; 3]')
+        self.assertRaises(ValueError, obj.encode, '0x0102')
+
+    def test_custom_tuple(self):
+        obj = ScaleDecoder.get_decoder_class('(u8,u8)', ScaleBytes("0x0102"))
+        self.assertEqual({'col1': 1, 'col2': 2}, obj.decode())
 
     def test_create_multi_sig_address(self):
         MultiAccountId = RuntimeConfiguration().get_decoder_class("MultiAccountId")
