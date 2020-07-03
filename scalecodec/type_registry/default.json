@@ -395,14 +395,16 @@
     },
     "OpenTipFinder": "(AccountId, Balance)",
     "OpenTipTip": "(AccountId, Balance)",
-    "OpenTip<AccountId, BalanceOf, BlockNumber, Hash>": {
+    "OpenTip": {
       "type": "struct",
       "type_mapping": [
          ["reason", "Hash"],
          ["who", "AccountId"],
-         ["finder", "Option<OpenTipFinder>"],
+         ["finder", "AccountId"],
+         ["deposit", "Balance"],
          ["closes", "Option<BlockNumber>"],
-         ["tips", "Vec<OpenTipTip>"]
+         ["tips", "Vec<OpenTipTip>"],
+         ["findersFee", "bool"]
       ]
     },
     "ParaId": "u32",
@@ -1158,6 +1160,7 @@
         ["Ecdsa", "EcdsaSignature"]
       ]
     },
-    "schedule::period<blocknumber>": "(BlockNumber, u32)"
+    "schedule::period<blocknumber>": "(BlockNumber, u32)",
+    "OpaqueCall": "Vec<u8>"
   }
 }

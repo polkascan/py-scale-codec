@@ -1,5 +1,5 @@
 {
-  "runtime_id": 1006,
+  "runtime_id": 23,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -25,5 +25,39 @@
         "IdentityJudgement"
       ]
     }
-  }
+  },
+  "versioning": [
+    {
+      "runtime_range": [3, 22],
+      "types": {
+        "OpenTip": {
+          "type": "struct",
+          "type_mapping": [
+             ["reason", "Hash"],
+             ["who", "AccountId"],
+             ["finder", "Option<OpenTipFinder>"],
+             ["closes", "Option<BlockNumber>"],
+             ["tips", "Vec<OpenTipTip>"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [23, null],
+      "types": {
+        "OpenTip": {
+          "type": "struct",
+          "type_mapping": [
+             ["reason", "Hash"],
+             ["who", "AccountId"],
+             ["finder", "AccountId"],
+             ["deposit", "Balance"],
+             ["closes", "Option<BlockNumber>"],
+             ["tips", "Vec<OpenTipTip>"],
+             ["findersFee", "bool"]
+          ]
+        }
+      }
+    }
+  ]
 }
