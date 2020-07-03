@@ -31,7 +31,8 @@
         "NonTransfer",
         "Governance",
         "Staking",
-        "SudoBalances"
+        "SudoBalances",
+        "IdentityJudgement"
       ]
     }
   },

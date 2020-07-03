@@ -23,6 +23,16 @@
          ["class", "DispatchClass"],
          ["paysFee", "Pays"]
       ]
+    },
+    "ProxyType": {
+      "type": "enum",
+      "value_list": [
+        "Any",
+        "NonTransfer",
+        "Governance",
+        "Staking",
+        "IdentityJudgement"
+      ]
     }
   },
   "versioning": [
