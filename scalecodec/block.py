@@ -311,6 +311,49 @@ class EventsDecoder(Vec):
         return [e.value for e in self.elements]
 
 
+class GenericEvent(ScaleDecoder):
+
+    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
+
+        assert (not metadata or type(metadata) == MetadataDecoder)
+
+        self.metadata = metadata
+
+        self.extrinsic_idx = None
+        self.type = None
+        self.params = []
+        self.event = None
+        self.event_module = None
+
+        super().__init__(data, sub_type)
+
+    def process(self):
+
+        self.type = self.get_next_bytes(2).hex()
+
+        # Decode params
+
+        self.event = self.metadata.event_index[self.type][1]
+        self.event_module = self.metadata.event_index[self.type][0]
+
+        for arg_type in self.event.args:
+            arg_type_obj = self.process_type(arg_type)
+
+            self.params.append({
+                'type': arg_type,
+                'value': arg_type_obj.serialize(),
+                'valueRaw': arg_type_obj.raw_value
+            })
+
+        return {
+            'extrinsic_idx': self.extrinsic_idx,
+            'type': self.type,
+            'module_id': self.event_module.name,
+            'event_id': self.event.name,
+            'params': self.params,
+        }
+
+
 class EventRecord(ScaleDecoder):
 
     def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):

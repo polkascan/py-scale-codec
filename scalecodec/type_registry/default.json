@@ -1,116 +1,208 @@
 {
   "types": {
+    "AccountId": "GenericAccountId",
+    "AccountIdOf": "AccountId",
     "AccountVoteSplit": {
       "type": "struct",
       "type_mapping": [
-         ["aye", "Balance"],
-         ["nay", "Balance"]
+        [
+          "aye",
+          "Balance"
+        ],
+        [
+          "nay",
+          "Balance"
+        ]
       ]
     },
     "AccountVoteStandard": {
       "type": "struct",
       "type_mapping": [
-         ["vote", "Vote"],
-         ["balance", "Balance"]
+        [
+          "vote",
+          "Vote"
+        ],
+        [
+          "balance",
+          "Balance"
+        ]
       ]
     },
     "AccountVote": {
       "type": "enum",
       "type_mapping": [
-        ["Standard", "AccountVoteStandard"],
-        ["Split", "AccountVoteSplit"]
+        [
+          "Standard",
+          "AccountVoteStandard"
+        ],
+        [
+          "Split",
+          "AccountVoteSplit"
+        ]
       ]
     },
     "Delegations": {
       "type": "struct",
       "type_mapping": [
-         ["votes", "Balance"],
-         ["capital", "Balance"]
+        [
+          "votes",
+          "Balance"
+        ],
+        [
+          "capital",
+          "Balance"
+        ]
       ]
     },
-    "PriorLock": {
-      "type": "struct",
-      "type_mapping": [
-         ["blockNumber", "BlockNumber"],
-         ["balance", "Balance"]
-      ]
-    },
+    "PriorLock": "(BlockNumber, Balance)",
     "ReferendumInfoFinished": {
       "type": "struct",
       "type_mapping": [
-         ["approved", "bool"],
-         ["end", "BlockNumber"]
+        [
+          "approved",
+          "bool"
+        ],
+        [
+          "end",
+          "BlockNumber"
+        ]
       ]
     },
     "Tally": {
       "type": "struct",
       "type_mapping": [
-         ["ayes", "Balance"],
-         ["nays", "Balance"],
-         ["turnout", "Balance"]
+        [
+          "ayes",
+          "Balance"
+        ],
+        [
+          "nays",
+          "Balance"
+        ],
+        [
+          "turnout",
+          "Balance"
+        ]
       ]
     },
     "ReferendumStatus": {
       "type": "struct",
       "type_mapping": [
-         ["end", "BlockNumber"],
-         ["proposalHash", "Hash"],
-         ["threshold", "VoteThreshold"],
-         ["delay", "BlockNumber"],
-         ["tally", "Tally"]
+        [
+          "end",
+          "BlockNumber"
+        ],
+        [
+          "proposalHash",
+          "Hash"
+        ],
+        [
+          "threshold",
+          "VoteThreshold"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ],
+        [
+          "tally",
+          "Tally"
+        ]
       ]
     },
     "ReferendumInfo": {
       "type": "enum",
       "type_mapping": [
-        ["Ongoing", "ReferendumStatus"],
-        ["Finished", "ReferendumInfoFinished"]
+        [
+          "Ongoing",
+          "ReferendumStatus"
+        ],
+        [
+          "Finished",
+          "ReferendumInfoFinished"
+        ]
       ]
     },
-    "VotingDirectVote": {
-      "type": "struct",
-      "type_mapping": [
-         ["referendumIndex", "ReferendumIndex"],
-         ["accountVote", "AccountVote"]
-      ]
-    },
+    "VotingDirectVote": "(ReferendumIndex, AccountVote)",
     "VotingDirect": {
       "type": "struct",
       "type_mapping": [
-         ["votes", "Vec<VotingDirectVote>"],
-         ["delegations", "Delegations"],
-         ["prior", "PriorLock"]
+        [
+          "votes",
+          "Vec<VotingDirectVote>"
+        ],
+        [
+          "delegations",
+          "Delegations"
+        ],
+        [
+          "prior",
+          "PriorLock"
+        ]
       ]
     },
     "VotingDelegating": {
       "type": "struct",
       "type_mapping": [
-         ["balance", "Balance"],
-         ["target", "AccountId"],
-         ["conviction", "Conviction"],
-         ["delegations", "Delegations"],
-         ["prior", "PriorLock"]
+        [
+          "balance",
+          "Balance"
+        ],
+        [
+          "target",
+          "AccountId"
+        ],
+        [
+          "conviction",
+          "Conviction"
+        ],
+        [
+          "delegations",
+          "Delegations"
+        ],
+        [
+          "prior",
+          "PriorLock"
+        ]
       ]
     },
     "Voting": {
       "type": "enum",
       "type_mapping": [
-        ["Direct", "VotingDirect"],
-        ["Delegating", "VotingDelegating"]
+        [
+          "Direct",
+          "VotingDirect"
+        ],
+        [
+          "Delegating",
+          "VotingDelegating"
+        ]
       ]
     },
     "(AccountId, Balance)": {
       "type": "struct",
       "type_mapping": [
-         ["account", "AccountId"],
-         ["balance", "Balance"]
+        [
+          "account",
+          "AccountId"
+        ],
+        [
+          "balance",
+          "Balance"
+        ]
       ]
     },
     "(BalanceOf<T, I>, BidKind<AccountId, BalanceOf<T, I>>)": {
       "type": "struct",
       "type_mapping": [
-        ["balance", "Balance"],
-        ["bidkind", "BidKind"]
+        [
+          "balance",
+          "Balance"
+        ],
+        [
+          "bidkind",
+          "BidKind"
+        ]
       ]
     },
     "RefCount": "u8",
@@ -118,80 +210,147 @@
     "AccountData": {
       "type": "struct",
       "type_mapping": [
-          ["free", "Balance"],
-          ["reserved", "Balance"],
-          ["miscFrozen", "Balance"],
-          ["feeFrozen", "Balance"]
+        [
+          "free",
+          "Balance"
+        ],
+        [
+          "reserved",
+          "Balance"
+        ],
+        [
+          "miscFrozen",
+          "Balance"
+        ],
+        [
+          "feeFrozen",
+          "Balance"
+        ]
       ]
     },
     "AccountInfo<Index, AccountData>": {
       "type": "struct",
       "type_mapping": [
-         ["nonce", "Index"],
-         ["refcount", "RefCount"],
-         ["data", "AccountData"]
+        [
+          "nonce",
+          "Index"
+        ],
+        [
+          "refcount",
+          "RefCount"
+        ],
+        [
+          "data",
+          "AccountData"
+        ]
       ]
     },
     "ActiveEraInfo": {
       "type": "struct",
       "type_mapping": [
-          ["index", "EraIndex"],
-          ["start", "Option<Moment>"]
+        [
+          "index",
+          "EraIndex"
+        ],
+        [
+          "start",
+          "Option<Moment>"
+        ]
       ]
     },
-    "BlockNumber": "U32",
+    "BlockNumber": "u32",
     "CandidateReceipt": {
       "type": "struct",
       "type_mapping": [
-          ["parachainIndex", "ParaId"],
-          ["collator", "AccountId"],
-          ["signature", "CollatorSignature"],
-          ["headData", "HeadData"],
-          ["balanceUploads", "Vec<BalanceUpload>"],
-          ["egressQueueRoots", "Vec<EgressQueueRoot>"],
-          ["fees", "u64"],
-          ["blockDataHash", "Hash"]
+        [
+          "parachainIndex",
+          "ParaId"
+        ],
+        [
+          "relayParent",
+          "Hash"
+        ],
+        [
+          "head_data",
+          "HeadData"
+        ],
+        [
+          "collator",
+          "CollatorId"
+        ],
+        [
+          "signature",
+          "CollatorSignature"
+        ],
+        [
+          "povBlockHash",
+          "Hash"
+        ],
+        [
+          "globalValidation",
+          "GlobalValidationSchedule"
+        ],
+        [
+          "localValidation",
+          "LocalValidationData"
+        ],
+        [
+          "commitments",
+          "CandidateCommitments"
+        ]
       ]
     },
     "ValidityVote": {
       "type": "struct",
       "type_mapping": [
-         ["accountId", "AccountId"],
-         ["validityAttestation", "ValidityAttestation"]
+        [
+          "accountId",
+          "AccountId"
+        ],
+        [
+          "validityAttestation",
+          "ValidityAttestation"
+        ]
       ]
     },
     "AttestedCandidate": {
       "type": "struct",
       "type_mapping": [
-         ["candidate", "CandidateReceipt"],
-         ["validityVotes", "Vec<ValidityVote>"]
+        [
+          "candidate",
+          "AbridgedCandidateReceipt"
+        ],
+        [
+          "validityVotes",
+          "Vec<ValidityAttestation>"
+        ],
+        [
+          "validatorIndices",
+          "BitVec"
+        ]
       ]
     },
     "LockIdentifier": "[u8; 8]",
     "BalanceLock": {
       "type": "struct",
       "type_mapping": [
-         ["id", "LockIdentifier"],
-         ["amount", "Balance"],
-         ["reasons", "Reasons"]
+        [
+          "id",
+          "LockIdentifier"
+        ],
+        [
+          "amount",
+          "Balance"
+        ],
+        [
+          "reasons",
+          "Reasons"
+        ]
       ]
     },
-    "FullIdentification": {
-      "type": "struct",
-      "type_mapping": [
-         ["total", "Compact<Balance>"],
-         ["own", "Compact<Balance>"],
-         ["others", "Vec<IndividualExposure>"]
-      ]
-    },
-    "IdentificationTuple": {
-      "type": "struct",
-      "type_mapping": [
-         ["validatorId", "ValidatorId"],
-         ["exposure", "FullIdentification"]
-      ]
-    },
-    "SetId": "U64",
+    "FullIdentification": "Exposure",
+    "IdentificationTuple": "(ValidatorId, FullIdentification)",
+    "SetId": "u64",
     "Reasons": {
       "type": "enum",
       "value_list": [
@@ -201,46 +360,70 @@
       ]
     },
     "RoundNumber": "U64",
-    "SessionIndex": "U32",
-    "AuctionIndex": "U32",
-    "AuthIndex": "U32",
+    "SessionIndex": "u32",
+    "AuctionIndex": "u32",
+    "AuthIndex": "u32",
     "AuthorityIndex": "u64",
     "Signature": "H512",
     "CollatorSignature": "Signature",
     "AuthorityWeight": "u64",
-    "NextAuthority": {
-      "type": "struct",
-      "type_mapping": [
-         ["AuthorityId", "AuthorityId"],
-         ["weight", "AuthorityWeight"]
-      ]
-    },
-    "AuthorityList": "VecNextAuthority",
+    "NextAuthority": "(AuthorityId, AuthorityWeight)",
+    "AuthorityList": "Vec<NextAuthority>",
     "BalanceUpload": {
       "type": "struct",
       "type_mapping": [
-         ["accountId", "AccountId"],
-         ["balance", "u64"]
+        [
+          "accountId",
+          "AccountId"
+        ],
+        [
+          "balance",
+          "u64"
+        ]
       ]
     },
-    "CollatorId": "H256",
+    "CollatorId": "[u8; 32]",
     "ContractInfo": {
       "type": "enum",
-      "value_list": [
-        "Alive",
-        "Tombstone"
+      "type_mapping": [
+        [
+          "Alive",
+          "AliveContractInfo"
+        ],
+        [
+          "Tombstone",
+          "TombstoneContractInfo"
+        ]
       ]
     },
-    "TrieId": "Vec<u8>",
+    "TrieId": "Bytes",
     "RawAliveContractInfo": {
       "type": "struct",
       "type_mapping": [
-         ["trie_id", "TrieId"],
-         ["storage_size", "u32"],
-         ["code_hash", "CodeHash"],
-         ["rent_allowance", "Balance"],
-         ["deduct_block", "BlockNumber"],
-         ["last_write", "Option<BlockNumber>"]
+        [
+          "trie_id",
+          "TrieId"
+        ],
+        [
+          "storage_size",
+          "u32"
+        ],
+        [
+          "code_hash",
+          "CodeHash"
+        ],
+        [
+          "rent_allowance",
+          "Balance"
+        ],
+        [
+          "deduct_block",
+          "BlockNumber"
+        ],
+        [
+          "last_write",
+          "Option<BlockNumber>"
+        ]
       ]
     },
     "Pays": {
@@ -261,31 +444,70 @@
     "DispatchInfo": {
       "type": "struct",
       "type_mapping": [
-         ["weight", "Weight"],
-         ["class", "DispatchClass"],
-         ["paysFee", "bool"]
+        [
+          "weight",
+          "Weight"
+        ],
+        [
+          "class",
+          "DispatchClass"
+        ],
+        [
+          "paysFee",
+          "Pays"
+        ]
       ]
     },
     "EgressQueueRoot": {
       "type": "struct",
       "type_mapping": [
-         ["paraId", "ParaId"],
-         ["hash", "Hash"]
+        [
+          "paraId",
+          "ParaId"
+        ],
+        [
+          "hash",
+          "Hash"
+        ]
       ]
     },
     "EventIndex": "u32",
-    "Extrinsic": "ExtrinsicsDecoder",
+    "Extrinsic": "GenericExtrinsic",
     "ExtrinsicPayloadValue": {
       "type": "struct",
       "type_mapping": [
-        ["call", "CallBytes"],
-        ["era", "Era"],
-        ["nonce", "Compact<Index>"],
-        ["tip", "Compact<Balance>"],
-        ["specVersion", "u32"],
-        ["transactionVersion", "u32"],
-        ["genesisHash", "Hash"],
-        ["blockHash", "Hash"]
+        [
+          "call",
+          "CallBytes"
+        ],
+        [
+          "era",
+          "Era"
+        ],
+        [
+          "nonce",
+          "Compact<Index>"
+        ],
+        [
+          "tip",
+          "Compact<Balance>"
+        ],
+        [
+          "specVersion",
+          "u32"
+        ],
+        [
+          "transactionVersion",
+          "u32"
+        ],
+        [
+          "genesisHash",
+          "Hash"
+        ],
+        [
+          "blockHash",
+          "Hash"
+        ]
       ]
     },
     "Gas": "u64",
@@ -296,44 +518,86 @@
         "Display": 1,
         "Legal": 2,
         "Web": 4,
-        "Riot":  8,
-        "Email":  16,
-        "PgpFingerprint":  32,
+        "Riot": 8,
+        "Email": 16,
+        "PgpFingerprint": 32,
         "Image": 64,
         "Twitter": 128
       }
     },
-    "IdentityInfoAdditional": {
-      "type": "struct",
-      "type_mapping": [
-         ["field", "Data"],
-         ["value", "Data"]
-      ]
-    },
+    "IdentityInfoAdditional": "(Data, Data)",
     "IdentityInfo": {
       "type": "struct",
       "type_mapping": [
-         ["additional", "Vec<IdentityInfoAdditional>"],
-         ["display", "Data"],
-         ["legal", "Data"],
-         ["web", "Data"],
-         ["riot", "Data"],
-         ["email", "Data"],
-         ["pgpFingerprint", "Option<H160>"],
-         ["image", "Data"],
-         ["twitter", "Data"]
+        [
+          "additional",
+          "Vec<IdentityInfoAdditional>"
+        ],
+        [
+          "display",
+          "Data"
+        ],
+        [
+          "legal",
+          "Data"
+        ],
+        [
+          "web",
+          "Data"
+        ],
+        [
+          "riot",
+          "Data"
+        ],
+        [
+          "email",
+          "Data"
+        ],
+        [
+          "pgpFingerprint",
+          "Option<H160>"
+        ],
+        [
+          "image",
+          "Data"
+        ],
+        [
+          "twitter",
+          "Data"
+        ]
       ]
     },
     "IdentityJudgement": {
       "type": "enum",
       "type_mapping": [
-        ["Unknown", "Null"],
-        ["FeePaid", "Balance"],
-        ["Reasonable", "Null"],
-        ["KnownGood", "Null"],
-        ["OutOfDate", "Null"],
-        ["LowQuality", "Null"],
-        ["Erroneous", "Null"]
+        [
+          "Unknown",
+          "Null"
+        ],
+        [
+          "FeePaid",
+          "Balance"
+        ],
+        [
+          "Reasonable",
+          "Null"
+        ],
+        [
+          "KnownGood",
+          "Null"
+        ],
+        [
+          "OutOfDate",
+          "Null"
+        ],
+        [
+          "LowQuality",
+          "Null"
+        ],
+        [
+          "Erroneous",
+          "Null"
+        ]
       ]
     },
     "Judgement": "IdentityJudgement",
@@ -343,54 +607,87 @@
     "(LeasePeriodOf, IncomingParachain<AccountId, Hash>)": {
       "type": "struct",
       "type_mapping": [
-         ["leasePeriod", "LeasePeriodOf"],
-         ["incomingParachain", "IncomingParachain"]
+        [
+          "leasePeriod",
+          "LeasePeriodOf"
+        ],
+        [
+          "incomingParachain",
+          "IncomingParachain"
+        ]
       ]
     },
     "(ParaId, Option<(CollatorId, Retriable)>)": {
       "type": "struct",
       "type_mapping": [
-         ["ParaId", "ParaId"],
-         ["CollatorId-Retriable", "Option<(CollatorId, Retriable)>"]
+        [
+          "ParaId",
+          "ParaId"
+        ],
+        [
+          "CollatorId-Retriable",
+          "Option<(CollatorId, Retriable)>"
+        ]
       ]
     },
-    "MaybeVrf": "[u8; 32]",
+    "MaybeVrf": "Option<VrfData>",
     "MemberCount": "u32",
     "MomentOf": "Moment",
-    "MoreAttestations": "Null",
-    "Multiplier": "u64",
+    "MoreAttestations": {
+      "type": "struct",
+      "type_mapping": []
+    },
+    "Multiplier": "Fixed128",
     "CallHash": "H256",
     "Timepoint": {
       "type": "struct",
       "type_mapping": [
-         ["height", "BlockNumber"],
-         ["index", "u32"]
+        [
+          "height",
+          "BlockNumber"
+        ],
+        [
+          "index",
+          "u32"
+        ]
       ]
     },
     "Multisig": {
       "type": "struct",
       "type_mapping": [
-         ["when", "Timepoint"],
-         ["deposit", "Balance"],
-         ["depositor", "AccountId"],
-         ["approvals", "Vec<AccountId>"]
+        [
+          "when",
+          "Timepoint"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "depositor",
+          "AccountId"
+        ],
+        [
+          "approvals",
+          "Vec<AccountId>"
+        ]
       ]
     },
-    "Offender": {
-      "type": "struct",
-      "type_mapping": [
-         ["validatorId", "ValidatorId"],
-         ["exposure", "Exposure"]
-      ]
-    },
+    "Offender": "IdentificationTuple",
     "PhantomData": "Null",
     "sp_std::marker::PhantomData<(AccountId, Event)>": "PhantomData",
     "Reporter": "AccountId",
     "OffenceDetails": {
       "type": "struct",
       "type_mapping": [
-         ["offender", "Offender"],
-         ["reporters", "Vec<Reporter>"]
+        [
+          "offender",
+          "Offender"
+        ],
+        [
+          "reporters",
+          "Vec<Reporter>"
+        ]
       ]
     },
     "OpenTipFinder": "(AccountId, Balance)",
@@ -398,13 +695,34 @@
     "OpenTip": {
       "type": "struct",
       "type_mapping": [
-         ["reason", "Hash"],
-         ["who", "AccountId"],
-         ["finder", "AccountId"],
-         ["deposit", "Balance"],
-         ["closes", "Option<BlockNumber>"],
-         ["tips", "Vec<OpenTipTip>"],
-         ["findersFee", "bool"]
+        [
+          "reason",
+          "Hash"
+        ],
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "finder",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "closes",
+          "Option<BlockNumber>"
+        ],
+        [
+          "tips",
+          "Vec<OpenTipTip>"
+        ],
+        [
+          "findersFee",
+          "bool"
+        ]
       ]
     },
     "ParaId": "u32",
@@ -419,7 +737,10 @@
     "ParaInfo": {
       "type": "struct",
       "type_mapping": [
-         ["scheduling", "ParaScheduling"]
+        [
+          "scheduling",
+          "Scheduling"
+        ]
       ]
     },
     "Percent": "u8",
@@ -429,60 +750,129 @@
     "RawAuraPreDigest": {
       "type": "struct",
       "type_mapping": [
-         ["slotNumber", "SlotNumber"]
+        [
+          "slotNumber",
+          "u64"
+        ]
       ]
     },
     "RawBabePreDigest": {
       "type": "enum",
       "type_mapping": [
-        ["value", "Null"],
-        ["value", "RawBabePreDigestPrimary"],
-        ["value", "RawBabePreDigestSecondaryPlain"],
-        ["value", "RawBabePreDigestSecondaryVRF"]
+        [
+          "Phantom",
+          "Null"
+        ],
+        [
+          "Primary",
+          "RawBabePreDigestPrimary"
+        ],
+        [
+          "SecondaryPlain",
+          "RawBabePreDigestSecondaryPlain"
+        ],
+        [
+          "SecondaryVRF",
+          "RawBabePreDigestSecondaryVRF"
+        ]
       ]
     },
     "RawBabePreDigestPrimary": {
       "type": "struct",
       "type_mapping": [
-         ["authorityIndex", "u32"],
-         ["slotNumber", "SlotNumber"],
-         ["vrfOutput", "VrfData"],
-         ["vrfProof", "VrfProof"]
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "vrfOutput",
+          "VrfOutput"
+        ],
+        [
+          "vrfProof",
+          "VrfProof"
+        ]
       ]
     },
     "RawBabePreDigestSecondaryPlain": {
       "type": "struct",
       "type_mapping": [
-         ["authorityIndex", "u32"],
-         ["slotNumber", "SlotNumber"]
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ]
       ]
     },
     "RawBabePreDigestSecondaryVRF": {
       "type": "struct",
       "type_mapping": [
-         ["authorityIndex", "u32"],
-         ["slotNumber", "SlotNumber"],
-         ["vrfOutput", "VrfData"],
-         ["vrfProof", "VrfProof"]
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "vrfOutput",
+          "VrfOutput"
+        ],
+        [
+          "vrfProof",
+          "VrfProof"
+        ]
       ]
     },
     "ReferendumInfo<BlockNumber, Proposal>": {
       "type": "struct",
       "type_mapping": [
-         ["end", "BlockNumber"],
-         ["proposal", "Proposal"],
-         ["threshold", "VoteThreshold"],
-         ["delay", "BlockNumber"]
+        [
+          "end",
+          "BlockNumber"
+        ],
+        [
+          "proposal",
+          "Proposal"
+        ],
+        [
+          "threshold",
+          "VoteThreshold"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
       ]
     },
     "(ReferendumInfo<BlockNumber, Proposal>)": "ReferendumInfo<BlockNumber, Proposal>",
     "ReferendumInfo<BlockNumber, Hash>": {
       "type": "struct",
       "type_mapping": [
-         ["end", "BlockNumber"],
-         ["proposalHash", "Hash"],
-         ["threshold", "VoteThreshold"],
-         ["delay", "BlockNumber"]
+        [
+          "end",
+          "BlockNumber"
+        ],
+        [
+          "proposalHash",
+          "Hash"
+        ],
+        [
+          "threshold",
+          "VoteThreshold"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
       ]
     },
     "(ReferendumInfo<BlockNumber, Hash>)": "ReferendumInfo<BlockNumber, Hash>",
@@ -490,58 +880,131 @@
     "RegistrarInfo": {
       "type": "struct",
       "type_mapping": [
-         ["account", "AccountId"],
-         ["fee", "Balance"],
-         ["fields", "IdentityFields"]
+        [
+          "account",
+          "AccountId"
+        ],
+        [
+          "fee",
+          "Balance"
+        ],
+        [
+          "fields",
+          "IdentityFields"
+        ]
       ]
     },
-    "RegistrationJudgement": {
-      "type": "struct",
-      "type_mapping": [
-         ["registrarIndex", "RegistrarIndex"],
-         ["judgement", "Judgement"]
-      ]
-    },
+    "RegistrationJudgement": "(RegistrarIndex, IdentityJudgement)",
     "Registration": {
       "type": "struct",
       "type_mapping": [
-         ["judgements", "Vec<RegistrationJudgement>"],
-         ["deposit", "Balance"],
-         ["info", "IdentityInfo"]
+        [
+          "judgements",
+          "Vec<RegistrationJudgement>"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "info",
+          "IdentityInfo"
+        ]
       ]
     },
     "ReportIdOf": "Hash",
     "Schedule": {
       "type": "struct",
       "type_mapping": [
-         ["version", "u32"],
-         ["put_code_per_byte_cost", "Gas"],
-         ["grow_mem_cost", "Gas"],
-         ["regular_op_cost", "Gas"],
-         ["return_data_per_byte_cost", "Gas"],
-         ["event_data_per_byte_cost", "Gas"],
-         ["event_per_topic_cost", "Gas"],
-         ["event_base_cost", "Gas"],
-         ["call_base_cost", "Gas"],
-         ["instantiate_base_cost", "Gas"],
-         ["sandbox_data_read_cost", "Gas"],
-         ["sandbox_data_write_cost", "Gas"],
-         ["max_event_topics", "u32"],
-         ["max_stack_height", "u32"],
-         ["max_memory_pages", "u32"],
-         ["max_table_size", "u32"],
-         ["enable_println", "bool"],
-         ["max_subject_len", "u32"]
+        [
+          "version",
+          "u32"
+        ],
+        [
+          "putCodePerByteCost",
+          "Gas"
+        ],
+        [
+          "growMemCost",
+          "Gas"
+        ],
+        [
+          "regularOpCost",
+          "Gas"
+        ],
+        [
+          "returnDataPerByteCost",
+          "Gas"
+        ],
+        [
+          "eventDataPerByteCost",
+          "Gas"
+        ],
+        [
+          "eventPerTopicCost",
+          "Gas"
+        ],
+        [
+          "eventBaseCost",
+          "Gas"
+        ],
+        [
+          "sandboxDataReadCost",
+          "Gas"
+        ],
+        [
+          "sandboxDataWriteCost",
+          "Gas"
+        ],
+        [
+          "transferCost",
+          "Gas"
+        ],
+        [
+          "maxEventTopics",
+          "u32"
+        ],
+        [
+          "maxStackHeight",
+          "u32"
+        ],
+        [
+          "maxMemoryPages",
+          "u32"
+        ],
+        [
+          "enablePrintln",
+          "bool"
+        ],
+        [
+          "maxSubjectLen",
+          "u32"
+        ]
       ]
     },
     "StakingLedger<AccountId, BalanceOf>": {
       "type": "struct",
       "type_mapping": [
-         ["stash", "AccountId"],
-         ["total", "Compact<Balance>"],
-         ["active", "Compact<Balance>"],
-         ["unlocking", "Vec<UnlockChunk<Balance>>"],
-         ["lastReward", "Option<EraIndex>"]
+        [
+          "stash",
+          "AccountId"
+        ],
+        [
+          "total",
+          "Compact<Balance>"
+        ],
+        [
+          "active",
+          "Compact<Balance>"
+        ],
+        [
+          "unlocking",
+          "Vec<UnlockChunk<Balance>>"
+        ],
+        [
+          "lastReward",
+          "Option<EraIndex>"
+        ]
       ]
     },
     "SubId": "u32",
@@ -552,31 +1015,36 @@
         "Uncle"
       ]
     },
-    "ValidatorPrefs":  {
+    "ValidatorPrefs": {
       "type": "struct",
       "type_mapping": [
-         ["commission", "Compact<Perbill>"]
+        [
+          "commission",
+          "Compact<Perbill>"
+        ]
       ]
     },
     "VestingSchedule<Balance, BlockNumber>": {
       "type": "struct",
       "type_mapping": [
-         ["offset", "Balance"],
-         ["perBlock", "Balance"],
-         ["startingBlock", "BlockNumber"]
+        [
+          "offset",
+          "Balance"
+        ],
+        [
+          "perBlock",
+          "Balance"
+        ],
+        [
+          "startingBlock",
+          "BlockNumber"
+        ]
       ]
     },
     "Weight": "u64",
-    "WeightMultiplier": "u64",
-    "WinningDataEntry": {
-      "type": "struct",
-      "type_mapping": [
-         ["accountId", "AccountId"],
-         ["paraId", "ParaId"],
-         ["balance", "Balance"]
-      ]
-    },
-    "WinningData": "Vec<WinningDataEntry>",
+    "WeightMultiplier": "Fixed64",
+    "WinningDataEntry": "Option<Bidder>",
+    "WinningData": "[WinningDataEntry; 10]",
     "WithdrawReasons": {
       "type": "set",
       "value_type": "u64",
@@ -588,14 +1056,23 @@
         "Tip": 16
       }
     },
-    "Index": "U32",
+    "Index": "u32",
     "Kind": "[u8; 16]",
     "Nominations": {
       "type": "struct",
       "type_mapping": [
-         ["targets", "Vec<AccountId>"],
-         ["submittedIn", "EraIndex"],
-         ["suppressed", "bool"]
+        [
+          "targets",
+          "Vec<AccountId>"
+        ],
+        [
+          "submittedIn",
+          "EraIndex"
+        ],
+        [
+          "suppressed",
+          "bool"
+        ]
       ]
     },
     "OpaqueTimeSlot": "Bytes",
@@ -608,17 +1085,33 @@
       "value_list": [
         "NotForcing",
         "ForceNew",
-        "ForceNone"
+        "ForceNone",
+        "ForceAlways"
       ]
     },
     "Heartbeat": {
       "type": "struct",
       "type_mapping": [
-         ["blockNumber", "BlockNumber"],
-         ["networkState", "OpaqueNetworkState"],
-         ["sessionIndex", "SessionIndex"],
-         ["authorityIndex", "AuthIndex"],
-         ["validatorsLen", "u32"]
+        [
+          "blockNumber",
+          "BlockNumber"
+        ],
+        [
+          "networkState",
+          "OpaqueNetworkState"
+        ],
+        [
+          "sessionIndex",
+          "SessionIndex"
+        ],
+        [
+          "authorityIndex",
+          "AuthIndex"
+        ],
+        [
+          "validatorsLen",
+          "u32"
+        ]
       ]
     },
     "RewardDestination": {
@@ -632,27 +1125,57 @@
     "ChangesTrieConfiguration": {
       "type": "struct",
       "type_mapping": [
-         ["digestInterval", "u32"],
-         ["digestLevels", "u32"]
+        [
+          "digestInterval",
+          "u32"
+        ],
+        [
+          "digestLevels",
+          "u32"
+        ]
       ]
     },
-    "ConsensusEngineId": "[u8; 4]",
+    "ConsensusEngineId": "GenericConsensusEngineId",
     "DigestItem": {
       "type": "enum",
       "type_mapping": [
-        ["Other", "Vec<u8>"],
-        ["AuthoritiesChange", "Vec<AuthorityId>"],
-        ["ChangesTrieRoot", "Hash"],
-        ["SealV0", "SealV0"],
-        ["Consensus", "Consensus"],
-        ["Seal", "Seal"],
-        ["PreRuntime", "PreRuntime"]
+        [
+          "Other",
+          "Bytes"
+        ],
+        [
+          "AuthoritiesChange",
+          "Vec<AuthorityId>"
+        ],
+        [
+          "ChangesTrieRoot",
+          "Hash"
+        ],
+        [
+          "SealV0",
+          "SealV0"
+        ],
+        [
+          "Consensus",
+          "Consensus"
+        ],
+        [
+          "Seal",
+          "Seal"
+        ],
+        [
+          "PreRuntime",
+          "PreRuntime"
+        ]
       ]
     },
     "Digest": {
       "type": "struct",
       "type_mapping": [
-        ["logs", "Vec<DigestItem<Hash>>"]
+        [
+          "logs",
+          "Vec<DigestItem>"
+        ]
       ]
     },
     "DigestOf": "Digest",
@@ -661,101 +1184,188 @@
     "SlashingSpans": {
       "type": "struct",
       "type_mapping": [
-         ["spanIndex", "SpanIndex"],
-         ["lastStart", "EraIndex"],
-         ["lastNonzeroSlash", "EraIndex"],
-         ["prior", "Vec<EraIndex>"]
+        [
+          "spanIndex",
+          "SpanIndex"
+        ],
+        [
+          "lastStart",
+          "EraIndex"
+        ],
+        [
+          "lastNonzeroSlash",
+          "EraIndex"
+        ],
+        [
+          "prior",
+          "Vec<EraIndex>"
+        ]
       ]
     },
     "slashing::SlashingSpans": "SlashingSpans",
     "SpanRecord": {
       "type": "struct",
       "type_mapping": [
-         ["slashed", "Balance"],
-         ["paidOut", "Balance"]
+        [
+          "slashed",
+          "Balance"
+        ],
+        [
+          "paidOut",
+          "Balance"
+        ]
       ]
     },
     "slashing::SpanRecord<BalanceOf>": "SpanRecord",
-    "UnappliedSlashOther": {
-      "type": "struct",
-      "type_mapping": [
-         ["account", "AccountId"],
-         ["amount", "Balance"]
-      ]
-    },
+    "UnappliedSlashOther": "(AccountId, Balance)",
     "UnappliedSlash<AccountId, BalanceOf>": {
       "type": "struct",
       "type_mapping": [
-         ["validator", "AccountId"],
-         ["own", "AccountId"],
-         ["others", "Vec<UnappliedSlashOther>"],
-         ["reporters", "Vec<AccountId>"],
-         ["payout", "Balance"]
+        [
+          "validator",
+          "AccountId"
+        ],
+        [
+          "own",
+          "AccountId"
+        ],
+        [
+          "others",
+          "Vec<UnappliedSlashOther>"
+        ],
+        [
+          "reporters",
+          "Vec<AccountId>"
+        ],
+        [
+          "payout",
+          "Balance"
+        ]
       ]
     },
     "Keys": "SessionKeysSubstrate",
     "Header": {
       "type": "struct",
       "type_mapping": [
-        ["parent_hash", "H256"],
-        ["number", "Compact<BlockNumber>"],
-        ["state_root", "H256"],
-        ["extrinsics_root", "H256"],
-        ["digest", "Digest"]
+        [
+          "parentHash",
+          "Hash"
+        ],
+        [
+          "number",
+          "Compact<BlockNumber>"
+        ],
+        [
+          "stateRoot",
+          "Hash"
+        ],
+        [
+          "extrinsicsRoot",
+          "Hash"
+        ],
+        [
+          "digest",
+          "Digest"
+        ]
       ]
     },
     "DispatchErrorModule": {
       "type": "struct",
       "type_mapping": [
-         ["index", "u8"],
-         ["error", "u8"]
+        [
+          "index",
+          "u8"
+        ],
+        [
+          "error",
+          "u8"
+        ]
       ]
     },
     "DispatchError": {
       "type": "enum",
       "type_mapping": [
-        ["Other", "Null"],
-        ["CannotLookup", "Null"],
-        ["BadOrigin", "Null"],
-        ["Module", "DispatchErrorModule"]
+        [
+          "Other",
+          "Null"
+        ],
+        [
+          "CannotLookup",
+          "Null"
+        ],
+        [
+          "BadOrigin",
+          "Null"
+        ],
+        [
+          "Module",
+          "DispatchErrorModule"
+        ]
       ]
     },
-    "DispatchResult": {
-      "type": "enum",
-      "type_mapping": [
-        ["Ok", "Null"],
-        ["Error", "DispatchError"]
-      ]
-    },
+    "DispatchResult": "Result<(), DispatchError>",
     "ActiveRecovery": {
       "type": "struct",
       "type_mapping": [
-        ["created", "BlockNumber"],
-        ["deposit", "Balance"],
-        ["friends", "Vec<AccountId>"]
+        [
+          "created",
+          "BlockNumber"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "friends",
+          "Vec<AccountId>"
+        ]
       ]
     },
     "RecoveryConfig": {
       "type": "struct",
       "type_mapping": [
-        ["delayPeriod", "BlockNumber"],
-        ["deposit", "Balance"],
-        ["friends", "Vec<AccountId>"],
-        ["threshold", "u16"]
+        [
+          "delayPeriod",
+          "BlockNumber"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "friends",
+          "Vec<AccountId>"
+        ],
+        [
+          "threshold",
+          "u16"
+        ]
       ]
     },
     "BidKindVouch": {
       "type": "struct",
       "type_mapping": [
-        ["account", "AccountId"],
-        ["amount", "Balance"]
+        [
+          "account",
+          "AccountId"
+        ],
+        [
+          "amount",
+          "Balance"
+        ]
       ]
     },
     "BidKind": {
       "type": "enum",
       "type_mapping": [
-        ["Deposit", "Balance"],
-        ["Vouch", "BidKindVouch"]
+        [
+          "Deposit",
+          "Balance"
+        ],
+        [
+          "Vouch",
+          "(AccountId, Balance)"
+        ]
       ]
     },
     "BidKind<AccountId,Balance>": "Bidkind",
@@ -763,9 +1373,18 @@
     "Bid": {
       "type": "struct",
       "type_mapping": [
-        ["who", "AccountId"],
-        ["kind", "BidKind"],
-        ["value", "Balance"]
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "kind",
+          "BidKind"
+        ],
+        [
+          "value",
+          "Balance"
+        ]
       ]
     },
     "StrikeCount": "u32",
@@ -779,59 +1398,114 @@
     "ExtrinsicMetadata": {
       "type": "struct",
       "type_mapping": [
-        ["version", "u8"],
-        ["signedExtensions", "Vec<Bytes>"]
+        [
+          "version",
+          "u8"
+        ],
+        [
+          "signedExtensions",
+          "Vec<Bytes>"
+        ]
       ]
     },
     "RewardPoint": "u32",
     "EraRewardPoints": {
       "type": "struct",
       "type_mapping": [
-        ["total", "RewardPoint"],
-        ["individual", "Vec<(AccountId, RewardPoint)>"]
+        [
+          "total",
+          "RewardPoint"
+        ],
+        [
+          "individual",
+          "BTreeMap<AccountId, RewardPoint>"
+        ]
       ]
     },
     "IncomingParachainDeploy": {
       "type": "struct",
       "type_mapping": [
-        ["code", "Bytes"],
-        ["initialHeadData", "Bytes"]
+        [
+          "code",
+          "ValidationCode"
+        ],
+        [
+          "initialHeadData",
+          "HeadData"
+        ]
       ]
     },
     "NewBidder": {
       "type": "struct",
       "type_mapping": [
-        ["who", "AccountId"],
-        ["sub", "SubId"]
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "sub",
+          "SubId"
+        ]
       ]
     },
     "IncomingParachainFixed": {
       "type": "struct",
       "type_mapping": [
-        ["codeHash", "Hash"],
-        ["initialHeadData", "Bytes"]
+        [
+          "codeHash",
+          "Hash"
+        ],
+        [
+          "codeSize",
+          "u32"
+        ],
+        [
+          "initialHeadData",
+          "HeadData"
+        ]
       ]
     },
     "IncomingParachain": {
       "type": "enum",
       "type_mapping": [
-        ["Unset", "NewBidder"],
-        ["Fixed", "IncomingParachainFixed"],
-        ["Deploy", "IncomingParachainDeploy"]
+        [
+          "Unset",
+          "NewBidder"
+        ],
+        [
+          "Fixed",
+          "IncomingParachainFixed"
+        ],
+        [
+          "Deploy",
+          "IncomingParachainDeploy"
+        ]
       ]
     },
     "LastRuntimeUpgradeInfo": {
       "type": "struct",
       "type_mapping": [
-        ["specVersion", "Compact<u32>"],
-        ["specName", "Bytes"]
+        [
+          "specVersion",
+          "Compact<u32>"
+        ],
+        [
+          "specName",
+          "Text"
+        ]
       ]
     },
     "ProxyState": {
-      "type": "struct",
+      "type": "enum",
       "type_mapping": [
-        ["Open", "AccountId"],
-        ["Active", "AccountId"]
+        [
+          "Open",
+          "AccountId"
+        ],
+        [
+          "Active",
+          "AccountId"
+        ]
       ]
     },
     "ReleasesBalances": {
@@ -841,7 +1515,21 @@
         "V2_0_0"
       ]
     },
-    "Releases": "ReleasesBalances",
+    "Releases": {
+      "type": "enum",
+      "value_list": [
+        "V1",
+        "V2",
+        "V3",
+        "V4",
+        "V5",
+        "V6",
+        "V7",
+        "V8",
+        "V9",
+        "V10"
+      ]
+    },
     "SlotRange": {
       "type": "enum",
       "value_list": [
@@ -860,216 +1548,391 @@
     "ValidityAttestation": {
       "type": "enum",
       "type_mapping": [
-        ["None", "Null"],
-        ["Implicit", "CollatorSignature"],
-        ["Explicit", "CollatorSignature"]
+        [
+          "Never",
+          "Null"
+        ],
+        [
+          "Implicit",
+          "ValidatorSignature"
+        ],
+        [
+          "Explicit",
+          "ValidatorSignature"
+        ]
       ]
     },
     "VestingInfo": {
       "type": "struct",
       "type_mapping": [
-        ["locked", "Balance"],
-        ["perBlock", "Balance"],
-        ["startingBlock", "BlockNumber"]
+        [
+          "locked",
+          "Balance"
+        ],
+        [
+          "perBlock",
+          "Balance"
+        ],
+        [
+          "startingBlock",
+          "BlockNumber"
+        ]
       ]
     },
     "NominatorIndex": "u32",
     "ValidatorIndex": "u16",
     "PerU16": "u16",
     "OffchainAccuracy": "PerU16",
-    "CompactScore": {
-      "type": "struct",
-        "type_mapping": [
-          ["validatorIndex", "ValidatorIndex"],
-          ["offchainAccuracy", "OffchainAccuracy"]
-        ]
-    },
+    "CompactScore": "(ValidatorIndex, OffchainAccuracy)",
     "CompactAssignments": {
       "type": "struct",
-        "type_mapping": [
-          ["votes1", "Vec<(NominatorIndex, ValidatorIndex)>"],
-          ["votes2", "Vec<(NominatorIndex, [CompactScore; 1], ValidatorIndex)>"],
-          ["votes3", "Vec<(NominatorIndex, [CompactScore; 2], ValidatorIndex)>"],
-          ["votes4", "Vec<(NominatorIndex, [CompactScore; 3], ValidatorIndex)>"],
-          ["votes5", "Vec<(NominatorIndex, [CompactScore; 4], ValidatorIndex)>"],
-          ["votes6", "Vec<(NominatorIndex, [CompactScore; 5], ValidatorIndex)>"],
-          ["votes7", "Vec<(NominatorIndex, [CompactScore; 6], ValidatorIndex)>"],
-          ["votes8", "Vec<(NominatorIndex, [CompactScore; 7], ValidatorIndex)>"],
-          ["votes9", "Vec<(NominatorIndex, [CompactScore; 8], ValidatorIndex)>"],
-          ["votes10", "Vec<(NominatorIndex, [CompactScore; 9], ValidatorIndex)>"],
-          ["votes11", "Vec<(NominatorIndex, [CompactScore; 10], ValidatorIndex)>"],
-          ["votes12", "Vec<(NominatorIndex, [CompactScore; 11], ValidatorIndex)>"],
-          ["votes13", "Vec<(NominatorIndex, [CompactScore; 12], ValidatorIndex)>"],
-          ["votes14", "Vec<(NominatorIndex, [CompactScore; 13], ValidatorIndex)>"],
-          ["votes15", "Vec<(NominatorIndex, [CompactScore; 14], ValidatorIndex)>"],
-          ["votes16", "Vec<(NominatorIndex, [CompactScore; 15], ValidatorIndex)>"]
+      "type_mapping": [
+        [
+          "votes1",
+          "Vec<(NominatorIndex, [CompactScore; 0], ValidatorIndex)>"
+        ],
+        [
+          "votes2",
+          "Vec<(NominatorIndex, [CompactScore; 1], ValidatorIndex)>"
+        ],
+        [
+          "votes3",
+          "Vec<(NominatorIndex, [CompactScore; 2], ValidatorIndex)>"
+        ],
+        [
+          "votes4",
+          "Vec<(NominatorIndex, [CompactScore; 3], ValidatorIndex)>"
+        ],
+        [
+          "votes5",
+          "Vec<(NominatorIndex, [CompactScore; 4], ValidatorIndex)>"
+        ],
+        [
+          "votes6",
+          "Vec<(NominatorIndex, [CompactScore; 5], ValidatorIndex)>"
+        ],
+        [
+          "votes7",
+          "Vec<(NominatorIndex, [CompactScore; 6], ValidatorIndex)>"
+        ],
+        [
+          "votes8",
+          "Vec<(NominatorIndex, [CompactScore; 7], ValidatorIndex)>"
+        ],
+        [
+          "votes9",
+          "Vec<(NominatorIndex, [CompactScore; 8], ValidatorIndex)>"
+        ],
+        [
+          "votes10",
+          "Vec<(NominatorIndex, [CompactScore; 9], ValidatorIndex)>"
+        ],
+        [
+          "votes11",
+          "Vec<(NominatorIndex, [CompactScore; 10], ValidatorIndex)>"
+        ],
+        [
+          "votes12",
+          "Vec<(NominatorIndex, [CompactScore; 11], ValidatorIndex)>"
+        ],
+        [
+          "votes13",
+          "Vec<(NominatorIndex, [CompactScore; 12], ValidatorIndex)>"
+        ],
+        [
+          "votes14",
+          "Vec<(NominatorIndex, [CompactScore; 13], ValidatorIndex)>"
+        ],
+        [
+          "votes15",
+          "Vec<(NominatorIndex, [CompactScore; 14], ValidatorIndex)>"
+        ],
+        [
+          "votes16",
+          "Vec<(NominatorIndex, [CompactScore; 15], ValidatorIndex)>"
         ]
+      ]
     },
-    "DeferredOffenceOf": {
-      "type": "struct",
-        "type_mapping": [
-          ["offences", "Vec<OffenceDetails>"],
-          ["perc", "Vec<Perbill>"],
-          ["session", "SessionIndex"]
-        ]
-    },
+    "DeferredOffenceOf": "(Vec<OffenceDetails>, Vec<Perbill>, SessionIndex)",
     "Statement": {
       "type": "enum",
       "type_mapping": [
-        ["Never", "Null"],
-        ["Candidate", "Hash"],
-        ["Valid", "Hash"],
-        ["Invalid", "Hash"]
+        [
+          "Never",
+          "Null"
+        ],
+        [
+          "Candidate",
+          "Hash"
+        ],
+        [
+          "Valid",
+          "Hash"
+        ],
+        [
+          "Invalid",
+          "Hash"
+        ]
       ]
     },
     "ValidatorSignature": "Signature",
     "DoubleVoteReportStatement": {
       "type": "struct",
       "type_mapping": [
-        ["statement", "Statement"],
-        ["signature", "ValidatorSignature"]
+        [
+          "statement",
+          "Statement"
+        ],
+        [
+          "signature",
+          "ValidatorSignature"
+        ]
       ]
     },
     "DoubleVoteReportProof": {
       "type": "struct",
       "type_mapping": [
-        ["session", "SessionIndex"],
-        ["trieNodes", "Vec<Bytes>"]
+        [
+          "session",
+          "SessionIndex"
+        ],
+        [
+          "trieNodes",
+          "Vec<Bytes>"
+        ]
       ]
     },
     "SigningContext": {
       "type": "struct",
       "type_mapping": [
-        ["sessionIndex", "SessionIndex"],
-        ["parentHash", "Hash"]
+        [
+          "sessionIndex",
+          "SessionIndex"
+        ],
+        [
+          "parentHash",
+          "Hash"
+        ]
       ]
     },
     "DoubleVoteReport": {
       "type": "struct",
       "type_mapping": [
-        ["identity", "ValidatorId"],
-        ["first", "DoubleVoteReportStatement"],
-        ["second", "DoubleVoteReportStatement"],
-        ["proof", "DoubleVoteReportProof"],
-        ["signingContext", "SigningContext"]
+        [
+          "identity",
+          "ValidatorId"
+        ],
+        [
+          "first",
+          "(Statement, ValidatorSignature)"
+        ],
+        [
+          "second",
+          "(Statement, ValidatorSignature)"
+        ],
+        [
+          "proof",
+          "MembershipProof"
+        ],
+        [
+          "signingContext",
+          "SigningContext"
+        ]
       ]
     },
     "ElectionCompute": {
       "type": "enum",
-        "value_list": [
-          "OnChain",
-          "Signed",
-          "Authority"
-        ]
+      "value_list": [
+        "OnChain",
+        "Signed",
+        "Authority"
+      ]
     },
     "ElectionResult": {
       "type": "struct",
       "type_mapping": [
-        ["compute", "ElectionCompute"],
-        ["slotStake", "Balance"],
-        ["electedStashes", "Vec<AccountId>"],
-        ["exposures", "Vec<(AccountId, Exposure)>"]
+        [
+          "compute",
+          "ElectionCompute"
+        ],
+        [
+          "slotStake",
+          "Balance"
+        ],
+        [
+          "electedStashes",
+          "Vec<AccountId>"
+        ],
+        [
+          "exposures",
+          "Vec<(AccountId, Exposure)>"
+        ]
       ]
     },
     "ElectionStatus": {
       "type": "enum",
       "type_mapping": [
-        ["Close", "Null"],
-        ["Open", "BlockNumber"]
+        [
+          "Close",
+          "Null"
+        ],
+        [
+          "Open",
+          "BlockNumber"
+        ]
       ]
     },
     "Phase": {
       "type": "enum",
       "type_mapping": [
-        ["ApplyExtrinsic", "u32"],
-        ["Finalization", "Null"],
-        ["Initialization", "Null"]
+        [
+          "ApplyExtrinsic",
+          "u32"
+        ],
+        [
+          "Finalization",
+          "Null"
+        ],
+        [
+          "Initialization",
+          "Null"
+        ]
       ]
     },
     "PhragmenScore": "[u128; 3]",
     "PreimageStatusAvailable": {
       "type": "struct",
       "type_mapping": [
-        ["data", "Bytes"],
-        ["provider", "AccountId"],
-        ["deposit", "Balance"],
-        ["since", "BlockNumber"],
-        ["expiry", "Option<BlockNumber>"]
+        [
+          "data",
+          "Bytes"
+        ],
+        [
+          "provider",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "since",
+          "BlockNumber"
+        ],
+        [
+          "expiry",
+          "Option<BlockNumber>"
+        ]
       ]
     },
     "PreimageStatus": {
       "type": "enum",
       "type_mapping": [
-        ["Missing", "BlockNumber"],
-        ["Available", "PreimageStatusAvailable"]
+        [
+          "Missing",
+          "BlockNumber"
+        ],
+        [
+          "Available",
+          "PreimageStatusAvailable"
+        ]
       ]
     },
     "Randomness": "Hash",
     "MaybeRandomness": "Option<Randomness>",
     "schnorrkel::Randomness": "Hash",
     "schnorrkel::RawVRFOutput": "[u8; 32]",
-    "TaskAddress": {
-      "type": "struct",
-      "type_mapping": [
-        ["blockNumber", "BlockNumber"],
-        ["index", "u32"]
-      ]
-    },
+    "TaskAddress": "(BlockNumber, u32)",
     "ValidationCode": "Bytes",
     "ParaPastCodeMeta": {
       "type": "struct",
       "type_mapping": [
-        ["upgrade_times", "Vec<BlockNumber>"],
-        ["last_pruned", "Option<BlockNumber>"]
+        [
+          "upgradeTimes",
+          "Vec<BlockNumber>"
+        ],
+        [
+          "lastPruned",
+          "Option<BlockNumber>"
+        ]
       ]
     },
     "ModuleId": "LockIdentifier",
     "RuntimeDbWeight": {
       "type": "struct",
       "type_mapping": [
-        ["read", "Weight"],
-        ["write", "Weight"]
+        [
+          "read",
+          "Weight"
+        ],
+        [
+          "write",
+          "Weight"
+        ]
       ]
     },
     "Renouncing": {
       "type": "enum",
       "type_mapping": [
-        ["Member", "Null"],
-        ["RunnerUp", "Null"],
-        ["Candidate", "Compact<u32>"]
+        [
+          "Member",
+          "Null"
+        ],
+        [
+          "RunnerUp",
+          "Null"
+        ],
+        [
+          "Candidate",
+          "Compact<u32>"
+        ]
       ]
     },
     "ExtrinsicsWeight": {
       "type": "struct",
       "type_mapping": [
-        ["normal", "Weight"],
-        ["operational", "Weight"]
+        [
+          "normal",
+          "Weight"
+        ],
+        [
+          "operational",
+          "Weight"
+        ]
       ]
     },
     "weights::ExtrinsicsWeight": "ExtrinsicsWeight",
     "ValidatorCount": "u32",
-    "KeyOwnerProof": {
-      "type": "struct",
-      "type_mapping": [
-        ["session", "SessionIndex"],
-        ["trieNodes", "Vec<Bytes>"],
-        ["validatorCount", "ValidatorCount"]
-      ]
-    },
+    "KeyOwnerProof": "MembershipProof",
     "DefunctVoter": {
       "type": "struct",
       "type_mapping": [
-        ["who", "AccountId"],
-        ["voteCount", "Compact<u32>"],
-        ["candidateCount", "Compact<u32>"]
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "voteCount",
+          "Compact<u32>"
+        ],
+        [
+          "candidateCount",
+          "Compact<u32>"
+        ]
       ]
     },
     "ElectionScore": "[u128; 3]",
     "ElectionSize": {
       "type": "struct",
       "type_mapping": [
-        ["validators", "Compact<ValidatorIndex>"],
-        ["nominators", "Compact<NominatorIndex>"]
+        [
+          "validators",
+          "Compact<ValidatorIndex>"
+        ],
+        [
+          "nominators",
+          "Compact<NominatorIndex>"
+        ]
       ]
     },
     "AllowedSlots": {
@@ -1083,15 +1946,27 @@
     "NextConfigDescriptorV1": {
       "type": "struct",
       "type_mapping": [
-        ["c", "(u64, u64)"],
-        ["allowedSlots", "AllowedSlots"]
+        [
+          "c",
+          "(u64, u64)"
+        ],
+        [
+          "allowedSlots",
+          "AllowedSlots"
+        ]
       ]
     },
     "NextConfigDescriptor": {
       "type": "enum",
       "type_mapping": [
-        ["V0", "Null"],
-        ["V1", "NextConfigDescriptorV1"]
+        [
+          "V0",
+          "Null"
+        ],
+        [
+          "V1",
+          "NextConfigDescriptorV1"
+        ]
       ]
     },
     "StatementKind": {
@@ -1103,33 +1978,55 @@
     },
     "schedule::Priority": "u8",
     "GrandpaEquivocation": {
-      "type": "struct",
+      "type": "enum",
       "type_mapping": [
-        ["roundNumber", "u64"],
-        ["identity", "AuthorityId"],
-        ["first", "(GrandpaPrevote, AuthoritySignature)"],
-        ["second", "(GrandpaPrevote, AuthoritySignature)"]
+        [
+          "Prevote",
+          "GrandpaEquivocationValue"
+        ],
+        [
+          "Precommit",
+          "GrandpaEquivocationValue"
+        ]
       ]
     },
     "GrandpaPrevote": {
       "type": "struct",
       "type_mapping": [
-        ["targetHash", "Hash"],
-        ["targetNumber", "BlockNumber"]
+        [
+          "targetHash",
+          "Hash"
+        ],
+        [
+          "targetNumber",
+          "BlockNumber"
+        ]
       ]
     },
     "Equivocation": {
       "type": "enum",
       "type_mapping": [
-        ["Prevote", "GrandpaEquivocation"],
-        ["Precommit", "GrandpaEquivocation"]
+        [
+          "Prevote",
+          "GrandpaEquivocation"
+        ],
+        [
+          "Precommit",
+          "GrandpaEquivocation"
+        ]
       ]
     },
     "EquivocationProof": {
       "type": "struct",
       "type_mapping": [
-        ["setId", "SetId"],
-        ["equivocation", "Equivocation"]
+        [
+          "setId",
+          "SetId"
+        ],
+        [
+          "equivocation",
+          "Equivocation"
+        ]
       ]
     },
     "ProxyType": {
@@ -1155,12 +2052,3388 @@
     "MultiSignature": {
       "type": "enum",
       "type_mapping": [
-        ["Ed25519", "Ed25519Signature"],
-        ["Sr25519", "Sr25519Signature"],
-        ["Ecdsa", "EcdsaSignature"]
+        [
+          "Ed25519",
+          "Ed25519Signature"
+        ],
+        [
+          "Sr25519",
+          "Sr25519Signature"
+        ],
+        [
+          "Ecdsa",
+          "EcdsaSignature"
+        ]
       ]
     },
     "schedule::period<blocknumber>": "(BlockNumber, u32)",
-    "OpaqueCall": "Vec<u8>"
+    "OpaqueCall": "Bytes",
+    "AuthorityId": "AccountId",
+    "RawVRFOutput": "[u8; 32]",
+    "BlockAttestations": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "receipt",
+          "CandidateReceipt"
+        ],
+        [
+          "valid",
+          "Vec<AccountId>"
+        ],
+        [
+          "invalid",
+          "Vec<AccountId>"
+        ]
+      ]
+    },
+    "IncludedBlocks": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "actualNumber",
+          "BlockNumber"
+        ],
+        [
+          "session",
+          "SessionIndex"
+        ],
+        [
+          "randomSeed",
+          "H256"
+        ],
+        [
+          "activeParachains",
+          "Vec<ParaId>"
+        ],
+        [
+          "paraBlocks",
+          "Vec<Hash>"
+        ]
+      ]
+    },
+    "HeartbeatTo244": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "blockNumber",
+          "BlockNumber"
+        ],
+        [
+          "networkState",
+          "OpaqueNetworkState"
+        ],
+        [
+          "sessionIndex",
+          "SessionIndex"
+        ],
+        [
+          "authorityIndex",
+          "AuthIndex"
+        ]
+      ]
+    },
+    "OpaqueMultiaddr": "Bytes",
+    "OpaquePeerId": "Bytes",
+    "OpaqueNetworkState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "peerId",
+          "OpaquePeerId"
+        ],
+        [
+          "externalAddresses",
+          "Vec<OpaqueMultiaddr>"
+        ]
+      ]
+    },
+    "ProposalIndex": "u32",
+    "VotesTo230": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "index",
+          "ProposalIndex"
+        ],
+        [
+          "threshold",
+          "MemberCount"
+        ],
+        [
+          "ayes",
+          "Vec<AccountId>"
+        ],
+        [
+          "nays",
+          "Vec<AccountId>"
+        ]
+      ]
+    },
+    "Votes": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "index",
+          "ProposalIndex"
+        ],
+        [
+          "threshold",
+          "MemberCount"
+        ],
+        [
+          "ayes",
+          "Vec<AccountId>"
+        ],
+        [
+          "nays",
+          "Vec<AccountId>"
+        ],
+        [
+          "end",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "RuntimeDispatchInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "weight",
+          "Weight"
+        ],
+        [
+          "class",
+          "DispatchClass"
+        ],
+        [
+          "partialFee",
+          "Balance"
+        ]
+      ]
+    },
+    "AliveContractInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "trieId",
+          "TrieId"
+        ],
+        [
+          "storageSize",
+          "u32"
+        ],
+        [
+          "codeHash",
+          "CodeHash"
+        ],
+        [
+          "rentAllowance",
+          "Balance"
+        ],
+        [
+          "deductBlock",
+          "BlockNumber"
+        ],
+        [
+          "lastWrite",
+          "Option<BlockNumber>"
+        ]
+      ]
+    },
+    "CodeHash": "Hash",
+    "ContractCallRequest": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "origin",
+          "AccountId"
+        ],
+        [
+          "dest",
+          "AccountId"
+        ],
+        [
+          "value",
+          "Balance"
+        ],
+        [
+          "gasLimit",
+          "u64"
+        ],
+        [
+          "inputData",
+          "Bytes"
+        ]
+      ]
+    },
+    "ContractExecResultSuccess": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "status",
+          "u8"
+        ],
+        [
+          "data",
+          "Raw"
+        ]
+      ]
+    },
+    "ContractExecResult": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccess"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "ContractStorageKey": "[u8; 32]",
+    "PrefabWasmModule": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "scheduleVersion",
+          "Compact<u32>"
+        ],
+        [
+          "initial",
+          "Compact<u32>"
+        ],
+        [
+          "maximum",
+          "Compact<u32>"
+        ],
+        [
+          "_reserved",
+          "PrefabWasmModuleReserved"
+        ],
+        [
+          "code",
+          "Bytes"
+        ]
+      ]
+    },
+    "PrefabWasmModuleReserved": "Option<Null>",
+    "ScheduleTo212": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "version",
+          "u32"
+        ],
+        [
+          "putCodePerByteCost",
+          "Gas"
+        ],
+        [
+          "growMemCost",
+          "Gas"
+        ],
+        [
+          "regularOpCost",
+          "Gas"
+        ],
+        [
+          "returnDataPerByteCost",
+          "Gas"
+        ],
+        [
+          "eventDataPerByteCost",
+          "Gas"
+        ],
+        [
+          "eventPerTopicCost",
+          "Gas"
+        ],
+        [
+          "eventBaseCost",
+          "Gas"
+        ],
+        [
+          "sandboxDataReadCost",
+          "Gas"
+        ],
+        [
+          "sandboxDataWriteCost",
+          "Gas"
+        ],
+        [
+          "maxEventTopics",
+          "u32"
+        ],
+        [
+          "maxStackHeight",
+          "u32"
+        ],
+        [
+          "maxMemoryPages",
+          "u32"
+        ],
+        [
+          "enablePrintln",
+          "bool"
+        ],
+        [
+          "maxSubjectLen",
+          "u32"
+        ]
+      ]
+    },
+    "SeedOf": "Hash",
+    "TombstoneContractInfo": "Hash",
+    "ExtrinsicOrHash": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Hash",
+          "Hash"
+        ],
+        [
+          "Extrinsic",
+          "Bytes"
+        ]
+      ]
+    },
+    "ExtrinsicStatus": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Future",
+          "Null"
+        ],
+        [
+          "Ready",
+          "Null"
+        ],
+        [
+          "Broadcast",
+          "Vec<Text>"
+        ],
+        [
+          "InBlock",
+          "Hash"
+        ],
+        [
+          "Retracted",
+          "Hash"
+        ],
+        [
+          "FinalityTimeout",
+          "Hash"
+        ],
+        [
+          "Finalized",
+          "Hash"
+        ],
+        [
+          "Usurped",
+          "Hash"
+        ],
+        [
+          "Dropped",
+          "Null"
+        ],
+        [
+          "Invalid",
+          "Null"
+        ]
+      ]
+    },
+    "PrefixedStorageKey": "StorageKey",
+    "AccountIndex": "GenericAccountIndex",
+    "Address": "GenericAddress",
+    "AssetId": "u32",
+    "Balance": "u128",
+    "BalanceOf": "Balance",
+    "Block": "GenericBlock",
+    "Call": "GenericCall",
+    "Fixed64": "Int<64, Fixed64>",
+    "Fixed128": "Int<128, Fixed128>",
+    "H160": "H160",
+    "H256": "H256",
+    "H512": "H512",
+    "Hash": "H256",
+    "Justification": "Bytes",
+    "StorageKey": "Bytes",
+    "StorageData": "Bytes",
+    "KeyValue": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "key",
+          "StorageKey"
+        ],
+        [
+          "value",
+          "StorageData"
+        ]
+      ]
+    },
+    "KeyTypeId": "u32",
+    "LookupSource": "Address",
+    "LookupTarget": "AccountId",
+    "Origin": "DoNotConstruct<Origin>",
+    "Perbill": "u32",
+    "Permill": "u32",
+    "Perquintill": "u64",
+    "Phantom": "Null",
+    "SignedBlock": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "block",
+          "Block"
+        ],
+        [
+          "justification",
+          "Justification"
+        ]
+      ]
+    },
+    "ValidatorId": "AccountId",
+    "PreRuntime": "(ConsensusEngineId, Bytes)",
+    "SealV0": "(u64, Signature)",
+    "Seal": "(ConsensusEngineId, Bytes)",
+    "Consensus": "(ConsensusEngineId, Bytes)",
+    "Period": "(BlockNumber, u32)",
+    "Priority": "u8",
+    "SchedulePeriod": "Period",
+    "SchedulePriority": "Priority",
+    "Scheduled": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "maybeId",
+          "Option<Bytes>"
+        ],
+        [
+          "priority",
+          "SchedulePriority"
+        ],
+        [
+          "call",
+          "Call"
+        ],
+        [
+          "maybePeriodic",
+          "Option<SchedulePeriod>"
+        ]
+      ]
+    },
+    "SocietyJudgement": {
+      "type": "enum",
+      "value_list": [
+        "Rebid",
+        "Reject",
+        "Approve"
+      ]
+    },
+    "SocietyVote": {
+      "type": "enum",
+      "value_list": [
+        "Skeptic",
+        "Reject",
+        "Approve"
+      ]
+    },
+    "BlockHash": "Hash",
+    "UncleEntryItem": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "InclusionHeight",
+          "BlockNumber"
+        ],
+        [
+          "Uncle",
+          "(Hash, Option<AccountId>)"
+        ]
+      ]
+    },
+    "ApiId": "[u8; 8]",
+    "KeyValueOption": "(StorageKey, Option<StorageData>)",
+    "ReadProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "at",
+          "Hash"
+        ],
+        [
+          "proof",
+          "Vec<Bytes>"
+        ]
+      ]
+    },
+    "RuntimeVersionApi": "(ApiId, u32)",
+    "RuntimeVersion": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "specName",
+          "Text"
+        ],
+        [
+          "implName",
+          "Text"
+        ],
+        [
+          "authoringVersion",
+          "u32"
+        ],
+        [
+          "specVersion",
+          "u32"
+        ],
+        [
+          "implVersion",
+          "u32"
+        ],
+        [
+          "apis",
+          "Vec<RuntimeVersionApi>"
+        ],
+        [
+          "transactionVersion",
+          "u32"
+        ]
+      ]
+    },
+    "StorageChangeSet": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "block",
+          "Hash"
+        ],
+        [
+          "changes",
+          "Vec<KeyValueOption>"
+        ]
+      ]
+    },
+    "GrandpaEquivocationProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "setId",
+          "SetId"
+        ],
+        [
+          "equivocation",
+          "GrandpaEquivocation"
+        ]
+      ]
+    },
+    "GrandpaEquivocationValue": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "roundNumber",
+          "u64"
+        ],
+        [
+          "identity",
+          "AuthorityId"
+        ],
+        [
+          "first",
+          "(GrandpaPrevote, AuthoritySignature)"
+        ],
+        [
+          "second",
+          "(GrandpaPrevote, AuthoritySignature)"
+        ]
+      ]
+    },
+    "PendingPause": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "scheduledAt",
+          "BlockNumber"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "PendingResume": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "scheduledAt",
+          "BlockNumber"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "Precommits": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "currentWeight",
+          "u32"
+        ],
+        [
+          "missing",
+          "BTreeSet<AuthorityId>"
+        ]
+      ]
+    },
+    "Prevotes": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "currentWeight",
+          "u32"
+        ],
+        [
+          "missing",
+          "BTreeSet<AuthorityId>"
+        ]
+      ]
+    },
+    "ReportedRoundStates": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "setId",
+          "u32"
+        ],
+        [
+          "best",
+          "RoundState"
+        ],
+        [
+          "background",
+          "Vec<RoundState>"
+        ]
+      ]
+    },
+    "RoundState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "round",
+          "u32"
+        ],
+        [
+          "totalWeight",
+          "u32"
+        ],
+        [
+          "thresholdWeight",
+          "u32"
+        ],
+        [
+          "prevotes",
+          "Prevotes"
+        ],
+        [
+          "precommits",
+          "Precommits"
+        ]
+      ]
+    },
+    "StoredPendingChange": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "scheduledAt",
+          "BlockNumber"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ],
+        [
+          "nextAuthorities",
+          "AuthorityList"
+        ]
+      ]
+    },
+    "StoredState": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Live",
+          "Null"
+        ],
+        [
+          "PendingPause",
+          "PendingPause"
+        ],
+        [
+          "Paused",
+          "Null"
+        ],
+        [
+          "PendingResume",
+          "PendingResume"
+        ]
+      ]
+    },
+    "AccountInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nonce",
+          "Index"
+        ],
+        [
+          "refcount",
+          "RefCount"
+        ],
+        [
+          "data",
+          "AccountData"
+        ]
+      ]
+    },
+    "ApplyExtrinsicResult": "Result<DispatchOutcome, TransactionValidityError>",
+    "ChainProperties": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "ss58Format",
+          "Option<u8>"
+        ],
+        [
+          "tokenDecimals",
+          "Option<u32>"
+        ],
+        [
+          "tokenSymbol",
+          "Option<Text>"
+        ]
+      ]
+    },
+    "ChainType": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Development",
+          "Null"
+        ],
+        [
+          "Local",
+          "Null"
+        ],
+        [
+          "Live",
+          "Null"
+        ],
+        [
+          "Custom",
+          "Text"
+        ]
+      ]
+    },
+    "DispatchErrorTo198": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "module",
+          "Option<u8>"
+        ],
+        [
+          "error",
+          "u8"
+        ]
+      ]
+    },
+    "DispatchInfoTo190": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "weight",
+          "Weight"
+        ],
+        [
+          "class",
+          "DispatchClass"
+        ]
+      ]
+    },
+    "DispatchInfoTo244": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "weight",
+          "Weight"
+        ],
+        [
+          "class",
+          "DispatchClass"
+        ],
+        [
+          "paysFee",
+          "bool"
+        ]
+      ]
+    },
+    "DispatchOutcome": "Result<(), DispatchError>",
+    "DispatchResultOf": "DispatchResult",
+    "DispatchResultTo198": "Result<(), Text>",
+    "Event": "GenericEvent",
+    "EventId": "[u8; 2]",
+    "EventRecord": "EventRecord",
+    "EventRecordTo76": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "phase",
+          "Phase"
+        ],
+        [
+          "event",
+          "Event"
+        ]
+      ]
+    },
+    "Health": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "peers",
+          "u64"
+        ],
+        [
+          "isSyncing",
+          "bool"
+        ],
+        [
+          "shouldHavePeers",
+          "bool"
+        ]
+      ]
+    },
+    "InvalidTransaction": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Call",
+          "Null"
+        ],
+        [
+          "Payment",
+          "Null"
+        ],
+        [
+          "Future",
+          "Null"
+        ],
+        [
+          "Stale",
+          "Null"
+        ],
+        [
+          "BadProof",
+          "Null"
+        ],
+        [
+          "AncientBirthBlock",
+          "Null"
+        ],
+        [
+          "ExhaustsResources",
+          "Null"
+        ],
+        [
+          "Custom",
+          "u8"
+        ],
+        [
+          "BadMandatory",
+          "Null"
+        ],
+        [
+          "MandatoryDispatch",
+          "Null"
+        ]
+      ]
+    },
+    "Key": "Bytes",
+    "NetworkState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "peerId",
+          "Text"
+        ],
+        [
+          "listenedAddresses",
+          "Vec<Text>"
+        ],
+        [
+          "externalAddresses",
+          "Vec<Text>"
+        ],
+        [
+          "connectedPeers",
+          "HashMap<Text, Peer>"
+        ],
+        [
+          "notConnectedPeers",
+          "HashMap<Text, NotConnectedPeer>"
+        ],
+        [
+          "averageDownloadPerSec",
+          "u64"
+        ],
+        [
+          "averageUploadPerSec",
+          "u64"
+        ],
+        [
+          "peerset",
+          "NetworkStatePeerset"
+        ]
+      ]
+    },
+    "NetworkStatePeerset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "messageQueue",
+          "u64"
+        ],
+        [
+          "nodes",
+          "HashMap<Text, NetworkStatePeersetInfo>"
+        ]
+      ]
+    },
+    "NetworkStatePeersetInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "connected",
+          "bool"
+        ],
+        [
+          "reputation",
+          "u64"
+        ]
+      ]
+    },
+    "NodeRole": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Full",
+          "Null"
+        ],
+        [
+          "LightClient",
+          "Null"
+        ],
+        [
+          "Authority",
+          "Null"
+        ],
+        [
+          "UnknownRole",
+          "u8"
+        ]
+      ]
+    },
+    "NotConnectedPeer": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "knownAddresses",
+          "Vec<Text>"
+        ],
+        [
+          "latestPingTime",
+          "Option<PeerPing>"
+        ],
+        [
+          "versionString",
+          "Option<Text>"
+        ]
+      ]
+    },
+    "Peer": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "enabled",
+          "bool"
+        ],
+        [
+          "endpoint",
+          "PeerEndpoint"
+        ],
+        [
+          "knownAddresses",
+          "Vec<Text>"
+        ],
+        [
+          "latestPingTime",
+          "PeerPing"
+        ],
+        [
+          "open",
+          "bool"
+        ],
+        [
+          "versionString",
+          "Text"
+        ]
+      ]
+    },
+    "PeerEndpoint": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "listening",
+          "PeerEndpointAddr"
+        ]
+      ]
+    },
+    "PeerEndpointAddr": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "_alias",
+          {
+            "localAddr": "local_addr",
+            "sendBackAddr": "send_back_addr"
+          }
+        ],
+        [
+          "localAddr",
+          "Text"
+        ],
+        [
+          "sendBackAddr",
+          "Text"
+        ]
+      ]
+    },
+    "PeerPing": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nanos",
+          "u64"
+        ],
+        [
+          "secs",
+          "u64"
+        ]
+      ]
+    },
+    "PeerInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "peerId",
+          "Text"
+        ],
+        [
+          "roles",
+          "Text"
+        ],
+        [
+          "protocolVersion",
+          "u32"
+        ],
+        [
+          "bestHash",
+          "Hash"
+        ],
+        [
+          "bestNumber",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "TransactionValidityError": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Invalid",
+          "InvalidTransaction"
+        ],
+        [
+          "Unknown",
+          "UnknownTransaction"
+        ]
+      ]
+    },
+    "UnknownTransaction": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "CannotLookup",
+          "Null"
+        ],
+        [
+          "NoUnsignedValidator",
+          "Null"
+        ],
+        [
+          "Custom",
+          "u8"
+        ]
+      ]
+    },
+    "WeightToFeeCoefficient": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "coeffInteger",
+          "Balance"
+        ],
+        [
+          "coeffFrac",
+          "Perbill"
+        ],
+        [
+          "negative",
+          "bool"
+        ],
+        [
+          "degree",
+          "u8"
+        ]
+      ]
+    },
+    "EraIndex": "u32",
+    "EraRewards": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "total",
+          "u32"
+        ],
+        [
+          "rewards",
+          "Vec<u32>"
+        ]
+      ]
+    },
+    "Exposure": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "total",
+          "Compact<Balance>"
+        ],
+        [
+          "own",
+          "Compact<Balance>"
+        ],
+        [
+          "others",
+          "Vec<IndividualExposure>"
+        ]
+      ]
+    },
+    "IndividualExposure": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "value",
+          "Compact<Balance>"
+        ]
+      ]
+    },
+    "KeyType": "AccountId",
+    "Points": "u32",
+    "SlashJournalEntry": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "amount",
+          "Balance"
+        ],
+        [
+          "ownSlash",
+          "Balance"
+        ]
+      ]
+    },
+    "SlashingSpansTo204": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "spanIndex",
+          "SpanIndex"
+        ],
+        [
+          "lastStart",
+          "EraIndex"
+        ],
+        [
+          "prior",
+          "Vec<EraIndex>"
+        ]
+      ]
+    },
+    "StakingLedgerTo223": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "stash",
+          "AccountId"
+        ],
+        [
+          "total",
+          "Compact<Balance>"
+        ],
+        [
+          "active",
+          "Compact<Balance>"
+        ],
+        [
+          "unlocking",
+          "Vec<UnlockChunk>"
+        ]
+      ]
+    },
+    "StakingLedgerTo240": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "stash",
+          "AccountId"
+        ],
+        [
+          "total",
+          "Compact<Balance>"
+        ],
+        [
+          "active",
+          "Compact<Balance>"
+        ],
+        [
+          "unlocking",
+          "Vec<UnlockChunk>"
+        ],
+        [
+          "lastReward",
+          "Option<EraIndex>"
+        ]
+      ]
+    },
+    "StakingLedger": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "stash",
+          "AccountId"
+        ],
+        [
+          "total",
+          "Compact<Balance>"
+        ],
+        [
+          "active",
+          "Compact<Balance>"
+        ],
+        [
+          "unlocking",
+          "Vec<UnlockChunk>"
+        ],
+        [
+          "claimedRewards",
+          "Vec<EraIndex>"
+        ]
+      ]
+    },
+    "UnappliedSlash": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validator",
+          "AccountId"
+        ],
+        [
+          "own",
+          "Balance"
+        ],
+        [
+          "others",
+          "Vec<UnappliedSlashOther>"
+        ],
+        [
+          "reporters",
+          "Vec<AccountId>"
+        ],
+        [
+          "payout",
+          "Balance"
+        ]
+      ]
+    },
+    "UnlockChunk": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "value",
+          "Compact<Balance>"
+        ],
+        [
+          "era",
+          "Compact<BlockNumber>"
+        ]
+      ]
+    },
+    "ValidatorPrefsTo196": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validatorPayment",
+          "Compact<Balance>"
+        ]
+      ]
+    },
+    "ValidatorPrefsTo145": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "unstakeThreshold",
+          "Compact<u32>"
+        ],
+        [
+          "validatorPayment",
+          "Compact<Balance>"
+        ]
+      ]
+    },
+    "BalanceLockTo212": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "id",
+          "LockIdentifier"
+        ],
+        [
+          "amount",
+          "Balance"
+        ],
+        [
+          "until",
+          "BlockNumber"
+        ],
+        [
+          "reasons",
+          "WithdrawReasons"
+        ]
+      ]
+    },
+    "VestingSchedule": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "offset",
+          "Balance"
+        ],
+        [
+          "perBlock",
+          "Balance"
+        ],
+        [
+          "startingBlock",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "Account": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nonce",
+          "U256"
+        ],
+        [
+          "balance",
+          "U256"
+        ]
+      ]
+    },
+    "Log": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "address",
+          "H160"
+        ],
+        [
+          "topics",
+          "Vec<H256>"
+        ],
+        [
+          "data",
+          "Bytes"
+        ]
+      ]
+    },
+    "Vicinity": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "gasPrice",
+          "U256"
+        ],
+        [
+          "origin",
+          "H160"
+        ]
+      ]
+    },
+    "StorageKind": {
+      "type": "enum",
+      "value_list": [
+        "__UNUSED",
+        "PERSISTENT",
+        "LOCAL"
+      ]
+    },
+    "OpenTipTo225": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "reason",
+          "Hash"
+        ],
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "finder",
+          "Option<OpenTipFinderTo225>"
+        ],
+        [
+          "closes",
+          "Option<BlockNumber>"
+        ],
+        [
+          "tips",
+          "Vec<OpenTipTip>"
+        ]
+      ]
+    },
+    "OpenTipFinderTo225": "(AccountId, Balance)",
+    "TreasuryProposal": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "proposer",
+          "AccountId"
+        ],
+        [
+          "value",
+          "Balance"
+        ],
+        [
+          "beneficiary",
+          "AccountId"
+        ],
+        [
+          "bond",
+          "Balance"
+        ]
+      ]
+    },
+    "BabeAuthorityWeight": "u64",
+    "BabeBlockWeight": "u32",
+    "BabeEquivocationProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "offender",
+          "AuthorityId"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "firstHeader",
+          "Header"
+        ],
+        [
+          "secondHeader",
+          "Header"
+        ]
+      ]
+    },
+    "BabeWeight": "u64",
+    "EpochAuthorship": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "primary",
+          "Vec<u64>"
+        ],
+        [
+          "secondary",
+          "Vec<u64>"
+        ]
+      ]
+    },
+    "RawBabePreDigestTo159": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Primary",
+          "RawBabePreDigestPrimaryTo159"
+        ],
+        [
+          "Secondary",
+          "RawBabePreDigestSecondaryTo159"
+        ]
+      ]
+    },
+    "RawBabePreDigestPrimaryTo159": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "weight",
+          "BabeBlockWeight"
+        ],
+        [
+          "vrfOutput",
+          "VrfOutput"
+        ],
+        [
+          "vrfProof",
+          "VrfProof"
+        ]
+      ]
+    },
+    "RawBabePreDigestSecondaryTo159": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "weight",
+          "BabeBlockWeight"
+        ]
+      ]
+    },
+    "RawBabePreDigestCompat": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Zero",
+          "u32"
+        ],
+        [
+          "One",
+          "u32"
+        ],
+        [
+          "Two",
+          "u32"
+        ],
+        [
+          "Three",
+          "u32"
+        ]
+      ]
+    },
+    "VrfOutput": "[u8; 32]",
+    "RpcMethods": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "version",
+          "u32"
+        ],
+        [
+          "methods",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "CreatedBlock": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hash",
+          "BlockHash"
+        ],
+        [
+          "aux",
+          "ImportedAux"
+        ]
+      ]
+    },
+    "ImportedAux": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "headerOnly",
+          "bool"
+        ],
+        [
+          "clearJustificationRequests",
+          "bool"
+        ],
+        [
+          "needsJustification",
+          "bool"
+        ],
+        [
+          "badJustification",
+          "bool"
+        ],
+        [
+          "needsFinalityProof",
+          "bool"
+        ],
+        [
+          "isNewBest",
+          "bool"
+        ]
+      ]
+    },
+    "ExtrinsicEra": "GenericExtrinsicEra",
+    "ExtrinsicPayload": "GenericExtrinsicPayload",
+    "ExtrinsicV1": "GenericExtrinsicV1",
+    "ExtrinsicPayloadV1": "GenericExtrinsicPayloadV1",
+    "ExtrinsicSignatureV1": "GenericExtrinsicSignatureV1",
+    "ExtrinsicV2": "GenericExtrinsicV2",
+    "ExtrinsicPayloadV2": "GenericExtrinsicPayloadV2",
+    "ExtrinsicSignatureV2": "GenericExtrinsicSignatureV2",
+    "ExtrinsicV3": "GenericExtrinsicV3",
+    "ExtrinsicPayloadV3": "GenericExtrinsicPayloadV3",
+    "ExtrinsicSignatureV3": "GenericExtrinsicSignatureV3",
+    "ExtrinsicV4": "GenericExtrinsicV4",
+    "ExtrinsicPayloadV4": "GenericExtrinsicPayloadV4",
+    "ExtrinsicSignatureV4": "GenericExtrinsicSignatureV4",
+    "ExtrinsicUnknown": "GenericExtrinsicUnknown",
+    "ExtrinsicPayloadUnknown": "GenericExtrinsicPayloadUnknown",
+    "ImmortalEra": "GenericImmortalEra",
+    "MortalEra": "GenericMortalEra",
+    "SignerPayload": "GenericSignerPayload",
+    "CallMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "functions",
+          "Vec<FunctionMetadataV0>"
+        ]
+      ]
+    },
+    "EventMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "args",
+          "Vec<Type>"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "FunctionArgumentMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "type",
+          "Type"
+        ]
+      ]
+    },
+    "FunctionMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "id",
+          "u16"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "args",
+          "Vec<FunctionArgumentMetadataV0>"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "MapTypeV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "key",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ]
+      ]
+    },
+    "MetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "outerEvent",
+          "OuterEventMetadataV0"
+        ],
+        [
+          "modules",
+          "Vec<RuntimeModuleMetadataV0>"
+        ],
+        [
+          "outerDispatch",
+          "OuterDispatchMetadataV0"
+        ]
+      ]
+    },
+    "ModuleMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "call",
+          "CallMetadataV0"
+        ]
+      ]
+    },
+    "OuterDispatchCallV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "index",
+          "u16"
+        ]
+      ]
+    },
+    "OuterDispatchMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "calls",
+          "Vec<OuterDispatchCallV0>"
+        ]
+      ]
+    },
+    "OuterEventEventMetadataEventsV0": "Vec<EventMetadataV0>",
+    "OuterEventEventMetadataV0": "(Text, OuterEventEventMetadataEventsV0)",
+    "OuterEventMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "events",
+          "Vec<OuterEventEventMetadataV0>"
+        ]
+      ]
+    },
+    "PlainTypeV0": "Type",
+    "RuntimeModuleMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "module",
+          "ModuleMetadataV0"
+        ],
+        [
+          "storage",
+          "Option<StorageMetadataV0>"
+        ]
+      ]
+    },
+    "StorageFunctionMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageFunctionModifierV0"
+        ],
+        [
+          "type",
+          "StorageFunctionTypeV0"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageFunctionModifierV0": {
+      "type": "enum",
+      "value_list": [
+        "Optional",
+        "Default",
+        "Required"
+      ]
+    },
+    "StorageFunctionTypeV0": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV0"
+        ],
+        [
+          "Map",
+          "MapTypeV0"
+        ]
+      ]
+    },
+    "StorageMetadataV0": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "functions",
+          "Vec<StorageFunctionMetadataV0>"
+        ]
+      ]
+    },
+    "EventMetadataV1": "EventMetadataV0",
+    "FunctionArgumentMetadataV1": "FunctionArgumentMetadataV0",
+    "FunctionMetadataV1": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "args",
+          "Vec<FunctionArgumentMetadataV1>"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "MetadataV1": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV1>"
+        ]
+      ]
+    },
+    "ModuleMetadataV1": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<Vec<StorageFunctionMetadataV1>>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV1>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV1>>"
+        ]
+      ]
+    },
+    "StorageFunctionMetadataV1": "StorageFunctionMetadataV0",
+    "StorageFunctionModifierV1": "StorageFunctionModifierV0",
+    "StorageFunctionTypeV1": "StorageFunctionTypeV0",
+    "EventMetadataV2": "EventMetadataV1",
+    "FunctionArgumentMetadataV2": "FunctionArgumentMetadataV1",
+    "FunctionMetadataV2": "FunctionMetadataV1",
+    "MapTypeV2": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "key",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "linked",
+          "bool"
+        ]
+      ]
+    },
+    "MetadataV2": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV2>"
+        ]
+      ]
+    },
+    "ModuleMetadataV2": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<Vec<StorageFunctionMetadataV2>>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV2>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV2>>"
+        ]
+      ]
+    },
+    "PlainTypeV2": "Type",
+    "StorageFunctionMetadataV2": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageFunctionModifierV2"
+        ],
+        [
+          "type",
+          "StorageFunctionTypeV2"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageFunctionModifierV2": "StorageFunctionModifierV1",
+    "StorageFunctionTypeV2": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV2"
+        ],
+        [
+          "Map",
+          "MapTypeV2"
+        ]
+      ]
+    },
+    "DoubleMapTypeV3": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "key1",
+          "Type"
+        ],
+        [
+          "key2",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "key2Hasher",
+          "Text"
+        ]
+      ]
+    },
+    "EventMetadataV3": "EventMetadataV2",
+    "FunctionArgumentMetadataV3": "FunctionArgumentMetadataV2",
+    "FunctionMetadataV3": "FunctionMetadataV2",
+    "MapTypeV3": "MapTypeV2",
+    "MetadataV3": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV3>"
+        ]
+      ]
+    },
+    "ModuleMetadataV3": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<Vec<StorageFunctionMetadataV3>>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV3>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV3>>"
+        ]
+      ]
+    },
+    "PlainTypeV3": "Type",
+    "StorageFunctionMetadataV3": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageFunctionModifierV3"
+        ],
+        [
+          "type",
+          "StorageFunctionTypeV3"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageFunctionModifierV3": "StorageFunctionModifierV2",
+    "StorageFunctionTypeV3": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV3"
+        ],
+        [
+          "Map",
+          "MapTypeV3"
+        ],
+        [
+          "DoubleMap",
+          "DoubleMapTypeV3"
+        ]
+      ]
+    },
+    "DoubleMapTypeV4": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV4"
+        ],
+        [
+          "key1",
+          "Type"
+        ],
+        [
+          "key2",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "key2Hasher",
+          "Text"
+        ]
+      ]
+    },
+    "EventMetadataV4": "EventMetadataV3",
+    "FunctionArgumentMetadataV4": "FunctionArgumentMetadataV3",
+    "FunctionMetadataV4": "FunctionMetadataV3",
+    "MapTypeV4": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV4"
+        ],
+        [
+          "key",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "linked",
+          "bool"
+        ]
+      ]
+    },
+    "MetadataV4": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV4>"
+        ]
+      ]
+    },
+    "ModuleMetadataV4": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<Vec<StorageFunctionMetadataV4>>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV4>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV4>>"
+        ]
+      ]
+    },
+    "PlainTypeV4": "Type",
+    "StorageFunctionMetadataV4": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageFunctionModifierV4"
+        ],
+        [
+          "type",
+          "StorageFunctionTypeV4"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageFunctionModifierV4": "StorageFunctionModifierV3",
+    "StorageFunctionTypeV4": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV4"
+        ],
+        [
+          "Map",
+          "MapTypeV4"
+        ],
+        [
+          "DoubleMap",
+          "DoubleMapTypeV4"
+        ]
+      ]
+    },
+    "StorageHasherV4": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Blake2_128",
+          null
+        ],
+        [
+          "Blake2_256",
+          null
+        ],
+        [
+          "Twox128",
+          null
+        ],
+        [
+          "Twox256",
+          null
+        ],
+        [
+          "Twox64Concat",
+          null
+        ]
+      ]
+    },
+    "DoubleMapTypeV5": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV5"
+        ],
+        [
+          "key1",
+          "Type"
+        ],
+        [
+          "key2",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "key2Hasher",
+          "StorageHasherV5"
+        ]
+      ]
+    },
+    "EventMetadataV5": "EventMetadataV4",
+    "FunctionArgumentMetadataV5": "FunctionArgumentMetadataV4",
+    "FunctionMetadataV5": "FunctionMetadataV4",
+    "MapTypeV5": "MapTypeV4",
+    "MetadataV5": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV5>"
+        ]
+      ]
+    },
+    "ModuleMetadataV5": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<Vec<StorageFunctionMetadataV5>>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV5>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV5>>"
+        ]
+      ]
+    },
+    "PlainTypeV5": "Type",
+    "StorageFunctionMetadataV5": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageFunctionModifierV5"
+        ],
+        [
+          "type",
+          "StorageFunctionTypeV5"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageFunctionModifierV5": "StorageFunctionModifierV4",
+    "StorageFunctionTypeV5": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV5"
+        ],
+        [
+          "Map",
+          "MapTypeV5"
+        ],
+        [
+          "DoubleMap",
+          "DoubleMapTypeV5"
+        ]
+      ]
+    },
+    "StorageHasherV5": "StorageHasherV4",
+    "DoubleMapTypeV6": "DoubleMapTypeV5",
+    "EventMetadataV6": "EventMetadataV5",
+    "FunctionArgumentMetadataV6": "FunctionArgumentMetadataV5",
+    "FunctionMetadataV6": "FunctionMetadataV5",
+    "MapTypeV6": "MapTypeV5",
+    "MetadataV6": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV6>"
+        ]
+      ]
+    },
+    "ModuleConstantMetadataV6": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "type",
+          "Type"
+        ],
+        [
+          "value",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "ModuleMetadataV6": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<Vec<StorageEntryMetadataV6>>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV6>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV6>>"
+        ],
+        [
+          "constants",
+          "Vec<ModuleConstantMetadataV6>"
+        ]
+      ]
+    },
+    "PlainTypeV6": "Type",
+    "StorageEntryModifierV6": "StorageFunctionModifierV5",
+    "StorageEntryMetadataV6": "StorageFunctionMetadataV5",
+    "StorageEntryTypeV6": "StorageFunctionTypeV5",
+    "StorageHasherV6": "StorageHasherV5",
+    "DoubleMapTypeV7": "DoubleMapTypeV6",
+    "EventMetadataV7": "EventMetadataV6",
+    "FunctionArgumentMetadataV7": "FunctionArgumentMetadataV6",
+    "FunctionMetadataV7": "FunctionMetadataV6",
+    "MapTypeV7": "MapTypeV6",
+    "MetadataV7": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV7>"
+        ]
+      ]
+    },
+    "ModuleConstantMetadataV7": "ModuleConstantMetadataV6",
+    "ModuleMetadataV7": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<StorageMetadataV7>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV7>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV7>>"
+        ],
+        [
+          "constants",
+          "Vec<ModuleConstantMetadataV7>"
+        ]
+      ]
+    },
+    "PlainTypeV7": "Type",
+    "StorageEntryModifierV7": "StorageEntryModifierV6",
+    "StorageEntryMetadataV7": "StorageEntryMetadataV6",
+    "StorageEntryTypeV7": "StorageEntryTypeV6",
+    "StorageHasherV7": "StorageHasherV6",
+    "StorageMetadataV7": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "items",
+          "Vec<StorageEntryMetadataV7>"
+        ]
+      ]
+    },
+    "DoubleMapTypeV8": "DoubleMapTypeV7",
+    "ErrorMetadataV8": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "EventMetadataV8": "EventMetadataV7",
+    "FunctionArgumentMetadataV8": "FunctionArgumentMetadataV7",
+    "FunctionMetadataV8": "FunctionMetadataV7",
+    "MapTypeV8": "MapTypeV7",
+    "MetadataV8": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV8>"
+        ]
+      ]
+    },
+    "ModuleConstantMetadataV8": "ModuleConstantMetadataV7",
+    "ModuleMetadataV8": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<StorageMetadataV8>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV8>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV8>>"
+        ],
+        [
+          "constants",
+          "Vec<ModuleConstantMetadataV8>"
+        ],
+        [
+          "errors",
+          "Vec<ErrorMetadataV8>"
+        ]
+      ]
+    },
+    "PlainTypeV8": "Type",
+    "StorageEntryModifierV8": "StorageEntryModifierV7",
+    "StorageEntryMetadataV8": "StorageEntryMetadataV7",
+    "StorageEntryTypeV8": "StorageEntryTypeV7",
+    "StorageHasherV8": "StorageHasherV7",
+    "StorageMetadataV8": "StorageMetadataV7",
+    "DoubleMapTypeV9": "DoubleMapTypeV8",
+    "ErrorMetadataV9": "ErrorMetadataV8",
+    "EventMetadataV9": "EventMetadataV8",
+    "FunctionArgumentMetadataV9": "FunctionArgumentMetadataV8",
+    "FunctionMetadataV9": "FunctionMetadataV8",
+    "MapTypeV9": "MapTypeV8",
+    "MetadataV9": "MetadataV8",
+    "ModuleConstantMetadataV9": "ModuleConstantMetadataV8",
+    "ModuleMetadataV9": "ModuleMetadataV8",
+    "PlainTypeV9": "Type",
+    "StorageEntryModifierV9": "StorageEntryModifierV8",
+    "StorageEntryMetadataV9": "StorageEntryMetadataV8",
+    "StorageEntryTypeV9": "StorageEntryTypeV8",
+    "StorageHasherV9": "StorageHasherV8",
+    "StorageMetadataV9": "StorageMetadataV8",
+    "DoubleMapTypeV10": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV10"
+        ],
+        [
+          "key1",
+          "Type"
+        ],
+        [
+          "key2",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "key2Hasher",
+          "StorageHasherV10"
+        ]
+      ]
+    },
+    "ErrorMetadataV10": "ErrorMetadataV9",
+    "EventMetadataV10": "EventMetadataV9",
+    "FunctionArgumentMetadataV10": "FunctionArgumentMetadataV9",
+    "FunctionMetadataV10": "FunctionMetadataV9",
+    "MapTypeV10": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV10"
+        ],
+        [
+          "key",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "linked",
+          "bool"
+        ]
+      ]
+    },
+    "MetadataV10": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV10>"
+        ]
+      ]
+    },
+    "ModuleConstantMetadataV10": "ModuleConstantMetadataV9",
+    "ModuleMetadataV10": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<StorageMetadataV10>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV10>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV10>>"
+        ],
+        [
+          "constants",
+          "Vec<ModuleConstantMetadataV10>"
+        ],
+        [
+          "errors",
+          "Vec<ErrorMetadataV10>"
+        ]
+      ]
+    },
+    "PlainTypeV10": "Type",
+    "StorageEntryModifierV10": "StorageEntryModifierV9",
+    "StorageEntryMetadataV10": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageEntryModifierV10"
+        ],
+        [
+          "type",
+          "StorageEntryTypeV10"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageEntryTypeV10": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV10"
+        ],
+        [
+          "Map",
+          "MapTypeV10"
+        ],
+        [
+          "DoubleMap",
+          "DoubleMapTypeV10"
+        ]
+      ]
+    },
+    "StorageMetadataV10": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "items",
+          "Vec<StorageEntryMetadataV10>"
+        ]
+      ]
+    },
+    "StorageHasherV10": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Blake2_128",
+          null
+        ],
+        [
+          "Blake2_256",
+          null
+        ],
+        [
+          "Blake2_128Concat",
+          null
+        ],
+        [
+          "Twox128",
+          null
+        ],
+        [
+          "Twox256",
+          null
+        ],
+        [
+          "Twox64Concat",
+          null
+        ]
+      ]
+    },
+    "DoubleMapTypeV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV11"
+        ],
+        [
+          "key1",
+          "Type"
+        ],
+        [
+          "key2",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "key2Hasher",
+          "StorageHasherV11"
+        ]
+      ]
+    },
+    "ErrorMetadataV11": "ErrorMetadataV10",
+    "EventMetadataV11": "EventMetadataV10",
+    "ExtrinsicMetadataV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "version",
+          "u8"
+        ],
+        [
+          "signedExtensions",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "FunctionArgumentMetadataV11": "FunctionArgumentMetadataV10",
+    "FunctionMetadataV11": "FunctionMetadataV10",
+    "MapTypeV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV11"
+        ],
+        [
+          "key",
+          "Type"
+        ],
+        [
+          "value",
+          "Type"
+        ],
+        [
+          "linked",
+          "bool"
+        ]
+      ]
+    },
+    "MetadataV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "modules",
+          "Vec<ModuleMetadataV11>"
+        ],
+        [
+          "extrinsic",
+          "ExtrinsicMetadataV11"
+        ]
+      ]
+    },
+    "ModuleConstantMetadataV11": "ModuleConstantMetadataV10",
+    "ModuleMetadataV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<StorageMetadataV11>"
+        ],
+        [
+          "calls",
+          "Option<Vec<FunctionMetadataV11>>"
+        ],
+        [
+          "events",
+          "Option<Vec<EventMetadataV11>>"
+        ],
+        [
+          "constants",
+          "Vec<ModuleConstantMetadataV11>"
+        ],
+        [
+          "errors",
+          "Vec<ErrorMetadataV11>"
+        ]
+      ]
+    },
+    "PlainTypeV11": "Type",
+    "StorageEntryModifierV11": "StorageEntryModifierV10",
+    "StorageEntryMetadataV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageEntryModifierV11"
+        ],
+        [
+          "type",
+          "StorageEntryTypeV11"
+        ],
+        [
+          "fallback",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageEntryTypeV11": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "PlainTypeV11"
+        ],
+        [
+          "Map",
+          "MapTypeV11"
+        ],
+        [
+          "DoubleMap",
+          "DoubleMapTypeV11"
+        ]
+      ]
+    },
+    "StorageMetadataV11": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "items",
+          "Vec<StorageEntryMetadataV11>"
+        ]
+      ]
+    },
+    "StorageHasherV11": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Blake2_128",
+          null
+        ],
+        [
+          "Blake2_256",
+          null
+        ],
+        [
+          "Blake2_128Concat",
+          null
+        ],
+        [
+          "Twox128",
+          null
+        ],
+        [
+          "Twox256",
+          null
+        ],
+        [
+          "Twox64Concat",
+          null
+        ],
+        [
+          "Identity",
+          null
+        ]
+      ]
+    },
+    "DoubleMapTypeLatest": "DoubleMapTypeV11",
+    "EventMetadataLatest": "EventMetadataV11",
+    "ExtrinsicMetadataLatest": "ExtrinsicMetadataV11",
+    "FunctionArgumentMetadataLatest": "FunctionArgumentMetadataV11",
+    "FunctionMetadataLatest": "FunctionMetadataV11",
+    "MapTypeLatest": "MapTypeV11",
+    "MetadataLatest": "MetadataV11",
+    "ModuleConstantMetadataLatest": "ModuleConstantMetadataV11",
+    "ModuleMetadataLatest": "ModuleMetadataV11",
+    "PlainTypeLatest": "PlainTypeV11",
+    "StorageEntryMetadataLatest": "StorageEntryMetadataV11",
+    "StorageEntryModifierLatest": "StorageEntryModifierV11",
+    "StorageEntryTypeLatest": "StorageEntryTypeV11",
+    "StorageMetadataLatest": "StorageMetadataV11",
+    "StorageHasher": "StorageHasherV11",
+    "MetadataAll": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "V0",
+          "MetadataV0"
+        ],
+        [
+          "V1",
+          "MetadataV1"
+        ],
+        [
+          "V2",
+          "MetadataV2"
+        ],
+        [
+          "V3",
+          "MetadataV3"
+        ],
+        [
+          "V4",
+          "MetadataV4"
+        ],
+        [
+          "V5",
+          "MetadataV5"
+        ],
+        [
+          "V6",
+          "MetadataV6"
+        ],
+        [
+          "V7",
+          "MetadataV7"
+        ],
+        [
+          "V8",
+          "MetadataV8"
+        ],
+        [
+          "V9",
+          "MetadataV9"
+        ],
+        [
+          "V10",
+          "MetadataV10"
+        ],
+        [
+          "V11",
+          "MetadataV11"
+        ]
+      ]
+    },
+    "AssetOptions": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "initalIssuance",
+          "Compact<Balance>"
+        ],
+        [
+          "permissions",
+          "PermissionLatest"
+        ]
+      ]
+    },
+    "Owner": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "None",
+          "Null"
+        ],
+        [
+          "Address",
+          "AccountId"
+        ]
+      ]
+    },
+    "PermissionsV1": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "update",
+          "Owner"
+        ],
+        [
+          "mint",
+          "Owner"
+        ],
+        [
+          "burn",
+          "Owner"
+        ]
+      ]
+    },
+    "PermissionVersions": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "V1",
+          "PermissionsV1"
+        ]
+      ]
+    },
+    "PermissionLatest": "PermissionsV1",
+    "Conviction": {
+      "type": "enum",
+      "value_list": [
+        "None",
+        "Locked1x",
+        "Locked2x",
+        "Locked3x",
+        "Locked4x",
+        "Locked5x",
+        "Locked6x"
+      ]
+    },
+    "PropIndex": "u32",
+    "Proposal": "Call",
+    "ReferendumIndex": "u32",
+    "ReferendumInfoTo239": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "end",
+          "BlockNumber"
+        ],
+        [
+          "proposalHash",
+          "Hash"
+        ],
+        [
+          "threshold",
+          "VoteThreshold"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "ApprovalFlag": "u32",
+    "SetIndex": "u32",
+    "Vote": "GenericVote",
+    "VoteIndex": "u32",
+    "VoterInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "lastActive",
+          "VoteIndex"
+        ],
+        [
+          "lastWin",
+          "VoteIndex"
+        ],
+        [
+          "pot",
+          "Balance"
+        ],
+        [
+          "stake",
+          "Balance"
+        ]
+      ]
+    },
+    "VoteThreshold": {
+      "type": "enum",
+      "value_list": [
+        "Super majority approval",
+        "Super majority rejection",
+        "Simple majority"
+      ]
+    },
+    "EthereumAddress": "H160",
+    "AbridgedCandidateReceipt": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "parachainIndex",
+          "ParaId"
+        ],
+        [
+          "relayParent",
+          "Hash"
+        ],
+        [
+          "headData",
+          "HeadData"
+        ],
+        [
+          "collator",
+          "CollatorId"
+        ],
+        [
+          "signature",
+          "CollatorSignature"
+        ],
+        [
+          "povBlockHash",
+          "Hash"
+        ],
+        [
+          "commitments",
+          "CandidateCommitments"
+        ]
+      ]
+    },
+    "Bidder": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "New",
+          "NewBidder"
+        ],
+        [
+          "Existing",
+          "ParaId"
+        ]
+      ]
+    },
+    "CandidateCommitments": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "fees",
+          "Balance"
+        ],
+        [
+          "upwardMessages",
+          "Vec<UpwardMessage>"
+        ],
+        [
+          "erasureRoot",
+          "Hash"
+        ],
+        [
+          "newValidationCode",
+          "Option<ValidationCode>"
+        ],
+        [
+          "processedDownwardMessages",
+          "u32"
+        ]
+      ]
+    },
+    "DownwardMessage": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "TransferInto",
+          "(AccountId, Balance, Remark)"
+        ],
+        [
+          "Opaque",
+          "Vec<u8>"
+        ]
+      ]
+    },
+    "GlobalValidationSchedule": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "maxCodeSize",
+          "u32"
+        ],
+        [
+          "maxHeadDataSize",
+          "u32"
+        ],
+        [
+          "blockNumber",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "HeadData": "Bytes",
+    "LocalValidationData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "parentHead",
+          "HeadData"
+        ],
+        [
+          "balance",
+          "Balance"
+        ],
+        [
+          "codeUpgradeAllowed",
+          "Option<BlockNumber>"
+        ]
+      ]
+    },
+    "ParachainDispatchOrigin": {
+      "type": "enum",
+      "value_list": [
+        "Signed",
+        "Parachain",
+        "Root"
+      ]
+    },
+    "Remark": "[u8; 32]",
+    "Retriable": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Never",
+          "Null"
+        ],
+        [
+          "WithRetries",
+          "u32"
+        ]
+      ]
+    },
+    "Scheduling": {
+      "type": "enum",
+      "value_list": [
+        "Always",
+        "Dynamic"
+      ]
+    },
+    "UpwardMessage": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "origin",
+          "ParachainDispatchOrigin"
+        ],
+        [
+          "data",
+          "Vec<u8>"
+        ]
+      ]
+    },
+    "MembershipProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "session",
+          "SessionIndex"
+        ],
+        [
+          "trieNodes",
+          "Vec<Vec<u8>>"
+        ],
+        [
+          "validatorCount",
+          "ValidatorCount"
+        ]
+      ]
+    }
   }
 }

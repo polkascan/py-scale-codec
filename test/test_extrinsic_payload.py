@@ -77,7 +77,6 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(str(payload), "0x0c041500")
 
-    # TODO: complicated: {"parent_hash":"0x0000000000000000000000000000000000000000000000000000000000000000","number":0,"state_root":"0x0000000000000000000000000000000000000000000000000000000000000000","extrinsics_root":"0x0000000000000000000000000000000000000000000000000000000000000000","digest":{"logs":["0x0000"]}}
     def test_encode_authorship_set_uncles_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)
 
@@ -87,10 +86,10 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'new_uncles': [
                     {
-                        "parent_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
                         "number": 0,
-                        "state_root": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                        "extrinsics_root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "stateRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "extrinsicsRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
                         "digest": {"logs": []}
                     }
                 ]
@@ -1134,21 +1133,31 @@ class TestScaleTypeEncoding(unittest.TestCase):
                 'heads': [{
                     'candidate': {
                         "parachainIndex": 1,
-                        "collator": "EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk",
+                        "collator": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "relayParent": "0x1ec24d8af5e02482f603722c203659c3373304098d26c6b65be03a2b9e79cc0d",
                         "signature": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
                         "headData": "0x012345",
                         "balanceUploads": [],
                         "egressQueueRoots": [],
-                        "fees": 1000000000000,
-                        "blockDataHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                        "fees": 0,
+                        "povBlockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "blockDataHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "commitments": {
+                            "fees": 0,
+                            "upwardMessages": [],
+                            "erasureRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "newValidationCode": None,
+                            "processedDownwardMessages": 1
+                        }
                     },
-                    'validityVotes': []
+                    'validityVotes': [],
+                    'validatorIndices': []
                 }]
             }
         })
 
         self.assertEqual(str(payload),
-                         "0x5d020414000401000000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4091234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef0c01234500000010a5d4e8000000000000000000000000000000000000000000000000000000000000000000000000")
+                         "0x910304140004010000001ec24d8af5e02482f603722c203659c3373304098d26c6b65be03a2b9e79cc0d0c01234500000000000000000000000000000000000000000000000000000000000000001234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000")
 
     def test_encode_registrar_deregister_para_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)

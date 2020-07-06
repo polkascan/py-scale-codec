@@ -427,6 +427,8 @@ class Struct(ScaleType):
 
         result = {}
         for key, data_type in self.type_mapping:
+            if data_type is None:
+                data_type = 'Null'
             result[key] = self.process_type(data_type, metadata=self.metadata).value
 
         return result
@@ -660,7 +662,7 @@ class Linkage(Struct):
     )
 
 
-class AccountId(H256):
+class GenericAccountId(H256):
 
     def __init__(self, data=None, sub_type=None, metadata=None):
         self.ss58_address = None
@@ -686,7 +688,7 @@ class PropIndex(U32):
     pass
 
 
-class Vote(U8):
+class GenericVote(U8):
     pass
 
 
@@ -760,6 +762,12 @@ class Vec(ScaleType):
         return data
 
 
+class BitVec(Vec):
+    # TODO: A BitVec that represents an array of bits. The bits are however stored encoded. The difference between this
+    #  * and a normal Bytes would be that the length prefix indicates the number of bits encoded, not the bytes
+    pass
+
+
 class VecNextAuthority(Vec):
     type_string = 'Vec<NextAuthority>'
 
@@ -775,7 +783,7 @@ class VecNextAuthority(Vec):
         return result
 
 
-class Address(ScaleType):
+class GenericAddress(ScaleType):
 
     def __init__(self, data, **kwargs):
         self.account_length = None
@@ -837,7 +845,7 @@ class Address(ScaleType):
             return self.value
 
 
-class AccountIdAddress(Address):
+class AccountIdAddress(GenericAddress):
 
     def process(self):
         self.account_id = self.process_type('AccountId').value.replace('0x', '')
@@ -865,7 +873,7 @@ class AccountIdAddress(Address):
             raise ValueError('Value is in unsupported format, expected 32 bytes hex-string for AccountIds or int for AccountIndex')
 
 
-class RawAddress(Address):
+class RawAddress(GenericAddress):
     pass
 
 
@@ -1116,14 +1124,6 @@ class ApprovalFlag(U32):
 
 
 class SetIndex(U32):
-    pass
-
-
-class AuthorityId(AccountId):
-    pass
-
-
-class ValidatorId(AccountId):
     pass
 
 
@@ -1747,7 +1747,7 @@ class TallyResult(Struct):
     )
 
 
-class Call(ScaleType):
+class GenericCall(ScaleType):
 
     type_string = "Box<Call>"
 
@@ -1818,7 +1818,7 @@ class Call(ScaleType):
         return data
 
 
-class MultiAccountId(AccountId):
+class MultiAccountId(GenericAccountId):
 
     @classmethod
     def create_from_account_list(cls, accounts, threshold):
