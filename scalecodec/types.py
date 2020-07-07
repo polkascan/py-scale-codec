@@ -826,7 +826,7 @@ class GenericAddress(ScaleType):
                 value = '0x{}'.format(ss58_decode(value))
             else:
                 from scalecodec.utils.ss58 import ss58_decode_account_index
-                index_obj = AccountIndex()
+                index_obj = GenericAccountIndex()
                 value = index_obj.encode(ss58_decode_account_index(value))
 
         if type(value) == str and value[0:2] == '0x' and len(value) == 66:
@@ -860,7 +860,7 @@ class AccountIdAddress(GenericAddress):
                 value = '0x{}'.format(ss58_decode(value))
             else:
                 from scalecodec.utils.ss58 import ss58_decode_account_index
-                index_obj = AccountIndex()
+                index_obj = GenericAccountIndex()
                 value = index_obj.encode(ss58_decode_account_index(value))
 
         if type(value) == str and value[0:2] == '0x' and len(value) == 66:
