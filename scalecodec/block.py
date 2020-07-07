@@ -16,7 +16,7 @@
 from hashlib import blake2b
 from collections import OrderedDict
 
-from scalecodec.base import ScaleDecoder, ScaleBytes
+from scalecodec.base import ScaleDecoder, ScaleBytes, FixedLengthArray
 from scalecodec.metadata import MetadataDecoder
 from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct
 from scalecodec.utils.ss58 import ss58_decode, ss58_decode_account_index
@@ -421,6 +421,14 @@ class AuthoritiesChange(Vec):
     def __init__(self, data, **kwargs):
 
         super().__init__(data, sub_type='AccountId', **kwargs)
+
+
+class GenericConsensusEngineId(FixedLengthArray):
+    sub_type = 'u8'
+    element_count = 4
+
+    def process(self):
+        return self.get_next_bytes(self.element_count).decode()
 
 
 class ChangesTrieRoot(Bytes):

@@ -676,7 +676,7 @@ class GenericAccountId(H256):
         return super().process_encode(value)
 
 
-class AccountIndex(U32):
+class GenericAccountIndex(U32):
     pass
 
 
@@ -1745,6 +1745,16 @@ class TallyResult(Struct):
         ('status', 'ProposalStatus'),
         ('finalized_at', 'BlockNumber'),
     )
+
+
+class GenericBlock(ScaleType):
+    # TODO implement generic block type
+
+    def process(self):
+        raise NotImplementedError()
+
+    def process_encode(self, value):
+        raise NotImplementedError()
 
 
 class GenericCall(ScaleType):
