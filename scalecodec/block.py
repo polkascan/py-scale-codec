@@ -16,7 +16,8 @@
 from hashlib import blake2b
 from collections import OrderedDict
 
-from scalecodec.base import ScaleDecoder, ScaleBytes, FixedLengthArray
+from scalecodec.base import ScaleDecoder, ScaleBytes
+from scalecodec.types import FixedLengthArray
 from scalecodec.metadata import MetadataDecoder
 from scalecodec.types import Vec, CompactU32, Enum, Bytes, Struct
 from scalecodec.utils.ss58 import ss58_decode, ss58_decode_account_index

@@ -66,8 +66,10 @@ class RuntimeConfiguration(metaclass=Singleton):
 
             # Custom tuples
             elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
-                decoder_class = RuntimeConfiguration().get_decoder_class('struct')
-                decoder_class.type_string = type_string
+
+                decoder_class = type(type_string, (RuntimeConfiguration().get_decoder_class('struct'),), {
+                    'type_string': type_string
+                })
 
                 decoder_class.build_type_mapping()
 
@@ -79,7 +81,7 @@ class RuntimeConfiguration(metaclass=Singleton):
 
                 if type_parts:
                     # Create dynamic class for e.g. [u8; 4] resulting in array of u8 with 4 elements
-                    decoder_class = type(type_string, (FixedLengthArray,), {
+                    decoder_class = type(type_string, (RuntimeConfiguration().get_decoder_class('FixedLengthArray'),), {
                         'sub_type': type_parts[0],
                         'element_count': int(type_parts[1])
                     })
@@ -370,43 +372,3 @@ class ScaleType(ScaleDecoder, ABC):
         super().__init__(data, sub_type)
 
 
-class FixedLengthArray(ScaleType):
-
-    element_count = 0
-
-    def process(self):
-
-        if self.element_count:
-            if self.sub_type == 'u8':
-                return '0x{}'.format(self.get_next_bytes(self.element_count).hex())
-            else:
-                result = []
-                for idx in range(self.element_count):
-                    result.append(self.process_type(self.sub_type).value)
-        else:
-            result = []
-
-        return result
-
-    def process_encode(self, value):
-        data = ScaleBytes(bytearray())
-
-        value = value or []
-
-        if self.sub_type == 'u8':
-            # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
-            if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
-                raise ValueError('Value should start with "0x" and should be {} bytes long'.format(self.element_count))
-
-            return ScaleBytes(value)
-
-        else:
-
-            if not type(value) is list:
-                raise ValueError('Given value is not a list')
-
-            for element_value in value:
-                element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
-                data += element_obj.encode(element_value)
-
-            return data
