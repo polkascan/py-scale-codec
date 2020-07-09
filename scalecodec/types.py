@@ -18,7 +18,6 @@
 
 from datetime import datetime
 from hashlib import blake2b
-
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException
 
@@ -509,10 +508,6 @@ class Era(ScaleType):
             raise NotImplementedError('Mortal Era not implemented')
 
 
-class EraIndex(U32):
-    pass
-
-
 class Bool(ScaleType):
 
     def process(self):
@@ -525,10 +520,6 @@ class Bool(ScaleType):
             return ScaleBytes('0x00')
         else:
             raise ValueError("Value must be boolean")
-
-
-class Moment(U64):
-    pass
 
 
 class CompactMoment(CompactU32):
@@ -680,45 +671,9 @@ class GenericAccountIndex(U32):
     pass
 
 
-class ReferendumIndex(U32):
-    pass
-
-
-class PropIndex(U32):
-    pass
-
-
-class GenericVote(U8):
-    pass
-
-
-class SessionKey(H256):
-    pass
-
-
-class SessionIndex(U32):
-    pass
-
-
-class Balance(U128):
-    pass
-
-
-class ParaId(U32):
-    pass
-
-
-class Key(Bytes):
-    pass
-
-
 class KeyValue(Struct):
     type_string = '(Vec<u8>, Vec<u8>)'
     type_mapping = (('key', 'Vec<u8>'), ('value', 'Vec<u8>'))
-
-
-class BalanceOf(Balance):
-    pass
 
 
 class NewAccountOutcome(CompactU32):
@@ -766,21 +721,6 @@ class BitVec(Vec):
     # TODO: A BitVec that represents an array of bits. The bits are however stored encoded. The difference between this
     #  * and a normal Bytes would be that the length prefix indicates the number of bits encoded, not the bytes
     pass
-
-
-class VecNextAuthority(Vec):
-    type_string = 'Vec<NextAuthority>'
-
-    def process(self):
-        element_count = self.process_type('Compact<u32>').value
-
-        result = []
-        for _ in range(0, element_count):
-            element = self.process_type('NextAuthority')
-            self.elements.append(element)
-            result.append(element.value)
-
-        return result
 
 
 class GenericAddress(ScaleType):
@@ -1022,66 +962,6 @@ class Data(Enum):
             raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
 
-class RewardDestination(Enum):
-
-    value_list = ['Staked', 'Stash', 'Controller']
-
-
-class StakingLedger(Struct):
-    type_string = 'StakingLedger<AccountId, BalanceOf, BlockNumber>'
-    type_mapping = (
-        ('stash', 'AccountId'),
-        ('total', 'Compact<Balance>'),
-        ('active', 'Compact<Balance>'),
-        ('unlocking', 'Vec<UnlockChunk<Balance>>'),
-    )
-
-
-class UnlockChunk(Struct):
-    type_string = 'UnlockChunk<Balance>'
-    type_mapping = (
-        ('value', 'Compact<Balance>'),
-        ('era', 'Compact<EraIndex>'),
-    )
-
-
-class Exposure(Struct):
-    type_string = 'Exposure<AccountId, BalanceOf>'
-    type_mapping = (
-        ('total', 'Compact<Balance>'),
-        ('own', 'Compact<Balance>'),
-        ('others', 'Vec<IndividualExposure>'),
-    )
-
-
-class IndividualExposure(Struct):
-    type_string = 'IndividualExposure<AccountId, Balance>'
-    type_mapping = (
-        ('who', 'AccountId'),
-        ('value', 'Compact<Balance>'),
-    )
-
-
-class BabeAuthorityWeight(U64):
-    pass
-
-
-class Points(U32):
-    pass
-
-
-class EraPoints(Struct):
-    type_mapping = (
-        ('total', 'Points'),
-        ('individual', 'Vec<Points>'),
-    )
-
-
-class VoteThreshold(Enum):
-
-    value_list = ['SuperMajorityApprove', 'SuperMajorityAgainst', 'SimpleMajority']
-
-
 class Null(ScaleType):
 
     def process(self):
@@ -1092,53 +972,6 @@ class Null(ScaleType):
 
 
 class InherentOfflineReport(Null):
-    pass
-
-
-class LockPeriods(U8):
-    pass
-
-
-class Hash(H256):
-    pass
-
-
-class VoteIndex(U32):
-    pass
-
-
-class ProposalIndex(U32):
-    pass
-
-
-class Permill(U32):
-    pass
-
-
-class Perbill(U32):
-    pass
-
-
-class ApprovalFlag(U32):
-    pass
-
-
-class SetIndex(U32):
-    pass
-
-
-class AuthorityWeight(U64):
-    pass
-
-
-class StoredPendingChange(Struct):
-    type_mapping = (
-        ('scheduled_at', 'u32'),
-        ('forced', 'u32'),
-    )
-
-
-class ReportIdOf(Hash):
     pass
 
 
@@ -1168,22 +1001,11 @@ class StorageHasher(Enum):
         return self.index == 6
 
 
-class VoterInfo(Struct):
-    type_string = 'VoterInfo<Balance>'
-
-    type_mapping = (
-        ('last_active', 'VoteIndex'),
-        ('last_win', 'VoteIndex'),
-        ('pot', 'Balance'),
-        ('stake', 'Balance'),
-    )
-
-
-class Gas(U64):
+class LockPeriods(U8):
     pass
 
 
-class CodeHash(Hash):
+class SessionKey(H256):
     pass
 
 
@@ -1199,22 +1021,6 @@ class PrefabWasmModule(Struct):
     )
 
 
-class OpaqueNetworkState(Struct):
-
-    type_mapping = (
-        ('peerId', 'OpaquePeerId'),
-        ('externalAddresses', 'Vec<OpaqueMultiaddr>'),
-    )
-
-
-class OpaquePeerId(Bytes):
-    pass
-
-
-class OpaqueMultiaddr(Bytes):
-    pass
-
-
 class SessionKeysSubstrate(Struct):
 
     type_mapping = (
@@ -1222,6 +1028,7 @@ class SessionKeysSubstrate(Struct):
         ('babe', 'AccountId'),
         ('im_online', 'AccountId'),
     )
+
 
 class LegacyKeys(Struct):
 
@@ -1281,470 +1088,11 @@ class VecQueuedKeys(Vec):
         return result
 
 
-class EthereumAddress(ScaleType):
-
-    def process(self):
-        value = self.get_next_bytes(20)
-        return value.hex()
-
-    def process_encode(self, value):
-        if value[0:2] == '0x' and len(value) == 42:
-            return ScaleBytes(value)
-        else:
-            raise ValueError('Value should start with "0x" and must be 20 bytes long')
-
-
-class EcdsaSignature(ScaleType):
-
-    def process(self):
-        value = self.get_next_bytes(65)
-        return value.hex()
-
-    def process_encode(self, value):
-        if value[0:2] == '0x' and len(value) == 132:
-            return ScaleBytes(value)
-        else:
-            raise ValueError('Value should start with "0x" and must be 65 bytes long')
-
-
-class BalanceLock(Struct):
-    type_string = 'BalanceLock<Balance, BlockNumber>'
-
-    type_mapping = (
-        ('id', 'LockIdentifier'),
-        ('amount', 'Balance'),
-        ('until', 'U32'),
-        ('reasons', 'WithdrawReasons'),
-    )
-
-
-class Bidder(Enum):
-    type_string = 'Bidder<AccountId, ParaIdOf>'
-
-    value_list = ['NewBidder', 'ParaId']
-
-
-class BlockAttestations(Struct):
-
-    type_mapping = (
-        ('receipt', 'CandidateReceipt'),
-        ('valid', 'Vec<AccountId>'),
-        ('invalid', 'Vec<AccountId>'),
-    )
-
-
-class IncludedBlocks(Struct):
-
-    type_mapping = (
-        ('actualNumber', 'BlockNumber'),
-        ('session', 'SessionIndex'),
-        ('randomSeed', 'H256'),
-        ('activeParachains', 'Vec<ParaId>'),
-        ('paraBlocks', 'Vec<Hash>'),
-    )
-
-class HeadData(Bytes):
-    pass
-
-
 class Conviction(Enum):
     CONVICTION_MASK = 0b01111111
     DEFAULT_CONVICTION = 0b00000000
 
     value_list = ['None', 'Locked1x', 'Locked2x', 'Locked3x', 'Locked4x', 'Locked5x', 'Locked6x']
-
-
-class EraRewards(Struct):
-
-    type_mapping = (
-        ('total', 'u32'),
-        ('rewards', 'Vec<u32>'),
-    )
-
-
-class SlashJournalEntry(Struct):
-    type_mapping = (
-        ('who', 'AccountId'),
-        ('amount', 'Balance'),
-        ('ownSlash', 'Balance'),
-    )
-
-
-class UpwardMessage(Struct):
-    type_mapping = (
-        ('origin', 'ParachainDispatchOrigin'),
-        ('data', 'Bytes'),
-    )
-
-
-class ParachainDispatchOrigin(Enum):
-    value_list = ['Signed', 'Parachain']
-
-
-class StoredState(Enum):
-    value_list = ['Live', 'PendingPause', 'Paused', 'PendingResume']
-
-
-class Votes(Struct):
-    type_mapping = (
-        ('index', 'ProposalIndex'),
-        ('threshold', 'MemberCount'),
-        ('ayes', 'Vec<AccountId>'),
-        ('nays', 'Vec<AccountId>'),
-    )
-
-# Edgeware types
-# TODO move to RuntimeConfiguration per network
-
-
-class IdentityType(Bytes):
-    pass
-
-
-class VoteType(Enum):
-
-    type_string = 'voting::VoteType'
-
-    value_list = ['Binary', 'MultiOption']
-
-
-class VoteOutcome(ScaleType):
-
-    def process(self):
-        return list(self.get_next_bytes(32))
-
-
-class Identity(Bytes):
-    pass
-
-
-class ProposalTitle(Bytes):
-    pass
-
-
-class ProposalContents(Bytes):
-    pass
-
-
-class ProposalStage(Enum):
-    value_list = ['PreVoting', 'Voting', 'Completed']
-
-
-class ProposalCategory(Enum):
-    value_list = ['Signaling']
-
-
-class VoteStage(Enum):
-    value_list = ['PreVoting', 'Commit', 'Voting', 'Completed']
-
-
-class TallyType(Enum):
-
-    type_string = 'voting::TallyType'
-
-    value_list = ['OnePerson', 'OneCoin']
-
-
-class Attestation(Bytes):
-    pass
-
-
-# Joystream types
-# TODO move to RuntimeConfiguration per network
-
-class ContentId(H256):
-    pass
-
-
-class MemberId(U64):
-    pass
-
-
-class PaidTermId(U64):
-    pass
-
-
-class SubscriptionId(U64):
-    pass
-
-
-class SchemaId(U64):
-    pass
-
-
-class DownloadSessionId(U64):
-    pass
-
-
-class UserInfo(Struct):
-
-    type_mapping = (
-        ('handle', 'Option<Vec<u8>>'),
-        ('avatar_uri', 'Option<Vec<u8>>'),
-        ('about', 'Option<Vec<u8>>')
-    )
-
-
-class Role(Enum):
-
-    value_list = ['Storage']
-
-
-class ContentVisibility(Enum):
-    value_list = ['Draft', 'Public']
-
-
-class ContentMetadata(Struct):
-    type_mapping = (
-        ('owner', 'AccountId'),
-        ('added_at', 'BlockAndTime'),
-        ('children_ids', 'Vec<ContentId>'),
-        ('visibility', 'ContentVisibility'),
-        ('schema', 'SchemaId'),
-        ('json', 'Vec<u8>'),
-
-    )
-
-
-class ContentMetadataUpdate(Struct):
-    type_mapping = (
-        ('children_ids', 'Option<Vec<ContentId>>'),
-        ('visibility', 'Option<ContentVisibility>'),
-        ('schema', 'Option<SchemaId>'),
-        ('json', 'Option<Vec<u8>>')
-    )
-
-
-class LiaisonJudgement(Enum):
-    value_list = ['Pending', 'Accepted', 'Rejected']
-
-
-class BlockAndTime(Struct):
-    type_mapping = (
-        ('block', 'BlockNumber'),
-        ('time', 'Moment')
-    )
-
-
-class DataObjectTypeId(U64):
-    type_string = "<T as DOTRTrait>::DataObjectTypeId"
-
-
-class DataObject(Struct):
-    type_mapping = (
-        ('owner', 'AccountId'),
-        ('added_at', 'BlockAndTime'),
-        ('type_id', 'DataObjectTypeId'),
-        ('size', 'u64'),
-        ('liaison', 'AccountId'),
-        ('liaison_judgement', 'LiaisonJudgement'),
-        ('ipfs_content_id', 'Bytes'),
-    )
-
-
-class DataObjectStorageRelationshipId(U64):
-    pass
-
-
-class IPNSIdentity(Bytes):
-    pass
-
-
-class AccountInfo(Struct):
-    type_string = 'AccountInfo<BlockNumber>'
-
-    type_mapping = (
-        ('identity', 'IPNSIdentity'),
-        ('expires_at', 'BlockNumber'),
-    )
-
-
-class DownloadState(Enum):
-    value_list = ['Started', 'Ended']
-
-
-class DownloadSession(Struct):
-
-    type_mapping = (
-        ('content_id', 'ContentId'),
-        ('consumer', 'AccountId'),
-        ('distributor', 'AccountId'),
-        ('initiated_at_block', 'BlockNumber'),
-        ('initiated_at_time', 'BlockNumber'),
-        ('state', 'DownloadState'),
-        ('transmitted_bytes', 'u64'),
-    )
-
-
-class Url(Bytes):
-    pass
-
-
-class EntryMethod(Enum):
-    value_list = ['Paid', 'Screening']
-
-
-class Profile(Struct):
-    type_mapping = (
-        ('id', 'MemberId'),
-        ('handle', 'Bytes'),
-        ('avatar_uri', 'Bytes'),
-        ('about', 'Bytes'),
-        ('registered_at_block', 'BlockNumber'),
-        ('registered_at_time', 'Moment'),
-        ('entry', 'EntryMethod'),
-        ('suspended', 'bool'),
-        ('subscription', 'Option<SubscriptionId>'),
-    )
-
-
-class PaidMembershipTerms(Struct):
-    type_mapping = (
-        ('id', 'PaidTermId'),
-        ('fee', 'BalanceOf'),
-        ('text', 'Bytes'),
-    )
-
-
-class ThreadId(U64):
-    pass
-
-
-class InputValidationLengthConstraint(Struct):
-    type_mapping = (
-        ('min', 'u16'),
-        ('max_min_diff', 'u16'),
-    )
-
-
-class BlockchainTimestamp(Struct):
-    type_string = 'BlockchainTimestamp<BlockNumber, Moment>'
-
-    type_mapping = (
-        ('block', 'BlockNumber'),
-        ('time', 'Moment'),
-    )
-
-
-class ModerationAction(Struct):
-    type_mapping = (
-        ('moderated_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
-        ('moderator_id', 'AccountId'),
-        ('rationale', 'Vec<u8>'),
-    )
-
-
-class PostId(U64):
-    pass
-
-
-class PostTextChange(Struct):
-    type_string = 'PostTextChange<BlockNumber, Moment>'
-
-    type_mapping = (
-        ('expired_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
-        ('text', 'Vec<u8>'),
-    )
-
-
-class Post(Struct):
-    type_string = 'Post<BlockNumber, Moment, AccountId>'
-
-    type_mapping = (
-        ('id', 'PostId'),
-        ('thread_id', 'ThreadId'),
-        ('nr_in_thread', 'u32'),
-        ('current_text', 'Vec<u8>'),
-        ('moderation', 'Option<ModerationAction<BlockNumber, Moment, AccountId>>'),
-        ('text_change_history', 'Vec<PostTextChange<BlockNumber, Moment>>'),
-        ('created_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
-        ('author_id', 'AccountId'),
-
-    )
-
-
-class Thread(Struct):
-    type_string = 'Thread<BlockNumber, Moment, AccountId>'
-
-    type_mapping = (
-        ('id', 'ThreadId'),
-        ('title', 'Vec<u8>'),
-        ('category_id', 'CategoryId'),
-        ('nr_in_category', 'u32'),
-        ('moderation', 'Option<ModerationAction<BlockNumber, Moment, AccountId>>'),
-        ('num_unmoderated_posts', 'u32'),
-        ('num_moderated_posts', 'u32'),
-        ('author_id', 'AccountId'),
-        ('created_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
-        ('author_id', 'AccountId'),
-    )
-
-
-class CategoryId(U64):
-    pass
-
-
-class ChildPositionInParentCategory(Struct):
-
-    type_mapping = (
-        ('parent_id', 'CategoryId'),
-        ('child_nr_in_parent_category', 'u32'),
-    )
-
-
-class Category(Struct):
-    type_string = 'Category<BlockNumber, Moment, AccountId>'
-
-    type_mapping = (
-        ('id', 'CategoryId'),
-        ('title', 'Vec<u8>'),
-        ('description', 'Vec<u8>'),
-        ('created_at', 'BlockchainTimestamp<BlockNumber, Moment>'),
-        ('deleted', 'bool'),
-        ('archived', 'bool'),
-        ('num_direct_subcategories', 'u32'),
-        ('num_direct_unmoderated_threads', 'u32'),
-        ('num_direct_moderated_threads', 'u32'),
-        ('position_in_parent_category', 'Option<ChildPositionInParentCategory>'),
-        ('moderator_id', 'AccountId'),
-    )
-
-
-class ProposalStatus(Enum):
-    value_list = ['Active', 'Cancelled', 'Expired', 'Approved', 'Rejected', 'Slashed']
-
-
-class VoteKind(Enum):
-    value_list = ['Abstain', 'Approve', 'Reject', 'Slash']
-
-
-class RuntimeUpgradeProposal(Struct):
-    type_string = 'RuntimeUpgradeProposal<AccountId, Balance, BlockNumber, Hash>'
-
-    type_mapping = (
-        ('id', 'u32'),
-        ('proposer', 'AccountId'),
-        ('stake', 'Balance'),
-        ('name', 'Vec<u8>'),
-        ('description', 'Vec<u8>'),
-        ('wasm_hash', 'Hash'),
-        ('proposed_at', 'BlockNumber'),
-        ('status', 'ProposalStatus'),
-    )
-
-
-class TallyResult(Struct):
-    type_string = 'TallyResult<BlockNumber>'
-
-    type_mapping = (
-        ('proposal_id', 'u32'),
-        ('abstentions', 'u32'),
-        ('approvals', 'u32'),
-        ('rejections', 'u32'),
-        ('slashes', 'u32'),
-        ('status', 'ProposalStatus'),
-        ('finalized_at', 'BlockNumber'),
-    )
 
 
 class GenericBlock(ScaleType):
@@ -1755,6 +1103,10 @@ class GenericBlock(ScaleType):
 
     def process_encode(self, value):
         raise NotImplementedError()
+
+
+class GenericVote(U8):
+    pass
 
 
 class GenericCall(ScaleType):
@@ -1852,3 +1204,45 @@ class MultiAccountId(GenericAccountId):
         multi_account_obj.encode(multi_account_id)
 
         return multi_account_obj
+
+
+class FixedLengthArray(ScaleType):
+
+    element_count = 0
+
+    def process(self):
+
+        if self.element_count:
+            if self.sub_type == 'u8':
+                return '0x{}'.format(self.get_next_bytes(self.element_count).hex())
+            else:
+                result = []
+                for idx in range(self.element_count):
+                    result.append(self.process_type(self.sub_type).value)
+        else:
+            result = []
+
+        return result
+
+    def process_encode(self, value):
+        data = ScaleBytes(bytearray())
+
+        value = value or []
+
+        if self.sub_type == 'u8':
+            # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
+            if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
+                raise ValueError('Value should start with "0x" and should be {} bytes long'.format(self.element_count))
+
+            return ScaleBytes(value)
+
+        else:
+
+            if not type(value) is list:
+                raise ValueError('Given value is not a list')
+
+            for element_value in value:
+                element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
+                data += element_obj.encode(element_value)
+
+            return data
