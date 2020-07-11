@@ -293,3 +293,29 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(multi_sig_address, "HFXXfXavDuKhLLBhFQTat2aaRQ5CMMw9mwswHzWi76m6iLt")
 
+    def test_opaque_call(self):
+
+        opaque_call_obj = ScaleDecoder.get_decoder_class('OpaqueCall', metadata=self.metadata_decoder)
+
+        call_value = {
+            'call_module': 'System',
+            'call_function': 'remark',
+            'call_args': {
+                '_remark': '0x0123456789'
+            }
+        }
+
+        scale_data = opaque_call_obj.encode(call_value)
+
+        self.assertEqual(str(scale_data), '0x200001140123456789')
+
+        opaque_call_obj = ScaleDecoder.get_decoder_class('OpaqueCall', data=scale_data, metadata=self.metadata_decoder)
+
+        value = opaque_call_obj.decode()
+
+        self.assertEqual(value['call_function'], 'remark')
+        self.assertEqual(value['call_module'], 'System')
+        self.assertEqual(value['call_args'][0]['value'],
+                         '0x0123456789')
+        self.assertEqual(value['call_args'][0]['name'], '_remark')
+

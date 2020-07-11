@@ -2094,7 +2094,7 @@
       ]
     },
     "schedule::period<blocknumber>": "(BlockNumber, u32)",
-    "OpaqueCall": "Bytes",
+    "OpaqueCall": "OpaqueCall",
     "AuthorityId": "AccountId",
     "RawVRFOutput": "[u8; 32]",
     "BlockAttestations": {

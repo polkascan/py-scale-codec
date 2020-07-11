@@ -1180,6 +1180,20 @@ class GenericCall(ScaleType):
         return data
 
 
+class OpaqueCall(Bytes):
+
+    def process_encode(self, value):
+        call_obj = self.get_decoder_class('Call', metadata=self.metadata)
+        return super().process_encode(str(call_obj.encode(value)))
+
+    def process(self):
+        value = super().process()
+
+        call_obj = self.get_decoder_class('Call', data=ScaleBytes(value), metadata=self.metadata)
+
+        return call_obj.process()
+
+
 class MultiAccountId(GenericAccountId):
 
     @classmethod
