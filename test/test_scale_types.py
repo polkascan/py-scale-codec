@@ -315,7 +315,6 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(value['call_function'], 'remark')
         self.assertEqual(value['call_module'], 'System')
-        self.assertEqual(value['call_args'][0]['value'],
-                         '0x0123456789')
+        self.assertEqual(value['call_args'][0]['value'], '0x0123456789')
         self.assertEqual(value['call_args'][0]['name'], '_remark')
 
