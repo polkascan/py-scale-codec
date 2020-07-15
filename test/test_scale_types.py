@@ -32,6 +32,7 @@ class TestScaleTypes(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
@@ -292,6 +293,7 @@ class TestScaleTypes(unittest.TestCase):
         multi_sig_address = ss58_encode(multi_sig_account.value.replace('0x', ''), 2)
 
         self.assertEqual(multi_sig_address, "HFXXfXavDuKhLLBhFQTat2aaRQ5CMMw9mwswHzWi76m6iLt")
+
 
     def test_opaque_call(self):
 

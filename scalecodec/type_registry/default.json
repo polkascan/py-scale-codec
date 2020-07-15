@@ -1,5 +1,13 @@
 {
   "types": {
+    "Balance": "u128",
+    "BalanceOf": "Balance",
+    "Block": "GenericBlock",
+    "Call": "GenericCall",
+    "H160": "H160",
+    "H256": "H256",
+    "H512": "H512",
+    "Hash": "H256",
     "Fixed64": "u64",
     "Fixed128": "u128",
     "AccountId": "GenericAccountId",
@@ -56,7 +64,13 @@
         ]
       ]
     },
-    "PriorLock": "(BlockNumber, Balance)",
+    "PriorLock": {
+      "type": "struct",
+      "type_mapping": [
+         ["blockNumber", "BlockNumber"],
+         ["balance", "Balance"]
+      ]
+    },
     "ReferendumInfoFinished": {
       "type": "struct",
       "type_mapping": [
@@ -125,7 +139,13 @@
         ]
       ]
     },
-    "VotingDirectVote": "(ReferendumIndex, AccountVote)",
+    "VotingDirectVote": {
+      "type": "struct",
+      "type_mapping": [
+         ["referendumIndex", "ReferendumIndex"],
+         ["accountVote", "AccountVote"]
+      ]
+    },
     "VotingDirect": {
       "type": "struct",
       "type_mapping": [
@@ -382,7 +402,13 @@
     "Signature": "H512",
     "CollatorSignature": "Signature",
     "AuthorityWeight": "u64",
-    "NextAuthority": "(AuthorityId, AuthorityWeight)",
+    "NextAuthority": {
+      "type": "struct",
+      "type_mapping": [
+         ["AuthorityId", "AuthorityId"],
+         ["weight", "AuthorityWeight"]
+      ]
+    },
     "AuthorityList": "Vec<NextAuthority>",
     "BalanceUpload": {
       "type": "struct",
@@ -540,7 +566,13 @@
         "Twitter": 128
       }
     },
-    "IdentityInfoAdditional": "(Data, Data)",
+    "IdentityInfoAdditional": {
+      "type": "struct",
+      "type_mapping": [
+         ["field", "Data"],
+         ["value", "Data"]
+      ]
+    },
     "IdentityInfo": {
       "type": "struct",
       "type_mapping": [
@@ -909,7 +941,13 @@
         ]
       ]
     },
-    "RegistrationJudgement": "(RegistrarIndex, IdentityJudgement)",
+    "RegistrationJudgement": {
+      "type": "struct",
+      "type_mapping": [
+         ["registrarIndex", "RegistrarIndex"],
+         ["judgement", "Judgement"]
+      ]
+    },
     "Registration": {
       "type": "struct",
       "type_mapping": [
@@ -1233,7 +1271,13 @@
       ]
     },
     "slashing::SpanRecord<BalanceOf>": "SpanRecord",
-    "UnappliedSlashOther": "(AccountId, Balance)",
+    "UnappliedSlashOther": {
+      "type": "struct",
+      "type_mapping": [
+         ["account", "AccountId"],
+         ["amount", "Balance"]
+      ]
+    },
     "UnappliedSlash<AccountId, BalanceOf>": {
       "type": "struct",
       "type_mapping": [
@@ -1612,7 +1656,13 @@
     "ValidatorIndex": "u16",
     "PerU16": "u16",
     "OffchainAccuracy": "PerU16",
-    "CompactScore": "(ValidatorIndex, OffchainAccuracy)",
+    "CompactScore": {
+      "type": "struct",
+        "type_mapping": [
+          ["validatorIndex", "ValidatorIndex"],
+          ["offchainAccuracy", "OffchainAccuracy"]
+        ]
+    },
     "CompactAssignments": {
       "type": "struct",
       "type_mapping": [
@@ -1682,7 +1732,14 @@
         ]
       ]
     },
-    "DeferredOffenceOf": "(Vec<OffenceDetails>, Vec<Perbill>, SessionIndex)",
+    "DeferredOffenceOf": {
+      "type": "struct",
+        "type_mapping": [
+          ["offences", "Vec<OffenceDetails>"],
+          ["perc", "Vec<Perbill>"],
+          ["session", "SessionIndex"]
+        ]
+    },
     "Statement": {
       "type": "enum",
       "type_mapping": [
@@ -1871,7 +1928,13 @@
     "MaybeRandomness": "Option<Randomness>",
     "schnorrkel::Randomness": "Hash",
     "schnorrkel::RawVRFOutput": "[u8; 32]",
-    "TaskAddress": "(BlockNumber, u32)",
+    "TaskAddress": {
+      "type": "struct",
+      "type_mapping": [
+        ["blockNumber", "BlockNumber"],
+        ["index", "u32"]
+      ]
+    },
     "ValidationCode": "Bytes",
     "ParaPastCodeMeta": {
       "type": "struct",
@@ -2496,14 +2559,6 @@
     "AccountIndex": "GenericAccountIndex",
     "Address": "GenericAddress",
     "AssetId": "u32",
-    "Balance": "u128",
-    "BalanceOf": "Balance",
-    "Block": "GenericBlock",
-    "Call": "GenericCall",
-    "H160": "H160",
-    "H256": "H256",
-    "H512": "H512",
-    "Hash": "H256",
     "Justification": "Bytes",
     "StorageData": "Bytes",
     "KeyValue": {

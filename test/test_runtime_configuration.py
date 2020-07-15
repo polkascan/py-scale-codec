@@ -29,6 +29,7 @@ class TestScaleDecoderClasses(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
     def test_valid_decoding_classes(self):

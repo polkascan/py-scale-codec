@@ -28,6 +28,7 @@ class TestMetadata(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
     def test_decode_metadata_v3(self):

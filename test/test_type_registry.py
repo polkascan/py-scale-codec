@@ -12,6 +12,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
 
