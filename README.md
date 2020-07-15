@@ -29,6 +29,25 @@ obj.decode()
 print(obj.value)
 ```
 
+Encode to Compact\<Balance\> 
+
+```python
+RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+obj = ScaleDecoder.get_decoder_class('Compact<Balance>')
+scale_data = obj.encode(2503000000000000000)
+print(scale_data)
+```
+
+Encode to Vec\<Bytes\>
+
+```python
+RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+value = ['test', 'vec']
+obj = ScaleDecoder.get_decoder_class('Vec<Bytes>')
+scale_data = obj.encode(value)
+print(scale_data)
+```
+
 Add custom types to type registry
 
 ```python
