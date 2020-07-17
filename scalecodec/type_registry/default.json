@@ -2380,12 +2380,16 @@
       "type": "struct",
       "type_mapping": [
         [
-          "status",
-          "u8"
+          "flags",
+          "u32"
         ],
         [
           "data",
-          "Raw"
+          "Vec<u8>"
+        ],
+        [
+          "gasConsumed",
+          "u64"
         ]
       ]
     },
@@ -3119,7 +3123,7 @@
         ],
         [
           "reputation",
-          "u64"
+          "i32"
         ]
       ]
     },
@@ -4108,6 +4112,68 @@
       ]
     },
     "PermissionLatest": "PermissionsV1",
-    "Approvals": "[bool; 4]"
+    "Approvals": "[bool; 4]",
+    "ContractExecResultSuccessTo255": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "status",
+          "u8"
+        ],
+        [
+          "data",
+          "Raw"
+        ]
+      ]
+    },
+    "ContractExecResultTo255": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccessTo255"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "AccountStatus": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validity",
+          "AccountValidity"
+        ],
+        [
+          "freeBalance",
+          "Balance"
+        ],
+        [
+          "lockedBalance",
+          "Balance"
+        ],
+        [
+          "signature",
+          "Vec<u8>"
+        ],
+        [
+          "vat",
+          "Permill"
+        ]
+      ]
+    },
+    "AccountValidity": {
+      "type": "enum",
+      "value_list": [
+        "Invalid",
+        "Initiated",
+        "Pending",
+        "ValidLow",
+        "ValidHigh",
+        "Completed"
+      ]
+    }
   }
 }
