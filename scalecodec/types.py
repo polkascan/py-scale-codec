@@ -1187,9 +1187,13 @@ class OpaqueCall(Bytes):
         return super().process_encode(str(call_obj.encode(value)))
 
     def process(self):
-        value = super().process()
+        super().process()
 
-        call_obj = self.get_decoder_class('Call', data=ScaleBytes(value), metadata=self.metadata)
+        call_obj = self.get_decoder_class(
+            type_string='Call',
+            data=ScaleBytes('0x{}'.format(self.raw_value)),
+            metadata=self.metadata
+        )
 
         return call_obj.process()
 
