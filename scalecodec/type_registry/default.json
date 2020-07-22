@@ -2112,19 +2112,7 @@
         ]
       ]
     },
-    "Equivocation": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "Prevote",
-          "GrandpaEquivocation"
-        ],
-        [
-          "Precommit",
-          "GrandpaEquivocation"
-        ]
-      ]
-    },
+    "Equivocation": "GrandpaEquivocation",
     "EquivocationProof": {
       "type": "struct",
       "type_mapping": [
