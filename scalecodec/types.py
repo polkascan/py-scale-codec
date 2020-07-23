@@ -425,6 +425,7 @@ class Struct(ScaleType):
     def process(self):
 
         result = {}
+        print('Struct', self.__class__.__name__)
         for key, data_type in self.type_mapping:
             if data_type is None:
                 data_type = 'Null'
@@ -1187,15 +1188,17 @@ class OpaqueCall(Bytes):
         return super().process_encode(str(call_obj.encode(value)))
 
     def process(self):
-        super().process()
+        value = super().process()
+        try:
+            call_obj = self.get_decoder_class(
+                type_string='Call',
+                data=ScaleBytes('0x{}'.format(self.raw_value)),
+                metadata=self.metadata
+            )
 
-        call_obj = self.get_decoder_class(
-            type_string='Call',
-            data=ScaleBytes('0x{}'.format(self.raw_value)),
-            metadata=self.metadata
-        )
-
-        return call_obj.process()
+            return call_obj.process()
+        except:
+            return value
 
 
 class MultiAccountId(GenericAccountId):
