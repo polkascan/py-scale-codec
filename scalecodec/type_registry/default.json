@@ -3649,6 +3649,7 @@
     },
     "BabeAuthorityWeight": "u64",
     "BabeBlockWeight": "u32",
+    "equivocationproof<header>": "BabeEquivocationProof",
     "BabeEquivocationProof": {
       "type": "struct",
       "type_mapping": [
