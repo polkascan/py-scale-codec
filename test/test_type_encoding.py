@@ -23,19 +23,23 @@ from scalecodec.metadata import MetadataDecoder
 from scalecodec.type_registry import load_type_registry_preset
 
 from scalecodec.types import CompactU32, Vec
-from test.fixtures import metadata_v10_hex
+from test.fixtures import kusama_metadata_hex
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        cls.metadata_decoder = MetadataDecoder(ScaleBytes(kusama_metadata_hex))
+        cls.metadata_decoder.decode()
+
+    def setUp(self) -> None:
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
 
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v10_hex))
-        cls.metadata_decoder.decode()
+    def tearDown(self) -> None:
+        RuntimeConfiguration().clear_type_registry()
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
     def test_u16(self):
         obj = ScaleDecoder.get_decoder_class('u16')
@@ -276,5 +280,38 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj.decode()
 
         self.assertEqual(obj.value, value)
+
+    def test_multi_encode(self):
+
+        as_multi = ScaleDecoder.get_decoder_class("Call", metadata=self.metadata_decoder)
+
+        as_multi.encode(
+            {
+                "call_module": "Multisig",
+                "call_function": "as_multi",
+                "call_args": {
+                    "call": {
+                        "call_module": "Balances",
+                        "call_function": "transfer",
+                        "call_args": {
+                            "dest": "CofvaLbP3m8PLeNRQmLVPWmTT7jGgAXTwyT69k2wkfPxJ9V",
+                            "value": 10000000000000
+                        },
+                    },
+                    "maybe_timepoint": {"height": 3012294, "index": 3},
+                    "other_signatories": sorted(['D2bHQwFcQj11SvtkjULEdKhK4WAeP6MThXgosMHjW9DrmbE',
+                                                 'CofvaLbP3m8PLeNRQmLVPWmTT7jGgAXTwyT69k2wkfPxJ9V']),
+                    "threshold": 2,
+                    "store_call": True,
+                    "max_weight": 10,
+                },
+            }
+        )
+        self.assertEqual(str(as_multi.data), "0x1f010200080a2ee2acc37fa96e818e2817afc104ce55770bcccb7333bbf8481d5bc3c6fa4614097421065c7bb0efc6770ffc5d604654159d45910cc7a3cb602be16acc552801c6f62d0003000000a404000a2ee2acc37fa96e818e2817afc104ce55770bcccb7333bbf8481d5bc3c6fa460b00a0724e1809010a00000000000000")
+
+    def test_call_encode_invalid_type(self):
+        call = ScaleDecoder.get_decoder_class("Call", metadata=self.metadata_decoder)
+        self.assertRaises(TypeError, call.encode, '{"call_module": "Balances", "call_function": "transfer"}')
+        self.assertRaises(TypeError, call.encode, 2)
 
 

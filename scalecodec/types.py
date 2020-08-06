@@ -425,7 +425,7 @@ class Struct(ScaleType):
     def process(self):
 
         result = {}
-        print('Struct', self.__class__.__name__)
+
         for key, data_type in self.type_mapping:
             if data_type is None:
                 data_type = 'Null'
@@ -1146,6 +1146,10 @@ class GenericCall(ScaleType):
         }
 
     def process_encode(self, value):
+
+        if type(value) is not dict:
+            raise TypeError("value must be of type dict to encode a GenericCall")
+
         # Check requirements
         if 'call_index' in value:
             self.call_index = value['call_index']
