@@ -51,6 +51,84 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(len(events_decoder.value), 5)
         self.assertEqual(events_decoder.value[4]['event_id'], "ExtrinsicFailed")
 
+    def test_type_registry_versioning_struct(self):
+        RuntimeConfiguration().clear_type_registry()
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
+
+        RuntimeConfiguration().set_active_spec_version_id(1019)
+        type_cls = RuntimeConfiguration().get_decoder_class("StakingLedger<AccountId, BalanceOf>")
+
+        self.assertEqual(type_cls.type_mapping, [
+            [
+              "stash",
+              "AccountId"
+            ],
+            [
+              "total",
+              "Compact<Balance>"
+            ],
+            [
+              "active",
+              "Compact<Balance>"
+            ],
+            [
+              "unlocking",
+              "Vec<UnlockChunk>"
+            ]
+          ])
+
+        RuntimeConfiguration().set_active_spec_version_id(1055)
+        type_cls = RuntimeConfiguration().get_decoder_class("StakingLedger<AccountId, BalanceOf>")
+
+        self.assertEqual(type_cls.type_mapping, [
+            [
+              "stash",
+              "AccountId"
+            ],
+            [
+              "total",
+              "Compact<Balance>"
+            ],
+            [
+              "active",
+              "Compact<Balance>"
+            ],
+            [
+              "unlocking",
+              "Vec<UnlockChunk>"
+            ],
+            [
+              "lastReward",
+              "Option<EraIndex>"
+            ]
+          ])
+
+        RuntimeConfiguration().set_active_spec_version_id(2019)
+        type_cls = RuntimeConfiguration().get_decoder_class("StakingLedger<AccountId, BalanceOf>")
+
+        self.assertEqual(type_cls.type_mapping, [
+            [
+              "stash",
+              "AccountId"
+            ],
+            [
+              "total",
+              "Compact<Balance>"
+            ],
+            [
+              "active",
+              "Compact<Balance>"
+            ],
+            [
+              "unlocking",
+              "Vec<UnlockChunk>"
+            ],
+            [
+              "claimedRewards",
+              "Vec<EraIndex>"
+            ]
+          ])
 
     def test_type_registry_versioning_type_changed(self):
         # Extrinsic containing identity.set_identity without 'twitter' field introduced since runtime version 1038

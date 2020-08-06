@@ -8,6 +8,8 @@
     "H256": "H256",
     "H512": "H512",
     "Hash": "H256",
+    "CallHash": "Hash",
+    "CallHashOf": "CallHash",
     "Fixed64": "u64",
     "Fixed128": "u128",
     "AccountId": "GenericAccountId",
@@ -685,7 +687,6 @@
       "type_mapping": []
     },
     "Multiplier": "Fixed128",
-    "CallHash": "H256",
     "Timepoint": {
       "type": "struct",
       "type_mapping": [
@@ -1032,31 +1033,6 @@
         [
           "maxSubjectLen",
           "u32"
-        ]
-      ]
-    },
-    "StakingLedger<AccountId, BalanceOf>": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "stash",
-          "AccountId"
-        ],
-        [
-          "total",
-          "Compact<Balance>"
-        ],
-        [
-          "active",
-          "Compact<Balance>"
-        ],
-        [
-          "unlocking",
-          "Vec<UnlockChunk<Balance>>"
-        ],
-        [
-          "lastReward",
-          "Option<EraIndex>"
         ]
       ]
     },
@@ -1933,6 +1909,23 @@
       "type_mapping": [
         ["blockNumber", "BlockNumber"],
         ["index", "u32"]
+      ]
+    },
+    "ValidationFunctionParams": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "maxCodeSize",
+          "u32"
+        ],
+        [
+          "relayChainHeight",
+          "RelayChainBlockNumber"
+        ],
+        [
+          "codeUpgradeAllowed",
+          "Option<RelayChainBlockNumber>"
+        ]
       ]
     },
     "ValidationCode": "Bytes",
@@ -4014,6 +4007,7 @@
         "Root"
       ]
     },
+    "RelayChainBlockNumber": "BlockNumber",
     "Remark": "[u8; 32]",
     "Retriable": {
       "type": "enum",
