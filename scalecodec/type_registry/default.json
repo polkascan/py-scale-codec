@@ -1649,7 +1649,7 @@
           ["offchainAccuracy", "OffchainAccuracy"]
         ]
     },
-    "CompactAssignments": {
+    "CompactAssignmentsFrom258": {
       "type": "struct",
       "type_mapping": [
         [
@@ -1787,6 +1787,7 @@
         ]
       ]
     },
+    "CompactAssignments": "CompactAssignmentsTo257",
     "DeferredOffenceOf": {
       "type": "struct",
         "type_mapping": [
