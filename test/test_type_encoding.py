@@ -314,4 +314,35 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertRaises(TypeError, call.encode, '{"call_module": "Balances", "call_function": "transfer"}')
         self.assertRaises(TypeError, call.encode, 2)
 
+    def test_era_immortal_encode(self):
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode('00')
+        self.assertEqual(str(obj.data), '0x00')
+    
+    def test_era_mortal_encode(self):
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode((32768, 20000))
+        self.assertEqual(str(obj.data), '0x4e9c')
 
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode((64, 60))
+        self.assertEqual(str(obj.data), '0xc503')
+
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode((64, 40))
+        self.assertEqual(str(obj.data), '0x8502')
+
+    def test_era_mortal_encode_dict(self):
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode({'period': 32768, 'phase': 20000})
+        self.assertEqual(str(obj.data), '0x4e9c')
+
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode({'period': 32768, 'current': (32768 * 3) + 20000})
+        self.assertEqual(str(obj.data), '0x4e9c')
+
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode({'period': 200, 'current': 1400})
+        obj2 = ScaleDecoder.get_decoder_class('Era')
+        obj2.encode((256, 120))
+        self.assertEqual(str(obj.data), str(obj2.data))

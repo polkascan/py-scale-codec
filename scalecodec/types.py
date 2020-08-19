@@ -20,6 +20,7 @@ from datetime import datetime
 from hashlib import blake2b
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException
+from scalecodec.utils.math import trailing_zeros, next_power_of_two
 
 
 class Compact(ScaleType):
@@ -500,13 +501,54 @@ class Era(ScaleType):
         if option_byte == '00':
             return option_byte
         else:
-            return option_byte + self.get_next_bytes(1).hex()
+            encoded = int(option_byte, base=16) + (int(self.get_next_bytes(1).hex(), base=16) << 8)
+            period = 2 << (encoded % (1 << 4))
+            quantize_factor = max(1, (period >> 12))
+            phase = (encoded >> 4) * quantize_factor
+            if period >= 4 and phase < period:
+                return (period, phase)
+            else:
+                raise ValueError('Invalid phase and period: {}, {}'.format(phase, period))
+
+    def _tuple_from_dict(self, value):
+        if 'period' not in value:
+            raise ValueError("Value missing required field 'period' in dict Era")
+        period = value['period']
+        
+        if 'phase' in value:
+            return (period, value['phase'])
+        
+        # If phase not specified explicitly, let the user specify the current block,
+        # and calculate the phase from that.
+        if 'current' not in value:
+            raise ValueError("Dict Era must have one of the fields 'phase' or 'current'")
+        
+        current = value['current']
+
+        # Period must be a power of two between 4 and 2**16
+        period = max(4, min(1 << 16, next_power_of_two(period)))
+        phase = current % period
+        quantize_factor = max(1, (period >> 12))
+        quantized_phase = (phase // quantize_factor) * quantize_factor
+
+        return (period, quantized_phase)
 
     def process_encode(self, value):
         if value == '00':
             return ScaleBytes('0x00')
-        else:
-            raise NotImplementedError('Mortal Era not implemented')
+        if isinstance(value, dict):
+            value = self._tuple_from_dict(value)
+        if isinstance(value, tuple) and len(value) == 2:
+            period, phase = value
+            if not isinstance(phase, int) or not isinstance(period, int):
+                raise ValueError("Phase and period must be ints")
+            if phase > period:
+                raise ValueError("Phase must be less than period")
+            quantize_factor = max(period >> 12, 1)
+            encoded = min(15, max(1, trailing_zeros(period) - 1)) | ((phase // quantize_factor) << 4)
+            return ScaleBytes(encoded.to_bytes(length=2, byteorder='little', signed=False))
+
+        raise ValueError("Value must be the string '00' or tuple of two ints")
 
 
 class Bool(ScaleType):

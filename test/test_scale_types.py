@@ -320,3 +320,21 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(value['call_args'][0]['value'], '0x0123456789')
         self.assertEqual(value['call_args'][0]['name'], '_remark')
 
+    def test_era_immortal(self):
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x00'))
+        obj.decode()
+        self.assertEqual(obj.value, '00')
+    
+    def test_era_mortal(self):
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x4e9c'))
+        obj.decode()
+        self.assertTupleEqual(obj.value, (32768, 20000))
+
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0xc503'))
+        obj.decode()
+        self.assertTupleEqual(obj.value, (64, 60))
+
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x8502'))
+        obj.decode()
+        self.assertTupleEqual(obj.value, (64, 40))
+
