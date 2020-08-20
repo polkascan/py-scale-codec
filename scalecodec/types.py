@@ -494,35 +494,50 @@ class Set(ScaleType):
 
 
 class Era(ScaleType):
+    """
+    An Era represents a range of blocks in which a transaction is allowed to be
+    executed.
+
+    An Era may either be "immortal", in which case the transaction is always valid,
+    or "mortal", in which case the transaction has a defined start block and period
+    in which it is valid.
+    """
+
+    def __init__(self, data=None, sub_type=None, metadata=None):
+        self.period = None
+        self.phase = None
+        super().__init__(data, sub_type, metadata)
 
     def process(self):
 
         option_byte = self.get_next_bytes(1).hex()
         if option_byte == '00':
+            self.period = None
+            self.phase = None
             return option_byte
         else:
             encoded = int(option_byte, base=16) + (int(self.get_next_bytes(1).hex(), base=16) << 8)
-            period = 2 << (encoded % (1 << 4))
-            quantize_factor = max(1, (period >> 12))
-            phase = (encoded >> 4) * quantize_factor
-            if period >= 4 and phase < period:
-                return (period, phase)
+            self.period = 2 << (encoded % (1 << 4))
+            quantize_factor = max(1, (self.period >> 12))
+            self.phase = (encoded >> 4) * quantize_factor
+            if self.period >= 4 and self.phase < self.period:
+                return (self.period, self.phase)
             else:
-                raise ValueError('Invalid phase and period: {}, {}'.format(phase, period))
+                raise ValueError('Invalid phase and period: {}, {}'.format(self.phase, self.period))
 
     def _tuple_from_dict(self, value):
         if 'period' not in value:
             raise ValueError("Value missing required field 'period' in dict Era")
         period = value['period']
-        
+
         if 'phase' in value:
             return (period, value['phase'])
-        
+
         # If phase not specified explicitly, let the user specify the current block,
         # and calculate the phase from that.
         if 'current' not in value:
             raise ValueError("Dict Era must have one of the fields 'phase' or 'current'")
-        
+
         current = value['current']
 
         # Period must be a power of two between 4 and 2**16
@@ -535,6 +550,8 @@ class Era(ScaleType):
 
     def process_encode(self, value):
         if value == '00':
+            self.period = None
+            self.phase = None
             return ScaleBytes('0x00')
         if isinstance(value, dict):
             value = self._tuple_from_dict(value)
@@ -544,12 +561,35 @@ class Era(ScaleType):
                 raise ValueError("Phase and period must be ints")
             if phase > period:
                 raise ValueError("Phase must be less than period")
+            self.period = period
+            self.phase = phase
             quantize_factor = max(period >> 12, 1)
             encoded = min(15, max(1, trailing_zeros(period) - 1)) | ((phase // quantize_factor) << 4)
             return ScaleBytes(encoded.to_bytes(length=2, byteorder='little', signed=False))
 
         raise ValueError("Value must be the string '00' or tuple of two ints")
 
+    def is_immortal(self) -> bool:
+        """Returns true if the era is immortal, false if mortal."""
+        return self.period is None or self.phase is None
+
+    def birth(self, current: int) -> int:
+        """Gets the block number of the start of the era given, with `current`
+        as the reference block number for the era, normally included as part
+        of the transaction.
+        """
+        if self.is_immortal():
+            return 0
+        return (max(current, self.phase) - self.phase) // self.period * self.period + self.phase
+
+    def death(self, current: int) -> int:
+        """Gets the block number of the first block at which the era has ended.
+
+        If the era is immortal, 2**64 - 1 (the maximum unsigned 64-bit integer) is returned.
+        """
+        if self.is_immortal():
+            return 2**64 - 1
+        return self.birth(current) + self.period
 
 class Bool(ScaleType):
 
