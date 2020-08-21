@@ -320,3 +320,43 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(value['call_args'][0]['value'], '0x0123456789')
         self.assertEqual(value['call_args'][0]['name'], '_remark')
 
+    def test_era_immortal(self):
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x00'))
+        obj.decode()
+        self.assertEqual(obj.value, '00')
+        self.assertIsNone(obj.period)
+        self.assertIsNone(obj.phase)
+    
+    def test_era_mortal(self):
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x4e9c'))
+        obj.decode()
+        self.assertTupleEqual(obj.value, (32768, 20000))
+        self.assertEqual(obj.period, 32768)
+        self.assertEqual(obj.phase, 20000)
+
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0xc503'))
+        obj.decode()
+        self.assertTupleEqual(obj.value, (64, 60))
+        self.assertEqual(obj.period, 64)
+        self.assertEqual(obj.phase, 60)
+
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x8502'))
+        obj.decode()
+        self.assertTupleEqual(obj.value, (64, 40))
+        self.assertEqual(obj.period, 64)
+        self.assertEqual(obj.phase, 40)
+
+    def test_era_methods(self):
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode('00')
+        self.assertTrue(obj.is_immortal())
+        self.assertEqual(obj.birth(1400), 0)
+        self.assertEqual(obj.death(1400), 2**64 - 1)
+
+        obj = ScaleDecoder.get_decoder_class('Era')
+        obj.encode((256, 120))
+        self.assertFalse(obj.is_immortal())
+        self.assertEqual(obj.birth(1400), 1400)
+        self.assertEqual(obj.birth(1410), 1400)
+        self.assertEqual(obj.birth(1399), 1144)
+        self.assertEqual(obj.death(1400), 1656)
