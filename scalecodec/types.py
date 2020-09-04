@@ -936,6 +936,10 @@ class Enum(ScaleType):
     def process_encode(self, value):
         if self.type_mapping:
 
+            if type(value) == str:
+                # Convert simple enum values
+                value = {value: None}
+
             if type(value) != dict:
                 raise ValueError("Value must be a dict when type_mapping is set, not '{}'".format(value))
 

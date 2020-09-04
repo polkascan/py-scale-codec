@@ -192,7 +192,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_enum_encode_decode(self):
 
-        value = "Stash"
+        value = {'Staked': None}
 
         obj = ScaleDecoder.get_decoder_class('RewardDestination')
         data = obj.encode(value)
@@ -318,7 +318,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Era')
         obj.encode('00')
         self.assertEqual(str(obj.data), '0x00')
-    
+
     def test_era_mortal_encode(self):
         obj = ScaleDecoder.get_decoder_class('Era')
         obj.encode((32768, 20000))
