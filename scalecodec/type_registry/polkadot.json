@@ -68,6 +68,18 @@
           ]
         }
       }
+    },
+    {
+      "runtime_range": [0, 22],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsTo257"
+      }
+    },
+    {
+      "runtime_range": [23, null],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsFrom258"
+      }
     }
   ]
 }

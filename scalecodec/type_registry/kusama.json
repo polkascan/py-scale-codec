@@ -1,5 +1,5 @@
 {
-  "runtime_id": 2022,
+  "runtime_id": 2023,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -33,7 +33,8 @@
         "Staking",
         "IdentityJudgement"
       ]
-    }
+    },
+    "CompactAssignments": "CompactAssignmentsFrom258"
   },
   "versioning": [
     {
@@ -309,6 +310,18 @@
              ["findersFee", "bool"]
           ]
         }
+      }
+    },
+    {
+      "runtime_range": [1019, 2022],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsTo257"
+      }
+    },
+    {
+      "runtime_range": [2023, null],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsFrom258"
       }
     }
   ]

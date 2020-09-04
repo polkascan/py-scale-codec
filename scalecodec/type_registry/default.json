@@ -355,6 +355,7 @@
       ]
     },
     "LockIdentifier": "[u8; 8]",
+    "TransactionPriority": "u64",
     "BalanceLock": {
       "type": "struct",
       "type_mapping": [
@@ -1146,6 +1147,27 @@
     },
     "RewardDestination": {
       "type": "enum",
+      "type_mapping": [
+        [
+          "Staked",
+          "Null"
+        ],
+        [
+          "Stash",
+          "Null"
+        ],
+        [
+          "Controller",
+          "Null"
+        ],
+        [
+          "Account",
+          "AccountId"
+        ]
+      ]
+    },
+    "RewardDestinationTo257": {
+      "type": "enum",
       "value_list": [
         "Staked",
         "Stash",
@@ -1654,11 +1676,11 @@
       "type_mapping": [
         [
           "votes1",
-          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 0], ValidatorIndexCompact)>"
+          "Vec<(NominatorIndexCompact, ValidatorIndexCompact)>"
         ],
         [
           "votes2",
-          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 1], ValidatorIndexCompact)>"
+          "Vec<(NominatorIndexCompact, CompactScoreCompact, ValidatorIndexCompact)>"
         ],
         [
           "votes3",
@@ -2085,6 +2107,7 @@
         ]
       ]
     },
+    "JustificationNotification": "Bytes",
     "KeyOwnerProof": "MembershipProof",
     "DefunctVoter": {
       "type": "struct",
