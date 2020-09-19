@@ -1,0 +1,29 @@
+{
+  "runtime_id": 1,
+  "types": {
+    "Address": "AccountIdAddress",
+    "BlockNumber": "U32",
+    "LeasePeriod": "BlockNumber",
+    "Weight": "u64",
+    "Keys": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"],
+         ["parachains", "AccountId"]
+      ]
+    },
+    "DispatchInfo": {
+      "type": "struct",
+      "type_mapping": [
+         ["weight", "Weight"],
+         ["class", "DispatchClass"],
+         ["paysFee", "Pays"]
+      ]
+    }
+  },
+  "versioning": [
+  ]
+}
