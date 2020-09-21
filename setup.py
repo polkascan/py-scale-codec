@@ -94,11 +94,11 @@ setup(
 
     # This should be your name or the name of the organization which owns the
     # project.
-    author='openAware B.V.',  # Optional
+    author='Stichting Polkascan (Polkascan Foundation)',  # Optional
 
     # This should be a valid email address corresponding to the author listed
     # above.
-    author_email='legal@openaware.com',  # Optional
+    author_email='info@polkascan.org',  # Optional
 
     # Classifiers help users find your project by categorizing it.
     #
@@ -114,7 +114,7 @@ setup(
         'Intended Audience :: Developers',
 
         # Pick your license as you wish
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'License :: OSI Approved :: Apache Software License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
