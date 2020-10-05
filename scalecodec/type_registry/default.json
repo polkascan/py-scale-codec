@@ -229,7 +229,8 @@
         ]
       ]
     },
-    "RefCount": "u8",
+    "RefCount": "u32",
+    "RefCountTo259": "u8",
     "Moment": "u64",
     "AccountData": {
       "type": "struct",

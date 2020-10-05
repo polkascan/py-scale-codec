@@ -34,7 +34,8 @@
         "SudoBalances",
         "IdentityJudgement"
       ]
-    }
+    },
+    "RefCount": "u8"
   },
   "versioning": [
     {
