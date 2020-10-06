@@ -406,6 +406,7 @@
     "Signature": "H512",
     "CollatorSignature": "Signature",
     "AuthorityWeight": "u64",
+    "EncodedFinalityProofs": "Bytes",
     "NextAuthority": {
       "type": "struct",
       "type_mapping": [
@@ -737,6 +738,104 @@
         [
           "reporters",
           "Vec<Reporter>"
+        ]
+      ]
+    },
+    "BountyStatusActive": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "curator",
+          "AccountId"
+        ],
+        [
+          "updateDue",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "BountyStatusCuratorProposed": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "curator",
+          "AccountId"
+        ]
+      ]
+    },
+    "BountyStatusPendingPayout": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "curator",
+          "AccountId"
+        ],
+        [
+          "beneficiary",
+          "AccountId"
+        ],
+        [
+          "unlockAt",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "BountyIndex": "u32",
+    "BountyStatus": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Proposed",
+          "Null"
+        ],
+        [
+          "Approved",
+          "Null"
+        ],
+        [
+          "Funded",
+          "Null"
+        ],
+        [
+          "CuratorProposed",
+          "BountyStatusCuratorProposed"
+        ],
+        [
+          "Active",
+          "BountyStatusActive"
+        ],
+        [
+          "PendingPayout",
+          "BountyStatusPendingPayout"
+        ]
+      ]
+    },
+    "Bounty": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "proposer",
+          "AccountId"
+        ],
+        [
+          "value",
+          "Balance"
+        ],
+        [
+          "fee",
+          "Balance"
+        ],
+        [
+          "curatorDeposit",
+          "Balance"
+        ],
+        [
+          "bond",
+          "Balance"
+        ],
+        [
+          "status",
+          "BountyStatus"
         ]
       ]
     },
@@ -2262,6 +2361,23 @@
     },
     "schedule::period<blocknumber>": "(BlockNumber, u32)",
     "OpaqueCall": "OpaqueCall",
+    "PalletVersion": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "major",
+          "u16"
+        ],
+        [
+          "minor",
+          "u8"
+        ],
+        [
+          "patch",
+          "u8"
+        ]
+      ]
+    },
     "AuthorityId": "AccountId",
     "RawVRFOutput": "[u8; 32]",
     "BlockAttestations": {
@@ -3778,6 +3894,10 @@
         ],
         [
           "secondary",
+          "Vec<u64>"
+        ],
+        [
+          "secondary_vrf",
           "Vec<u64>"
         ]
       ]
