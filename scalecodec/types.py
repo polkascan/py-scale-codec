@@ -589,6 +589,7 @@ class Era(ScaleType):
             return 2**64 - 1
         return self.birth(current) + self.period
 
+
 class Bool(ScaleType):
 
     def process(self):

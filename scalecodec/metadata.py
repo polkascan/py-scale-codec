@@ -1029,6 +1029,9 @@ class MetadataV12Module(ScaleType):
         self.index = None
         super().__init__(data, sub_type, **kwargs)
 
+    def get_identifier(self):
+        return self.name.lower()
+
     def process(self):
 
         self.name = self.process_type('Bytes').value
