@@ -1,5 +1,5 @@
 {
-  "runtime_id": 2023,
+  "runtime_id": 2025,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -35,7 +35,7 @@
       ]
     },
     "CompactAssignments": "CompactAssignmentsFrom258",
-    "RefCount": "u8"
+    "RefCount": "u32"
   },
   "versioning": [
     {
@@ -323,6 +323,18 @@
       "runtime_range": [2023, null],
       "types": {
         "CompactAssignments": "CompactAssignmentsFrom258"
+      }
+    },
+    {
+      "runtime_range": [1019, 2024],
+      "types": {
+        "RefCount": "u8"
+      }
+    },
+    {
+      "runtime_range": [2025, null],
+      "types": {
+        "RefCount": "u32"
       }
     }
   ]
