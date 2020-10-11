@@ -11,19 +11,6 @@
          ["paysFee", "Pays"]
       ]
     },
-  },
-  "versioning": [
-    {
-      "runtime_range": [0, 7],
-      "types": {
-        "RefCount": "u8"
-      }
-    },
-    {
-      "runtime_range": [9, null],
-      "types": {
-        "RefCount": "u32"
-      }
-    }
-  ]
+    "RefCount": "u8"
+  }
 }
