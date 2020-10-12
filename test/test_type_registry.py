@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import copy
 import os
 import unittest
 from pathlib import Path
@@ -193,11 +194,29 @@ class TestScaleTypeEncoding(unittest.TestCase):
                 # Check requirements of JSON file
                 self.assertIn('types', type_registry)
 
+                # Try to apply type registry preset
+                RuntimeConfiguration().clear_type_registry()
+                RuntimeConfiguration().update_type_registry(load_type_registry_preset('default'))
+                RuntimeConfiguration().update_type_registry(type_registry)
+
+                original_type_reg = copy.deepcopy(RuntimeConfiguration().type_registry)
+
                 if 'runtime_id' in type_registry:
                     self.assertTrue(isinstance(type_registry['runtime_id'], int))
+                    latest_runtime_id = type_registry['runtime_id']
 
-                # Try to apply type registry preset
-                RuntimeConfiguration().update_type_registry(type_registry)
+                    # Switch type registry versioning state
+                    RuntimeConfiguration().set_active_spec_version_id(0)
+                    RuntimeConfiguration().set_active_spec_version_id(latest_runtime_id)
+
+                    # Test if switch resulted in identical type registry
+                    for type_string, type_definition in RuntimeConfiguration().type_registry['types'].items():
+                        if type_definition:
+                            self.assertEqual(
+                                type_definition.__name__,
+                                original_type_reg['types'][type_string].__name__,
+                                'Type string "{}" mismatch between latest state and when versioning is applied'
+                            )
 
 
 
