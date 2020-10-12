@@ -35,6 +35,7 @@
         "IdentityJudgement"
       ]
     },
+    "CompactAssignments": "CompactAssignmentsFrom258",
     "RefCount": "u8"
   },
   "versioning": [
