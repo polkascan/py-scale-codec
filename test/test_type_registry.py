@@ -13,8 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import unittest
+from pathlib import Path
 
 from scalecodec.block import EventsDecoder, ExtrinsicsDecoder
 
@@ -178,5 +179,25 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(extrinsic_data['call_function'], 'set_identity')
         self.assertEqual(extrinsic_data['call_module'], 'identity')
         self.assertIn('twitter', extrinsic_data['params'][0]['value'])
+
+    def test_valid_type_registry_presets(self):
+        preset_path = os.path.join(os.path.dirname(__file__), '..', 'scalecodec', 'type_registry')
+
+        for filename in os.listdir(preset_path):
+
+            filename_obj = Path(filename)
+            if filename_obj.suffix == '.json':
+
+                type_registry = load_type_registry_preset(Path(filename).stem)
+
+                # Check requirements of JSON file
+                self.assertIn('types', type_registry)
+
+                if 'runtime_id' in type_registry:
+                    self.assertTrue(isinstance(type_registry['runtime_id'], int))
+
+                # Try to apply type registry preset
+                RuntimeConfiguration().update_type_registry(type_registry)
+
 
 
