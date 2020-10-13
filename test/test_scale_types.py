@@ -292,7 +292,6 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(multi_sig_address, "HFXXfXavDuKhLLBhFQTat2aaRQ5CMMw9mwswHzWi76m6iLt")
 
-
     def test_opaque_call(self):
 
         opaque_call_obj = ScaleDecoder.get_decoder_class('OpaqueCall', metadata=self.metadata_decoder)
@@ -358,3 +357,16 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.birth(1410), 1400)
         self.assertEqual(obj.birth(1399), 1144)
         self.assertEqual(obj.death(1400), 1656)
+
+    def test_era_invalid_encode(self):
+        obj = ScaleDecoder.get_decoder_class('Era')
+        self.assertRaises(ValueError, obj.encode, (1, 120))
+        self.assertRaises(ValueError, obj.encode, ('64', 60))
+        self.assertRaises(ValueError, obj.encode, 'x')
+        self.assertRaises(ValueError, obj.encode, {'phase': 2})
+        self.assertRaises(ValueError, obj.encode, {'period': 2})
+
+    def test_era_invalid_decode(self):
+        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x0101'))
+        self.assertRaises(ValueError, obj.decode)
+

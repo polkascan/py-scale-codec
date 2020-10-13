@@ -22,17 +22,20 @@ from scalecodec.metadata import MetadataDecoder
 from scalecodec.type_registry import load_type_registry_preset
 
 from scalecodec.types import CompactU32, Vec
-from test.fixtures import metadata_1045_hex
+from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
+
+    def setUp(self) -> None:
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
+        RuntimeConfiguration().set_active_spec_version_id(1045)
+
 
     @classmethod
     def setUpClass(cls):
         RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
-        RuntimeConfiguration().set_active_spec_version_id(1045)
 
         cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_1045_hex))
         cls.metadata_decoder.decode()
@@ -2179,3 +2182,56 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(extrinsic_value['signature'], decoded_extrinsic['signature'])
         self.assertEqual(extrinsic_value['params'][0]['value'], decoded_extrinsic['params'][0]['value'])
+
+    def test_decode_mortal_extrinsic(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
+
+        metadata_decoder = MetadataDecoder(ScaleBytes(metadata_substrate_node_template))
+        metadata_decoder.decode()
+
+        extrinsic_scale = '0x4102841c0d1aa34c4be7eaddc924b30bab35e45ec22307f2f7304d6e5f9c8f3753de560186be385b2f7b25525518259b00e6b8a61e7e821544f102dca9b6d89c60fc327922229c975c2fa931992b17ab9d5b26f9848eeeff44e0333f6672a98aa8b113836935040005031c0d1aa34c4be7eaddc924b30bab35e45ec22307f2f7304d6e5f9c8f3753de560f0080c6a47e8d03'
+
+        extrinsic = ExtrinsicsDecoder(metadata=metadata_decoder, data=ScaleBytes(extrinsic_scale))
+        extrinsic.decode()
+
+        self.assertEqual(extrinsic.call.name, 'transfer_keep_alive')
+
+        era_obj = ScaleDecoder.get_decoder_class('Era')
+        era_obj.encode({'period': 666, 'current': 4950})
+
+        self.assertEqual(extrinsic.era.period, era_obj.period)
+        self.assertEqual(extrinsic.era.phase, era_obj.phase)
+        self.assertEqual('0x{}'.format(extrinsic.era.raw_value), str(era_obj.data))
+
+        # Check lifetime of transaction
+        self.assertEqual(extrinsic.era.birth(4955), 4950)
+        self.assertEqual(extrinsic.era.death(4955), 5974)
+
+    def test_encode_mortal_extrinsic(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
+
+        metadata_decoder = MetadataDecoder(ScaleBytes(metadata_substrate_node_template))
+        metadata_decoder.decode()
+
+        extrinsic = ExtrinsicsDecoder(metadata=metadata_decoder)
+
+        extrinsic_value = {
+            'account_id': '5ChV6DCRkvaTfwNHsiE2y3oQyPwTJqDPmhEUoEx1t1dupThE',
+            'signature_version': 1,
+            'signature': '0x86be385b2f7b25525518259b00e6b8a61e7e821544f102dca9b6d89c60fc327922229c975c2fa931992b17ab9d5b26f9848eeeff44e0333f6672a98aa8b11383',
+            'call_function': 'transfer_keep_alive',
+            'call_module': 'balances',
+            'nonce': 1,
+            'era': {'period': 666, 'current': 4950},
+            'tip': 0,
+            'params': [
+                {'name': 'dest', 'type': 'Address',
+                 'value': '5ChV6DCRkvaTfwNHsiE2y3oQyPwTJqDPmhEUoEx1t1dupThE'},
+                {'name': 'value', 'type': 'Compact<Balance>', 'value': 1000000000000000}
+            ]
+        }
+
+        extrinsic_hex = extrinsic.encode(extrinsic_value)
+        extrinsic_scale = '0x4102841c0d1aa34c4be7eaddc924b30bab35e45ec22307f2f7304d6e5f9c8f3753de560186be385b2f7b25525518259b00e6b8a61e7e821544f102dca9b6d89c60fc327922229c975c2fa931992b17ab9d5b26f9848eeeff44e0333f6672a98aa8b113836935040005031c0d1aa34c4be7eaddc924b30bab35e45ec22307f2f7304d6e5f9c8f3753de560f0080c6a47e8d03'
+
+        self.assertEqual(str(extrinsic_hex), extrinsic_scale)
