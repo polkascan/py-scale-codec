@@ -12,5 +12,19 @@
       ]
     },
     "RefCount": "u8"
-  }
+  },
+  "versioning": [
+    {
+      "runtime_range": [0, 9],
+      "types": {
+        "RefCount": "u8"
+      }
+    },
+    {
+      "runtime_range": [10, null],
+      "types": {
+        "RefCount": "u32"
+      }
+    }
+  ]
 }
