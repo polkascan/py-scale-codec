@@ -215,7 +215,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
                             self.assertEqual(
                                 type_definition.__name__,
                                 original_type_reg['types'][type_string].__name__,
-                                'Type string "{}" mismatch between latest state and when versioning is applied'
+                                'Type string "{}" mismatch between latest state and when versioning is applied'.format(
+                                    type_string
+                                )
                             )
 
 
