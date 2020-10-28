@@ -6,4 +6,5 @@ more-itertools==8.5.0
 pluggy==0.13.1
 py==1.9.0
 pytest==6.1.1
+requests==2.24.0
 six==1.15.0

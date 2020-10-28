@@ -146,7 +146,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='scale codec polkascan polkadot substrate blockchain',  # Optional
+    keywords='scale codec polkascan polkadot substrate blockchain kusama',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
@@ -175,7 +175,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['more-itertools', 'base58>=2.0.1'],  # Optional
+    install_requires=['more-itertools', 'base58>=2.0.1', 'requests>=2.24.0'],  # Optional
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"

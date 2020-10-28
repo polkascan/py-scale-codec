@@ -76,5 +76,21 @@ RuntimeConfiguration().update_type_registry(load_type_registry_preset("default")
 RuntimeConfiguration().update_type_registry(load_type_registry_file("/path/to/type_registry.json"))
 ```
 
+## Using the type registry updater in your application
+
+To ensure the type registries are in sync with the current runtime of the blockchain, you can use 
+the updater function in your application:
+
+```python
+from scalecodec.updater import update_type_registries
+
+# Update type registries with latest version from Github   
+try:
+    update_type_registries()
+except Exception:
+    pass
+```
+
+
 ## License
 https://github.com/polkascan/py-scale-codec/blob/master/LICENSE
