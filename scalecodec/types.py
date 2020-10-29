@@ -16,6 +16,9 @@
 
 from datetime import datetime
 from hashlib import blake2b
+
+from scalecodec.utils.ss58 import ss58_decode_account_index
+
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException
 from scalecodec.utils.math import trailing_zeros, next_power_of_two
@@ -1356,3 +1359,23 @@ class FixedLengthArray(ScaleType):
                 data += element_obj.encode(element_value)
 
             return data
+
+
+class GenericMultiAddress(Enum):
+    type_mapping = [
+        ["Id", "AccountId"],
+        ["Index", "Compact<AccountIndex>"],
+        ["Raw", "Bytes"],
+        ["Address32", "H256"],
+        ["Address20", "H160"],
+      ]
+
+    def process_encode(self, value):
+
+        if type(value) == str:
+            if len(value) <= 8:
+                value = {"Index": ss58_decode_account_index(value)}
+            else:
+                value = {"Id": value}
+
+        return super().process_encode(value)

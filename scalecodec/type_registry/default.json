@@ -248,6 +248,23 @@
     },
     "RefCount": "u32",
     "RefCountTo259": "u8",
+    "SyncState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "startingBlock",
+          "BlockNumber"
+        ],
+        [
+          "currentBlock",
+          "BlockNumber"
+        ],
+        [
+          "highestBlock",
+          "Option<BlockNumber>"
+        ]
+      ]
+    },
     "SystemOrigin": "RawOrigin",
     "Moment": "u64",
     "AccountData": {
@@ -2221,6 +2238,7 @@
       ]
     },
     "ModuleId": "LockIdentifier",
+    "MultiAddress": "GenericMultiAddress",
     "RuntimeDbWeight": {
       "type": "struct",
       "type_mapping": [
@@ -2313,6 +2331,145 @@
         [
           "nominators",
           "Compact<NominatorIndex>"
+        ]
+      ]
+    },
+    "SiField": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Option<Text>"
+        ],
+        [
+          "type",
+          "SiLookupTypeId"
+        ]
+      ]
+    },
+    "SiLookupTypeId": "u32",
+    "SiPath": "Vec<Text>",
+    "SiType": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "path",
+          "SiPath"
+        ],
+        [
+          "params",
+          "Vec<SiLookupTypeId>"
+        ],
+        [
+          "def",
+          "SiTypeDef"
+        ]
+      ]
+    },
+    "SiTypeDef": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Composite",
+          "SiTypeDefComposite"
+        ],
+        [
+          "Variant",
+          "SiTypeDefVariant"
+        ],
+        [
+          "Sequence",
+          "SiTypeDefSequence"
+        ],
+        [
+          "Array",
+          "SiTypeDefArray"
+        ],
+        [
+          "Tuple",
+          "SiTypeDefTuple"
+        ],
+        [
+          "Primitive",
+          "SiTypeDefPrimitive"
+        ]
+      ]
+    },
+    "SiTypeDefArray": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "len",
+          "u16"
+        ],
+        [
+          "type",
+          "SiLookupTypeId"
+        ]
+      ]
+    },
+    "SiTypeDefComposite": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "fields",
+          "Vec<SiField>"
+        ]
+      ]
+    },
+    "SiTypeDefVariant": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "variants",
+          "Vec<SiVariant>"
+        ]
+      ]
+    },
+    "SiTypeDefPrimitive": {
+      "type": "enum",
+      "value_list": [
+        "Bool",
+        "Char",
+        "Str",
+        "U8",
+        "U16",
+        "U32",
+        "U64",
+        "U128",
+        "U256",
+        "I8",
+        "I16",
+        "I32",
+        "I64",
+        "I128",
+        "I256"
+      ]
+    },
+    "SiTypeDefSequence": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "type",
+          "SiLookupTypeId"
+        ]
+      ]
+    },
+    "SiTypeDefTuple": "Vec<SiLookupTypeId>",
+    "SiVariant": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "fields",
+          "Vec<SiField>"
+        ],
+        [
+          "discriminant",
+          "Option<u64>"
         ]
       ]
     },
@@ -3053,7 +3210,7 @@
     },
     "StorageKey": "Bytes",
     "PrefixedStorageKey": "StorageKey",
-    "InkProject": {
+    "ContractProject": {
       "type": "struct",
       "type_mapping": [
         [
@@ -3062,23 +3219,23 @@
         ],
         [
           "source",
-          "InkProjectSource"
+          "ContractProjectSource"
         ],
         [
           "contract",
-          "InkProjectContract"
+          "ContractProjectContract"
         ],
         [
           "types",
-          "Vec<MtType>"
+          "Vec<SiType>"
         ],
         [
           "spec",
-          "InkContractSpec"
+          "ContractContractSpec"
         ]
       ]
     },
-    "InkProjectContract": {
+    "ContractProjectContract": {
       "type": "struct",
       "type_mapping": [
         [
@@ -3115,7 +3272,7 @@
         ]
       ]
     },
-    "InkProjectSource": {
+    "ContractProjectSource": {
       "type": "struct",
       "type_mapping": [
         [

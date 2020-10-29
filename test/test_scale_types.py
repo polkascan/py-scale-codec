@@ -22,7 +22,7 @@ from scalecodec.metadata import MetadataDecoder
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException, RuntimeConfiguration
 from scalecodec.type_registry import load_type_registry_preset
-from scalecodec.utils.ss58 import ss58_encode
+from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
 from test.fixtures import metadata_v10_hex
 
 
@@ -370,3 +370,27 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x0101'))
         self.assertRaises(ValueError, obj.decode)
 
+    def test_multiaddress_ss58_address_as_str(self):
+        obj = ScaleDecoder.get_decoder_class('Multiaddress')
+        ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
+
+        public_key = ss58_decode(ss58_address)
+
+        data = obj.encode(ss58_address)
+        decode_obj = ScaleDecoder.get_decoder_class('Multiaddress', data=data)
+
+        self.assertEqual(decode_obj.decode(), {"Id": "0x{}".format(public_key)})
+
+    def test_multiaddress_ss58_index_as_str(self):
+        obj = ScaleDecoder.get_decoder_class('Multiaddress')
+        ss58_address = "F7Hs"
+
+        index_id = ss58_decode_account_index(ss58_address)
+
+        data = obj.encode(ss58_address)
+        decode_obj = ScaleDecoder.get_decoder_class('Multiaddress', data=data)
+
+        self.assertEqual(decode_obj.decode(), {"Index": index_id})
+
+    def test_ss58_encode_index(self):
+        self.assertEqual(ss58_encode_account_index(0), 'F7Hs')
