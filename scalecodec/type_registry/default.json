@@ -229,8 +229,26 @@
         ]
       ]
     },
+    "RawOrigin": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Root",
+          "Null"
+        ],
+        [
+          "Signed",
+          "AccountId"
+        ],
+        [
+          "None",
+          "Null"
+        ]
+      ]
+    },
     "RefCount": "u32",
     "RefCountTo259": "u8",
+    "SystemOrigin": "RawOrigin",
     "Moment": "u64",
     "AccountData": {
       "type": "struct",
@@ -684,6 +702,19 @@
     },
     "MaybeVrf": "Option<VrfData>",
     "MemberCount": "u32",
+    "CollectiveOrigin": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Members",
+          "(MemberCount, MemberCount)"
+        ],
+        [
+          "Member",
+          "AccountId"
+        ]
+      ]
+    },
     "MomentOf": "Moment",
     "MoreAttestations": {
       "type": "struct",
@@ -1068,7 +1099,7 @@
       ]
     },
     "ReportIdOf": "Hash",
-    "Schedule": {
+    "ScheduleTo258": {
       "type": "struct",
       "type_mapping": [
         [
@@ -1133,6 +1164,51 @@
         ],
         [
           "maxSubjectLen",
+          "u32"
+        ]
+      ]
+    },
+    "Schedule": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "version",
+          "u32"
+        ],
+        [
+          "instructionWeights",
+          "InstructionWeights"
+        ],
+        [
+          "hostFnWeights",
+          "HostFnWeights"
+        ],
+        [
+          "enablePrintln",
+          "bool"
+        ],
+        [
+          "maxEventTopics",
+          "u32"
+        ],
+        [
+          "maxStackHeight",
+          "u32"
+        ],
+        [
+          "maxMemoryPages",
+          "u32"
+        ],
+        [
+          "maxTableSize",
+          "u32"
+        ],
+        [
+          "maxSubjectLen",
+          "u32"
+        ],
+        [
+          "maxCodeSize",
           "u32"
         ]
       ]
@@ -2361,6 +2437,16 @@
     },
     "schedule::period<blocknumber>": "(BlockNumber, u32)",
     "OpaqueCall": "OpaqueCall",
+    "OriginCaller": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "System",
+          "SystemOrigin"
+        ]
+      ]
+    },
+    "PalletsOrigin": "OriginCaller",
     "PalletVersion": {
       "type": "struct",
       "type_mapping": [
@@ -2534,6 +2620,14 @@
           "u32"
         ],
         [
+          "emptyPairCount",
+          "u32"
+        ],
+        [
+          "totalPairCount",
+          "u32"
+        ],
+        [
           "codeHash",
           "CodeHash"
         ],
@@ -2586,7 +2680,7 @@
         ],
         [
           "data",
-          "Vec<u8>"
+          "Bytes"
         ],
         [
           "gasConsumed",
@@ -2608,6 +2702,204 @@
       ]
     },
     "ContractStorageKey": "[u8; 32]",
+    "HostFnWeights": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "caller",
+          "Weight"
+        ],
+        [
+          "address",
+          "Weight"
+        ],
+        [
+          "gasLeft",
+          "Weight"
+        ],
+        [
+          "balance",
+          "Weight"
+        ],
+        [
+          "valueTransferred",
+          "Weight"
+        ],
+        [
+          "minimumBalance",
+          "Weight"
+        ],
+        [
+          "tombstoneDeposit",
+          "Weight"
+        ],
+        [
+          "rentAllowance",
+          "Weight"
+        ],
+        [
+          "blockNumber",
+          "Weight"
+        ],
+        [
+          "now",
+          "Weight"
+        ],
+        [
+          "weightToFee",
+          "Weight"
+        ],
+        [
+          "gas",
+          "Weight"
+        ],
+        [
+          "input",
+          "Weight"
+        ],
+        [
+          "inputPerByte",
+          "Weight"
+        ],
+        [
+          "return",
+          "Weight"
+        ],
+        [
+          "returnPerByte",
+          "Weight"
+        ],
+        [
+          "terminate",
+          "Weight"
+        ],
+        [
+          "restoreTo",
+          "Weight"
+        ],
+        [
+          "restoreToPerDelta",
+          "Weight"
+        ],
+        [
+          "random",
+          "Weight"
+        ],
+        [
+          "depositEvent",
+          "Weight"
+        ],
+        [
+          "depositEventPerTopic",
+          "Weight"
+        ],
+        [
+          "depositEventPerByte",
+          "Weight"
+        ],
+        [
+          "setRentAllowance",
+          "Weight"
+        ],
+        [
+          "setStorage",
+          "Weight"
+        ],
+        [
+          "setStoragePerByte",
+          "Weight"
+        ],
+        [
+          "clearStorage",
+          "Weight"
+        ],
+        [
+          "getStorage",
+          "Weight"
+        ],
+        [
+          "getStoragePerByte",
+          "Weight"
+        ],
+        [
+          "transfer",
+          "Weight"
+        ],
+        [
+          "call",
+          "Weight"
+        ],
+        [
+          "callTransferSurcharge",
+          "Weight"
+        ],
+        [
+          "callPerInputByte",
+          "Weight"
+        ],
+        [
+          "callPerOutputByte",
+          "Weight"
+        ],
+        [
+          "instantiate",
+          "Weight"
+        ],
+        [
+          "instantiatePerInputByte",
+          "Weight"
+        ],
+        [
+          "instantiatePerOutputByte",
+          "Weight"
+        ],
+        [
+          "hashSha2256",
+          "Weight"
+        ],
+        [
+          "hashSha2256PerByte",
+          "Weight"
+        ],
+        [
+          "hashKeccak256",
+          "Weight"
+        ],
+        [
+          "hashKeccak256PerByte",
+          "Weight"
+        ],
+        [
+          "hashBlake2256",
+          "Weight"
+        ],
+        [
+          "hashBlake2256PerByte",
+          "Weight"
+        ],
+        [
+          "hashBlake2128",
+          "Weight"
+        ],
+        [
+          "hashBlake2128PerByte",
+          "Weight"
+        ]
+      ]
+    },
+    "InstructionWeights": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "growMem",
+          "Weight"
+        ],
+        [
+          "regular",
+          "Weight"
+        ]
+      ]
+    },
     "PrefabWasmModule": {
       "type": "struct",
       "type_mapping": [
@@ -2761,6 +3053,85 @@
     },
     "StorageKey": "Bytes",
     "PrefixedStorageKey": "StorageKey",
+    "InkProject": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "metadataVersion",
+          "Text"
+        ],
+        [
+          "source",
+          "InkProjectSource"
+        ],
+        [
+          "contract",
+          "InkProjectContract"
+        ],
+        [
+          "types",
+          "Vec<MtType>"
+        ],
+        [
+          "spec",
+          "InkContractSpec"
+        ]
+      ]
+    },
+    "InkProjectContract": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "version",
+          "Text"
+        ],
+        [
+          "authors",
+          "Vec<Text>"
+        ],
+        [
+          "description",
+          "Option<Text>"
+        ],
+        [
+          "documentation",
+          "Option<Text>"
+        ],
+        [
+          "repository",
+          "Option<Text>"
+        ],
+        [
+          "homepage",
+          "Option<Text>"
+        ],
+        [
+          "license",
+          "Option<Text>"
+        ]
+      ]
+    },
+    "InkProjectSource": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hash",
+          "[u8; 32]"
+        ],
+        [
+          "language",
+          "Text"
+        ],
+        [
+          "compiler",
+          "Text"
+        ]
+      ]
+    },
     "AccountIndex": "GenericAccountIndex",
     "Address": "GenericAddress",
     "AssetId": "u32",
@@ -2809,6 +3180,31 @@
     "SchedulePeriod": "Period",
     "SchedulePriority": "Priority",
     "Scheduled": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "maybeId",
+          "Option<Bytes>"
+        ],
+        [
+          "priority",
+          "SchedulePriority"
+        ],
+        [
+          "call",
+          "Call"
+        ],
+        [
+          "maybePeriodic",
+          "Option<SchedulePeriod>"
+        ],
+        [
+          "origin",
+          "PalletsOrigin"
+        ]
+      ]
+    },
+    "ScheduledTo254": {
       "type": "struct",
       "type_mapping": [
         [
