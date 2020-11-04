@@ -1,5 +1,5 @@
 {
-  "runtime_id": 23,
+  "runtime_id": 45,
   "types": {
     "Address": "AccountIdAddress",
     "BlockNumber": "U32",
@@ -25,7 +25,7 @@
         "IdentityJudgement"
       ]
     },
-    "RefCount": "u8"
+    "RefCount": "u32"
   },
   "versioning": [
     {
@@ -58,6 +58,18 @@
              ["findersFee", "bool"]
           ]
         }
+      }
+    },
+    {
+      "runtime_range": [3, 44],
+      "types": {
+        "RefCount": "u8"
+      }
+    },
+    {
+      "runtime_range": [45, null],
+      "types": {
+        "RefCount": "u32"
       }
     }
   ]
