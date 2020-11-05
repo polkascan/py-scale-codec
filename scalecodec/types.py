@@ -211,11 +211,15 @@ class String(ScaleType):
 
 class HexBytes(ScaleType):
 
+    def __init__(self, *args, **kwargs):
+        self.length_obj = None
+        super().__init__(*args, **kwargs)
+
     def process(self):
 
-        length = self.process_type('Compact<u32>').value
+        self.length_obj = self.process_type('Compact<u32>')
 
-        return '0x{}'.format(self.get_next_bytes(length).hex())
+        return '0x{}'.format(self.get_next_bytes(self.length_obj.value).hex())
 
     def process_encode(self, value):
 
