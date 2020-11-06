@@ -71,6 +71,18 @@
       "types": {
         "RefCount": "u32"
       }
+    },
+    {
+      "runtime_range": [1, 42],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsTo257"
+      }
+    },
+    {
+      "runtime_range": [43, null],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsFrom258"
+      }
     }
   ]
 }

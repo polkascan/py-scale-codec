@@ -2002,7 +2002,7 @@
         ]
       ]
     },
-    "CompactAssignments": "CompactAssignmentsTo257",
+    "CompactAssignments": "CompactAssignmentsFrom258",
     "DeferredOffenceOf": {
       "type": "struct",
         "type_mapping": [
@@ -2828,7 +2828,7 @@
         ]
       ]
     },
-    "ContractExecResultSuccess": {
+    "ContractExecResultSuccessTo260": {
       "type": "struct",
       "type_mapping": [
         [
@@ -2845,16 +2845,97 @@
         ]
       ]
     },
-    "ContractExecResult": {
+    "ContractExecResultTo260": {
       "type": "enum",
       "type_mapping": [
         [
           "Success",
-          "ContractExecResultSuccess"
+          "ContractExecResultSuccessTo260"
         ],
         [
           "Error",
           "Null"
+        ]
+      ]
+    },
+    "ContractExecResultErrModule": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "index",
+          "u8"
+        ],
+        [
+          "error",
+          "u8"
+        ],
+        [
+          "message",
+          "Option<Text>"
+        ]
+      ]
+    },
+    "ContractExecResultErr": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Other",
+          "Text"
+        ],
+        [
+          "CannotLookup",
+          "Null"
+        ],
+        [
+          "BadOrigin",
+          "Null"
+        ],
+        [
+          "Module",
+          "ContractExecResultErrModule"
+        ]
+      ]
+    },
+    "ContractExecResultOk": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "flags",
+          "u32"
+        ],
+        [
+          "data",
+          "Bytes"
+        ]
+      ]
+    },
+    "ContractExecResultResult": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Ok",
+          "ContractExecResultOk"
+        ],
+        [
+          "Err",
+          "ContractExecResultErr"
+        ]
+      ]
+    },
+    "ContractExecResult": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "gasConsumed",
+          "u64"
+        ],
+        [
+          "debugMessage",
+          "Text"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
         ]
       ]
     },
