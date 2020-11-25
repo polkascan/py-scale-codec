@@ -33,7 +33,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         ('call_index', '(u8,u8)'),
     )
 
-    def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, address_type=42):
+    def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, runtime_config=None, address_type=42):
 
         assert (type(metadata) == MetadataDecoder)
 
@@ -55,7 +55,7 @@ class ExtrinsicsDecoder(ScaleDecoder):
         self.call_args = None
         self.params_raw = None
         self.params = []
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type=sub_type, runtime_config=runtime_config)
 
     def generate_hash(self):
         if self.contains_transaction:
@@ -232,22 +232,30 @@ class ExtrinsicsDecoder(ScaleDecoder):
         if self.contains_transaction:
             data = ScaleBytes('0x84')
 
-            self.address = self.get_decoder_class('Address', metadata=self.metadata)
+            self.address = self.get_decoder_class('Address', metadata=self.metadata, runtime_config=self.runtime_config)
             data += self.address.encode(value['account_id'])
 
-            self.signature_version = self.get_decoder_class('U8', metadata=self.metadata)
+            self.signature_version = self.get_decoder_class(
+                'U8', metadata=self.metadata, runtime_config=self.runtime_config
+            )
             data += self.signature_version.encode(value['signature_version'])
 
-            self.signature = self.get_decoder_class('Signature', metadata=self.metadata)
+            self.signature = self.get_decoder_class(
+                'Signature', metadata=self.metadata, runtime_config=self.runtime_config
+            )
             data += self.signature.encode('0x{}'.format(value['signature'].replace('0x', '')))
 
-            self.era = self.get_decoder_class('Era', metadata=self.metadata)
+            self.era = self.get_decoder_class('Era', metadata=self.metadata, runtime_config=self.runtime_config)
             data += self.era.encode(value['era'])
 
-            self.nonce = self.get_decoder_class('Compact<Index>', metadata=self.metadata)
+            self.nonce = self.get_decoder_class(
+                'Compact<Index>', metadata=self.metadata, runtime_config=self.runtime_config
+            )
             data += self.nonce.encode(value['nonce'])
 
-            self.tip = self.get_decoder_class('Compact<Balance>', metadata=self.metadata)
+            self.tip = self.get_decoder_class(
+                'Compact<Balance>', metadata=self.metadata, runtime_config=self.runtime_config
+            )
             data += self.tip.encode(value['tip'])
 
         else:
@@ -267,11 +275,13 @@ class ExtrinsicsDecoder(ScaleDecoder):
                 else:
                     param_value = value['call_args'][arg.name]
 
-                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    arg_obj = self.get_decoder_class(
+                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
+                    )
                     data += arg_obj.encode(param_value)
 
         # Wrap payload with a length Compact<u32>
-        length_obj = self.get_decoder_class('Compact<u32>')
+        length_obj = self.get_decoder_class('Compact<u32>', runtime_config=self.runtime_config)
         data = length_obj.encode(data.length) + data
 
         return data
@@ -356,7 +366,7 @@ class GenericEvent(ScaleDecoder):
 
 class EventRecord(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
+    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None, **kwargs):
 
         assert (not metadata or type(metadata) == MetadataDecoder)
 
@@ -370,7 +380,7 @@ class EventRecord(ScaleDecoder):
         self.event_module = None
         self.topics = []
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
 

@@ -70,13 +70,13 @@ class MetadataDecoder(ScaleDecoder):
 
 class MetadataV4Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -231,13 +231,13 @@ class MetadataV4ModuleStorage(ScaleType):
 
 class MetadataV5Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -276,7 +276,7 @@ class MetadataV5Decoder(ScaleDecoder):
 
 class MetadataV5Module(ScaleType):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.name = None
         self.prefix = None
         self.call_index = None
@@ -288,7 +288,7 @@ class MetadataV5Module(ScaleType):
         self.events = None
         self.constants = []
         self.errors = []
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
         return self.name.lower()
@@ -391,13 +391,13 @@ class MetadataV5ModuleStorage(ScaleType):
 
 class MetadataV6Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -525,13 +525,13 @@ class MetadataV6ModuleConstants(ScaleType):
 
 class MetadataV7Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -711,13 +711,13 @@ class MetadataV7ModuleConstants(MetadataV6ModuleConstants):
 
 class MetadataV8Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -837,13 +837,13 @@ class MetadataModuleError(ScaleType):
 
 class MetadataV9Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -882,13 +882,13 @@ class MetadataV9Decoder(ScaleDecoder):
 
 class MetadataV10Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -927,13 +927,13 @@ class MetadataV10Decoder(ScaleDecoder):
 
 class MetadataV11Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -973,13 +973,13 @@ class MetadataV11Decoder(ScaleDecoder):
 
 class MetadataV12Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -1085,13 +1085,13 @@ class MetadataV12Module(ScaleType):
 
 class MetadataV3Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -1130,13 +1130,13 @@ class MetadataV3Decoder(ScaleDecoder):
 
 class MetadataV2Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -1175,13 +1175,13 @@ class MetadataV2Decoder(ScaleDecoder):
 
 class MetadataV1Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.modules = []
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {
@@ -1220,7 +1220,7 @@ class MetadataV1Decoder(ScaleDecoder):
 
 class MetadataV0Decoder(ScaleDecoder):
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, **kwargs):
         self.version = None
         self.events_modules = []
         self.modules = []
@@ -1228,7 +1228,7 @@ class MetadataV0Decoder(ScaleDecoder):
         self.call_index = {}
         self.event_index = {}
 
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, **kwargs)
 
     def process(self):
         result_data = {

@@ -24,19 +24,26 @@ class Singleton(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+
+        if 'config_id' in kwargs:
+            instance_key = kwargs['config_id']
+        else:
+            instance_key = cls
+
+        if instance_key not in cls._instances:
+            cls._instances[instance_key] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[instance_key]
 
 
-class RuntimeConfiguration(metaclass=Singleton):
+class RuntimeConfigurationObject:
 
     @classmethod
     def all_subclasses(cls, class_):
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self):
+    def __init__(self, config_id=None):
+        self.config_id = config_id
         self.type_registry = {}
         self.clear_type_registry()
         self.active_spec_version_id = None
@@ -65,7 +72,7 @@ class RuntimeConfiguration(metaclass=Singleton):
             # Custom tuples
             elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
 
-                decoder_class = type(type_string, (RuntimeConfiguration().get_decoder_class('struct'),), {
+                decoder_class = type(type_string, (self.get_decoder_class('struct'),), {
                     'type_string': type_string
                 })
 
@@ -79,7 +86,7 @@ class RuntimeConfiguration(metaclass=Singleton):
 
                 if type_parts:
                     # Create dynamic class for e.g. [u8; 4] resulting in array of u8 with 4 elements
-                    decoder_class = type(type_string, (RuntimeConfiguration().get_decoder_class('FixedLengthArray'),), {
+                    decoder_class = type(type_string, (self.get_decoder_class('FixedLengthArray'),), {
                         'sub_type': type_parts[0],
                         'element_count': int(type_parts[1])
                     })
@@ -189,6 +196,14 @@ class ScaleBytes:
     def __str__(self):
         return "0x{}".format(self.data.hex())
 
+    def __eq__(self, other):
+        if not hasattr(other, 'data'):
+            return False
+        return self.data == other.data
+
+    def __repr__(self):
+        return "<{}(data=0x{})>".format(self.__class__.__name__, self.data.hex())
+
     def __add__(self, data):
 
         if type(data) == ScaleBytes:
@@ -216,7 +231,7 @@ class ScaleDecoder(ABC):
     PRIMITIVES = ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128', 'i256', 'h160',
                   'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]', '&[u8]')
 
-    def __init__(self, data, sub_type=None):
+    def __init__(self, data, sub_type=None, runtime_config=None):
 
         if sub_type:
             self.sub_type = sub_type
@@ -226,6 +241,8 @@ class ScaleDecoder(ABC):
 
         if data:
             assert(type(data) == ScaleBytes)
+
+        self.runtime_config = runtime_config
 
         self.data = data
         self.raw_value = ''
@@ -291,6 +308,9 @@ class ScaleDecoder(ABC):
     def __str__(self):
         return str(self.value) or ''
 
+    def __repr__(self):
+        return "<{}(value={})>".format(self.__class__.__name__, self.value)
+
     def encode(self, value):
         self.value = value
         self.data = self.process_encode(value)
@@ -300,28 +320,38 @@ class ScaleDecoder(ABC):
         raise NotImplementedError("Encoding not implemented for this ScaleType")
 
     @classmethod
-    def get_decoder_class(cls, type_string, data=None, **kwargs):
+    def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs):
         """
-        :param type_string:
-        :param data:
-        :param kwargs:
-        :return: ScaleType
+
+        Parameters
+        ----------
+        type_string
+        data
+        runtime_config
+        kwargs
+
+        Returns
+        -------
+        ScaleType
         """
 
         type_string = cls.convert_type(type_string)
 
-        decoder_class = RuntimeConfiguration().get_decoder_class(
+        if not runtime_config:
+            runtime_config = RuntimeConfiguration()
+
+        decoder_class = runtime_config.get_decoder_class(
             type_string.lower(),
             spec_version_id=kwargs.get('spec_version_id', 'default')
         )
         if decoder_class:
-            return decoder_class(data, **kwargs)
+            return decoder_class(data=data, runtime_config=runtime_config, **kwargs)
 
         raise NotImplementedError('Decoder class for "{}" not found'.format(type_string))
 
     # TODO rename to decode_type (confusing when encoding is introduced)
     def process_type(self, type_string, **kwargs):
-        obj = self.get_decoder_class(type_string, self.data, **kwargs)
+        obj = self.get_decoder_class(type_string, self.data, runtime_config=self.runtime_config, **kwargs)
         obj.decode(check_remaining=False)
         return obj
 
@@ -360,13 +390,26 @@ class ScaleDecoder(ABC):
         return name
 
 
+class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
+    pass
+
+
 # TODO move type_string and sub_type behaviour to this sub class
 class ScaleType(ScaleDecoder, ABC):
 
-    def __init__(self, data=None, sub_type=None, metadata=None):
+    def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):
+        """
+
+        Parameters
+        ----------
+        data: ScaleBytes
+        sub_type: str
+        metadata: MetadataDecoder
+        runtime_config: RuntimeConfigurationObject
+        """
         self.metadata = metadata
         if not data:
             data = ScaleBytes(bytearray())
-        super().__init__(data, sub_type)
+        super().__init__(data, sub_type, runtime_config=runtime_config)
 
 

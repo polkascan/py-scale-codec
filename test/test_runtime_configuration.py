@@ -19,7 +19,7 @@
 
 import unittest
 
-from scalecodec.base import RuntimeConfiguration
+from scalecodec.base import RuntimeConfiguration, RuntimeConfigurationObject
 from scalecodec.type_registry import load_type_registry_preset
 
 
@@ -35,6 +35,32 @@ class TestScaleDecoderClasses(unittest.TestCase):
             self.assertIsNotNone(RuntimeConfiguration().get_decoder_class(
                 type_string), msg='"{}" didn\'t return decoding class'.format(type_string)
             )
+
+
+class TestMultipleRuntimeConfigurations(unittest.TestCase):
+
+    def test_use_config_singleton(self):
+        RuntimeConfiguration(config_id='test').update_type_registry({
+            'types': {
+                'CustomTestType': 'u8'
+            }
+        })
+        self.assertIsNone(RuntimeConfiguration().get_decoder_class('CustomTestType'))
+        self.assertIsNotNone(RuntimeConfiguration(config_id='test').get_decoder_class('CustomTestType'))
+
+    def test_multiple_instances(self):
+        runtime_config1 = RuntimeConfigurationObject()
+        runtime_config1.update_type_registry({
+            'types': {
+                'MyNewType': 'Vec<u8>'
+            }
+        })
+
+        runtime_config2 = RuntimeConfigurationObject()
+
+        self.assertIsNone(RuntimeConfiguration().get_decoder_class('MyNewType'))
+        self.assertIsNotNone(runtime_config1.get_decoder_class('MyNewType'))
+        self.assertIsNone(runtime_config2.get_decoder_class('MyNewType'))
 
 
 if __name__ == '__main__':

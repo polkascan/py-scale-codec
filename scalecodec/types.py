@@ -62,7 +62,9 @@ class Compact(ScaleType):
 
         if self.sub_type:
 
-            byte_data = self.get_decoder_class(self.sub_type, ScaleBytes(self.compact_bytes)).process()
+            byte_data = self.get_decoder_class(
+                type_string=self.sub_type, data=ScaleBytes(self.compact_bytes), runtime_config=self.runtime_config
+            ).process()
 
             if type(byte_data) is int and self.compact_length <= 4:
                 return int(byte_data / 4)
@@ -143,7 +145,7 @@ class Option(ScaleType):
     def process_encode(self, value):
 
         if value is not None and self.sub_type:
-            sub_type_obj = self.get_decoder_class(self.sub_type)
+            sub_type_obj = self.get_decoder_class(self.sub_type, runtime_config=self.runtime_config)
             return ScaleBytes('0x01') + sub_type_obj.encode(value)
 
         return ScaleBytes('0x00')
@@ -448,7 +450,9 @@ class Struct(ScaleType):
 
             for idx, (key, data_type) in enumerate(self.type_mapping):
 
-                element_obj = self.get_decoder_class(data_type, metadata=self.metadata)
+                element_obj = self.get_decoder_class(
+                    data_type, metadata=self.metadata, runtime_config=self.runtime_config
+                )
                 data += element_obj.encode(value[idx])
 
         else:
@@ -456,7 +460,9 @@ class Struct(ScaleType):
                 if key not in value:
                     raise ValueError('Element "{}" of struct is missing in given value'.format(key))
 
-                element_obj = self.get_decoder_class(data_type, metadata=self.metadata)
+                element_obj = self.get_decoder_class(
+                    type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
+                )
                 data += element_obj.encode(value[key])
 
         return data
@@ -493,7 +499,7 @@ class Set(ScaleType):
             if item in value:
                 result += set_mask
 
-        u64_obj = self.get_decoder_class(self.value_type)
+        u64_obj = self.get_decoder_class(type_string=self.value_type, runtime_config=self.runtime_config)
 
         return u64_obj.encode(result)
 
@@ -508,10 +514,10 @@ class Era(ScaleType):
     in which it is valid.
     """
 
-    def __init__(self, data=None, sub_type=None, metadata=None):
+    def __init__(self, **kwargs):
         self.period = None
         self.phase = None
-        super().__init__(data, sub_type, metadata)
+        super().__init__(**kwargs)
 
     def process(self):
 
@@ -690,7 +696,9 @@ class BoxProposal(ScaleType):
                 else:
                     param_value = value['call_args'][arg.name]
 
-                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    arg_obj = self.get_decoder_class(
+                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
+                    )
                     data += arg_obj.encode(param_value)
 
         return data
@@ -744,9 +752,9 @@ class Linkage(Struct):
 
 class GenericAccountId(H256):
 
-    def __init__(self, data=None, sub_type=None, metadata=None):
+    def __init__(self, data=None, **kwargs):
         self.ss58_address = None
-        super().__init__(data, sub_type, metadata)
+        super().__init__(data, **kwargs)
 
     def process_encode(self, value):
         if value[0:2] != '0x' and len(value) == 47:
@@ -800,7 +808,9 @@ class Vec(ScaleType):
 
         for element in value:
 
-            element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
+            element_obj = self.get_decoder_class(
+                type_string=self.sub_type, metadata=self.metadata, runtime_config=self.runtime_config
+            )
             data += element_obj.encode(element)
 
         return data
@@ -929,7 +939,9 @@ class Enum(ScaleType):
         if self.type_mapping:
             try:
                 enum_type_mapping = self.type_mapping[self.index]
-                return self.process_type('Struct', type_mapping=[enum_type_mapping]).value
+                return self.process_type(
+                    type_string='Struct', type_mapping=[enum_type_mapping]
+                ).value
 
             except IndexError:
                 raise ValueError("Index '{}' not present in Enum type mapping".format(self.index))
@@ -956,7 +968,11 @@ class Enum(ScaleType):
                 for idx, (item_key, item_value) in enumerate(self.type_mapping):
                     if item_key == enum_key:
                         self.index = idx
-                        struct_obj = self.get_decoder_class('Struct', type_mapping=[self.type_mapping[self.index]])
+                        struct_obj = self.get_decoder_class(
+                            type_string='Struct',
+                            type_mapping=[self.type_mapping[self.index]],
+                            runtime_config=self.runtime_config
+                        )
                         return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
 
                 raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
@@ -1049,7 +1065,11 @@ class Data(Enum):
                             return ScaleBytes(bytearray(data))
                     else:
 
-                        struct_obj = self.get_decoder_class('Struct', type_mapping=[self.type_mapping[self.index]])
+                        struct_obj = self.get_decoder_class(
+                            type_string='Struct',
+                            type_mapping=[self.type_mapping[self.index]],
+                            runtime_config=self.runtime_config
+                        )
                         return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
 
             raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
@@ -1272,7 +1292,9 @@ class GenericCall(ScaleType):
                 else:
                     param_value = value['call_args'][arg.name]
 
-                    arg_obj = self.get_decoder_class(arg.type, metadata=self.metadata)
+                    arg_obj = self.get_decoder_class(
+                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
+                    )
                     data += arg_obj.encode(param_value)
         return data
 
@@ -1280,7 +1302,9 @@ class GenericCall(ScaleType):
 class OpaqueCall(Bytes):
 
     def process_encode(self, value):
-        call_obj = self.get_decoder_class('Call', metadata=self.metadata)
+        call_obj = self.get_decoder_class(
+            type_string='Call', metadata=self.metadata, runtime_config=self.runtime_config
+        )
         return super().process_encode(str(call_obj.encode(value)))
 
     def process(self):
@@ -1289,7 +1313,8 @@ class OpaqueCall(Bytes):
             call_obj = self.get_decoder_class(
                 type_string='Call',
                 data=ScaleBytes('0x{}'.format(self.raw_value)),
-                metadata=self.metadata
+                metadata=self.metadata,
+                runtime_config=self.runtime_config
             )
 
             return call_obj.process()
@@ -1359,7 +1384,9 @@ class FixedLengthArray(ScaleType):
                 raise ValueError('Given value is not a list')
 
             for element_value in value:
-                element_obj = self.get_decoder_class(self.sub_type, metadata=self.metadata)
+                element_obj = self.get_decoder_class(
+                    type_string=self.sub_type, metadata=self.metadata, runtime_config=self.runtime_config
+                )
                 data += element_obj.encode(element_value)
 
             return data

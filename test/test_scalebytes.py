@@ -56,6 +56,10 @@ class TestScaleBytes(unittest.TestCase):
 
         self.assertEqual(scale_total.data, bytearray.fromhex("01020304"))
 
+    def test_scale_bytes_compare(self):
+        self.assertEqual(ScaleBytes('0x1234'), ScaleBytes('0x1234'))
+        self.assertNotEqual(ScaleBytes('0x1234'), ScaleBytes('0x555555'))
+
     def test_scale_decoder_remaining_bytes(self):
         obj = ScaleDecoder.get_decoder_class('[u8; 3]', ScaleBytes("0x010203"))
         self.assertEqual(obj.get_remaining_bytes(), b"\x01\x02\x03")
