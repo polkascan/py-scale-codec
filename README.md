@@ -76,6 +76,32 @@ RuntimeConfiguration().update_type_registry(load_type_registry_preset("default")
 RuntimeConfiguration().update_type_registry(load_type_registry_file("/path/to/type_registry.json"))
 ```
 
+## Multiple runtime configurations
+By default a singleton is used to maintain the configuration, for multiple instances: 
+
+```python
+# Kusama runtime config
+runtime_config_kusama = RuntimeConfigurationObject()
+runtime_config_kusama.update_type_registry(load_type_registry_preset("default"))
+runtime_config_kusama.update_type_registry(load_type_registry_preset("kusama"))
+
+
+# Polkadot runtime config
+runtime_config_polkadot = RuntimeConfigurationObject()
+runtime_config_polkadot.update_type_registry(load_type_registry_preset("default"))
+runtime_config_polkadot.update_type_registry(load_type_registry_preset("polkadot"))
+
+# Decode extrinsic using Kusama runtime configuration
+extrinsic = ScaleDecoder.get_decoder_class(
+    type_string='Extrinsic', 
+    data=ScaleBytes(extrinsic_data),
+    metadata=metadata_decoder, 
+    runtime_config=runtime_config_kusama
+)
+extrinsic.decode()
+
+``` 
+
 ## Using the type registry updater in your application
 
 To ensure the type registries are in sync with the current runtime of the blockchain, you can use 
