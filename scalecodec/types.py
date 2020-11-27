@@ -1334,7 +1334,7 @@ class MultiAccountId(GenericAccountId):
                 account = '0x{}'.format(ss58_decode(account))
             account_ids.append(account)
 
-        account_list_cls = cls.get_decoder_class('Vec<AccountId>')
+        account_list_cls = cls.get_decoder_class('Vec<AccountId>', runtime_config=cls.runtime_config)
         account_list_data = account_list_cls.encode(sorted(account_ids))
         threshold_data = cls.get_decoder_class("u16").encode(threshold)
 
@@ -1342,7 +1342,7 @@ class MultiAccountId(GenericAccountId):
             b"modlpy/utilisuba" + bytes(account_list_data.data) + bytes(threshold_data.data), digest_size=32
         ).digest().hex())
 
-        multi_account_obj = cls()
+        multi_account_obj = cls(runtime_config=cls.runtime_config)
         multi_account_obj.encode(multi_account_id)
 
         return multi_account_obj

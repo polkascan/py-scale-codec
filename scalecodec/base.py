@@ -91,6 +91,10 @@ class RuntimeConfigurationObject:
                         'element_count': int(type_parts[1])
                     })
 
+        if decoder_class:
+            # Attach RuntimeConfigurationObject to new class
+            decoder_class.runtime_config = self
+
         return decoder_class
 
     def clear_type_registry(self):
@@ -230,6 +234,8 @@ class ScaleDecoder(ABC):
 
     PRIMITIVES = ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128', 'i256', 'h160',
                   'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]', '&[u8]')
+
+    runtime_config = None
 
     def __init__(self, data, sub_type=None, runtime_config=None):
 
