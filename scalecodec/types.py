@@ -757,7 +757,7 @@ class GenericAccountId(H256):
         super().__init__(data, **kwargs)
 
     def process_encode(self, value):
-        if value[0:2] != '0x' and len(value) == 47:
+        if value[0:2] != '0x':
             from scalecodec.utils.ss58 import ss58_decode
             self.ss58_address = value
             value = '0x{}'.format(ss58_decode(value))
