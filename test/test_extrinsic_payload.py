@@ -1147,7 +1147,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
                         "commitments": {
                             "fees": 0,
                             "upwardMessages": [],
-                            "erasureRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "horizontalMessages": [],
+                            "headData": "",
+                            "hrmpWatermark": 1,
                             "newValidationCode": None,
                             "processedDownwardMessages": 1
                         }
@@ -1159,7 +1161,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload),
-                         "0x910304140004010000001ec24d8af5e02482f603722c203659c3373304098d26c6b65be03a2b9e79cc0d0c01234500000000000000000000000000000000000000000000000000000000000000001234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000")
+                         "0xe90204140004010000001ec24d8af5e02482f603722c203659c3373304098d26c6b65be03a2b9e79cc0d0c01234500000000000000000000000000000000000000000000000000000000000000001234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef00000000000000000000000000000000000000000000000000000000000000000000000001000000010000000000")
 
     def test_encode_registrar_deregister_para_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)

@@ -319,47 +319,6 @@
       ]
     },
     "BlockNumber": "u32",
-    "CandidateReceipt": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "parachainIndex",
-          "ParaId"
-        ],
-        [
-          "relayParent",
-          "Hash"
-        ],
-        [
-          "head_data",
-          "HeadData"
-        ],
-        [
-          "collator",
-          "CollatorId"
-        ],
-        [
-          "signature",
-          "CollatorSignature"
-        ],
-        [
-          "povBlockHash",
-          "Hash"
-        ],
-        [
-          "globalValidation",
-          "GlobalValidationSchedule"
-        ],
-        [
-          "localValidation",
-          "LocalValidationData"
-        ],
-        [
-          "commitments",
-          "CandidateCommitments"
-        ]
-      ]
-    },
     "ValidityVote": {
       "type": "struct",
       "type_mapping": [
@@ -1690,6 +1649,19 @@
         [
           "sub",
           "SubId"
+        ]
+      ]
+    },
+    "OutboundHrmpMessage": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "recipient",
+          "u32"
+        ],
+        [
+          "data",
+          "Bytes"
         ]
       ]
     },
@@ -4849,6 +4821,70 @@
         ]
       ]
     },
+    "AssetBalance": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "balance",
+          "TAssetBalance"
+        ],
+        [
+          "isFrozen",
+          "bool"
+        ],
+        [
+          "isZombie",
+          "bool"
+        ]
+      ]
+    },
+    "AssetDetails": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "owner",
+          "AccountId"
+        ],
+        [
+          "issuer",
+          "AccountId"
+        ],
+        [
+          "admin",
+          "AccountId"
+        ],
+        [
+          "freezer",
+          "AccountId"
+        ],
+        [
+          "supply",
+          "TAssetBalance"
+        ],
+        [
+          "deposit",
+          "TAssetDepositBalance"
+        ],
+        [
+          "maxZombies",
+          "u32"
+        ],
+        [
+          "minBalance",
+          "TAssetBalance"
+        ],
+        [
+          "zombies",
+          "u32"
+        ],
+        [
+          "accounts",
+          "u32"
+        ]
+      ]
+    },
+    "TAssetBalance": "Balance",
+    "TAssetDepositBalance": "BalanceOf",
     "CreatedBlock": {
       "type": "struct",
       "type_mapping": [
@@ -5007,28 +5043,133 @@
         ]
       ]
     },
-    "CandidateCommitments": {
+    "BackedCandidate": {
       "type": "struct",
       "type_mapping": [
         [
-          "fees",
-          "Balance"
+          "candidate",
+          "CommittedCandidateReceipt"
         ],
+        [
+          "validityVotes",
+          "Vec<ValidityAttestation>"
+        ],
+        [
+          "validatorIndices",
+          "BitVec"
+        ]
+      ]
+    },
+    "CandidateCommitments": {
+      "type": "struct",
+      "type_mapping": [
         [
           "upwardMessages",
           "Vec<UpwardMessage>"
         ],
         [
-          "erasureRoot",
-          "Hash"
+          "horizontalMessages",
+          "Vec<OutboundHrmpMessage>"
         ],
         [
           "newValidationCode",
           "Option<ValidationCode>"
         ],
         [
+          "headData",
+          "HeadData"
+        ],
+        [
           "processedDownwardMessages",
           "u32"
+        ],
+        [
+          "hrmpWatermark",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "CandidateDescriptor": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "paraId",
+          "u32"
+        ],
+        [
+          "relayParent",
+          "Hash"
+        ],
+        [
+          "collatorId",
+          "Hash"
+        ],
+        [
+          "persistedValidationDataHash",
+          "Hash"
+        ],
+        [
+          "povHash",
+          "Hash"
+        ],
+        [
+          "erasureRoot",
+          "Hash"
+        ],
+        [
+          "signature",
+          "Signature"
+        ]
+      ]
+    },
+    "CandidatePendingAvailablility": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "core",
+          "u32"
+        ],
+        [
+          "descriptor",
+          "CandidateDescriptor"
+        ],
+        [
+          "availabilityVotes",
+          "BitVec"
+        ],
+        [
+          "relayParentNumber",
+          "BlockNumber"
+        ],
+        [
+          "backedInNumber",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "CandidateReceipt": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "descriptor",
+          "CandidateDescriptor"
+        ],
+        [
+          "commitmentsHash",
+          "Hash"
+        ]
+      ]
+    },
+    "CommittedCandidateReceipt": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "descriptor",
+          "CandidateDescriptor"
+        ],
+        [
+          "commitments",
+          "CandidateCommitments"
         ]
       ]
     },
@@ -5063,6 +5204,19 @@
       ]
     },
     "HeadData": "Bytes",
+    "HrmpChannelId": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "sender",
+          "u32"
+        ],
+        [
+          "receiver",
+          "u32"
+        ]
+      ]
+    },
     "LocalValidationData": {
       "type": "struct",
       "type_mapping": [
@@ -5110,19 +5264,25 @@
         "Dynamic"
       ]
     },
-    "UpwardMessage": {
+    "SignedAvailabilityBitfield": {
       "type": "struct",
       "type_mapping": [
         [
-          "origin",
-          "ParachainDispatchOrigin"
+          "payload",
+          "BitVec"
         ],
         [
-          "data",
-          "Vec<u8>"
+          "validatorIndex",
+          "u32"
+        ],
+        [
+          "signature",
+          "Signature"
         ]
       ]
     },
+    "SignedAvailabilityBitfields": "Vec<SignedAvailabilityBitfield>",
+    "UpwardMessage": "Bytes",
     "AssetOptions": {
       "type": "struct",
       "type_mapping": [
