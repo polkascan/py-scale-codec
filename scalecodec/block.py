@@ -22,7 +22,7 @@ from scalecodec.metadata import MetadataDecoder
 from scalecodec.types import Vec, Enum, Bytes, Struct
 
 
-class ExtrinsicsDecoder(ScaleDecoder):
+class Extrinsic(ScaleDecoder):
     type_mapping = (
         ('extrinsic_length', 'Compact<u32>'),
         ('version_info', 'u8'),
@@ -286,17 +286,13 @@ class ExtrinsicsDecoder(ScaleDecoder):
 
         return data
 
+    def __repr__(self):
+        return "<{}(hash={})>".format(self.__class__.__name__, self.extrinsic_hash)
 
-class ExtrinsicsBlock61181Decoder(ExtrinsicsDecoder):
-    type_mapping = (
-        ('extrinsic_length', 'Compact<u32>'),
-        ('version_info', 'u8'),
-        ('address', 'Address'),
-        ('signature', 'Signature'),
-        ('nonce', 'u64'),
-        ('era', 'Era'),
-        ('call_index', '(u8,u8)'),
-    )
+
+# Deprecated
+class ExtrinsicsDecoder(Extrinsic):
+    pass
 
 
 class EventsDecoder(Vec):

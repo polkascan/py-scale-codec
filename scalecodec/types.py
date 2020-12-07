@@ -1066,11 +1066,10 @@ class Data(Enum):
                     else:
 
                         struct_obj = self.get_decoder_class(
-                            type_string='Struct',
-                            type_mapping=[self.type_mapping[self.index]],
+                            type_string=self.type_mapping[self.index][1],
                             runtime_config=self.runtime_config
                         )
-                        return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
+                        return ScaleBytes(bytearray([self.index + 32])) + struct_obj.encode(enum_value)
 
             raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
