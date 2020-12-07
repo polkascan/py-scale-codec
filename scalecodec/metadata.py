@@ -24,6 +24,7 @@ class MetadataDecoder(ScaleDecoder):
         self.metadata = None
         self.call_index = None
         self.event_index = None
+        self.error_index = {}
         super().__init__(data, **kwargs)
 
     def process(self):
@@ -53,6 +54,20 @@ class MetadataDecoder(ScaleDecoder):
             self.call_index = self.metadata.call_index
             self.event_index = self.metadata.event_index
 
+            # Create error index
+            if self.version.index >= 12:
+                for module in self.metadata.modules:
+                    if len(module.errors or []) > 0:
+                        for idx, error in enumerate(module.errors):
+                            self.error_index[f'{module.index}-{idx}'] = error
+            else:
+                error_module_index = 0
+                for module in self.metadata.modules:
+                    if len(module.errors or []) > 0:
+                        for idx, error in enumerate(module.errors):
+                            self.error_index[f'{error_module_index}-{idx}'] = error
+                        error_module_index += 1
+
             return self.metadata.value
 
         else:
@@ -66,6 +81,9 @@ class MetadataDecoder(ScaleDecoder):
             self.event_index = self.metadata.event_index
 
             return self.metadata.value
+
+    def get_module_error(self, module_index, error_index):
+        return self.error_index.get(f'{module_index}-{error_index}')
 
 
 class MetadataV4Decoder(ScaleDecoder):
