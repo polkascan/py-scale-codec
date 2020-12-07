@@ -21,7 +21,10 @@ import json
 def load_type_registry_preset(name):
     module_path = os.path.dirname(__file__)
     path = os.path.join(module_path, '{}.json'.format(name))
-    return load_type_registry_file(path)
+    try:
+        return load_type_registry_file(path)
+    except FileNotFoundError:
+        return None
 
 
 def load_type_registry_file(file_path):

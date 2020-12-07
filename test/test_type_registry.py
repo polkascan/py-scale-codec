@@ -220,5 +220,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
                                 )
                             )
 
+    def test_not_existing_type_registry_preset(self):
+        self.assertIsNone(load_type_registry_preset('unknown'))
 
 
