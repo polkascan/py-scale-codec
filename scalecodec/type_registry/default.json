@@ -1354,6 +1354,7 @@
         ]
       ]
     },
+    "ConsumedWeight": "PerDispatchClass",
     "Digest": {
       "type": "struct",
       "type_mapping": [
@@ -1779,6 +1780,27 @@
         ]
       ]
     },
+    "WeightPerClass": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "baseExtrinsic",
+          "Weight"
+        ],
+        [
+          "maxExtrinsic",
+          "Weight"
+        ],
+        [
+          "maxTotal",
+          "Option<Weight>"
+        ],
+        [
+          "reserved",
+          "Option<Weight>"
+        ]
+      ]
+    },
     "VestingInfo": {
       "type": "struct",
       "type_mapping": [
@@ -2089,6 +2111,23 @@
         [
           "Open",
           "BlockNumber"
+        ]
+      ]
+    },
+    "PerDispatchClass": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "normal",
+          "WeightPerClass"
+        ],
+        [
+          "operational",
+          "WeightPerClass"
+        ],
+        [
+          "mandatory",
+          "WeightPerClass"
         ]
       ]
     },
@@ -3930,6 +3969,23 @@
         [
           "data",
           "AccountData"
+        ]
+      ]
+    },
+    "BlockWeights": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "baseBlock",
+          "Weight"
+        ],
+        [
+          "maxBlock",
+          "Weight"
+        ],
+        [
+          "perClass",
+          "PerDispatchClass"
         ]
       ]
     },
