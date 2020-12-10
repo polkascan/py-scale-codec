@@ -222,7 +222,7 @@ class TestScaleTypes(unittest.TestCase):
     def test_box_call(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
-        scale_value = ScaleBytes("0x0400ff6e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402070010a5d4e8")
+        scale_value = ScaleBytes("0x0400006e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402070010a5d4e8")
 
         obj = ScaleDecoder.get_decoder_class('Box<Call>', scale_value, metadata=self.metadata_decoder)
         value = obj.decode()

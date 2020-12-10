@@ -1411,12 +1411,14 @@ class GenericMultiAddress(Enum):
         value = super().process()
         self.account_length = self.index
         if self.index == 0:
-            self.account_id = list(value.values())[0][2:]
+            value = list(value.values())[0]
+            self.account_id = value[2:]
+            return value
         elif self.index == 1:
             self.account_index = list(value.values())[0]
+            return self.account_index
         else:
             raise NotImplementedError("Address type not yet supported")
-        return value
 
     def process_encode(self, value):
 
