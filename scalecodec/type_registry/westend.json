@@ -83,6 +83,63 @@
       "types": {
         "CompactAssignments": "CompactAssignmentsFrom258"
       }
+    },
+    {
+      "runtime_range": [1, 44],
+      "types": {
+        "Heartbeat": {
+          "type": "struct",
+          "type_mapping": [
+             ["blockNumber", "BlockNumber"],
+             ["networkState", "OpaqueNetworkState"],
+             ["sessionIndex", "SessionIndex"],
+             ["authorityIndex", "AuthIndex"]
+          ]
+        },
+        "DispatchInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["weight", "Weight"],
+             ["class", "DispatchClass"],
+             ["paysFee", "bool"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [45, null],
+      "types": {
+        "Heartbeat": {
+          "type": "struct",
+          "type_mapping": [
+             ["blockNumber", "BlockNumber"],
+             ["networkState", "OpaqueNetworkState"],
+             ["sessionIndex", "SessionIndex"],
+             ["authorityIndex", "AuthIndex"],
+             ["validatorsLen", "u32"]
+          ]
+        },
+        "DispatchInfo": {
+          "type": "struct",
+          "type_mapping": [
+             ["weight", "Weight"],
+             ["class", "DispatchClass"],
+             ["paysFee", "Pays"]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [1, 44],
+      "types": {
+        "Weight": "u32"
+      }
+    },
+    {
+      "runtime_range": [45, null],
+      "types": {
+        "Weight": "u64"
+      }
     }
   ]
 }
