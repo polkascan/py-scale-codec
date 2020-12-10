@@ -379,7 +379,7 @@ class TestScaleTypes(unittest.TestCase):
         data = obj.encode(ss58_address)
         decode_obj = ScaleDecoder.get_decoder_class('Multiaddress', data=data)
 
-        self.assertEqual(decode_obj.decode(), {"Id": "0x{}".format(public_key)})
+        self.assertEqual(decode_obj.decode(), f'0x{public_key}')
 
     def test_multiaddress_ss58_index_as_str(self):
         obj = ScaleDecoder.get_decoder_class('Multiaddress')
@@ -390,7 +390,7 @@ class TestScaleTypes(unittest.TestCase):
         data = obj.encode(ss58_address)
         decode_obj = ScaleDecoder.get_decoder_class('Multiaddress', data=data)
 
-        self.assertEqual(decode_obj.decode(), {"Index": index_id})
+        self.assertEqual(decode_obj.decode(), index_id)
 
     def test_ss58_encode_index(self):
         self.assertEqual(ss58_encode_account_index(0), 'F7Hs')
