@@ -3605,7 +3605,7 @@
       ]
     },
     "AccountIndex": "GenericAccountIndex",
-    "Address": "GenericAddress",
+    "Address": "MultiAddress",
     "AssetId": "u32",
     "Justification": "Bytes",
     "StorageData": "Bytes",

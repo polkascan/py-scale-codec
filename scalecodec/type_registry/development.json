@@ -1,0 +1,29 @@
+{
+  "runtime_id": 260,
+  "types": {
+    "Keys": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"],
+         ["authority_discovery", "AccountId"],
+         ["parachains", "AccountId"]
+      ]
+    }
+  },
+  "versioning": [
+    {
+      "runtime_range": [0, 259],
+      "types": {
+        "Address": "GenericAddress"
+      }
+    },
+    {
+      "runtime_range": [260, null],
+      "types": {
+        "Address": "MultiAddress"
+      }
+    }
+  ]
+}

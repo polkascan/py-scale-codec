@@ -1,6 +1,7 @@
 {
   "runtime_id": 11,
   "types": {
+    "Address": "GenericAddress",
     "BlockNumber": "U32",
     "Weight": "u64",
     "DispatchInfo": {
