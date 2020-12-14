@@ -10,7 +10,8 @@
          ["authority_discovery", "AccountId"],
          ["parachains", "AccountId"]
       ]
-    }
+    },
+    "ContractExecResult": "ContractExecResultTo260"
   },
   "versioning": [
     {

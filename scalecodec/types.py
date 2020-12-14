@@ -423,7 +423,7 @@ class H512(ScaleType):
 
 class Struct(ScaleType):
 
-    def __init__(self, data, type_mapping=None, **kwargs):
+    def __init__(self, data=None, type_mapping=None, **kwargs):
 
         if type_mapping:
             self.type_mapping = type_mapping
@@ -921,7 +921,7 @@ class Enum(ScaleType):
     value_list = []
     type_mapping = None
 
-    def __init__(self, data, value_list=None, type_mapping=None, **kwargs):
+    def __init__(self, data=None, value_list=None, type_mapping=None, **kwargs):
 
         self.index = None
 
@@ -1296,6 +1296,21 @@ class GenericCall(ScaleType):
                     )
                     data += arg_obj.encode(param_value)
         return data
+
+
+class GenericContractExecResult(Enum):
+    def __init__(self, data=None, data_scale_type=None, **kwargs):
+        self.data_scale_type = data_scale_type
+        super().__init__(data, **kwargs)
+
+    def process_encode(self, value):
+
+        if self.data_scale_type is None:
+            raise ValueError("Encoding is not possible because data_scale_type is not set")
+
+        if 'success' in value:
+            value = {'Success': value['success']}
+        return super().process_encode(value)
 
 
 class OpaqueCall(Bytes):

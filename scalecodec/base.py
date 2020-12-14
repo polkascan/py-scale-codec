@@ -112,18 +112,33 @@ class RuntimeConfigurationObject:
                 # Create dynamic decoder class
                 if decoder_class_data['type'] == 'struct':
 
-                    decoder_class = type(type_string, (Struct,), {'type_mapping': decoder_class_data['type_mapping']})
+                    if decoder_class_data.get('base_class'):
+                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
+                    else:
+                        base_cls = Struct
+
+                    decoder_class = type(type_string, (base_cls,), {'type_mapping': decoder_class_data['type_mapping']})
 
                 elif decoder_class_data['type'] == 'enum':
 
-                    decoder_class = type(type_string, (Enum,), {
+                    if decoder_class_data.get('base_class'):
+                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
+                    else:
+                        base_cls = Enum
+
+                    decoder_class = type(type_string, (base_cls,), {
                         'value_list': decoder_class_data.get('value_list'),
                         'type_mapping': decoder_class_data.get('type_mapping')
                     })
 
                 elif decoder_class_data['type'] == 'set':
 
-                    decoder_class = type(type_string, (Set,), {
+                    if decoder_class_data.get('base_class'):
+                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
+                    else:
+                        base_cls = Set
+
+                    decoder_class = type(type_string, (base_cls,), {
                         'value_list': decoder_class_data.get('value_list'),
                         'value_type': decoder_class_data.get('value_type', 'u64')
                     })
@@ -220,6 +235,9 @@ class ScaleBytes:
 
         if type(data) == bytearray:
             return ScaleBytes(self.data + data)
+
+    def to_hex(self):
+        return f'0x{self.data.hex()}'
 
 
 class ScaleDecoder(ABC):
@@ -321,9 +339,12 @@ class ScaleDecoder(ABC):
     def __repr__(self):
         return "<{}(value={})>".format(self.__class__.__name__, self.value)
 
-    def encode(self, value):
-        self.value = value
-        self.data = self.process_encode(value)
+    def encode(self, value=None):
+
+        if value is not None:
+            self.value = value
+
+        self.data = self.process_encode(self.value)
         return self.data
 
     def process_encode(self, value):

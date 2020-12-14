@@ -2833,13 +2833,14 @@
           "Bytes"
         ],
         [
-          "gasConsumed",
+          "gas_consumed",
           "u64"
         ]
       ]
     },
     "ContractExecResultTo260": {
       "type": "enum",
+      "base_class": "GenericContractExecResult",
       "type_mapping": [
         [
           "Success",
