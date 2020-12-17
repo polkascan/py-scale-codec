@@ -1244,6 +1244,7 @@
     "<AuthorityId as RuntimeAppPublic>::Signature": "AuthoritySignature",
     "&[u8]": "Bytes",
     "Text": "Bytes",
+    "Str": "Bytes",
     "Forcing": {
       "type": "enum",
       "value_list": [
