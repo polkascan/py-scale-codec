@@ -1301,7 +1301,21 @@ class GenericCall(ScaleType):
 class GenericContractExecResult(Enum):
     def __init__(self, data=None, data_scale_type=None, **kwargs):
         self.data_scale_type = data_scale_type
+        self.gas_consumed = None
+        self.flags = None
+        self.contract_result_data = None
         super().__init__(data, **kwargs)
+
+    def process(self):
+        value = super().process()
+        self.process_contract_result()
+        return value
+
+    def process_contract_result(self):
+        if 'success' in self.value:
+            self.gas_consumed = self.value['success']['gas_consumed']
+            self.flags = self.value['success']['flags']
+            self.contract_result_data = self.value['success']['data']
 
     def process_encode(self, value):
 
