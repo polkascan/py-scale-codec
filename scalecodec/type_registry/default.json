@@ -891,6 +891,31 @@
         "Dynamic"
       ]
     },
+    "PersistedValidationData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "parentHead",
+          "HeadData"
+        ],
+        [
+          "blockNumber",
+          "BlockNumber"
+        ],
+        [
+          "hrmpMqcHeads",
+          "Vec<(u32, Hash)>"
+        ],
+        [
+          "dmqMqcHead",
+          "Hash"
+        ],
+        [
+          "maxPovSize",
+          "u32"
+        ]
+      ]
+    },
     "ParaInfo": {
       "type": "struct",
       "type_mapping": [
@@ -1171,6 +1196,31 @@
       ]
     },
     "SubId": "u32",
+    "TransientValidationData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "maxCodeSize",
+          "u32"
+        ],
+        [
+          "maxHeadDataSize",
+          "u32"
+        ],
+        [
+          "balance",
+          "Balance"
+        ],
+        [
+          "codeUpgradeAllowed",
+          "Option<BlockNumber>"
+        ],
+        [
+          "dmqLength",
+          "u32"
+        ]
+      ]
+    },
     "UncleEntryItem<BlockNumber, Hash, AccountId>": {
       "type": "enum",
       "value_list": [
@@ -2217,6 +2267,19 @@
       ]
     },
     "ValidationCode": "Bytes",
+    "ValidationData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "persisted",
+          "PersistedValidationData"
+        ],
+        [
+          "transient",
+          "TransientValidationData"
+        ]
+      ]
+    },
     "ParaPastCodeMeta": {
       "type": "struct",
       "type_mapping": [
