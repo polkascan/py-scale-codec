@@ -165,12 +165,10 @@ class Extrinsic(ScaleDecoder):
                 self.params.append({
                     'name': arg.name,
                     'type': arg.type,
-                    'value': arg_type_obj.serialize(),
-                    'valueRaw': arg_type_obj.raw_value
+                    'value': arg_type_obj.serialize()
                 })
 
         result = {
-            'valueRaw': self.raw_value,
             'extrinsic_length': self.extrinsic_length,
             'version_info': self.version_info,
         }
@@ -347,8 +345,7 @@ class GenericEvent(ScaleDecoder):
 
             self.params.append({
                 'type': arg_type,
-                'value': arg_type_obj.serialize(),
-                'valueRaw': arg_type_obj.raw_value
+                'value': arg_type_obj.serialize()
             })
 
         return {
@@ -398,8 +395,7 @@ class EventRecord(ScaleDecoder):
 
             self.params.append({
                 'type': arg_type,
-                'value': arg_type_obj.serialize(),
-                'valueRaw': arg_type_obj.raw_value
+                'value': arg_type_obj.serialize()
             })
 
         # Topics introduced since MetadataV5

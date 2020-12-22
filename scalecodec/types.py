@@ -654,8 +654,7 @@ class BoxProposal(ScaleType):
             self.call_args.append({
                 'name': arg.name,
                 'type': arg.type,
-                'value': arg_type_obj.serialize(),
-                'valueRaw': arg_type_obj.raw_value
+                'value': arg_type_obj.serialize()
             })
 
         return {
@@ -1245,8 +1244,7 @@ class GenericCall(ScaleType):
             self.call_args.append({
                 'name': arg.name,
                 'type': arg.type,
-                'value': arg_type_obj.serialize(),
-                'valueRaw': arg_type_obj.raw_value
+                'value': arg_type_obj.serialize()
             })
 
         return {
