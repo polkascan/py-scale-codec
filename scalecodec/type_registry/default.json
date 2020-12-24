@@ -1,5 +1,6 @@
 {
   "types": {
+    "()": "Null",
     "Balance": "u128",
     "BalanceOf": "Balance",
     "Block": "GenericBlock",
@@ -2980,23 +2981,7 @@
         ]
       ]
     },
-    "ContractExecResult": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "gasConsumed",
-          "u64"
-        ],
-        [
-          "debugMessage",
-          "Text"
-        ],
-        [
-          "result",
-          "ContractExecResultResult"
-        ]
-      ]
-    },
+    "ContractExecResult": "ContractExecResultTo260",
     "ContractStorageKey": "[u8; 32]",
     "HostFnWeights": {
       "type": "struct",

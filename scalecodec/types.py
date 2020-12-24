@@ -1297,8 +1297,8 @@ class GenericCall(ScaleType):
 
 
 class GenericContractExecResult(Enum):
-    def __init__(self, data=None, data_scale_type=None, **kwargs):
-        self.data_scale_type = data_scale_type
+    def __init__(self, data=None, contract_result_scale_type=None, **kwargs):
+        self.contract_result_scale_type = contract_result_scale_type
         self.gas_consumed = None
         self.flags = None
         self.contract_result_data = None
@@ -1317,8 +1317,8 @@ class GenericContractExecResult(Enum):
 
     def process_encode(self, value):
 
-        if self.data_scale_type is None:
-            raise ValueError("Encoding is not possible because data_scale_type is not set")
+        if self.contract_result_scale_type is None:
+            raise ValueError("Encoding is not possible because 'contract_result_scale_type' is not set")
 
         if 'success' in value:
             value = {'Success': value['success']}
