@@ -32,9 +32,24 @@ class TestScaleDecoderClasses(unittest.TestCase):
 
     def test_valid_decoding_classes(self):
         for type_string in RuntimeConfiguration().type_registry['types'].keys():
-            self.assertIsNotNone(RuntimeConfiguration().get_decoder_class(
-                type_string), msg='"{}" didn\'t return decoding class'.format(type_string)
-            )
+
+            decoding_cls = RuntimeConfiguration().get_decoder_class(type_string)
+
+            self.assertIsNotNone(decoding_cls, msg='"{}" didn\'t return decoding class'.format(type_string))
+
+            # Try to decode type mapping if present
+            if decoding_cls.type_mapping:
+                for name, sub_type_string in decoding_cls.type_mapping:
+                    sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_type_string)
+
+                    self.assertIsNotNone(sub_decoding_cls,
+                                         msg=f' Sub type "{sub_type_string}" didn\'t return decoding class')
+
+                    # Try to decode sub_type if present
+                    if sub_decoding_cls.sub_type:
+                        sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_decoding_cls.sub_type)
+                        self.assertIsNotNone(sub_decoding_cls,
+                                             msg=f' Sub type "{decoding_cls.sub_type}" didn\'t return decoding class')
 
 
 class TestMultipleRuntimeConfigurations(unittest.TestCase):

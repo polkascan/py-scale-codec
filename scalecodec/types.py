@@ -310,6 +310,19 @@ class U128(ScaleType):
             raise ValueError('{} out of range for u128'.format(value))
 
 
+class U256(ScaleType):
+
+    def process(self):
+        return int(int.from_bytes(self.get_next_bytes(32), byteorder='little'))
+
+    def process_encode(self, value):
+
+        if 0 <= int(value) <= 2**256 - 1:
+            return ScaleBytes(bytearray(int(value).to_bytes(32, 'little')))
+        else:
+            raise ValueError('{} out of range for u256'.format(value))
+
+
 class I8(ScaleType):
 
     def process(self):
