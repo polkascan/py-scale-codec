@@ -405,6 +405,11 @@ class TestScaleTypes(unittest.TestCase):
         data = obj.encode(0b111)
         self.assertEqual(data.to_hex(), '0x0c07')
 
+    def test_bitvec_encode_zero_int(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode(0)
+        self.assertEqual(data.to_hex(), '0x00')
+
     def test_bitvec_encode_bytes(self):
         obj = ScaleDecoder.get_decoder_class('BitVec')
         data = obj.encode(b'\x07')
@@ -414,6 +419,16 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('BitVec')
         data = obj.encode('0x07')
         self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_list(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode([7])
+        self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_empty_list(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode([])
+        self.assertEqual(data.to_hex(), '0x00')
 
     def test_bitvec_encode_large_int(self):
         obj = ScaleDecoder.get_decoder_class('BitVec')

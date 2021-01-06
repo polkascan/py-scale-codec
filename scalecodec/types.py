@@ -845,11 +845,17 @@ class BitVec(ScaleType):
         if type(value) is str:
             value = bytes.fromhex(value[2:])
 
+        if type(value) is list:
+            value = bytes(value)
+
         if type(value) is bytes:
             value = int.from_bytes(value, 'little')
 
         if type(value) is not int:
             raise ValueError("Provided value is not of type int, hex string or bytes")
+
+        if value == 0:
+            return ScaleBytes(b'\x00')
 
         # determine length in bits
         length = int(math.log2(value)+1)
