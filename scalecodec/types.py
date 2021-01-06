@@ -841,7 +841,26 @@ class BitVec(ScaleType):
         return f'0x{self.get_next_bytes(total).hex()}'
 
     def process_encode(self, value):
-        raise NotImplementedError("Encoding not implemented for this ScaleType")
+
+        if type(value) is str:
+            value = bytes.fromhex(value[2:])
+
+        if type(value) is bytes:
+            value = int.from_bytes(value, 'little')
+
+        if type(value) is not int:
+            raise ValueError("Provided value is not of type int, hex string or bytes")
+
+        # determine length in bits
+        length = int(math.log2(value)+1)
+
+        # encode the length in a compact u32
+        compact_obj = CompactU32()
+        data = compact_obj.encode(length)
+
+        byte_length = math.ceil(length / 8)
+
+        return data + value.to_bytes(length=byte_length, byteorder='little')
 
 
 class GenericAddress(ScaleType):

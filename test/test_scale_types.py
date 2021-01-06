@@ -394,3 +394,34 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_ss58_encode_index(self):
         self.assertEqual(ss58_encode_account_index(0), 'F7Hs')
+
+    def test_bitvec_decode(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0c07'))
+        obj.decode()
+        self.assertEqual(obj.value, '0x07')
+
+    def test_bitvec_encode_int(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode(0b111)
+        self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_bytes(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode(b'\x07')
+        self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_str(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode('0x07')
+        self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_large_int(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode(0b101010101010101)
+        self.assertEqual(data.to_hex(), '0x3c5555')
+
+    def test_bitvec_decode_large_int(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x3c5555'))
+        obj.decode()
+        self.assertEqual(obj.value, '0x5555')
+
