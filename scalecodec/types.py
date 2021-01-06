@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import math
 from datetime import datetime
 from hashlib import blake2b
 
@@ -828,10 +828,20 @@ class Vec(ScaleType):
         return data
 
 
-class BitVec(Vec):
-    # TODO: A BitVec that represents an array of bits. The bits are however stored encoded. The difference between this
-    #  * and a normal Bytes would be that the length prefix indicates the number of bits encoded, not the bytes
-    pass
+class BitVec(ScaleType):
+    """
+    A BitVec that represents an array of bits. The bits are however stored encoded. The difference between this
+    and a normal Bytes would be that the length prefix indicates the number of bits encoded, not the bytes
+    """
+    def process(self):
+        length_obj = self.process_type('Compact<u32>')
+
+        total = math.ceil(length_obj.value / 8)
+
+        return f'0x{self.get_next_bytes(total).hex()}'
+
+    def process_encode(self, value):
+        raise NotImplementedError("Encoding not implemented for this ScaleType")
 
 
 class GenericAddress(ScaleType):
