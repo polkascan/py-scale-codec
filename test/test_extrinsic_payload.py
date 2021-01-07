@@ -58,7 +58,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(call_function.name, 'transfer')
 
         # Check destination address for balance transfer
-        self.assertEqual(extrinsic.params[0]['type'], 'Address')
+        self.assertEqual(extrinsic.params[0]['type'], 'LookupSource')
         self.assertEqual(extrinsic.params[0]['value'],
                          '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409')
 

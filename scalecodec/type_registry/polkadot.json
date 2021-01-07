@@ -2,6 +2,7 @@
   "runtime_id": 26,
   "types": {
     "Address": "AccountIdAddress",
+    "LookupSource": "AccountIdAddress",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",

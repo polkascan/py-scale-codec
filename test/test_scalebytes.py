@@ -74,7 +74,6 @@ class TestScaleBytes(unittest.TestCase):
         self.assertEqual(str(obj), "Test")
 
     def test_type_convert(self):
-        self.assertEqual(ScaleDecoder.convert_type("RawAddress"), "Address")
         self.assertEqual(ScaleDecoder.convert_type("<Balance as HasCompact>::Type"), "Compact<Balance>")
         self.assertEqual(ScaleDecoder.convert_type("<BlockNumber as HasCompact>::Type"), "Compact<BlockNumber>")
         self.assertEqual(ScaleDecoder.convert_type("<Moment as HasCompact>::Type"), "Compact<Moment>")

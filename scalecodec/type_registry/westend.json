@@ -2,6 +2,7 @@
   "runtime_id": 45,
   "types": {
     "Address": "AccountIdAddress",
+    "LookupSource": "AccountIdAddress",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "SessionKeysPolkadot": {

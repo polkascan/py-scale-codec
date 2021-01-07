@@ -17,13 +17,15 @@
     {
       "runtime_range": [0, 259],
       "types": {
-        "Address": "GenericAddress"
+        "Address": "GenericAddress",
+        "LookupSource": "GenericAddress"
       }
     },
     {
       "runtime_range": [260, null],
       "types": {
-        "Address": "MultiAddress"
+        "Address": "MultiAddress",
+        "LookupSource": "MultiAddress"
       }
     }
   ]

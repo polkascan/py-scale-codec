@@ -4245,6 +4245,7 @@
     },
     "KeyTypeId": "u32",
     "LookupSource": "Address",
+
     "LookupTarget": "AccountId",
     "Perbill": "u32",
     "Permill": "u32",

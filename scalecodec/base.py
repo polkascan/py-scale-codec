@@ -60,22 +60,18 @@ class RuntimeConfigurationObject:
 
         if name == '()':
             return "Null"
-        if name in ['Vec<u8>', '&[u8]']:
+        if name.lower() in ['vec<u8>', '&[u8]']:
             return "Bytes"
-        if name == '<Lookup as StaticLookup>::Source':
-            return 'Address'
-        if name == 'Vec<<Lookup as StaticLookup>::Source>':
-            return 'Vec<Address>'
-        if name == '<Balance as HasCompact>::Type':
+        if name.lower() == '<lookup as staticlookup>::source':
+            return 'LookupSource'
+        if name.lower() == '<balance as hascompact>::type':
             return 'Compact<Balance>'
-        if name == '<BlockNumber as HasCompact>::Type':
+        if name.lower() == '<blocknumber as hascompact>::type':
             return 'Compact<BlockNumber>'
-        if name == '<Moment as HasCompact>::Type':
+        if name.lower() == '<moment as hascompact>::type':
             return 'Compact<Moment>'
-        if name == '<InherentOfflineReport as InherentOfflineReport>::Inherent':
+        if name.lower() == '<inherentofflinereport as inherentofflinereport>::inherent':
             return 'InherentOfflineReport'
-        if name == 'RawAddress':
-            return 'Address'
 
         return name
 
@@ -429,7 +425,6 @@ class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
     pass
 
 
-# TODO move type_string and sub_type behaviour to this sub class
 class ScaleType(ScaleDecoder, ABC):
 
     def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):

@@ -2,6 +2,7 @@
   "runtime_id": 1,
   "types": {
     "Address": "AccountIdAddress",
+    "LookupSource": "AccountIdAddress",
     "Keys": {
       "type": "struct",
       "type_mapping": [
