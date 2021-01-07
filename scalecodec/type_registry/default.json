@@ -894,6 +894,23 @@
         ]
       ]
     },
+    "ParaGenesisArgs": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "genesisHead",
+          "Bytes"
+        ],
+        [
+          "validationCode",
+          "Bytes"
+        ],
+        [
+          "parachain",
+          "bool"
+        ]
+      ]
+    },
     "ParaId": "u32",
     "ParaIdOf": "ParaId",
     "ParaScheduling": {

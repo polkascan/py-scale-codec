@@ -48,7 +48,40 @@ class RuntimeConfigurationObject:
         self.clear_type_registry()
         self.active_spec_version_id = None
 
+    @classmethod
+    def convert_type_string(cls, name):
+
+        name = re.sub(r'T::', "", name)
+        name = re.sub(r'<T>', "", name)
+        name = re.sub(r'<T as Trait>::', "", name)
+        name = re.sub(r'<T as Config>::', "", name)
+        name = re.sub(r'\n', "", name)
+        name = re.sub(r'(grandpa|session|slashing)::', "", name)
+
+        if name == '()':
+            return "Null"
+        if name in ['Vec<u8>', '&[u8]']:
+            return "Bytes"
+        if name == '<Lookup as StaticLookup>::Source':
+            return 'Address'
+        if name == 'Vec<<Lookup as StaticLookup>::Source>':
+            return 'Vec<Address>'
+        if name == '<Balance as HasCompact>::Type':
+            return 'Compact<Balance>'
+        if name == '<BlockNumber as HasCompact>::Type':
+            return 'Compact<BlockNumber>'
+        if name == '<Moment as HasCompact>::Type':
+            return 'Compact<Moment>'
+        if name == '<InherentOfflineReport as InherentOfflineReport>::Inherent':
+            return 'InherentOfflineReport'
+        if name == 'RawAddress':
+            return 'Address'
+
+        return name
+
     def get_decoder_class(self, type_string, spec_version_id='default'):
+
+        type_string = self.convert_type_string(type_string)
 
         decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
 
@@ -366,8 +399,6 @@ class ScaleDecoder(ABC):
         ScaleType
         """
 
-        type_string = cls.convert_type(type_string)
-
         if not runtime_config:
             runtime_config = RuntimeConfiguration()
 
@@ -389,36 +420,9 @@ class ScaleDecoder(ABC):
     def serialize(self):
         return self.value
 
-    # TODO convert to TYPE_ALIAS per class Address: TYPE_ALIAS = ('<Lookup as StaticLookup>::Source',)
     @classmethod
     def convert_type(cls, name):
-
-        name = re.sub(r'T::', "", name)
-        name = re.sub(r'<T>', "", name)
-        name = re.sub(r'<T as Trait>::', "", name)
-        name = re.sub(r'\n', "", name)
-        name = re.sub(r'(grandpa|session|slashing)::', "", name)
-
-        if name == '()':
-            return "Null"
-        if name in ['Vec<u8>', '&[u8]']:
-            return "Bytes"
-        if name == '<Lookup as StaticLookup>::Source':
-            return 'Address'
-        if name == 'Vec<<Lookup as StaticLookup>::Source>':
-            return 'Vec<Address>'
-        if name == '<Balance as HasCompact>::Type':
-            return 'Compact<Balance>'
-        if name == '<BlockNumber as HasCompact>::Type':
-            return 'Compact<BlockNumber>'
-        if name == '<Moment as HasCompact>::Type':
-            return 'Compact<Moment>'
-        if name == '<InherentOfflineReport as InherentOfflineReport>::Inherent':
-            return 'InherentOfflineReport'
-        if name == 'RawAddress':
-            return 'Address'
-
-        return name
+        return RuntimeConfigurationObject.convert_type_string(name)
 
 
 class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
