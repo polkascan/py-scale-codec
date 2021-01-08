@@ -838,35 +838,27 @@ class BitVec(ScaleType):
 
         total = math.ceil(length_obj.value / 8)
 
-        return f'0x{self.get_next_bytes(total).hex()}'
+        value_int = int.from_bytes(self.get_next_bytes(total), byteorder='little')
+
+        return [bool(value_int & (1 << n)) for n in range(length_obj.value)]
 
     def process_encode(self, value):
 
-        if type(value) is str:
-            value = bytes.fromhex(value[2:])
+        if type(value) is not list:
+            raise ValueError("Provided value is not a list of booleans")
 
-        if type(value) is list:
-            value = bytes(value)
-
-        if type(value) is bytes:
-            value = int.from_bytes(value, 'little')
-
-        if type(value) is not int:
-            raise ValueError("Provided value is not of type int, hex string or bytes")
-
-        if value == 0:
+        if len(value) == 0:
             return ScaleBytes(b'\x00')
 
-        # determine length in bits
-        length = int(math.log2(value)+1)
+        int_value = sum(v << i for i, v in enumerate(value))
 
         # encode the length in a compact u32
         compact_obj = CompactU32()
-        data = compact_obj.encode(length)
+        data = compact_obj.encode(len(value))
 
-        byte_length = math.ceil(length / 8)
+        byte_length = math.ceil(len(value) / 8)
 
-        return data + value.to_bytes(length=byte_length, byteorder='little')
+        return data + int_value.to_bytes(length=byte_length, byteorder='little')
 
 
 class GenericAddress(ScaleType):

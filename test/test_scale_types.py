@@ -398,45 +398,40 @@ class TestScaleTypes(unittest.TestCase):
     def test_bitvec_decode(self):
         obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0c07'))
         obj.decode()
-        self.assertEqual(obj.value, '0x07')
+        self.assertEqual(obj.value, [True, True, True])
 
-    def test_bitvec_encode_int(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
-        data = obj.encode(0b111)
-        self.assertEqual(data.to_hex(), '0x0c07')
+    def test_bitvec_decode_size2(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0803'))
+        obj.decode()
+        self.assertEqual(obj.value, [True, True])
 
-    def test_bitvec_encode_zero_int(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
-        data = obj.encode(0)
-        self.assertEqual(data.to_hex(), '0x00')
-
-    def test_bitvec_encode_bytes(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
-        data = obj.encode(b'\x07')
-        self.assertEqual(data.to_hex(), '0x0c07')
-
-    def test_bitvec_encode_str(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
-        data = obj.encode('0x07')
-        self.assertEqual(data.to_hex(), '0x0c07')
+    def test_bitvec_decode_size_2bytes(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x28fd02'))
+        obj.decode()
+        self.assertEqual(obj.value, [True, False, True, True, True, True, True, True, False, True])
 
     def test_bitvec_encode_list(self):
         obj = ScaleDecoder.get_decoder_class('BitVec')
-        data = obj.encode([7])
+        data = obj.encode([True, True, True])
         self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_list2(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode([False, True])
+        self.assertEqual(data.to_hex(), '0x0802')
+
+    def test_bitvec_encode_list3(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode([True, False])
+        self.assertEqual(data.to_hex(), '0x0801')
+
+    def test_bitvec_encode_list4(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode([True, False, True, True, True, True, True, True, False, True])
+        self.assertEqual(data.to_hex(), '0x28fd02')
 
     def test_bitvec_encode_empty_list(self):
         obj = ScaleDecoder.get_decoder_class('BitVec')
         data = obj.encode([])
         self.assertEqual(data.to_hex(), '0x00')
-
-    def test_bitvec_encode_large_int(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
-        data = obj.encode(0b101010101010101)
-        self.assertEqual(data.to_hex(), '0x3c5555')
-
-    def test_bitvec_decode_large_int(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x3c5555'))
-        obj.decode()
-        self.assertEqual(obj.value, '0x5555')
 
