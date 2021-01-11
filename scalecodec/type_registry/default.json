@@ -3637,6 +3637,19 @@
     },
     "ContractExecResult": "ContractExecResultTo260",
     "ContractStorageKey": "[u8; 32]",
+    "DeletedContract": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "pairCount",
+          "u32"
+        ],
+        [
+          "trieId",
+          "TrieId"
+        ]
+      ]
+    },
     "HostFnWeights": {
       "type": "struct",
       "type_mapping": [
@@ -5504,7 +5517,7 @@
         ]
       ]
     },
-    "TAssetBalance": "Balance",
+    "TAssetBalance": "u64",
     "TAssetDepositBalance": "BalanceOf",
     "CreatedBlock": {
       "type": "struct",
