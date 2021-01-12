@@ -894,6 +894,35 @@
         ]
       ]
     },
+    "ParachainProposal": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "proposer",
+          "AccountId"
+        ],
+        [
+          "validationCode",
+          "ValidationCode"
+        ],
+        [
+          "genesisHead",
+          "HeadData"
+        ],
+        [
+          "validators",
+          "Vec<ValidatorId>"
+        ],
+        [
+          "name",
+          "Bytes"
+        ],
+        [
+          "balance",
+          "Balance"
+        ]
+      ]
+    },
     "ParaGenesisArgs": {
       "type": "struct",
       "type_mapping": [
@@ -969,6 +998,19 @@
         [
           "maxPovSize",
           "u32"
+        ]
+      ]
+    },
+    "RegisteredParachainInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validators",
+          "Vec<ValidatorId>"
+        ],
+        [
+          "proposer",
+          "AccountId"
         ]
       ]
     },
@@ -4278,6 +4320,7 @@
       ]
     },
     "ValidatorId": "AccountId",
+    "ValidatorIdOf": "ValidatorId",
     "PreRuntime": "(ConsensusEngineId, Bytes)",
     "SealV0": "(u64, Signature)",
     "Seal": "(ConsensusEngineId, Bytes)",
