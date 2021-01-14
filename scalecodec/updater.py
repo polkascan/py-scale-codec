@@ -32,8 +32,24 @@ TYPE_REGISTRY_CONFIG = [
         'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/kusama.json'
     },
     {
-        'name': 'kulupu',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/kulupu.json'
+        'name': 'westend',
+        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/westend.json'
+    },
+    {
+        'name': 'rococo',
+        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/rococo.json'
+    },
+    {
+        'name': 'canvas',
+        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/canvas.json'
+    },
+    {
+        'name': 'development',
+        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/development.json'
+    },
+    {
+        'name': 'substrate-node-template',
+        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/substrate-node-template.json'
     }
 ]
 
