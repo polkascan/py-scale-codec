@@ -959,6 +959,10 @@
           "BlockNumber"
         ],
         [
+          "relayStorageRoot",
+          "Hash"
+        ],
+        [
           "hrmpMqcHeads",
           "Vec<(u32, Hash)>"
         ],
@@ -2930,6 +2934,19 @@
         [
           "transient",
           "TransientValidationData"
+        ]
+      ]
+    },
+    "ValidationDataType": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validationData",
+          "ValidationData"
+        ],
+        [
+          "relayChainState",
+          "Vec<Bytes>"
         ]
       ]
     },
@@ -6505,6 +6522,32 @@
     },
     "SignedAvailabilityBitfields": "Vec<SignedAvailabilityBitfield>",
     "UpwardMessage": "Bytes",
+    "CallIndex": "(u8, u8)",
+    "LotteryConfig": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "price",
+          "Balance"
+        ],
+        [
+          "start",
+          "BlockNumber"
+        ],
+        [
+          "length",
+          "BlockNumber"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ],
+        [
+          "repeat",
+          "bool"
+        ]
+      ]
+    },
     "AssetOptions": {
       "type": "struct",
       "type_mapping": [
