@@ -435,7 +435,7 @@
         ]
       ]
     },
-    "CollatorId": "[u8; 32]",
+    "CollatorId": "H256",
     "ContractInfo": {
       "type": "enum",
       "type_mapping": [
@@ -2455,21 +2455,6 @@
         "V10"
       ]
     },
-    "SlotRange": {
-      "type": "enum",
-      "value_list": [
-        "ZeroZero",
-        "ZeroOne",
-        "ZeroTwo",
-        "ZeroThree",
-        "OneOne",
-        "OneTwo",
-        "OneThree",
-        "TwoTwo",
-        "TwoThree",
-        "ThreeThree"
-      ]
-    },
     "ValidityAttestation": {
       "type": "enum",
       "type_mapping": [
@@ -4442,6 +4427,86 @@
         ]
       ]
     },
+    "FundIndex": "u32",
+    "LastContribution": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Never",
+          "Null"
+        ],
+        [
+          "PreEnding",
+          "AuctionIndex"
+        ],
+        [
+          "Ending",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "DeployData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "codeHash",
+          "Hash"
+        ],
+        [
+          "codeSize",
+          "u32"
+        ],
+        [
+          "initialHeadData",
+          "HeadData"
+        ]
+      ]
+    },
+    "FundInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "parachain",
+          "Option<ParaId>"
+        ],
+        [
+          "owner",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "raised",
+          "Balance"
+        ],
+        [
+          "end",
+          "BlockNumber"
+        ],
+        [
+          "cap",
+          "Balance"
+        ],
+        [
+          "lastContribution",
+          "LastContribution"
+        ],
+        [
+          "firstSlot",
+          "BlockNumber"
+        ],
+        [
+          "lastSlot",
+          "BlockNumber"
+        ],
+        [
+          "deployData",
+          "Option<DeployData>"
+        ]
+      ]
+    },
     "GrandpaEquivocationProof": {
       "type": "struct",
       "type_mapping": [
@@ -5845,7 +5910,7 @@
         ],
         [
           "collatorId",
-          "Hash"
+          "CollatorId"
         ],
         [
           "persistedValidationDataHash",
@@ -5861,7 +5926,7 @@
         ],
         [
           "signature",
-          "Signature"
+          "CollatorSignature"
         ]
       ]
     },
@@ -6458,6 +6523,7 @@
         "Dynamic"
       ]
     },
+    "SessionInfoValidatorGroup": "Vec<u32>",
     "SessionInfo": {
       "type": "struct",
       "type_mapping": [
@@ -6475,7 +6541,7 @@
         ],
         [
           "validatorGroups",
-          "Vec<ValidatorGroup>"
+          "Vec<SessionInfoValidatorGroup>"
         ],
         [
           "nCores",
@@ -6516,7 +6582,7 @@
         ],
         [
           "signature",
-          "Signature"
+          "ValidatorSignature"
         ]
       ]
     },

@@ -4,6 +4,7 @@
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
     "AccountInfo": "AccountInfoWithRefCount",
+    "FullIdentification": "()",
     "Keys": {
       "type": "struct",
       "type_mapping": [
