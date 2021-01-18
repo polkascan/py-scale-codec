@@ -2187,6 +2187,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_decode_mortal_extrinsic(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
+        RuntimeConfiguration().set_active_spec_version_id(1)
 
         metadata_decoder = MetadataDecoder(ScaleBytes(metadata_substrate_node_template))
         metadata_decoder.decode()
@@ -2211,6 +2212,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_encode_mortal_extrinsic(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
+        RuntimeConfiguration().set_active_spec_version_id(1)
 
         metadata_decoder = MetadataDecoder(ScaleBytes(metadata_substrate_node_template))
         metadata_decoder.decode()
