@@ -1,8 +1,8 @@
 {
-  "runtime_id": 1,
+  "runtime_id": 100,
   "types": {
-    "Address": "AccountIdAddress",
-    "LookupSource": "AccountIdAddress",
+    "Address": "MultiAddress",
+    "LookupSource": "MultiAddress",
     "Keys": {
       "type": "struct",
       "type_mapping": [
@@ -15,5 +15,19 @@
     }
   },
   "versioning": [
+    {
+      "runtime_range": [0, 99],
+      "types": {
+        "Address": "AccountIdAddress",
+        "LookupSource": "AccountIdAddress"
+      }
+    },
+    {
+      "runtime_range": [100, null],
+      "types": {
+        "Address": "MultiAddress",
+        "LookupSource": "MultiAddress"
+      }
+    }
   ]
 }
