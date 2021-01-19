@@ -1288,15 +1288,6 @@
         "Uncle"
       ]
     },
-    "ValidatorPrefs": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "commission",
-          "Compact<Perbill>"
-        ]
-      ]
-    },
     "VestingSchedule<Balance, BlockNumber>": {
       "type": "struct",
       "type_mapping": [
@@ -3462,6 +3453,32 @@
         ]
       ]
     },
+    "FeeDetails": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "inclusionFee",
+          "Option<InclusionFee>"
+        ]
+      ]
+    },
+    "InclusionFee": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "baseFee",
+          "Balance"
+        ],
+        [
+          "lenFee",
+          "Balance"
+        ],
+        [
+          "adjustedWeightFee",
+          "Balance"
+        ]
+      ]
+    },
     "RuntimeDispatchInfo": {
       "type": "struct",
       "type_mapping": [
@@ -5131,6 +5148,29 @@
         ]
       ]
     },
+    "ValidatorPrefsWithCommission": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "commission",
+          "Compact<Perbill>"
+        ]
+      ]
+    },
+    "ValidatorPrefsWithBlocked": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "commission",
+          "Compact<Perbill>"
+        ],
+        [
+          "blocked",
+          "bool"
+        ]
+      ]
+    },
+    "ValidatorPrefs": "ValidatorPrefsWithCommission",
     "ValidatorPrefsTo196": {
       "type": "struct",
       "type_mapping": [
