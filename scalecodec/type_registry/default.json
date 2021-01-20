@@ -947,6 +947,7 @@
         ]
       ]
     },
+    "ParaValidatorIndex": "u32",
     "PersistedValidationData": {
       "type": "struct",
       "type_mapping": [
@@ -6563,7 +6564,7 @@
         "Dynamic"
       ]
     },
-    "SessionInfoValidatorGroup": "Vec<u32>",
+    "SessionInfoValidatorGroup": "Vec<ParaValidatorIndex>",
     "SessionInfo": {
       "type": "struct",
       "type_mapping": [
@@ -6618,7 +6619,7 @@
         ],
         [
           "validatorIndex",
-          "u32"
+          "ParaValidatorIndex"
         ],
         [
           "signature",
