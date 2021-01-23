@@ -54,6 +54,33 @@
         ]
       ]
     },
+
+    "BlockLength": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "max",
+          "PerDispatchClassU32"
+        ]
+      ]
+    },
+    "PerDispatchClassU32": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "normal",
+          "u32"
+        ],
+        [
+          "operational",
+          "u32"
+        ],
+        [
+          "mandatory",
+          "u32"
+        ]
+      ]
+    },
     "Delegations": {
       "type": "struct",
       "type_mapping": [
@@ -5638,6 +5665,27 @@
         [
           "accounts",
           "u32"
+        ]
+      ]
+    },
+    "AssetMetadata": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "deposit",
+          "TAssetDepositBalance"
+        ],
+        [
+          "name",
+          "Vec<u8>"
+        ],
+        [
+          "symbol",
+          "Vec<u8>"
+        ],
+        [
+          "decimals",
+          "u8"
         ]
       ]
     },
