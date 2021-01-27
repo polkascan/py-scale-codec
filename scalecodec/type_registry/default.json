@@ -408,6 +408,43 @@
         ]
       ]
     },
+    "MessagingStateSnapshot": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "relayDispatchQueueSize",
+          "(u32, u32)"
+        ],
+        [
+          "egressChannels",
+          "Vec<MessagingStateSnapshotEgressEntry>"
+        ]
+      ]
+    },
+    "MessagingStateSnapshotEgressEntry": "(ParaId, AbridgedHrmpChannel)",
+    "BTreeMap<ParaId, VecInboundHrmpMessage>": "Vec<(ParaId, VecInboundHrmpMessage)>",
+    "SystemInherentData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "pvalidationData",
+          "PersistedValidationData"
+        ],
+        [
+          "relayChainState",
+          "StorageProof"
+        ],
+        [
+          "downwardMessages",
+          "Vec<InboundDownwardMessage>"
+        ],
+        [
+          "horizontalMessages",
+          "BTreeMap<ParaId, VecInboundHrmpMessage>"
+        ]
+      ]
+    },
+    "VecInboundHrmpMessage": "Vec<InboundHrmpMessage>",
     "FullIdentification": {
       "type": "struct",
       "type_mapping": [
@@ -4290,6 +4327,15 @@
     "AssetId": "u32",
     "Justification": "Bytes",
     "StorageData": "Bytes",
+    "StorageProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "trieNodes",
+          "Vec<Bytes>"
+        ]
+      ]
+    },
     "KeyValue": {
       "type": "struct",
       "type_mapping": [
@@ -6016,6 +6062,10 @@
         [
           "signature",
           "CollatorSignature"
+        ],
+        [
+          "paraHead",
+          "Hash"
         ]
       ]
     },
