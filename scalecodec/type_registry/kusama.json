@@ -1,5 +1,5 @@
 {
-  "runtime_id": 2026,
+  "runtime_id": 2027,
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
