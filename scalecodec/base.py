@@ -60,6 +60,10 @@ class RuntimeConfigurationObject:
         name = re.sub(r'\n', "", name)
         name = re.sub(r'(grandpa|session|slashing|limits)::', "", name)
 
+        if name == '()':
+            return "Null"
+        if name.lower() in ['vec<u8>', '&[u8]']:
+            return "Bytes"
         if name.lower() == '<lookup as staticlookup>::source':
             return 'LookupSource'
         if name.lower() == '<balance as hascompact>::type':
