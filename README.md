@@ -1,5 +1,5 @@
 # Python SCALE Codec
-[![Travis CI Build Status](https://api.travis-ci.org/polkascan/py-scale-codec.svg?branch=master)](https://travis-ci.org/polkascan/py-scale-codec)
+[![Build Status](https://img.shields.io/github/workflow/status/polkascan/py-scale-codec/Run%20unit%20tests)](https://github.com/polkascan/py-scale-codec/actions?query=workflow%3A%22Run+unit+tests%22)
 [![Latest Version](https://img.shields.io/pypi/v/scalecodec.svg)](https://pypi.org/project/scalecodec/) 
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/scalecodec.svg)](https://pypi.org/project/scalecodec/)
 [![License](https://img.shields.io/pypi/l/scalecodec.svg)](https://github.com/polkascan/py-scale-codec/blob/master/LICENSE)
