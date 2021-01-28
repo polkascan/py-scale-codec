@@ -47,6 +47,7 @@ class RuntimeConfigurationObject:
         self.type_registry = {}
         self.clear_type_registry()
         self.active_spec_version_id = None
+        self.chain_id = None
 
     @classmethod
     def convert_type_string(cls, name):
@@ -55,13 +56,10 @@ class RuntimeConfigurationObject:
         name = re.sub(r'<T>', "", name)
         name = re.sub(r'<T as Trait>::', "", name)
         name = re.sub(r'<T as Config>::', "", name)
+        name = re.sub(r'<T as Config<I>>::', "", name)
         name = re.sub(r'\n', "", name)
-        name = re.sub(r'(grandpa|session|slashing)::', "", name)
+        name = re.sub(r'(grandpa|session|slashing|limits)::', "", name)
 
-        if name == '()':
-            return "Null"
-        if name.lower() in ['vec<u8>', '&[u8]']:
-            return "Bytes"
         if name.lower() == '<lookup as staticlookup>::source':
             return 'LookupSource'
         if name.lower() == '<balance as hascompact>::type':
@@ -185,6 +183,9 @@ class RuntimeConfigurationObject:
 
         # Set runtime ID if set
         self.active_spec_version_id = type_registry.get('runtime_id')
+
+        # Set chain ID if set
+        self.chain_id = type_registry.get('chain_id')
 
         # Set versioning
         if 'versioning' in type_registry:
