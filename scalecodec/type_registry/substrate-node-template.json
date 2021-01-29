@@ -3,6 +3,7 @@
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
+    "AccountInfo": "AccountInfoWithRefCount",
     "Keys": {
       "type": "struct",
       "type_mapping": [

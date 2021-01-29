@@ -3,6 +3,7 @@
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
+    "AccountInfo": "AccountInfoWithRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
@@ -131,8 +132,6 @@
     {
       "runtime_range": [1019, 1045],
       "types": {
-        "Address": "RawAddress",
-        "LookupSource": "RawAddress",
         "StakingLedger": "StakingLedgerTo223",
         "BalanceLock": {
           "type": "struct",
@@ -148,8 +147,6 @@
     {
       "runtime_range": [1050, 1056],
       "types": {
-        "Address": "AccountIdAddress",
-        "LookupSource": "AccountIdAddress",
         "StakingLedger": "StakingLedgerTo240",
         "BalanceLock": {
           "type": "struct",
@@ -164,8 +161,6 @@
     {
       "runtime_range": [1057, null],
       "types": {
-        "Address": "AccountIdAddress",
-        "LookupSource": "AccountIdAddress",
         "StakingLedger": {
           "type": "struct",
           "type_mapping": [
@@ -338,6 +333,30 @@
       "runtime_range": [2025, null],
       "types": {
         "RefCount": "u32"
+      }
+    },
+    {
+      "runtime_range": [1019, 1045],
+      "types": {
+        "Address": "RawAddress",
+        "LookupSource": "RawAddress",
+        "AccountInfo": "AccountInfoWithRefCount"
+      }
+    },
+    {
+      "runtime_range": [1050, 2027],
+      "types": {
+        "Address": "AccountIdAddress",
+        "LookupSource": "AccountIdAddress",
+        "AccountInfo": "AccountInfoWithRefCount"
+      }
+    },
+    {
+      "runtime_range": [2028, null],
+      "types": {
+        "Address": "MultiAddress",
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithProviders"
       }
     }
   ]

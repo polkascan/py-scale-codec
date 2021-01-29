@@ -4326,6 +4326,7 @@
     "Address": "MultiAddress",
     "AssetId": "u32",
     "Justification": "Bytes",
+    "Slot": "u64",
     "StorageData": "Bytes",
     "StorageProof": {
       "type": "struct",

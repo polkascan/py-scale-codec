@@ -3,7 +3,7 @@
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
-    "AccountInfo": "AccountInfoWithRefCount",
+    "AccountInfo": "AccountInfoWithProviders",
     "FullIdentification": "()",
     "Keys": {
       "type": "struct",
@@ -61,6 +61,18 @@
              ["authority_discovery", "AccountId"]
           ]
         }
+      }
+    },
+    {
+      "runtime_range": [0, 199],
+      "types": {
+        "AccountInfo": "AccountInfoWithRefCount"
+      }
+    },
+    {
+      "runtime_range": [200, null],
+      "types": {
+        "AccountInfo": "AccountInfoWithProviders"
       }
     },
     {

@@ -3,6 +3,7 @@
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
+    "AccountInfo": "AccountInfoWithRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
@@ -93,6 +94,22 @@
       "runtime_range": [25, null],
       "types": {
         "RefCount": "u32"
+      }
+    },
+    {
+      "runtime_range": [0, 27],
+      "types": {
+        "Address": "AccountIdAddress",
+        "LookupSource": "AccountIdAddress",
+        "AccountInfo": "AccountInfoWithRefCount"
+      }
+    },
+    {
+      "runtime_range": [28, null],
+      "types": {
+        "Address": "MultiAddress",
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithProviders"
       }
     }
   ]
