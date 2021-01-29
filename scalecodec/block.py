@@ -182,7 +182,7 @@ class Extrinsic(ScaleDecoder):
             result['signature'] = self.signature.replace('0x', '')
             result['extrinsic_hash'] = self.extrinsic_hash
         if self.call_index:
-            result['call_code'] = self.call_index
+            result['call_index'] = self.call_index
             result['call_function'] = self.call.get_identifier()
             result['call_module'] = self.call_module.get_identifier()
 
@@ -261,7 +261,6 @@ class Extrinsic(ScaleDecoder):
 
         data += ScaleBytes(bytearray.fromhex(self.call_index))
 
-        # Convert params to call_args TODO refactor
         if not value.get('call_args') and value.get('params'):
             value['call_args'] = {call_arg['name']: call_arg['value'] for call_arg in value.get('params')}
 
@@ -367,7 +366,7 @@ class EventRecord(ScaleDecoder):
 
         self.phase = None
         self.extrinsic_idx = None
-        self.type = None
+        self.event_index = None
         self.params = []
         self.event = None
         self.event_module = None
@@ -383,12 +382,12 @@ class EventRecord(ScaleDecoder):
         if self.phase == 0:
             self.extrinsic_idx = self.process_type('U32').value
 
-        self.type = self.get_next_bytes(2).hex()
+        self.event_index = self.get_next_bytes(2).hex()
 
         # Decode params
 
-        self.event = self.metadata.event_index[self.type][1]
-        self.event_module = self.metadata.event_index[self.type][0]
+        self.event = self.metadata.event_index[self.event_index][1]
+        self.event_module = self.metadata.event_index[self.event_index][0]
 
         for arg_type in self.event.args:
             arg_type_obj = self.process_type(arg_type)
@@ -405,7 +404,7 @@ class EventRecord(ScaleDecoder):
         return {
             'phase': self.phase,
             'extrinsic_idx': self.extrinsic_idx,
-            'type': self.type,
+            'event_index': self.event_index,
             'module_id': self.event_module.name,
             'event_id': self.event.name,
             'params': self.params,

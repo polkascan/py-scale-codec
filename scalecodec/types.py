@@ -1269,6 +1269,7 @@ class GenericCall(ScaleType):
         self.call_function = None
         self.call_args = []
         self.call_module = None
+        self.call_hash = None
 
         super().__init__(data, **kwargs)
 
@@ -1278,8 +1279,12 @@ class GenericCall(ScaleType):
 
         self.call_module, self.call_function = self.metadata.call_index[self.call_index]
 
+        call_bytes = bytes.fromhex(self.call_index)
+
         for arg in self.call_function.args:
             arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+            call_bytes += arg_type_obj.get_used_bytes()
 
             self.call_args.append({
                 'name': arg.name,
@@ -1287,11 +1292,14 @@ class GenericCall(ScaleType):
                 'value': arg_type_obj.serialize()
             })
 
+        call_hash = blake2b(call_bytes, digest_size=32).digest()
+
         return {
-            'call_index': self.call_index,
+            'call_index': f'0x{self.call_index}',
             'call_function': self.call_function.name,
             'call_module': self.call_module.name,
-            'call_args': self.call_args
+            'call_args': self.call_args,
+            'call_hash': f'0x{call_hash.hex()}'
         }
 
     def process_encode(self, value):

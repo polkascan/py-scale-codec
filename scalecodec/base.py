@@ -309,6 +309,8 @@ class ScaleDecoder(ABC):
         self.data = data
         self.raw_value = ''
         self.value = None
+        self.data_start_offset = None
+        self.data_end_offset = None
 
     @classmethod
     def build_type_mapping(cls):
@@ -351,12 +353,17 @@ class ScaleDecoder(ABC):
         self.raw_value += data.hex()
         return data
 
+    def get_used_bytes(self):
+        return self.data.data[self.data_start_offset:self.data_end_offset]
+
     @abstractmethod
     def process(self):
         raise NotImplementedError
 
     def decode(self, check_remaining=True):
+        self.data_start_offset = self.data.offset
         self.value = self.process()
+        self.data_end_offset = self.data.offset
 
         if check_remaining and self.data.offset != self.data.length:
             raise RemainingScaleBytesNotEmptyException('Current offset: {} / length: {}'.format(self.data.offset, self.data.length))
