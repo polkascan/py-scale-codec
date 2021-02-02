@@ -148,7 +148,7 @@ class MetadataV4Module(ScaleType):
         super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
-        return self.name.lower()
+        return self.name
 
     def process(self):
 
@@ -309,7 +309,7 @@ class MetadataV5Module(ScaleType):
         super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
-        return self.name.lower()
+        return self.name
 
     def process(self):
 
@@ -469,7 +469,7 @@ class MetadataV6Module(ScaleType):
         super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
-        return self.name.lower()
+        return self.name
 
     def process(self):
 
@@ -1048,7 +1048,7 @@ class MetadataV12Module(ScaleType):
         super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
-        return self.name.lower()
+        return self.name
 
     def process(self):
 
@@ -1487,7 +1487,7 @@ class MetadataModule(ScaleType):
         super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
-        return self.name.lower()
+        return self.name
 
     def process(self):
 
@@ -1544,7 +1544,7 @@ class MetadataV1Module(ScaleType):
         super().__init__(data, sub_type, **kwargs)
 
     def get_identifier(self):
-        return self.name.lower()
+        return self.name
 
     def process(self):
 

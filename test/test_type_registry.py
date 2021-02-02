@@ -164,7 +164,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         extrinsic_data = extrinsics_decoder.decode()
 
         self.assertEqual(extrinsic_data['call_function'], 'set_identity')
-        self.assertEqual(extrinsic_data['call_module'], 'identity')
+        self.assertEqual(extrinsic_data['call_module'], 'Identity')
         self.assertNotIn('twitter', extrinsic_data['params'][0]['value'])
 
         # Change runtime version id
