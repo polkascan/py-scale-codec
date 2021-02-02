@@ -427,7 +427,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "pvalidationData",
+          "validationData",
           "PersistedValidationData"
         ],
         [
@@ -1021,7 +1021,7 @@
         ],
         [
           "blockNumber",
-          "BlockNumber"
+          "RelayChainBlockNumber"
         ],
         [
           "relayStorageRoot",
@@ -6628,7 +6628,7 @@
         "Root"
       ]
     },
-    "RelayChainBlockNumber": "BlockNumber",
+    "RelayChainBlockNumber": "u32",
     "QueuedParathread": {
       "type": "struct",
       "type_mapping": [

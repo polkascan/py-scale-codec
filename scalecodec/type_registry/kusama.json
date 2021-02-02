@@ -7,7 +7,7 @@
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
-    "SessionKeysPolkadot": {
+    "Keys": {
       "type": "struct",
       "type_mapping": [
          ["grandpa", "AccountId"],
@@ -17,7 +17,6 @@
          ["parachains", "AccountId"]
       ]
     },
-    "Keys": "SessionKeysPolkadot",
     "DispatchInfo": {
       "type": "struct",
       "type_mapping": [
@@ -340,7 +339,18 @@
       "types": {
         "Address": "RawAddress",
         "LookupSource": "RawAddress",
-        "AccountInfo": "AccountInfoWithRefCount"
+        "AccountInfo": "AccountInfoWithRefCount",
+        "Keys": {
+          "type": "struct",
+          "type_mapping": [
+             ["grandpa", "AccountId"],
+             ["babe", "AccountId"],
+             ["im_online", "AccountId"],
+             ["authority_discovery", "AccountId"],
+             ["parachains", "AccountId"]
+          ]
+        },
+        "ValidatorPrefs": "ValidatorPrefsWithCommission"
       }
     },
     {
@@ -348,7 +358,18 @@
       "types": {
         "Address": "AccountIdAddress",
         "LookupSource": "AccountIdAddress",
-        "AccountInfo": "AccountInfoWithRefCount"
+        "AccountInfo": "AccountInfoWithRefCount",
+        "Keys": {
+          "type": "struct",
+          "type_mapping": [
+             ["grandpa", "AccountId"],
+             ["babe", "AccountId"],
+             ["im_online", "AccountId"],
+             ["authority_discovery", "AccountId"],
+             ["parachains", "AccountId"]
+          ]
+        },
+        "ValidatorPrefs": "ValidatorPrefsWithCommission"
       }
     },
     {
@@ -356,7 +377,19 @@
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
-        "AccountInfo": "AccountInfoWithProviders"
+        "AccountInfo": "AccountInfoWithProviders",
+        "Keys": {
+          "type": "struct",
+          "type_mapping": [
+             ["grandpa", "AccountId"],
+             ["babe", "AccountId"],
+             ["im_online", "AccountId"],
+             ["para_validator", "AccountId"],
+             ["para_assignment", "AccountId"],
+             ["authority_discovery", "AccountId"]
+          ]
+        },
+        "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     }
   ]

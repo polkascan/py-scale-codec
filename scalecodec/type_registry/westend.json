@@ -1,28 +1,30 @@
 {
-  "runtime_id": 45,
+  "runtime_id": 48,
   "types": {
-    "Address": "AccountIdAddress",
-    "LookupSource": "AccountIdAddress",
+    "Address": "MultiAddress",
+    "LookupSource": "MultiAddress",
+    "AccountInfo": "AccountInfoWithProviders",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
-    "SessionKeysPolkadot": {
+    "Keys": {
       "type": "struct",
       "type_mapping": [
          ["grandpa", "AccountId"],
          ["babe", "AccountId"],
          ["im_online", "AccountId"],
-         ["authority_discovery", "AccountId"],
-         ["parachains", "AccountId"]
+         ["para_validator", "AccountId"],
+         ["para_assignment", "AccountId"],
+         ["authority_discovery", "AccountId"]
       ]
     },
-    "Keys": "SessionKeysPolkadot",
+    "ValidatorPrefs": "ValidatorPrefsWithBlocked",
     "ProxyType": {
       "type": "enum",
       "value_list": [
         "Any",
         "NonTransfer",
         "Staking",
-        "SudoBalances",
+        "Unused",
         "IdentityJudgement"
       ]
     },
@@ -140,6 +142,45 @@
       "runtime_range": [45, null],
       "types": {
         "Weight": "u64"
+      }
+    },
+    {
+      "runtime_range": [0, 47],
+      "types": {
+        "Address": "AccountIdAddress",
+        "LookupSource": "AccountIdAddress",
+        "AccountInfo": "AccountInfoWithRefCount",
+        "Keys": {
+          "type": "struct",
+          "type_mapping": [
+             ["grandpa", "AccountId"],
+             ["babe", "AccountId"],
+             ["im_online", "AccountId"],
+             ["authority_discovery", "AccountId"],
+             ["parachains", "AccountId"]
+          ]
+        },
+        "ValidatorPrefs": "ValidatorPrefsWithCommission"
+      }
+    },
+    {
+      "runtime_range": [48, null],
+      "types": {
+        "Address": "MultiAddress",
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithProviders",
+        "Keys": {
+          "type": "struct",
+          "type_mapping": [
+             ["grandpa", "AccountId"],
+             ["babe", "AccountId"],
+             ["im_online", "AccountId"],
+             ["para_validator", "AccountId"],
+             ["para_assignment", "AccountId"],
+             ["authority_discovery", "AccountId"]
+          ]
+        },
+        "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     }
   ]

@@ -3,7 +3,7 @@
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
-    "AccountInfo": "AccountInfoWithProviders",
+    "AccountInfo": "AccountInfoWithRefCount",
     "FullIdentification": "()",
     "Keys": {
       "type": "struct",
@@ -64,29 +64,19 @@
       }
     },
     {
-      "runtime_range": [0, 199],
-      "types": {
-        "AccountInfo": "AccountInfoWithRefCount"
-      }
-    },
-    {
-      "runtime_range": [200, null],
-      "types": {
-        "AccountInfo": "AccountInfoWithProviders"
-      }
-    },
-    {
       "runtime_range": [0, 201],
       "types": {
         "Address": "AccountIdAddress",
-        "LookupSource": "AccountIdAddress"
+        "LookupSource": "AccountIdAddress",
+        "AccountInfo": "AccountInfoWithRefCount"
       }
     },
     {
       "runtime_range": [202, null],
       "types": {
         "Address": "MultiAddress",
-        "LookupSource": "MultiAddress"
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithProviders"
       }
     }
   ]
