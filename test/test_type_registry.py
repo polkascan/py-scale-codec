@@ -178,7 +178,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         extrinsic_data = extrinsics_decoder.decode()
 
         self.assertEqual(extrinsic_data['call_function'], 'set_identity')
-        self.assertEqual(extrinsic_data['call_module'], 'identity')
+        self.assertEqual(extrinsic_data['call_module'], 'Identity')
         self.assertIn('twitter', extrinsic_data['params'][0]['value'])
 
     def test_valid_type_registry_presets(self):
