@@ -24,8 +24,9 @@
         "Any",
         "NonTransfer",
         "Staking",
-        "Unused",
-        "IdentityJudgement"
+        "SudoBalances",
+        "IdentityJudgement",
+        "CancelProxy"
       ]
     },
     "RefCount": "u32"

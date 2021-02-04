@@ -32,7 +32,8 @@
         "NonTransfer",
         "Governance",
         "Staking",
-        "IdentityJudgement"
+        "IdentityJudgement",
+        "CancelProxy"
       ]
     },
     "RefCount": "u32"

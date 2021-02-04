@@ -32,8 +32,9 @@
         "NonTransfer",
         "Governance",
         "Staking",
-        "SudoBalances",
-        "IdentityJudgement"
+        "DeprecatedSudoBalances",
+        "IdentityJudgement",
+        "CancelProxy"
       ]
     },
     "RefCount": "u32"
