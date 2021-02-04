@@ -17,14 +17,43 @@
 import os
 import json
 
+import requests
 
-def load_type_registry_preset(name):
-    module_path = os.path.dirname(__file__)
-    path = os.path.join(module_path, '{}.json'.format(name))
-    try:
-        return load_type_registry_file(path)
-    except FileNotFoundError:
-        return None
+SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'default', 'development', 'kusama', 'polkadot', 'rococo',
+                                   'substrate-node-template', 'westend', 'test')
+
+ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/'
+
+
+def load_type_registry_preset(name, use_remote_preset=False):
+    """
+    Loads a type registry JSON file into a dict
+
+    Parameters
+    ----------
+    name
+    use_remote_preset: When True preset is downloaded from Github master, otherwise use files from local installed scalecodec package
+
+    Returns
+    -------
+
+    """
+
+    if name not in SUPPORTED_TYPE_REGISTRY_PRESETS:
+        raise ValueError(f'Unsupported type registry preset "{name}"')
+
+    if use_remote_preset:
+        result = requests.get(f'{ONLINE_BASE_URL}{name}.json')
+
+        if result.status_code == 200:
+            return result.json()
+    else:
+        module_path = os.path.dirname(__file__)
+        path = os.path.join(module_path, '{}.json'.format(name))
+        try:
+            return load_type_registry_file(path)
+        except FileNotFoundError:
+            return None
 
 
 def load_type_registry_file(file_path):

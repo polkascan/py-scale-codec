@@ -13,59 +13,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 import os
-
 import requests
 
-TYPE_REGISTRY_CONFIG = [
-    {
-        'name': 'default',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/default.json'
-    },
-    {
-        'name': 'polkadot',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/polkadot.json'
-    },
-    {
-        'name': 'kusama',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/kusama.json'
-    },
-    {
-        'name': 'westend',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/westend.json'
-    },
-    {
-        'name': 'rococo',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/rococo.json'
-    },
-    {
-        'name': 'canvas',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/canvas.json'
-    },
-    {
-        'name': 'development',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/development.json'
-    },
-    {
-        'name': 'substrate-node-template',
-        'remote': 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/substrate-node-template.json'
-    }
-]
+from scalecodec.type_registry import SUPPORTED_TYPE_REGISTRY_PRESETS, ONLINE_BASE_URL
 
 
 def update_type_registries():
 
-    for type_registry in TYPE_REGISTRY_CONFIG:
+    for type_registry in SUPPORTED_TYPE_REGISTRY_PRESETS:
 
-        remote_type_reg = requests.get(type_registry['remote']).content
+        result = requests.get(f'{ONLINE_BASE_URL}{type_registry}.json')
 
-        module_path = os.path.dirname(__file__)
-        path = os.path.join(module_path, 'type_registry/{}.json'.format(type_registry['name']))
+        if result.status_code == 200:
+            remote_type_reg = result.content
 
-        f = open(path, 'wb')
-        f.write(remote_type_reg)
-        f.close()
+            module_path = os.path.dirname(__file__)
+            path = os.path.join(module_path, 'type_registry/{}.json'.format(type_registry))
+
+            f = open(path, 'wb')
+            f.write(remote_type_reg)
+            f.close()
 
 
 if __name__ == '__main__':

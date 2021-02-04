@@ -45,6 +45,7 @@ class RuntimeConfigurationObject:
     def __init__(self, config_id=None):
         self.config_id = config_id
         self.type_registry = {}
+        self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
         self.chain_id = None
@@ -129,12 +130,18 @@ class RuntimeConfigurationObject:
         return decoder_class
 
     def clear_type_registry(self):
-        self.type_registry = {'types': {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
-                                        cls.type_string}}
-        self.type_registry['types'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+        if not self.__initial_state:
+            self.type_registry = {'types': {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
+                                            cls.type_string}}
+            self.type_registry['types'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+        self.__initial_state = True
 
     def update_type_registry_types(self, types_dict):
         from scalecodec.types import Enum, Struct, Set
+
+        self.__initial_state = False
 
         for type_string, decoder_class_data in types_dict.items():
 

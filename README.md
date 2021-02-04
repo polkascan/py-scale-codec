@@ -117,6 +117,16 @@ except Exception:
     pass
 ```
 
+This will overwrite the type registry JSON files with the downloaded lastest versions from Github. In case of write 
+permission restrictions it is also possible to always use the remote version on Github with the `use_remote_preset` kwarg:
+
+```python
+# Polkadot runtime config
+runtime_config_polkadot = RuntimeConfigurationObject()
+runtime_config_polkadot.update_type_registry(load_type_registry_preset("default", use_remote_preset=True))
+runtime_config_polkadot.update_type_registry(load_type_registry_preset("polkadot", use_remote_preset=True))
+```
+
 
 ## License
 https://github.com/polkascan/py-scale-codec/blob/master/LICENSE
