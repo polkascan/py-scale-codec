@@ -2992,6 +2992,18 @@
       ]
     },
     "ValidatorGroup": "Vec<ValidatorIndex>",
+    "ParaLifecycle": {
+      "type": "enum",
+      "value_list": [
+        "Onboarding",
+        "Parathread",
+        "Parachain",
+        "UpgradingToParachain",
+        "DowngradingToParathread",
+        "OutgoingParathread",
+        "OutgoingParachain"
+      ]
+    },
     "ParaPastCodeMeta": {
       "type": "struct",
       "type_mapping": [
