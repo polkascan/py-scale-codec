@@ -26,6 +26,83 @@
         "Image": 64,
         "Twitter": 128
       }
+    },
+    "EnumWithBaseClass": {
+      "type": "enum",
+      "base_class": "GenericContractExecResult",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccessTo260"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "EnumWithoutBaseClass": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccessTo260"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "StructWithBaseClass": {
+      "type": "struct",
+      "base_class": "GenericContractExecResult",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccessTo260"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "StructWithoutBaseClass": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccessTo260"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "SetWithoutBaseClass": {
+        "type": "set",
+        "value_type": "u32",
+        "value_list": {
+          "Value1": 1,
+          "Value2": 2,
+          "Value3": 4,
+          "Value4": 8,
+          "Value5": 16
+        }
+    },
+    "SetWithBaseClass": {
+        "type": "set",
+        "base_class": "GenericContractExecResult",
+        "value_type": "u32",
+        "value_list": {
+          "Value1": 1,
+          "Value2": 2,
+          "Value3": 4,
+          "Value4": 8,
+          "Value5": 16
+        }
     }
   }
 }

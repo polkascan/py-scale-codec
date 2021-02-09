@@ -871,7 +871,7 @@ class BitVec(ScaleType):
 
 class GenericAddress(ScaleType):
 
-    def __init__(self, data, **kwargs):
+    def __init__(self, data=None, **kwargs):
         self.account_length = None
         self.account_id = None
         self.account_index = None

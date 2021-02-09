@@ -17,6 +17,8 @@
 import datetime
 import unittest
 
+from scalecodec import GenericContractExecResult
+
 from scalecodec.metadata import MetadataDecoder
 
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
@@ -30,13 +32,14 @@ class TestScaleTypes(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v10_hex))
+        cls.metadata_decoder.decode()
+
+    def setUp(self) -> None:
         RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
-
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v10_hex))
-        cls.metadata_decoder.decode()
 
     def test_compact_u32(self):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x02093d00"))
@@ -435,3 +438,29 @@ class TestScaleTypes(unittest.TestCase):
         data = obj.encode([])
         self.assertEqual(data.to_hex(), '0x00')
 
+    def test_struct_with_base_class(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = ScaleDecoder.get_decoder_class('StructWithoutBaseClass')
+        self.assertFalse(isinstance(obj, GenericContractExecResult))
+
+        obj = ScaleDecoder.get_decoder_class('StructWithBaseClass')
+        self.assertTrue(isinstance(obj, GenericContractExecResult))
+
+    def test_enum_with_base_class(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = ScaleDecoder.get_decoder_class('EnumWithoutBaseClass')
+        self.assertFalse(isinstance(obj, GenericContractExecResult))
+
+        obj = ScaleDecoder.get_decoder_class('EnumWithBaseClass')
+        self.assertTrue(isinstance(obj, GenericContractExecResult))
+
+    def test_set_with_base_class(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = ScaleDecoder.get_decoder_class('SetWithoutBaseClass')
+        self.assertFalse(isinstance(obj, GenericContractExecResult))
+
+        obj = ScaleDecoder.get_decoder_class('SetWithBaseClass')
+        self.assertTrue(isinstance(obj, GenericContractExecResult))
