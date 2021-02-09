@@ -192,6 +192,14 @@ class OptionBytes(ScaleType):
             return self.process_type('Bytes').value
 
         return None
+    
+    def process_encode(self, value):
+        
+        if value is not None:
+            sub_type_obj = Bytes()
+            return ScaleBytes('0x01') + sub_type_obj.encode(value)
+
+        return ScaleBytes('0x00')
 
 
 # TODO replace in metadata
