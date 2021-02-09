@@ -1,9 +1,9 @@
 {
-  "runtime_id": 2027,
+  "runtime_id": 2028,
   "types": {
-    "Address": "AccountIdAddress",
-    "LookupSource": "AccountIdAddress",
-    "AccountInfo": "AccountInfoWithRefCount",
+    "Address": "MultiAddress",
+    "LookupSource": "MultiAddress",
+    "AccountInfo": "AccountInfoWithProviders",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
@@ -13,8 +13,9 @@
          ["grandpa", "AccountId"],
          ["babe", "AccountId"],
          ["im_online", "AccountId"],
-         ["authority_discovery", "AccountId"],
-         ["parachains", "AccountId"]
+         ["para_validator", "AccountId"],
+         ["para_assignment", "AccountId"],
+         ["authority_discovery", "AccountId"]
       ]
     },
     "DispatchInfo": {
@@ -36,7 +37,8 @@
         "CancelProxy"
       ]
     },
-    "RefCount": "u32"
+    "RefCount": "u32",
+    "ValidatorPrefs": "ValidatorPrefsWithBlocked"
   },
   "versioning": [
     {
