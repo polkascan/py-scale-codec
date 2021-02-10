@@ -3049,6 +3049,40 @@
         ]
       ]
     },
+    "Voter": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "votes",
+          "Vec<AccountId>"
+        ],
+        [
+          "stake",
+          "Balance"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ]
+      ]
+    },
+    "SeatHolder": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "stake",
+          "Balance"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ]
+      ]
+    },
     "ExtrinsicsWeight": {
       "type": "struct",
       "type_mapping": [

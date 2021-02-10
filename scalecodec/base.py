@@ -134,7 +134,14 @@ class RuntimeConfigurationObject:
         if not self.__initial_state:
             self.type_registry = {'types': {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
                                             cls.type_string}}
-            self.type_registry['types'].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+            # Class names that contains '<' are excluded because of a side effect that is introduced in
+            # get_decoder_class: "Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as
+            # sub_type" which won't get reset because class definitions always remain globally
+
+            self.type_registry['types'].update(
+                {cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if '<' not in cls.__name__}
+            )
 
         self.__initial_state = True
 
