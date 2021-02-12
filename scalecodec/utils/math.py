@@ -22,6 +22,7 @@
 
 from math import ceil, log2
 
+
 def trailing_zeros(value: int) -> int:
     """Returns the number of trailing zeros in the binary representation of
     the given integer.
@@ -31,6 +32,7 @@ def trailing_zeros(value: int) -> int:
         num_zeros += 1
         value >>= 1
     return num_zeros
+
 
 def next_power_of_two(value: int) -> int:
     """Returns the smallest power of two that is greater than or equal
