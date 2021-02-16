@@ -423,27 +423,6 @@
     },
     "MessagingStateSnapshotEgressEntry": "(ParaId, AbridgedHrmpChannel)",
     "BTreeMap<ParaId, VecInboundHrmpMessage>": "Vec<(ParaId, VecInboundHrmpMessage)>",
-    "SystemInherentData": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "validationData",
-          "PersistedValidationData"
-        ],
-        [
-          "relayChainState",
-          "StorageProof"
-        ],
-        [
-          "downwardMessages",
-          "Vec<InboundDownwardMessage>"
-        ],
-        [
-          "horizontalMessages",
-          "BTreeMap<ParaId, VecInboundHrmpMessage>"
-        ]
-      ]
-    },
     "VecInboundHrmpMessage": "Vec<InboundHrmpMessage>",
     "FullIdentification": {
       "type": "struct",
@@ -1020,19 +999,11 @@
           "HeadData"
         ],
         [
-          "blockNumber",
+          "relayParentNumber",
           "RelayChainBlockNumber"
         ],
         [
-          "relayStorageRoot",
-          "Hash"
-        ],
-        [
-          "hrmpMqcHeads",
-          "Vec<(u32, Hash)>"
-        ],
-        [
-          "dmqMqcHead",
+          "relayParentStorageRoot",
           "Hash"
         ],
         [
@@ -6674,7 +6645,30 @@
         "Root"
       ]
     },
+    "ParachainInherentData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validationData",
+          "PersistedValidationData"
+        ],
+        [
+          "relayChainState",
+          "StorageProof"
+        ],
+        [
+          "downwardMessages",
+          "Vec<InboundDownwardMessage>"
+        ],
+        [
+          "horizontalMessages",
+          "BTreeMap<ParaId, VecInboundHrmpMessage>"
+        ]
+      ]
+    },
+    "SystemInherentData": "ParachainInherentData",
     "RelayChainBlockNumber": "u32",
+    "RelayChainHash": "Hash",
     "QueuedParathread": {
       "type": "struct",
       "type_mapping": [
