@@ -17,7 +17,7 @@ import math
 from datetime import datetime
 from hashlib import blake2b
 
-from scalecodec.utils.ss58 import ss58_decode_account_index
+from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode
 
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException
@@ -192,9 +192,9 @@ class OptionBytes(ScaleType):
             return self.process_type('Bytes').value
 
         return None
-    
+
     def process_encode(self, value):
-        
+
         if value is not None:
             sub_type_obj = Bytes()
             return ScaleBytes('0x01') + sub_type_obj.encode(value)
@@ -1478,7 +1478,7 @@ class GenericMultiAddress(Enum):
     type_mapping = [
         ["Id", "AccountId"],
         ["Index", "Compact<AccountIndex>"],
-        ["Raw", "Bytes"],
+        ["Raw", "HexBytes"],
         ["Address32", "H256"],
         ["Address20", "H160"],
       ]
@@ -1501,14 +1501,26 @@ class GenericMultiAddress(Enum):
             self.account_index = list(value.values())[0]
             return self.account_index
         else:
-            raise NotImplementedError("Address type not yet supported")
+            # Todo cap HexBytes / zero pad to 32 bytes to keep compatibility with AccountId
+            account_id = list(value.values())[0]
+            self.account_id = account_id[2:66].ljust(64, '0')
+            return value
 
     def process_encode(self, value):
 
-        if type(value) == str:
-            if len(value) <= 8:
+        if type(value) is int:
+            value = {"Index": value}
+
+        elif type(value) is str:
+            if len(value) <= 8 and value[0:2] != '0x':
                 value = {"Index": ss58_decode_account_index(value)}
-            else:
+            elif len(value) == 66:
                 value = {"Id": value}
+            elif len(value) == 42:
+                value = {"Address20": value}
+            elif value[0:2] != '0x':
+                value = {"Id": f'0x{ss58_decode(value)}'}
+            else:
+                raise NotImplementedError("Address type not yet supported")
 
         return super().process_encode(value)

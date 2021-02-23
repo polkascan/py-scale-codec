@@ -268,6 +268,9 @@ class ScaleBytes:
             return False
         return self.data == other.data
 
+    def __len__(self):
+        return len(self.data)
+
     def __repr__(self):
         return "<{}(data=0x{})>".format(self.__class__.__name__, self.data.hex())
 
