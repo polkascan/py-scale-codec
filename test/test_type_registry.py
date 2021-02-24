@@ -221,7 +221,6 @@ class TestScaleTypeEncoding(unittest.TestCase):
                             )
 
     def test_not_existing_type_registry_preset(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as cm:
             load_type_registry_preset('unknown')
-
-
+        self.assertEqual('Unsupported type registry preset "unknown"', str(cm.exception))
