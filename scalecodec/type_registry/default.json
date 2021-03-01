@@ -5485,15 +5485,10 @@
     },
     "StorageKind": {
       "type": "enum",
-      "type_mapping": [
-        [
-          "PERSISTENT",
-          1
-        ],
-        [
-          "LOCAL",
-          2
-        ]
+      "value_list": [
+        "__UNUSED",
+        "PERSISTENT",
+        "LOCAL"
       ]
     },
     "OpenTipTo225": {
