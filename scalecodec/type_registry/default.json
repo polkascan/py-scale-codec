@@ -5262,7 +5262,7 @@
         ]
       ]
     },
-    "ValidatorPrefs": "ValidatorPrefsWithCommission",
+    "ValidatorPrefs": "ValidatorPrefsWithBlocked",
     "ValidatorPrefsTo196": {
       "type": "struct",
       "type_mapping": [
@@ -5485,10 +5485,15 @@
     },
     "StorageKind": {
       "type": "enum",
-      "value_list": [
-        "__UNUSED",
-        "PERSISTENT",
-        "LOCAL"
+      "type_mapping": [
+        [
+          "PERSISTENT",
+          1
+        ],
+        [
+          "LOCAL",
+          2
+        ]
       ]
     },
     "OpenTipTo225": {
