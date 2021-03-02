@@ -11,21 +11,27 @@
          ["parachains", "AccountId"]
       ]
     },
-    "ContractExecResult": "ContractExecResultTo260"
+    "ContractExecResult": "ContractExecResultTo260",
+    "ValidatorPrefs": "ValidatorPrefsWithBlocked",
+    "AccountInfo": "AccountInfoWithProviders"
   },
   "versioning": [
     {
       "runtime_range": [0, 259],
       "types": {
         "Address": "GenericAddress",
-        "LookupSource": "GenericAddress"
+        "LookupSource": "GenericAddress",
+        "AccountInfo": "AccountInfoWithRefCount",
+        "ValidatorPrefs": "ValidatorPrefsWithCommission"
       }
     },
     {
       "runtime_range": [260, null],
       "types": {
         "Address": "MultiAddress",
-        "LookupSource": "MultiAddress"
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithProviders",
+        "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     }
   ]
