@@ -13,7 +13,7 @@
     },
     "ContractExecResult": "ContractExecResultTo260",
     "ValidatorPrefs": "ValidatorPrefsWithBlocked",
-    "AccountInfo": "AccountInfoWithProviders"
+    "AccountInfo": "AccountInfoWithDualRefCount"
   },
   "versioning": [
     {
@@ -30,7 +30,7 @@
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
-        "AccountInfo": "AccountInfoWithProviders",
+        "AccountInfo": "AccountInfoWithDualRefCount",
         "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     }

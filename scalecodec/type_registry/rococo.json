@@ -3,7 +3,7 @@
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
-    "AccountInfo": "AccountInfoWithProviders",
+    "AccountInfo": "AccountInfoWithDualRefCount",
     "FullIdentification": "()",
     "Keys": {
       "type": "struct",

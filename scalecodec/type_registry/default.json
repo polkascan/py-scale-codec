@@ -4800,7 +4800,7 @@
         ]
       ]
     },
-    "AccountInfoWithProviders": {
+    "AccountInfoWithDualRefCount": {
       "type": "struct",
       "type_mapping": [
         [
@@ -4813,6 +4813,32 @@
         ],
         [
           "providers",
+          "RefCount"
+        ],
+        [
+          "data",
+          "AccountData"
+        ]
+      ]
+    },
+    "AccountInfoWithProviders": "AccountInfoWithDualRefCount",
+    "AccountInfoWithTripleRefCount": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nonce",
+          "Index"
+        ],
+        [
+          "consumers",
+          "RefCount"
+        ],
+        [
+          "providers",
+          "RefCount"
+        ],
+        [
+          "sufficients",
           "RefCount"
         ],
         [

@@ -3,7 +3,7 @@
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
-    "AccountInfo": "AccountInfoWithProviders",
+    "AccountInfo": "AccountInfoWithDualRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
@@ -122,7 +122,7 @@
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
-        "AccountInfo": "AccountInfoWithProviders",
+        "AccountInfo": "AccountInfoWithDualRefCount",
         "Keys": {
           "type": "struct",
           "type_mapping": [
