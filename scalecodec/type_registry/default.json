@@ -3903,6 +3903,10 @@
           "Weight"
         ],
         [
+          "instantiatePerSaltByte",
+          "Weight"
+        ],
+        [
           "hashSha2256",
           "Weight"
         ],
@@ -4847,7 +4851,7 @@
         ]
       ]
     },
-    "AccountInfo": "AccountInfoWithRefCount",
+    "AccountInfo": "AccountInfoWithTripleRefCount",
     "BlockWeights": {
       "type": "struct",
       "type_mapping": [
