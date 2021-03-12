@@ -852,21 +852,22 @@ class BitVec(ScaleType):
 
     def process_encode(self, value):
 
-        if type(value) is not list:
-            raise ValueError("Provided value is not a list of booleans")
+        if type(value) is list:
+            value = sum(v << i for i, v in enumerate(reversed(value)))
 
-        if len(value) == 0:
+        if type(value) is not int:
+            raise ValueError("Provided value is not an int or a list of booleans")
+
+        if value == 0:
             return ScaleBytes(b'\x00')
-
-        int_value = sum(v << i for i, v in enumerate(value))
 
         # encode the length in a compact u32
         compact_obj = CompactU32()
-        data = compact_obj.encode(len(value))
+        data = compact_obj.encode(value.bit_length())
 
-        byte_length = math.ceil(len(value) / 8)
+        byte_length = math.ceil(value.bit_length() / 8)
 
-        return data + int_value.to_bytes(length=byte_length, byteorder='little')
+        return data + value.to_bytes(length=byte_length, byteorder='little')
 
 
 class GenericAddress(ScaleType):
