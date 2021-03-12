@@ -276,6 +276,81 @@
     },
     "RefCount": "u32",
     "RefCountTo259": "u8",
+    "ExtendedBalance": "u128",
+    "RawSolution": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "compact",
+          "CompactAssignments"
+        ],
+        [
+          "score",
+          "ElectionScore"
+        ],
+        [
+          "round",
+          "u32"
+        ]
+      ]
+    },
+    "ReadySolution": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "supports",
+          "SolutionSupports"
+        ],
+        [
+          "score",
+          "ElectionScore"
+        ],
+        [
+          "compute",
+          "ElectionCompute"
+        ]
+      ]
+    },
+    "RoundSnapshot": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "voters",
+          "Vec<(AccountId, VoteWeight, Vec<AccountId>)>"
+        ],
+        [
+          "targets",
+          "Vec<AccountId>"
+        ]
+      ]
+    },
+    "SolutionSupport": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "total",
+          "ExtendedBalance"
+        ],
+        [
+          "voters",
+          "Vec<(AccountId, ExtendedBalance)>"
+        ]
+      ]
+    },
+    "SolutionSupports": "Vec<(AccountId, SolutionSupport)>",
+    "SolutionOrSnapshotSize": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "voters",
+          "Compact<u32>"
+        ],
+        [
+          "targets",
+          "Compact<u32>"
+        ]
+      ]
+    },
     "SyncState": {
       "type": "struct",
       "type_mapping": [

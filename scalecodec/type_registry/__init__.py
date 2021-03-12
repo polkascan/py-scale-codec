@@ -16,6 +16,7 @@
 
 import os
 import json
+from typing import Optional
 
 import requests
 
@@ -25,7 +26,7 @@ SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'default', 'development', 'kusama',
 ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/'
 
 
-def load_type_registry_preset(name, use_remote_preset=False):
+def load_type_registry_preset(name: str, use_remote_preset: bool = False) -> Optional[dict]:
     """
     Loads a type registry JSON file into a dict
 
@@ -42,7 +43,7 @@ def load_type_registry_preset(name, use_remote_preset=False):
     if name not in SUPPORTED_TYPE_REGISTRY_PRESETS:
         raise ValueError(f'Unsupported type registry preset "{name}"')
 
-    if use_remote_preset:
+    if use_remote_preset is True:
         result = requests.get(f'{ONLINE_BASE_URL}{name}.json')
 
         if result.status_code == 200:
@@ -56,7 +57,7 @@ def load_type_registry_preset(name, use_remote_preset=False):
             return None
 
 
-def load_type_registry_file(file_path):
+def load_type_registry_file(file_path: str) -> dict:
 
     with open(os.path.abspath(file_path), 'r') as fp:
         data = fp.read()
