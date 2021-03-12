@@ -2990,6 +2990,23 @@
     },
     "ModuleId": "LockIdentifier",
     "MultiAddress": "GenericMultiAddress",
+    "MultiSigner": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Ed25519",
+          "[u8; 32]"
+        ],
+        [
+          "Sr25519",
+          "[u8; 32]"
+        ],
+        [
+          "Ecdsa",
+          "[u8; 33]"
+        ]
+      ]
+    },
     "RuntimeDbWeight": {
       "type": "struct",
       "type_mapping": [
@@ -4550,7 +4567,7 @@
         ],
         [
           "PreEnding",
-          "AuctionIndex"
+          "u32"
         ],
         [
           "Ending",
@@ -4558,33 +4575,20 @@
         ]
       ]
     },
-    "DeployData": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "codeHash",
-          "Hash"
-        ],
-        [
-          "codeSize",
-          "u32"
-        ],
-        [
-          "initialHeadData",
-          "HeadData"
-        ]
-      ]
-    },
     "FundInfo": {
       "type": "struct",
       "type_mapping": [
         [
-          "parachain",
-          "Option<ParaId>"
+          "retiring",
+          "bool"
         ],
         [
-          "owner",
+          "depositor",
           "AccountId"
+        ],
+        [
+          "verifier",
+          "Option<MultiSigner>"
         ],
         [
           "deposit",
@@ -4608,18 +4612,19 @@
         ],
         [
           "firstSlot",
-          "BlockNumber"
+          "LeasePeriod"
         ],
         [
           "lastSlot",
-          "BlockNumber"
+          "LeasePeriod"
         ],
         [
-          "deployData",
-          "Option<DeployData>"
+          "trieIndex",
+          "TrieIndex"
         ]
       ]
     },
+    "TrieIndex": "u32",
     "GrandpaEquivocationProof": {
       "type": "struct",
       "type_mapping": [
@@ -5569,6 +5574,19 @@
       ]
     },
     "BabeAuthorityWeight": "u64",
+    "BabeEpochConfiguration": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "c",
+          "(u64, u64)"
+        ],
+        [
+          "allowedSlots",
+          "AllowedSlots"
+        ]
+      ]
+    },
     "BabeBlockWeight": "u32",
     "BabeEquivocationProof": {
       "type": "struct",
@@ -6353,6 +6371,10 @@
         ],
         [
           "maxValidatorsPerCore",
+          "Option<u32>"
+        ],
+        [
+          "maxValidators",
           "Option<u32>"
         ],
         [
