@@ -2595,6 +2595,79 @@
         ]
       ]
     },
+    "ActiveGilt": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "proportion",
+          "Perquintill"
+        ],
+        [
+          "amount",
+          "Balance"
+        ],
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "expiry",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "ActiveGiltsTotal": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "frozen",
+          "Balance"
+        ],
+        [
+          "proportion",
+          "Perquintill"
+        ],
+        [
+          "index",
+          "ActiveIndex"
+        ],
+        [
+          "target",
+          "Perquintill"
+        ]
+      ]
+    },
+    "ActiveIndex": "u32",
+    "GiltBid": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "amount",
+          "Balance"
+        ],
+        [
+          "who",
+          "AccountId"
+        ]
+      ]
+    },
+    "MmrLeafProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "blockHash",
+          "BlockHash"
+        ],
+        [
+          "leaf",
+          "Bytes"
+        ],
+        [
+          "proof",
+          "Bytes"
+        ]
+      ]
+    },
     "VestingInfo": {
       "type": "struct",
       "type_mapping": [
@@ -3704,6 +3777,10 @@
         [
           "lastWrite",
           "Option<BlockNumber>"
+        ],
+        [
+          "_reserved",
+          "Option<Null>"
         ]
       ]
     },
@@ -4029,6 +4106,10 @@
         [
           "hashBlake2128PerByte",
           "Weight"
+        ],
+        [
+          "rentParams",
+          "Weight"
         ]
       ]
     },
@@ -4298,16 +4379,23 @@
           "Compact<u32>"
         ],
         [
+          "refcount",
+          "Compact<u64>"
+        ],
+        [
           "_reserved",
-          "PrefabWasmModuleReserved"
+          "Option<Null>"
         ],
         [
           "code",
           "Bytes"
+        ],
+        [
+          "originalCodeLen",
+          "u32"
         ]
       ]
     },
-    "PrefabWasmModuleReserved": "Option<Null>",
     "ScheduleTo212": {
       "type": "struct",
       "type_mapping": [
@@ -5793,6 +5881,32 @@
         ]
       ]
     },
+    "AssetApprovalKey": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "owner",
+          "AccountId"
+        ],
+        [
+          "delegate",
+          "AccountId"
+        ]
+      ]
+    },
+    "AssetApproval": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "amount",
+          "TAssetBalance"
+        ],
+        [
+          "deposit",
+          "TAssetDepositBalance"
+        ]
+      ]
+    },
     "AssetBalance": {
       "type": "struct",
       "type_mapping": [
@@ -5805,8 +5919,25 @@
           "bool"
         ],
         [
-          "isZombie",
+          "isSufficient",
           "bool"
+        ]
+      ]
+    },
+    "AssetDestroyWitness": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "accounts",
+          "Compact<u32>"
+        ],
+        [
+          "sufficients",
+          "Compact<u32>"
+        ],
+        [
+          "approvals",
+          "Compact<u32>"
         ]
       ]
     },
@@ -5838,20 +5969,28 @@
           "TAssetDepositBalance"
         ],
         [
-          "maxZombies",
-          "u32"
-        ],
-        [
           "minBalance",
           "TAssetBalance"
         ],
         [
-          "zombies",
-          "u32"
+          "isSufficient",
+          "bool"
         ],
         [
           "accounts",
           "u32"
+        ],
+        [
+          "sufficients",
+          "u32"
+        ],
+        [
+          "approvals",
+          "u32"
+        ],
+        [
+          "isFrozen",
+          "bool"
         ]
       ]
     },
@@ -5873,6 +6012,10 @@
         [
           "decimals",
           "u8"
+        ],
+        [
+          "isFrozen",
+          "bool"
         ]
       ]
     },
