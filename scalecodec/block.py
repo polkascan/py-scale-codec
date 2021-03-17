@@ -412,18 +412,6 @@ class EventRecord(ScaleDecoder):
         }
 
 
-class Other(Bytes):
-    pass
-
-
-class AuthoritiesChange(Vec):
-    type_string = 'Vec<AccountId>'
-
-    def __init__(self, data, **kwargs):
-
-        super().__init__(data, sub_type='AccountId', **kwargs)
-
-
 class GenericConsensusEngineId(FixedLengthArray):
     sub_type = 'u8'
     element_count = 4
@@ -432,32 +420,67 @@ class GenericConsensusEngineId(FixedLengthArray):
         return self.get_next_bytes(self.element_count).decode()
 
 
-class ChangesTrieRoot(Bytes):
-    pass
-
-
-class SealV0(Struct):
+class GenericSealV0(Struct):
     type_string = '(u64, Signature)'
 
     type_mapping = (('slot', 'u64'), ('signature', 'Signature'))
 
 
-class Consensus(Struct):
+class GenericConsensus(Struct):
     type_string = '(ConsensusEngineId, Vec<u8>)'
 
     type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
 
 
-class Seal(Struct):
+class GenericSeal(Struct):
     type_string = '(ConsensusEngineId, Bytes)'
 
     type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
 
 
-class PreRuntime(Struct):
-    type_string = '(ConsensusEngineId, Bytes)'
+class GenericPreRuntime(Struct):
 
     type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
+
+    def __init__(self, data, **kwargs):
+        self.authority_index = None
+        self.slot_number = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+
+        value = super().process()
+
+        if value['engine'] == 'BABE':
+            # Determine block producer
+            babe_predigest = self.get_decoder_class(
+                type_string='RawBabePreDigest',
+                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', ''))),
+                runtime_config=self.runtime_config
+            )
+
+            babe_predigest.decode()
+
+            if len(list(babe_predigest.value.values())) > 0:
+                babe_predigest_value = list(babe_predigest.value.values())[0]
+
+                value['data'] = babe_predigest_value
+                self.authority_index = babe_predigest_value['authorityIndex']
+                self.slot_number = babe_predigest_value['slotNumber']
+
+        if value['engine'] == 'aura':
+
+            aura_predigest = self.get_decoder_class(
+                type_string='RawAuraPreDigest',
+                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', ''))),
+                runtime_config=self.runtime_config
+            )
+            aura_predigest.decode()
+
+            value['data'] = aura_predigest.value
+            self.slot_number = aura_predigest.value['slotNumber']
+
+        return value
 
 
 class LogDigest(Enum):
