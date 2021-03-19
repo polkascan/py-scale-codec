@@ -1,8 +1,8 @@
 {
   "runtime_id": 216,
   "types": {
-    "Address": "AccountIdAddress",
-    "LookupSource": "AccountIdAddress",
+    "Address": "MultiAddress",
+    "LookupSource": "MultiAddress",
     "AccountInfo": "AccountInfoWithTripleRefCount",
     "FullIdentification": "()",
     "Keys": {
