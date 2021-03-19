@@ -497,5 +497,5 @@ class LogDigest(Enum):
         self.index_value = self.value_list[self.index]
         self.log_type = self.process_type(self.value_list[self.index])
 
-        return {'type': self.log_type.type_string, 'value': self.log_type.value}
+        return {'type': self.value_list[self.index], 'value': self.log_type.value}
 
