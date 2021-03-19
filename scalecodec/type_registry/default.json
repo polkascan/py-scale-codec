@@ -6770,17 +6770,9 @@
         ]
       ]
     },
-    "HrmpChannelTo13": {
+    "HrmpChannel": {
       "type": "struct",
       "type_mapping": [
-        [
-          "senderDeposit",
-          "Balance"
-        ],
-        [
-          "recipientDeposit",
-          "Balance"
-        ],
         [
           "maxCapacity",
           "u32"
@@ -6804,6 +6796,14 @@
         [
           "mqcHead",
           "Option<Hash>"
+        ],
+        [
+          "senderDeposit",
+          "Balance"
+        ],
+        [
+          "recipientDeposit",
+          "Balance"
         ]
       ]
     },
@@ -6933,6 +6933,44 @@
         [
           "horizontalMessages",
           "BTreeMap<ParaId, VecInboundHrmpMessage>"
+        ]
+      ]
+    },
+    "ParachainProposal": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "proposer",
+          "AccountId"
+        ],
+        [
+          "genesisHead",
+          "HeadData"
+        ],
+        [
+          "validators",
+          "Vec<ValidatorId>"
+        ],
+        [
+          "name",
+          "Bytes"
+        ],
+        [
+          "balance",
+          "Balance"
+        ]
+      ]
+    },
+    "RegisteredParachainInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validators",
+          "Vec<ValidatorId>"
+        ],
+        [
+          "proposer",
+          "AccountId"
         ]
       ]
     },

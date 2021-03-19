@@ -59,7 +59,8 @@ class RuntimeConfigurationObject:
         name = re.sub(r'<T as Config>::', "", name)
         name = re.sub(r'<T as Config<I>>::', "", name)
         name = re.sub(r'\n', "", name)
-        name = re.sub(r'(grandpa|session|slashing|limits)::', "", name)
+        name = re.sub(r'(grandpa|session|slashing|limits|xcm)::', "", name)
+        name = re.sub(r'VecDeque<', "Vec<", name)
 
         if name == '()':
             return "Null"
