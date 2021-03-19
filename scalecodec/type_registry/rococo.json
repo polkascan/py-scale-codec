@@ -1,9 +1,9 @@
 {
-  "runtime_id": 200,
+  "runtime_id": 216,
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
-    "AccountInfo": "AccountInfoWithDualRefCount",
+    "AccountInfo": "AccountInfoWithTripleRefCount",
     "FullIdentification": "()",
     "Keys": {
       "type": "struct",
@@ -22,14 +22,16 @@
       "runtime_range": [0, 200],
       "types": {
         "Address": "AccountIdAddress",
-        "LookupSource": "AccountIdAddress"
+        "LookupSource": "AccountIdAddress",
+        "AccountInfo": "AccountInfoWithDualRefCount"
       }
     },
     {
       "runtime_range": [201, null],
       "types": {
         "Address": "MultiAddress",
-        "LookupSource": "MultiAddress"
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithTripleRefCount"
       }
     }
   ]
