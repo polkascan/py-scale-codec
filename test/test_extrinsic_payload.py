@@ -1198,12 +1198,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'code': '0x00',
                 'id': 1,
-                'info': {"scheduling": "Always"},
+                'info': {"manager": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", "deposit": 100000000},
                 'initial_head_data': '0x01'
             }
         })
 
-        self.assertEqual(str(payload), "0x24041700040004000401")
+        self.assertEqual(str(payload), "0xe004170004d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d00e1f50500000000000000000000000004000401")
 
     def test_encode_registrar_register_parathread_payload(self):
         extrinsic = ExtrinsicsDecoder(metadata=self.metadata_decoder)

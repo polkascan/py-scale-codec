@@ -1091,8 +1091,12 @@
       "type": "struct",
       "type_mapping": [
         [
-          "scheduling",
-          "Scheduling"
+          "manager",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
         ]
       ]
     },
@@ -2015,8 +2019,16 @@
         ]
       ]
     },
-    "WinningDataEntry": "Option<Bidder>",
+    "SlotRange": {
+      "type": "enum",
+      "value_list": [
+        "ZeroZero", "ZeroOne", "ZeroTwo", "ZeroThree", "OneOne", "OneTwo", "OneThree", "TwoTwo", "TwoThree", "ThreeThree"
+      ]
+    },
+    "WinningDataEntry": "Option<(AccountId, ParaId, BalanceOf)>",
     "WinningData": "[WinningDataEntry; 10]",
+    "WinnersData": "Vec<WinnersDataTuple>",
+    "WinnersDataTuple": "(AccountId, ParaId, BalanceOf, SlotRange)",
     "WithdrawReasons": {
       "type": "set",
       "value_type": "u64",
@@ -4526,7 +4538,9 @@
     "AccountIndex": "GenericAccountIndex",
     "Address": "MultiAddress",
     "AssetId": "u32",
-    "Justification": "Bytes",
+    "Justification": "(ConsensusEngineId, EncodedJustification)",
+    "EncodedJustification": "Bytes",
+    "Justifications": "Vec<Justification>",
     "Slot": "u64",
     "StorageData": "Bytes",
     "StorageProof": {
@@ -4559,7 +4573,8 @@
     "Permill": "u32",
     "Perquintill": "u64",
     "Phantom": "Null",
-    "SignedBlock": {
+    "SignedBlock": "SignedBlockWithJustifications",
+    "SignedBlockWithJustification": {
       "type": "struct",
       "type_mapping": [
         [
@@ -4568,7 +4583,20 @@
         ],
         [
           "justification",
-          "Justification"
+          "Option<EncodedJustification>"
+        ]
+      ]
+    },
+    "SignedBlockWithJustifications": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "block",
+          "Block"
+        ],
+        [
+          "justifications",
+          "Option<Justifications>"
         ]
       ]
     },
