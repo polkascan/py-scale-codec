@@ -284,7 +284,7 @@ class Extrinsic(ScaleDecoder):
         return data
 
     def __repr__(self):
-        return "<{}(hash={})>".format(self.__class__.__name__, self.extrinsic_hash)
+        return "<{}(value={})>".format(self.__class__.__name__, self.value)
 
 
 # Deprecated

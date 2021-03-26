@@ -318,11 +318,12 @@ class ScaleDecoder(ABC):
         if data:
             assert(type(data) == ScaleBytes)
 
-        if not runtime_config:
-            # if no runtime config is provided, fallback on singleton
-            runtime_config = RuntimeConfiguration()
+        if runtime_config:
+            self.runtime_config = runtime_config
 
-        self.runtime_config = runtime_config
+        if not self.runtime_config:
+            # if no runtime config is provided, fallback on singleton
+            self.runtime_config = RuntimeConfiguration()
 
         self.data = data
         self.raw_value = ''
