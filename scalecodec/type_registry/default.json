@@ -2464,6 +2464,13 @@
         ]
       ]
     },
+    "ServiceQuality": {
+      "type": "enum",
+      "value_list": [
+        "Ordered",
+        "Fast"
+      ]
+    },
     "IncomingParachainDeploy": {
       "type": "struct",
       "type_mapping": [
