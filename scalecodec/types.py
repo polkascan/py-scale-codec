@@ -783,6 +783,9 @@ class GenericAccountId(H256):
             value = '0x{}'.format(ss58_decode(value))
         return super().process_encode(value)
 
+    def serialize(self):
+        return self.ss58_address or self.value
+
 
 class GenericAccountIndex(U32):
     pass

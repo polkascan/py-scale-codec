@@ -59,7 +59,7 @@ class RuntimeConfigurationObject:
         name = re.sub(r'<T as Config>::', "", name)
         name = re.sub(r'<T as Config<I>>::', "", name)
         name = re.sub(r'\n', "", name)
-        name = re.sub(r'(grandpa|session|slashing|limits|xcm|beefy_primitives)::', "", name)
+        name = re.sub(r'(grandpa|session|slashing|limits|xcm|beefy_primitives|opaque)::', "", name)
         name = re.sub(r'VecDeque<', "Vec<", name)
 
         if name == '()':
@@ -394,10 +394,10 @@ class ScaleDecoder(ABC):
         return self.value
 
     def __str__(self):
-        return str(self.value) or ''
+        return str(self.serialize()) or ''
 
     def __repr__(self):
-        return "<{}(value={})>".format(self.__class__.__name__, self.value)
+        return "<{}(value={})>".format(self.__class__.__name__, self.serialize())
 
     def encode(self, value=None):
 
