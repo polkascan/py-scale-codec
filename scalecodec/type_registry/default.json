@@ -1042,27 +1042,6 @@
         ]
       ]
     },
-    "ParachainsInherentData": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "bitfields",
-          "SignedAvailabilityBitfields"
-        ],
-        [
-          "backedCandidates",
-          "Vec<BackedCandidate>"
-        ],
-        [
-          "disputes",
-          "MultiDisputeStatementSet"
-        ],
-        [
-          "parentHeader",
-          "Header"
-        ]
-      ]
-    },
     "ParaGenesisArgs": {
       "type": "struct",
       "type_mapping": [
