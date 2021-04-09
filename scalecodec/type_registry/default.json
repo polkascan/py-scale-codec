@@ -3046,69 +3046,6 @@
         ]
       ]
     },
-    "DisputeStatementSet": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "candidateHash",
-          "CandidateHash"
-        ],
-        [
-          "session",
-          "SessionIndex"
-        ],
-        [
-          "statements",
-          "Vec<(DisputeStatement, ValidatorIndex, ValidatorSignature)>"
-        ]
-      ]
-    },
-    "MultiDisputeStatementSet": "Vec<DisputeStatementSet>",
-    "DisputeStatement": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "Valid",
-          "ValidDisputeStatementKind"
-        ],
-        [
-          "Invalid",
-          "InvalidDisputeStatementKind"
-        ]
-      ]
-    },
-    "ValidDisputeStatementKind": {
-      "type": "enum",
-      "value_list": [
-        "Explicit",
-        "BackingSeconded",
-        "BackingValid",
-        "ApprovalChecking"
-      ]
-    },
-    "InvalidDisputeStatementKind": {
-      "type": "enum",
-      "value_list": [
-        "Explicit"
-      ]
-    },
-    "ExplicitDisputeStatement": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "valid",
-          "bool"
-        ],
-        [
-          "candidateHash",
-          "CandidateHash"
-        ],
-        [
-          "session",
-          "SessionIndex"
-        ]
-      ]
-    },
     "DoubleVoteReport": {
       "type": "struct",
       "type_mapping": [
@@ -6613,23 +6550,6 @@
         [
           "commitmentsHash",
           "Hash"
-        ]
-      ]
-    },
-    "GlobalValidationData": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "maxCodeSize",
-          "u32"
-        ],
-        [
-          "maxHeadDataSize",
-          "u32"
-        ],
-        [
-          "blockNumber",
-          "BlockNumber"
         ]
       ]
     },
