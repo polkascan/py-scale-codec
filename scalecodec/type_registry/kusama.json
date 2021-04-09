@@ -7,17 +7,7 @@
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
-    "Keys": {
-      "type": "struct",
-      "type_mapping": [
-         ["grandpa", "AccountId"],
-         ["babe", "AccountId"],
-         ["im_online", "AccountId"],
-         ["para_validator", "AccountId"],
-         ["para_assignment", "AccountId"],
-         ["authority_discovery", "AccountId"]
-      ]
-    },
+    "Keys": "SessionKeys6",
     "DispatchInfo": {
       "type": "struct",
       "type_mapping": [
@@ -381,18 +371,19 @@
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
         "AccountInfo": "AccountInfoWithDualRefCount",
-        "Keys": {
-          "type": "struct",
-          "type_mapping": [
-             ["grandpa", "AccountId"],
-             ["babe", "AccountId"],
-             ["im_online", "AccountId"],
-             ["para_validator", "AccountId"],
-             ["para_assignment", "AccountId"],
-             ["authority_discovery", "AccountId"]
-          ]
-        },
         "ValidatorPrefs": "ValidatorPrefsWithBlocked"
+      }
+    },
+    {
+      "runtime_range": [2028, 2029],
+      "types": {
+        "Keys": "SessionKeys6"
+      }
+    },
+    {
+      "runtime_range": [2030, null],
+      "types": {
+        "Keys": "SessionKeys7B"
       }
     }
   ]

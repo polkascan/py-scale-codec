@@ -5,17 +5,7 @@
     "LookupSource": "MultiAddress",
     "AccountInfo": "AccountInfoWithTripleRefCount",
     "FullIdentification": "()",
-    "Keys": {
-      "type": "struct",
-      "type_mapping": [
-         ["grandpa", "AccountId"],
-         ["babe", "AccountId"],
-         ["im_online", "AccountId"],
-         ["para_validator", "AccountId"],
-         ["para_assignment", "AccountId"],
-         ["authority_discovery", "AccountId"]
-      ]
-    }
+    "Keys": "SessionKeys7B"
   },
   "versioning": [
     {
@@ -32,6 +22,18 @@
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
         "AccountInfo": "AccountInfoWithTripleRefCount"
+      }
+    },
+    {
+      "runtime_range": [0, 228],
+      "types": {
+        "Keys": "SessionKeys6"
+      }
+    },
+    {
+      "runtime_range": [229, null],
+      "types": {
+        "Keys": "SessionKeys7B"
       }
     }
   ]
