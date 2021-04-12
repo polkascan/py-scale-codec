@@ -1465,6 +1465,7 @@
         ]
       ]
     },
+    "xcm::VersionedXcm": "VersionedXcm",
     "WithdrawAsset": {
       "type": "struct",
       "type_mapping": [
@@ -1589,6 +1590,7 @@
         ]
       ]
     },
+    "Xcm<Call>": "Xcm",
     "XcmError": {
       "type": "enum",
       "value_list": [
@@ -1617,6 +1619,32 @@
         [
           "Err",
           "XcmError"
+        ]
+      ]
+    },
+    "xcm::v0::Outcome": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Complete",
+          "Weight"
+        ],
+        [
+          "Incomplete",
+          "(Weight, XcmError)"
+        ],
+        [
+          "Error",
+          "XcmError"
+        ]
+      ]
+    },
+    "DoubleEncoded": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "encoded",
+          "Vec<u8>"
         ]
       ]
     },
@@ -2110,7 +2138,7 @@
       ]
     },
     "OpaqueTimeSlot": "Bytes",
-    "Box<<T as Trait<I>>::Proposal>": "BoxProposal",
+    "<T as Trait<I>>::Proposal": "Proposal",
     "AuthoritySignature": "Signature",
     "<AuthorityId as RuntimeAppPublic>::Signature": "AuthoritySignature",
     "&[u8]": "Bytes",
@@ -3732,6 +3760,7 @@
         ]
       ]
     },
+    "PalletId": "LockIdentifier",
     "PalletsOrigin": "OriginCaller",
     "PalletVersion": {
       "type": "struct",
@@ -4738,7 +4767,6 @@
     "Permill": "u32",
     "Perquintill": "u64",
     "Phantom": "Null",
-    "SignedBlock": "SignedBlockWithJustifications",
     "SignedBlockWithJustification": {
       "type": "struct",
       "type_mapping": [
@@ -4765,6 +4793,7 @@
         ]
       ]
     },
+    "SignedBlock": "SignedBlockWithJustifications",
     "ValidatorId": "AccountId",
     "ValidatorIdOf": "ValidatorId",
     "ValidatorSetId": "u64",

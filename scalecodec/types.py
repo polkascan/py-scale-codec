@@ -653,77 +653,6 @@ class CompactMoment(CompactU32):
         return self.value.isoformat()
 
 
-class BoxProposal(ScaleType):
-    type_string = 'Box<Proposal>'
-
-    def __init__(self, data, **kwargs):
-        self.call_index = None
-        self.call_function = None
-        self.call_module = None
-        self.call_args = []
-        super().__init__(data, **kwargs)
-
-    def process(self):
-
-        self.call_index = self.get_next_bytes(2).hex()
-
-        self.call_module, self.call_function = self.metadata.call_index[self.call_index]
-
-        for arg in self.call_function.args:
-            arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
-
-            self.call_args.append({
-                'name': arg.name,
-                'type': arg.type,
-                'value': arg_type_obj.serialize()
-            })
-
-        return {
-            'call_index': self.call_index,
-            'call_function': self.call_function.name,
-            'call_module': self.call_module.name,
-            'call_args': self.call_args
-        }
-
-    def process_encode(self, value):
-        # Check requirements
-        if 'call_index' in value:
-            self.call_index = value['call_index']
-
-        elif 'call_module' in value and 'call_function' in value:
-            # Look up call module from metadata
-            for call_index, (call_module, call_function) in self.metadata.call_index.items():
-
-                if call_module.name == value['call_module'] and call_function.name == value['call_function']:
-                    self.call_index = call_index
-                    self.call_module = call_module
-                    self.call_function = call_function
-                    break
-
-            if not self.call_index:
-                raise ValueError('Specified call module and function not found in metadata')
-
-        elif not self.call_module or not self.call_function:
-            raise ValueError('No call module and function specified')
-
-        data = ScaleBytes(bytearray.fromhex(self.call_index))
-
-        # Encode call params
-        if len(self.call_function.args) > 0:
-            for arg in self.call_function.args:
-                if arg.name not in value['call_args']:
-                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
-                else:
-                    param_value = value['call_args'][arg.name]
-
-                    arg_obj = self.get_decoder_class(
-                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
-                    )
-                    data += arg_obj.encode(param_value)
-
-        return data
-
-
 class ProposalPreimage(Struct):
     type_string = '(Vec<u8>, AccountId, BalanceOf, BlockNumber)'
 
@@ -733,6 +662,7 @@ class ProposalPreimage(Struct):
         ("deposit", "BalanceOf"),
         ("blockNumber", "BlockNumber")
     )
+
     def process(self):
 
         result = {}
@@ -740,13 +670,10 @@ class ProposalPreimage(Struct):
             result[key] = self.process_type(data_type, metadata=self.metadata).value
 
         # Replace HexBytes with actual proposal
-        result['proposal'] = Proposal(ScaleBytes(result['proposal']), metadata=self.metadata).decode()
+        result['proposal'] = self.get_decoder_class('Proposal', data=ScaleBytes(result['proposal']),
+                                                    metadata=self.metadata).decode()
 
         return result
-
-
-class Proposal(BoxProposal):
-    type_string = '<T as Trait<I>>::Proposal'
 
 
 class ValidatorPrefs(Struct):

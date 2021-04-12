@@ -241,12 +241,12 @@ class TestScaleTypes(unittest.TestCase):
 
         obj = ScaleDecoder.get_decoder_class('(BalanceOf, Vec<(AccountId, Data)>)')
 
-        self.assertEqual(obj.type_mapping[0][1].lower(), "BalanceOf".lower())
-        self.assertEqual(obj.type_mapping[1][1].lower(), "Vec<(AccountId, Data)>".lower())
+        self.assertEqual(obj.type_mapping[0][1], "BalanceOf")
+        self.assertEqual(obj.type_mapping[1][1], "Vec<(AccountId, Data)>")
 
         obj = ScaleDecoder.get_decoder_class('Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>')
 
-        self.assertEqual(obj.sub_type, "UncleEntryItem<BlockNumber, Hash, AccountId>".lower())
+        self.assertEqual(obj.sub_type, "UncleEntryItem<BlockNumber, Hash, AccountId>")
 
     def test_dynamic_fixed_array_type_decode(self):
         obj = ScaleDecoder.get_decoder_class('[u32; 1]', data=ScaleBytes("0x01000000"))
