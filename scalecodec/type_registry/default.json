@@ -539,6 +539,38 @@
          ["weight", "AuthorityWeight"]
       ]
     },
+    "BeefyCommitment": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "payload",
+          "BeefyPayload"
+        ],
+        [
+          "blockNumber",
+          "BlockNumber"
+        ],
+        [
+          "validatorSetId",
+          "ValidatorSetId"
+        ]
+      ]
+    },
+    "BeefySignedCommitment": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "commitment",
+          "BeefyCommitment"
+        ],
+        [
+          "signatures",
+          "Vec<Option<Signature>>"
+        ]
+      ]
+    },
+    "MmrRootHash": "H256",
+    "BeefyPayload": "MmrRootHash",
     "BeefyNextAuthoritySet": {
       "type": "struct",
       "type_mapping": [
@@ -1456,173 +1488,129 @@
     },
     "Weight": "u64",
     "WeightMultiplier": "Fixed64",
-    "VersionedXcm": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "V0",
-          "Xcm"
-        ]
-      ]
-    },
-    "xcm::VersionedXcm": "VersionedXcm",
-    "WithdrawAsset": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "assets",
-          "Vec<MultiAsset>"
-        ],
-        [
-          "effects",
-          "Vec<Order>"
-        ]
-      ]
-    },
-    "ReserveAssetDeposit": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "assets",
-          "Vec<MultiAsset>"
-        ],
-        [
-          "effects",
-          "Vec<Order>"
-        ]
-      ]
-    },
-    "TeleportAsset": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "assets",
-          "Vec<MultiAsset>"
-        ],
-        [
-          "effects",
-          "Vec<Order>"
-        ]
-      ]
-    },
-    "Balances": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "queryId",
-          "Compact<u64>"
-        ],
-        [
-          "assets",
-          "Vec<MultiAsset>"
-        ]
-      ]
-    },
-    "Transact": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "originType",
-          "OriginKind"
-        ],
-        [
-          "call",
-          "Vec<u8>"
-        ]
-      ]
-    },
-    "RelayTo": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "dest",
-          "MultiLocation"
-        ],
-        [
-          "inner",
-          "VersionedXcm"
-        ]
-      ]
-    },
-    "RelayedFrom": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "superorigin",
-          "MultiLocation"
-        ],
-        [
-          "inner",
-          "VersionedXcm"
-        ]
-      ]
-    },
-    "Xcm": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "WithdrawAsset",
-          "WithdrawAsset"
-        ],
-        [
-          "ReserveAssetDeposit",
-          "ReserveAssetDeposit"
-        ],
-        [
-          "TeleportAsset",
-          "TeleportAsset"
-        ],
-        [
-          "Balances",
-          "Balances"
-        ],
-        [
-          "Transact",
-          "Transact"
-        ],
-        [
-          "RelayTo",
-          "RelayTo"
-        ],
-        [
-          "RelayedFrom",
-          "RelayedFrom"
-        ]
-      ]
-    },
-    "Xcm<Call>": "Xcm",
-    "XcmError": {
+    "XcmOriginKind": {
       "type": "enum",
       "value_list": [
-        "Undefined",
-        "Unimplemented",
-        "UnhandledXcmVersion",
-        "UnhandledXcmMessage",
-        "UnhandledEffect",
-        "EscalationOfPrivilege",
-        "UntrustedReserveLocation",
-        "UntrustedTeleportLocation",
-        "DestinationBufferOverflow",
-        "CannotReachDestination",
-        "MultiLocationFull",
-        "FailedToDecode",
-        "BadOrigin"
+        "Native",
+        "SovereignAccount",
+        "Superuser"
       ]
     },
-    "XcmResult": {
+    "XcmResponse": {
       "type": "enum",
       "type_mapping": [
         [
-          "Ok",
-          "()"
-        ],
-        [
-          "Err",
-          "XcmError"
+          "Assets",
+          "Vec<MultiAsset>"
         ]
       ]
     },
-    "xcm::v0::Outcome": {
+    "XcmError": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Undefined",
+          "Null"
+        ],
+        [
+          "Overflow",
+          "Null"
+        ],
+        [
+          "Unimplemented",
+          "Null"
+        ],
+        [
+          "UnhandledXcmVersion",
+          "Null"
+        ],
+        [
+          "UnhandledXcmMessage",
+          "Null"
+        ],
+        [
+          "UnhandledEffect",
+          "Null"
+        ],
+        [
+          "EscalationOfPrivilege",
+          "Null"
+        ],
+        [
+          "UntrustedReserveLocation",
+          "Null"
+        ],
+        [
+          "UntrustedTeleportLocation",
+          "Null"
+        ],
+        [
+          "DestinationBufferOverflow",
+          "Null"
+        ],
+        [
+          "SendFailed",
+          "Null"
+        ],
+        [
+          "CannotReachDestination",
+          "(MultiLocation, Xcm)"
+        ],
+        [
+          "MultiLocationFull",
+          "Null"
+        ],
+        [
+          "FailedToDecode",
+          "Null"
+        ],
+        [
+          "BadOrigin",
+          "Null"
+        ],
+        [
+          "ExceedsMaxMessageSize",
+          "Null"
+        ],
+        [
+          "FailedToTransactAsset",
+          "Null"
+        ],
+        [
+          "WeightLimitReached",
+          "Null"
+        ],
+        [
+          "Wildcard",
+          "Null"
+        ],
+        [
+          "TooMuchWeightRequired",
+          "Null"
+        ],
+        [
+          "NotHoldingFees",
+          "Null"
+        ],
+        [
+          "WeightNotComputable",
+          "Null"
+        ],
+        [
+          "Barrier",
+          "Null"
+        ],
+        [
+          "NotWithdrawable",
+          "Null"
+        ],
+        [
+          "LocationCannotHold",
+          "Null"
+        ]
+      ]
+    },
+    "XcmOutcome": {
       "type": "enum",
       "type_mapping": [
         [
@@ -1639,6 +1627,20 @@
         ]
       ]
     },
+    "XcmResult": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Ok",
+          "()"
+        ],
+        [
+          "Err",
+          "XcmError"
+        ]
+      ]
+    },
+    "xcm::v0::Outcome": "XcmOutcome",
     "DoubleEncoded": {
       "type": "struct",
       "type_mapping": [
@@ -1856,7 +1858,7 @@
         ]
       ]
     },
-    "AbstractFungible": {
+    "MultiAssetAbstractFungible": {
       "type": "struct",
       "type_mapping": [
         [
@@ -1869,7 +1871,7 @@
         ]
       ]
     },
-    "AbstractNonFungible": {
+    "MultiAssetAbstractNonFungible": {
       "type": "struct",
       "type_mapping": [
         [
@@ -1882,7 +1884,7 @@
         ]
       ]
     },
-    "ConcreteFungible": {
+    "MultiAssetConcreteFungible": {
       "type": "struct",
       "type_mapping": [
         [
@@ -1895,7 +1897,7 @@
         ]
       ]
     },
-    "ConcreteNonFungible": {
+    "MultiAssetConcreteNonFungible": {
       "type": "struct",
       "type_mapping": [
         [
@@ -1945,19 +1947,19 @@
         ],
         [
           "AbstractFungible",
-          "AbstractFungible"
+          "MultiAssetAbstractFungible"
         ],
         [
           "AbstractNonFungible",
-          "AbstractNonFungible"
+          "MultiAssetAbstractNonFungible"
         ],
         [
           "ConcreteFungible",
-          "ConcreteFungible"
+          "MultiAssetConcreteFungible"
         ],
         [
           "ConcreteNonFungible",
-          "ConcreteNonFungible"
+          "MultiAssetConcreteNonFungible"
         ]
       ]
     },
@@ -3776,6 +3778,363 @@
         [
           "patch",
           "u8"
+        ]
+      ]
+    },
+    "XcmAssetEffects": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "effects",
+          "Vec<XcmOrder>"
+        ]
+      ]
+    },
+    "XcmWithdrawAsset": "XcmAssetEffects",
+    "XcmReserveAssetDeposit": "XcmAssetEffects",
+    "XcmTeleportAsset": "XcmAssetEffects",
+    "XcmQueryResponse": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "queryId",
+          "Compact<u64>"
+        ],
+        [
+          "response",
+          "XcmResponse"
+        ]
+      ]
+    },
+    "XcmTransferAsset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "dest",
+          "MultiLocation"
+        ]
+      ]
+    },
+    "XcmTransferReserveAsset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "dest",
+          "MultiLocation"
+        ],
+        [
+          "effects",
+          "Vec<XcmOrder>"
+        ]
+      ]
+    },
+    "XcmTransact": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "originType",
+          "XcmOriginKind"
+        ],
+        [
+          "requireWeightAtMost",
+          "u64"
+        ],
+        [
+          "call",
+          "DoubleEncodedCall"
+        ]
+      ]
+    },
+    "XcmHrmpNewChannelOpenRequest": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "sender",
+          "Compact<u32>"
+        ],
+        [
+          "maxMessageSize",
+          "Compact<u32>"
+        ],
+        [
+          "maxCapacity",
+          "Compact<u32>"
+        ]
+      ]
+    },
+    "XcmHrmpChannelAccepted": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "recipient",
+          "Compact<u32>"
+        ]
+      ]
+    },
+    "XcmHrmpChannelClosing": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "initiator",
+          "Compact<u32>"
+        ],
+        [
+          "sender",
+          "Compact<u32>"
+        ],
+        [
+          "recipient",
+          "Compact<u32>"
+        ]
+      ]
+    },
+    "XcmRelayedFrom": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "MultiLocation"
+        ],
+        [
+          "message",
+          "Xcm"
+        ]
+      ]
+    },
+    "Xcm": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "WithdrawAsset",
+          "XcmWithdrawAsset"
+        ],
+        [
+          "ReserveAssetDeposit",
+          "XcmReserveAssetDeposit"
+        ],
+        [
+          "TeleportAsset",
+          "XcmTeleportAsset"
+        ],
+        [
+          "QueryResponse",
+          "XcmQueryResponse"
+        ],
+        [
+          "TransferAsset",
+          "XcmTransferAsset"
+        ],
+        [
+          "TransferReserveAsset",
+          "XcmTransferReserveAsset"
+        ],
+        [
+          "Transact",
+          "XcmTransact"
+        ],
+        [
+          "HrmpNewChannelOpenRequest",
+          "XcmHrmpNewChannelOpenRequest"
+        ],
+        [
+          "HrmpChannelAccepted",
+          "XcmHrmpChannelAccepted"
+        ],
+        [
+          "HrmpChannelClosing",
+          "XcmHrmpChannelClosing"
+        ],
+        [
+          "RelayedFrom",
+          "XcmRelayedFrom"
+        ]
+      ]
+    },
+    "Xcm<Call>": "Xcm",
+    "VersionedXcm": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "V0",
+          "Xcm"
+        ]
+      ]
+    },
+    "xcm::VersionedXcm": "VersionedXcm",
+    "XcmOrderDepositAsset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "dest",
+          "MultiLocation"
+        ]
+      ]
+    },
+    "XcmOrderDepositReserveAsset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "dest",
+          "MultiLocation"
+        ],
+        [
+          "effects",
+          "Vec<XcmOrder>"
+        ]
+      ]
+    },
+    "XcmOrderExchangeAsset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "give",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "receive",
+          "Vec<MultiAsset>"
+        ]
+      ]
+    },
+    "XcmOrderInitiateReserveWithdraw": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "reserve",
+          "MultiLocation"
+        ],
+        [
+          "effects",
+          "Vec<XcmOrder>"
+        ]
+      ]
+    },
+    "XcmOrderInitiateTeleport": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ],
+        [
+          "dest",
+          "MultiLocation"
+        ],
+        [
+          "effects",
+          "Vec<XcmOrder>"
+        ]
+      ]
+    },
+    "XcmOrderQueryHolding": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "queryId",
+          "Compact<u64>"
+        ],
+        [
+          "dest",
+          "MultiLocation"
+        ],
+        [
+          "assets",
+          "Vec<MultiAsset>"
+        ]
+      ]
+    },
+    "XcmOrderBuyExecution": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "fees",
+          "MultiAsset"
+        ],
+        [
+          "weight",
+          "u64"
+        ],
+        [
+          "debt",
+          "u64"
+        ],
+        [
+          "haltOnError",
+          "bool"
+        ],
+        [
+          "xcm",
+          "Vec<Xcm>"
+        ]
+      ]
+    },
+    "XcmOrder": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Null",
+          "Null"
+        ],
+        [
+          "DepositAsset",
+          "XcmOrderDepositAsset"
+        ],
+        [
+          "DepositReserveAsset",
+          "XcmOrderDepositReserveAsset"
+        ],
+        [
+          "ExchangeAsset",
+          "XcmOrderExchangeAsset"
+        ],
+        [
+          "InitiateReserveWithdraw",
+          "XcmOrderInitiateReserveWithdraw"
+        ],
+        [
+          "InitiateTeleport",
+          "XcmOrderInitiateTeleport"
+        ],
+        [
+          "QueryHolding",
+          "XcmOrderQueryHolding"
+        ],
+        [
+          "BuyExecution",
+          "XcmOrderBuyExecution"
+        ]
+      ]
+    },
+    "DoubleEncodedCall": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "encoded",
+          "Vec<u8>"
         ]
       ]
     },
