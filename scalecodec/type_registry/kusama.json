@@ -7,7 +7,7 @@
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
-    "Keys": "SessionKeys6",
+    "Keys": "SessionKeys7B",
     "DispatchInfo": {
       "type": "struct",
       "type_mapping": [
