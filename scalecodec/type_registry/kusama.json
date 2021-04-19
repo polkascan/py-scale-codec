@@ -1,9 +1,9 @@
 {
-  "runtime_id": 2029,
+  "runtime_id": 2030,
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
-    "AccountInfo": "AccountInfoWithDualRefCount",
+    "AccountInfo": "AccountInfoWithTripleRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
@@ -370,20 +370,21 @@
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
-        "AccountInfo": "AccountInfoWithDualRefCount",
         "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     },
     {
       "runtime_range": [2028, 2029],
       "types": {
-        "Keys": "SessionKeys6"
+        "Keys": "SessionKeys6",
+        "AccountInfo": "AccountInfoWithDualRefCount"
       }
     },
     {
       "runtime_range": [2030, null],
       "types": {
-        "Keys": "SessionKeys7B"
+        "Keys": "SessionKeys7B",
+        "AccountInfo": "AccountInfoWithTripleRefCount"
       }
     }
   ]
