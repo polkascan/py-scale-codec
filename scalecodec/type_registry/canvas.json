@@ -3,6 +3,7 @@
   "types": {
     "Address": "AccountIdAddress",
     "LookupSource": "AccountIdAddress",
+    "AccountInfo": "AccountInfoWithRefCount",
     "Keys": {
       "type": "struct",
       "type_mapping": [

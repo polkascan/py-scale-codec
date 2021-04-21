@@ -4361,10 +4361,6 @@
         [
           "lastWrite",
           "Option<BlockNumber>"
-        ],
-        [
-          "_reserved",
-          "Option<Null>"
         ]
       ]
     },
