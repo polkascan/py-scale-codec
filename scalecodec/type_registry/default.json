@@ -1720,6 +1720,103 @@
         ]
       ]
     },
+    "BodyId": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Unit",
+          "Null"
+        ],
+        [
+          "Named",
+          "Vec<u8>"
+        ],
+        [
+          "Index",
+          "Compact<u32>"
+        ],
+        [
+          "Executive",
+          "Null"
+        ],
+        [
+          "Technical",
+          "Null"
+        ],
+        [
+          "Legislative",
+          "Null"
+        ],
+        [
+          "Judicial",
+          "Null"
+        ]
+      ]
+    },
+    "BodyPart": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Voice",
+          "Null"
+        ],
+        [
+          "Members",
+          "Compact<u32>"
+        ],
+        [
+          "Fraction",
+          "BodyPartFraction"
+        ],
+        [
+          "AtLeastProportion",
+          "BodyPartAtLeastProportion"
+        ],
+        [
+          "MoreThanProportion",
+          "BodyPartMoreThanProportion"
+        ]
+      ]
+    },
+    "BodyPartFraction": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nom",
+          "Compact<u32>"
+        ],
+        [
+          "denom",
+          "Compact<u32>"
+        ]
+      ]
+    },
+    "BodyPartAtLeastProportion": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nom",
+          "Compact<u32>"
+        ],
+        [
+          "denom",
+          "Compact<u32>"
+        ]
+      ]
+    },
+    "BodyPartMoreThanProportion": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nom",
+          "Compact<u32>"
+        ],
+        [
+          "denom",
+          "Compact<u32>"
+        ]
+      ]
+    },
     "AccountId32Junction": {
       "type": "struct",
       "type_mapping": [
@@ -1756,6 +1853,19 @@
         [
           "index",
           "[u8; 20]"
+        ]
+      ]
+    },
+    "PluralityJunction": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "id",
+          "BodyId"
+        ],
+        [
+          "part",
+          "BodyPart"
         ]
       ]
     },
@@ -1797,6 +1907,10 @@
         [
           "OnlyChild",
           "Null"
+        ],
+        [
+          "Plurality",
+          "PluralityJunction"
         ]
       ]
     },
@@ -2198,6 +2312,10 @@
         [
           "Account",
           "AccountId"
+        ],
+        [
+          "None",
+          "Null"
         ]
       ]
     },
