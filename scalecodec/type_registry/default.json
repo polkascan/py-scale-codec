@@ -369,6 +369,19 @@
       ]
     },
     "SystemOrigin": "RawOrigin",
+    "TokenError": {
+      "type": "enum",
+      "value_list": [
+        "NoFunds",
+        "WouldDie",
+        "BelowMinimum",
+        "CannotCreate",
+        "UnknownAsset",
+        "Frozen",
+        "Underflow",
+        "Overflow"
+      ]
+    },
     "Moment": "u64",
     "AccountData": {
       "type": "struct",
@@ -2575,6 +2588,18 @@
         [
           "Module",
           "DispatchErrorModule"
+        ],
+        [
+          "ConsumerRemaining",
+          "Null"
+        ],
+        [
+          "NoProviders",
+          "Null"
+        ],
+        [
+          "Token",
+          "TokenError"
         ]
       ]
     },
