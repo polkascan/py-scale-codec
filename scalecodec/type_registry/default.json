@@ -627,35 +627,7 @@
       ]
     },
     "TrieId": "Bytes",
-    "RawAliveContractInfo": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "trie_id",
-          "TrieId"
-        ],
-        [
-          "storage_size",
-          "u32"
-        ],
-        [
-          "code_hash",
-          "CodeHash"
-        ],
-        [
-          "rent_allowance",
-          "Balance"
-        ],
-        [
-          "deduct_block",
-          "BlockNumber"
-        ],
-        [
-          "last_write",
-          "Option<BlockNumber>"
-        ]
-      ]
-    },
+    "RawAliveContractInfo": "AliveContractInfo",
     "Pays": {
       "type": "enum",
       "value_list": [
@@ -4480,36 +4452,40 @@
       "type": "struct",
       "type_mapping": [
         [
-          "trieId",
+          "trie_id",
           "TrieId"
         ],
         [
-          "storageSize",
+          "storage_size",
           "u32"
         ],
         [
-          "emptyPairCount",
+          "pair_count",
           "u32"
         ],
         [
-          "totalPairCount",
-          "u32"
-        ],
-        [
-          "codeHash",
+          "code_hash",
           "CodeHash"
         ],
         [
-          "rentAllowance",
+          "rent_allowance",
           "Balance"
         ],
         [
-          "deductBlock",
+          "rent_payed",
+          "Balance"
+        ],
+        [
+          "deduct_block",
           "BlockNumber"
         ],
         [
-          "lastWrite",
+          "last_write",
           "Option<BlockNumber>"
+        ],
+        [
+          "_reserved",
+          "Option<Null>"
         ]
       ]
     },
