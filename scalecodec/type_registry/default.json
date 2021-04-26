@@ -5,6 +5,11 @@
     "BalanceOf": "Balance",
     "Block": "GenericBlock",
     "Call": "GenericCall",
+    "H32": "[u8; 4]",
+    "H64": "[u8; 8]",
+    "H128": "[u8; 16]",
+    "H1024": "[u8; 128]",
+    "H2048": "[u8; 256]",
     "H160": "H160",
     "H256": "H256",
     "H512": "H512",
@@ -1506,7 +1511,8 @@
       "value_list": [
         "Native",
         "SovereignAccount",
-        "Superuser"
+        "Superuser",
+        "Xcm"
       ]
     },
     "XcmResponse": {
