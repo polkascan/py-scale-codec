@@ -20,7 +20,7 @@ from hashlib import blake2b
 from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode
 
 from scalecodec.base import ScaleType, ScaleBytes
-from scalecodec.exceptions import InvalidScaleTypeValueException
+from scalecodec.exceptions import InvalidScaleTypeValueException, MetadataCallFunctionNotFound
 from scalecodec.utils.math import trailing_zeros, next_power_of_two
 
 
@@ -1261,7 +1261,9 @@ class GenericCall(ScaleType):
                     break
 
             if not self.call_index:
-                raise ValueError('Specified call module and function not found in metadata')
+                raise MetadataCallFunctionNotFound(
+                    f"Call function '{value['call_module']}.{value['call_function']}' not found in metadata"
+                )
 
         elif not self.call_module or not self.call_function:
             raise ValueError('No call module and function specified')

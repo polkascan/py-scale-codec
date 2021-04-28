@@ -21,3 +21,7 @@ class RemainingScaleBytesNotEmptyException(Exception):
 
 class InvalidScaleTypeValueException(Exception):
     pass
+
+
+class MetadataCallFunctionNotFound(ValueError):
+    pass
