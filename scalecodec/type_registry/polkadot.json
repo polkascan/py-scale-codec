@@ -1,9 +1,9 @@
 {
-  "runtime_id": 29,
+  "runtime_id": 30,
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
-    "AccountInfo": "AccountInfoWithDualRefCount",
+    "AccountInfo": "AccountInfoWithTripleRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
     "Weight": "u64",
