@@ -766,6 +766,15 @@ class Vec(ScaleType):
         return data
 
 
+class BoundedVec(Vec):
+    def __init__(self, data=None, **kwargs):
+
+        # Rebuild sub_type as last item is the upper bound of elements allowed
+        self.sub_type, self.max_elements = [x.strip() for x in self.sub_type.rsplit(',', 1)]
+
+        super().__init__(data, **kwargs)
+
+
 class BitVec(ScaleType):
     """
     A BitVec that represents an array of bits. The bits are however stored encoded. The difference between this

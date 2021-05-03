@@ -95,6 +95,29 @@ class TestScaleTypes(unittest.TestCase):
             '0x65d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b977'
         ])
 
+    def test_bounded_vec_encode(self):
+        obj = ScaleDecoder.get_decoder_class('BoundedVec<Hash, maxproposals>')
+        value = obj.encode(['0xe1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236'])
+        self.assertEqual(str(value), '0x04e1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236')
+
+        obj = ScaleDecoder.get_decoder_class('BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>')
+        self.assertEqual(obj.sub_type, 'Option<RegistrarInfo<BalanceOf, AccountId>>')
+
+        value = obj.encode([None, None])
+        self.assertEqual(str(value), '0x080000')
+
+    def test_bounded_vec_decode(self):
+        obj = ScaleDecoder.get_decoder_class(
+            'BoundedVec<Hash, maxproposals>',
+            data=ScaleBytes('0x04e1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236')
+        )
+        self.assertEqual(obj.decode(), ['0xe1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236'])
+
+        obj = ScaleDecoder.get_decoder_class(
+            'BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>', data=ScaleBytes('0x080000')
+        )
+        self.assertEqual([None, None], obj.decode())
+
     def test_validatorprefs_struct(self):
         obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', ScaleBytes("0x0c00"))
         obj.decode()
