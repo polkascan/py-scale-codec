@@ -1674,6 +1674,20 @@
         ]
       ]
     },
+    "InboundStatus": {
+      "type": "enum",
+      "value_list": [
+        "Ok",
+        "Suspended"
+      ]
+    },
+    "OutboundStatus": {
+      "type": "enum",
+      "value_list": [
+        "Ok",
+        "Suspended"
+      ]
+    },
     "MultiLocation": {
       "type": "enum",
       "type_mapping": [
@@ -1906,6 +1920,31 @@
         [
           "Plurality",
           "PluralityJunction"
+        ]
+      ]
+    },
+    "QueueConfigData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "suspendThreshold",
+          "u32"
+        ],
+        [
+          "dropThreshold",
+          "u32"
+        ],
+        [
+          "resumeThreshold",
+          "u32"
+        ],
+        [
+          "thresholdWeight",
+          "Weight"
+        ],
+        [
+          "weightRestrictDecay",
+          "Weight"
         ]
       ]
     },
@@ -4107,6 +4146,14 @@
       ]
     },
     "Xcm<Call>": "Xcm",
+    "XcmpMessageFormat": {
+      "type": "enum",
+      "value_list": [
+        "ConcatenatedVersionedXcm",
+        "ConcatenatedEncodedBlob",
+        "Signals"
+      ]
+    },
     "VersionedXcm": {
       "type": "enum",
       "type_mapping": [
@@ -7722,8 +7769,10 @@
       ]
     },
     "SystemInherentData": "ParachainInherentData",
-    "RelayChainBlockNumber": "u32",
-    "RelayChainHash": "Hash",
+    "RelayBlockNumber": "u32",
+    "RelayChainBlockNumber": "RelayBlockNumber",
+    "RelayHash": "Hash",
+    "RelayChainHash": "RelayHash",
     "QueuedParathread": {
       "type": "struct",
       "type_mapping": [
