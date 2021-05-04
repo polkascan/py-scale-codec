@@ -7161,6 +7161,10 @@
         [
           "backedInNumber",
           "BlockNumber"
+        ],
+        [
+          "backingGroup",
+          "GroupIndex"
         ]
       ]
     },
