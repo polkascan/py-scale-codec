@@ -606,3 +606,15 @@ class TestScaleTypes(unittest.TestCase):
 
         obj = ScaleDecoder.get_decoder_class('SetWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
+
+    def test_hashmap_encode(self):
+        obj = ScaleDecoder.get_decoder_class('HashMap<Vec<u8>, u32>')
+        data = obj.encode([('1', 2), ('23', 24), ('28', 30), ('45', 80)])
+        self.assertEqual(data.to_hex(), '0x10043102000000083233180000000832381e00000008343550000000')
+
+    def test_hashmap_decode(self):
+        obj = ScaleDecoder.get_decoder_class(
+            'HashMap<Vec<u8>, u32>', data=ScaleBytes("0x10043102000000083233180000000832381e00000008343550000000")
+        )
+        self.assertEqual([('1', 2), ('23', 24), ('28', 30), ('45', 80)], obj.decode())
+

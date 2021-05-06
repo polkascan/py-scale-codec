@@ -627,7 +627,6 @@
       ]
     },
     "TrieId": "Bytes",
-    "RawAliveContractInfo": "AliveContractInfo",
     "Pays": {
       "type": "enum",
       "value_list": [
@@ -2374,6 +2373,15 @@
         ]
       ]
     },
+    "ChangesTrieSignal": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "NewConfiguration",
+          "Option<ChangesTrieConfiguration>"
+        ]
+      ]
+    },
     "ConsensusEngineId": "GenericConsensusEngineId",
     "DigestItem": {
       "type": "enum",
@@ -2405,6 +2413,10 @@
         [
           "PreRuntime",
           "PreRuntime"
+        ],
+        [
+          "ChangesTrieSignal",
+          "ChangesTrieSignal"
         ]
       ]
     },
@@ -4503,35 +4515,35 @@
       "type": "struct",
       "type_mapping": [
         [
-          "trie_id",
+          "trieId",
           "TrieId"
         ],
         [
-          "storage_size",
+          "storageSize",
           "u32"
         ],
         [
-          "pair_count",
+          "pairCount",
           "u32"
         ],
         [
-          "code_hash",
+          "codeHash",
           "CodeHash"
         ],
         [
-          "rent_allowance",
+          "rentAllowance",
           "Balance"
         ],
         [
-          "rent_payed",
+          "rentPaid",
           "Balance"
         ],
         [
-          "deduct_block",
+          "deductBlock",
           "BlockNumber"
         ],
         [
-          "last_write",
+          "lastWrite",
           "Option<BlockNumber>"
         ],
         [
@@ -4540,6 +4552,7 @@
         ]
       ]
     },
+    "RawAliveContractInfo": "AliveContractInfo",
     "CodeHash": "Hash",
     "ContractCallRequest": {
       "type": "struct",
@@ -4673,6 +4686,19 @@
         [
           "trieId",
           "TrieId"
+        ]
+      ]
+    },
+    "ExecReturnValue": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "flags",
+          "u32"
+        ],
+        [
+          "data",
+          "Bytes"
         ]
       ]
     },
@@ -4866,6 +4892,65 @@
         [
           "rentParams",
           "Weight"
+        ]
+      ]
+    },
+    "InstantiateRequest": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "origin",
+          "AccountId"
+        ],
+        [
+          "endowment",
+          "Balance"
+        ],
+        [
+          "gasLimit",
+          "Gas"
+        ],
+        [
+          "code",
+          "Bytes"
+        ],
+        [
+          "data",
+          "Bytes"
+        ],
+        [
+          "salt",
+          "Bytes"
+        ]
+      ]
+    },
+    "ContractInstantiateResult": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Ok",
+          "InstantiateReturnValue"
+        ],
+        [
+          "Err",
+          "Null"
+        ]
+      ]
+    },
+    "InstantiateReturnValue": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "result",
+          "ExecReturnValue"
+        ],
+        [
+          "accountId",
+          "AccountId"
+        ],
+        [
+          "rentProjection",
+          "Option<RentProjection>"
         ]
       ]
     },
@@ -5152,6 +5237,19 @@
         ]
       ]
     },
+    "RentProjection": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "EvictionAt",
+          "BlockNumber"
+        ],
+        [
+          "NoEviction",
+          "Null"
+        ]
+      ]
+    },
     "ScheduleTo212": {
       "type": "struct",
       "type_mapping": [
@@ -5432,6 +5530,86 @@
       ]
     },
     "ApiId": "[u8; 8]",
+    "BlockTrace": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "blockHash",
+          "Text"
+        ],
+        [
+          "parentHash",
+          "Text"
+        ],
+        [
+          "tracingTargets",
+          "Text"
+        ],
+        [
+          "storageKeys",
+          "Text"
+        ],
+        [
+          "spans",
+          "Vec<BlockTraceSpan>"
+        ],
+        [
+          "events",
+          "Vec<BlockTraceEvent>"
+        ]
+      ]
+    },
+    "BlockTraceEvent": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "target",
+          "Text"
+        ],
+        [
+          "data",
+          "BlockTraceEventData"
+        ],
+        [
+          "parentId",
+          "Option<u64>"
+        ]
+      ]
+    },
+    "BlockTraceEventData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "stringValues",
+          "HashMap<Text, Text>"
+        ]
+      ]
+    },
+    "BlockTraceSpan": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "id",
+          "u64"
+        ],
+        [
+          "parentId",
+          "Option<u64>"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "target",
+          "Text"
+        ],
+        [
+          "wasm",
+          "bool"
+        ]
+      ]
+    },
     "KeyValueOption": "(StorageKey, Option<StorageData>)",
     "ReadProof": {
       "type": "struct",
@@ -5490,6 +5668,28 @@
         [
           "changes",
           "Vec<KeyValueOption>"
+        ]
+      ]
+    },
+    "TraceBlockResponse": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "TraceError",
+          "TraceError"
+        ],
+        [
+          "BlockTrace",
+          "BlockTrace"
+        ]
+      ]
+    },
+    "TraceError": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "error",
+          "Text"
         ]
       ]
     },
@@ -7358,7 +7558,7 @@
           "u32"
         ],
         [
-          "acceptancePeriod",
+          "codeRetentionPeriod",
           "BlockNumber"
         ],
         [
@@ -7396,6 +7596,18 @@
         [
           "disputePeriod",
           "SessionIndex"
+        ],
+        [
+          "disputePostConclusionAcceptancePeriod",
+          "BlockNumber"
+        ],
+        [
+          "disputeMaxSpamSlots",
+          "u32"
+        ],
+        [
+          "disputeConclusionByTimeOutPeriod",
+          "BlockNumber"
         ],
         [
           "noShowSlots",
@@ -8017,6 +8229,7 @@
         "ValidHigh",
         "Completed"
       ]
-    }
+    },
+    "Text, Text": "(Text, Text)"
   }
 }

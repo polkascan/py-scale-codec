@@ -47,9 +47,9 @@ class TestScaleDecoderClasses(unittest.TestCase):
 
                     # Try to decode sub_type if present
                     if sub_decoding_cls.sub_type:
-                        sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_decoding_cls.sub_type)
-                        self.assertIsNotNone(sub_decoding_cls,
-                                             msg=f' Sub type "{decoding_cls.sub_type}" didn\'t return decoding class')
+                        sub_sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_decoding_cls.sub_type)
+                        self.assertIsNotNone(sub_sub_decoding_cls,
+                                             msg=f' Sub type "{sub_decoding_cls.sub_type}" didn\'t return decoding class')
 
 
 class TestMultipleRuntimeConfigurations(unittest.TestCase):

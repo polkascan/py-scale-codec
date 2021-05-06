@@ -1466,3 +1466,53 @@ class GenericMultiAddress(Enum):
                 raise NotImplementedError("Address type not yet supported")
 
         return super().process_encode(value)
+
+
+class Map(ScaleType):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.map_key, self.map_value = [x.strip() for x in self.sub_type.split(',')]
+
+    def process(self):
+
+        element_count = self.process_type('Compact<u32>').value
+
+        result = []
+        for _ in range(0, element_count):
+            key_value = self.process_type(self.map_key, metadata=self.metadata).value
+            result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+
+        return result
+
+    def process_encode(self, value):
+
+        if type(value) is not list:
+            raise ValueError("value should be a list of tuples e.g.: [('1', 2), ('23', 24), ('28', 30), ('45', 80)]")
+
+        element_count_compact = CompactU32()
+
+        element_count_compact.encode(len(value))
+
+        data = element_count_compact.data
+
+        for item_key, item_value in value:
+            key_obj = self.get_decoder_class(
+                type_string=self.map_key, metadata=self.metadata, runtime_config=self.runtime_config
+            )
+            data += key_obj.encode(item_key)
+
+            value_obj = self.get_decoder_class(
+                type_string=self.map_value, metadata=self.metadata, runtime_config=self.runtime_config
+            )
+            data += value_obj.encode(item_value)
+
+        return data
+
+
+class HashMap(Map):
+    pass
+
+
+class BTreeMap(Map):
+    pass
