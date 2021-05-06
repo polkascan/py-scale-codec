@@ -20,7 +20,7 @@ from scalecodec.base import ScaleBytes, RuntimeConfiguration, ScaleDecoder
 from scalecodec.metadata import MetadataDecoder
 from scalecodec.type_registry import load_type_registry_preset
 from test.fixtures import metadata_v3_hex, metadata_v2_hex, metadata_v1_hex, invalid_metadata_v1_hex, metadata_v12_hex, \
-    metadata_v11_hex, metadata_v10_hex, metadata_v9_hex
+    metadata_v11_hex, metadata_v10_hex, metadata_v9_hex, metadata_v13_hex
 
 
 class TestMetadata(unittest.TestCase):
@@ -125,6 +125,18 @@ class TestMetadata(unittest.TestCase):
         metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v12_hex))
         metadata_decoder.decode()
         self.assertEqual(metadata_decoder.version.value, "MetadataV12Decoder")
+
+        for module in metadata_decoder.metadata.modules:
+            if module.calls:
+                for call in module.calls:
+                    for arg in call.args:
+                        decoder_class = ScaleDecoder.get_decoder_class(arg.type)
+                        self.assertIsNotNone(decoder_class, msg='{} is not supported by metadata'.format(arg.type))
+
+    def test_metadata_v13(self):
+        metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v13_hex))
+        metadata_decoder.decode()
+        self.assertEqual(metadata_decoder.version.value, "MetadataV13Decoder")
 
         for module in metadata_decoder.metadata.modules:
             if module.calls:

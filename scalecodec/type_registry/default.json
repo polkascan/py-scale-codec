@@ -8230,6 +8230,7 @@
         "Completed"
       ]
     },
-    "Text, Text": "(Text, Text)"
+    "Text, Text": "(Text, Text)",
+    "DestroyWitness": "AssetDestroyWitness"
   }
 }
