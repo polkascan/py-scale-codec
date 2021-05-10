@@ -59,7 +59,14 @@
         ]
       ]
     },
-
+    "ArithmeticError": {
+      "type": "enum",
+      "value_list": [
+        "Underflow",
+        "Overflow",
+        "DivisionByZero"
+      ]
+    },
     "BlockLength": {
       "type": "struct",
       "type_mapping": [
@@ -2633,6 +2640,10 @@
         [
           "Token",
           "TokenError"
+        ],
+        [
+          "Arithmetic",
+          "ArithmeticError"
         ]
       ]
     },
@@ -6660,6 +6671,35 @@
         "__UNUSED",
         "PERSISTENT",
         "LOCAL"
+      ]
+    },
+    "ConfigData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "maxIndividual",
+          "Weight"
+        ]
+      ]
+    },
+    "MessageId": "[u8; 32]",
+    "OverweightIndex": "u64",
+    "PageCounter": "u32",
+    "PageIndexData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "beginUsed",
+          "PageCounter"
+        ],
+        [
+          "endUsed",
+          "PageCounter"
+        ],
+        [
+          "overweightCount",
+          "OverweightIndex"
+        ]
       ]
     },
     "OpenTipTo225": {
