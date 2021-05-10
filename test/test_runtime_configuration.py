@@ -39,7 +39,11 @@ class TestScaleDecoderClasses(unittest.TestCase):
 
             # Try to decode type mapping if present
             if decoding_cls.type_mapping:
-                for name, sub_type_string in decoding_cls.type_mapping:
+                for sub_type_string in decoding_cls.type_mapping:
+
+                    if type(sub_type_string) in [list, tuple]:
+                        sub_type_string = sub_type_string[1]
+
                     sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_type_string)
 
                     self.assertIsNotNone(sub_decoding_cls,

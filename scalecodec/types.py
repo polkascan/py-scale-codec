@@ -465,26 +465,52 @@ class Struct(ScaleType):
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
 
-        if type(value) is list:
-            if len(value) != len(self.type_mapping):
-                raise ValueError('Element count of value ({}) doesn\'t match type_mapping ({})'.format(len(value), len(self.type_mapping)))
+        for key, data_type in self.type_mapping:
+            if key not in value:
+                raise ValueError('Element "{}" of struct is missing in given value'.format(key))
 
-            for idx, (key, data_type) in enumerate(self.type_mapping):
+            element_obj = self.get_decoder_class(
+                type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
+            )
+            data += element_obj.encode(value[key])
+
+        return data
+
+
+class Tuple(ScaleType):
+    def __init__(self, data=None, type_mapping=None, **kwargs):
+
+        if type_mapping:
+            self.type_mapping = type_mapping
+
+        super().__init__(data, **kwargs)
+
+    def process(self):
+
+        result = ()
+
+        for member_type in self.type_mapping:
+            if member_type is None:
+                member_type = 'Null'
+            result += (self.process_type(member_type, metadata=self.metadata).value,)
+
+        return result
+
+    def process_encode(self, value):
+        data = ScaleBytes(bytearray())
+
+        if type(value) is list or type(value) is tuple:
+            if len(value) != len(self.type_mapping):
+                raise ValueError('Element count of value ({}) doesn\'t match type_definition ({})'.format(
+                    len(value), len(self.type_mapping))
+                )
+
+            for idx, member_type in enumerate(self.type_mapping):
 
                 element_obj = self.get_decoder_class(
-                    data_type, metadata=self.metadata, runtime_config=self.runtime_config
+                    member_type, metadata=self.metadata, runtime_config=self.runtime_config
                 )
                 data += element_obj.encode(value[idx])
-
-        else:
-            for key, data_type in self.type_mapping:
-                if key not in value:
-                    raise ValueError('Element "{}" of struct is missing in given value'.format(key))
-
-                element_obj = self.get_decoder_class(
-                    type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
-                )
-                data += element_obj.encode(value[key])
 
         return data
 
@@ -718,22 +744,16 @@ class GenericAccountId(H256):
         value = self.public_key = super().process()
 
         if self.runtime_config.ss58_format is not None:
-            value = self.ss58_address = ss58_encode(value, ss58_format=self.runtime_config.ss58_format)
+            try:
+                value = self.ss58_address = ss58_encode(value, ss58_format=self.runtime_config.ss58_format)
+            except ValueError:
+                pass
 
         return value
 
 
 class GenericAccountIndex(U32):
     pass
-
-
-class KeyValue(Struct):
-    type_string = '(Vec<u8>, Vec<u8>)'
-    type_mapping = (('key', 'Vec<u8>'), ('value', 'Vec<u8>'))
-
-
-class NewAccountOutcome(CompactU32):
-    type_string = 'NewAccountOutcome'
 
 
 class Vec(ScaleType):

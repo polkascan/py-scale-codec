@@ -5405,19 +5405,7 @@
         ]
       ]
     },
-    "KeyValue": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "key",
-          "StorageKey"
-        ],
-        [
-          "value",
-          "StorageData"
-        ]
-      ]
-    },
+    "KeyValue": "(StorageKey, StorageData)",
     "KeyTypeId": "u32",
     "LookupSource": "Address",
 

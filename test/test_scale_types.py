@@ -127,7 +127,7 @@ class TestScaleTypes(unittest.TestCase):
     def test_implied_struct(self):
         obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
         obj.decode()
-        self.assertEqual(obj.value, {"col1": 3, "col2": 0})
+        self.assertEqual(obj.value, (3, 0))
 
     def test_address(self):
         obj = ScaleDecoder.get_decoder_class(
@@ -265,8 +265,8 @@ class TestScaleTypes(unittest.TestCase):
 
         obj = ScaleDecoder.get_decoder_class('(BalanceOf, Vec<(AccountId, Data)>)')
 
-        self.assertEqual(obj.type_mapping[0][1], "BalanceOf")
-        self.assertEqual(obj.type_mapping[1][1], "Vec<(AccountId, Data)>")
+        self.assertEqual(obj.type_mapping[0], "BalanceOf")
+        self.assertEqual(obj.type_mapping[1], "Vec<(AccountId, Data)>")
 
         obj = ScaleDecoder.get_decoder_class('Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>')
 
@@ -306,7 +306,7 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_custom_tuple(self):
         obj = ScaleDecoder.get_decoder_class('(u8,u8)', ScaleBytes("0x0102"))
-        self.assertEqual({'col1': 1, 'col2': 2}, obj.decode())
+        self.assertEqual((1, 2), obj.decode())
 
     def test_create_multi_sig_address(self):
         MultiAccountId = RuntimeConfiguration().get_decoder_class("MultiAccountId")

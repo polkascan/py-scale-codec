@@ -109,7 +109,7 @@ class RuntimeConfigurationObject:
             # Custom tuples
             elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
 
-                decoder_class = type(type_string, (self.get_decoder_class('struct'),), {
+                decoder_class = type(type_string, (self.get_decoder_class('tuple'),), {
                     'type_string': type_string
                 })
 
@@ -350,10 +350,8 @@ class ScaleDecoder(ABC):
                 for sub_type in sub_types:
                     tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(',', '|'))
 
-            n = 1
-            for struct_element in tuple_contents.split(','):
-                type_mapping += (('col{}'.format(n), struct_element.strip().replace('|', ',')),)
-                n += 1
+            for tuple_element in tuple_contents.split(','):
+                type_mapping += (tuple_element.strip().replace('|', ','),)
 
             cls.type_mapping = type_mapping
 
