@@ -17,7 +17,7 @@ import math
 from datetime import datetime
 from hashlib import blake2b
 
-from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode
+from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode
 
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException, MetadataCallFunctionNotFound
@@ -701,6 +701,7 @@ class GenericAccountId(H256):
 
     def __init__(self, data=None, **kwargs):
         self.ss58_address = None
+        self.public_key = None
         super().__init__(data, **kwargs)
 
     def process_encode(self, value):
@@ -712,6 +713,14 @@ class GenericAccountId(H256):
 
     def serialize(self):
         return self.ss58_address or self.value
+
+    def process(self):
+        value = self.public_key = super().process()
+
+        if self.runtime_config.ss58_format is not None:
+            value = self.ss58_address = ss58_encode(value, ss58_format=self.runtime_config.ss58_format)
+
+        return value
 
 
 class GenericAccountIndex(U32):

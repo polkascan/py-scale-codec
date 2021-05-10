@@ -42,13 +42,15 @@ class RuntimeConfigurationObject:
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self, config_id=None):
+    def __init__(self, config_id=None, ss58_format=None):
         self.config_id = config_id
         self.type_registry = {}
         self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
         self.chain_id = None
+
+        self.ss58_format = ss58_format
 
     @classmethod
     def convert_type_string(cls, name):

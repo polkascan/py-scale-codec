@@ -22,7 +22,7 @@ from scalecodec import GenericContractExecResult
 from scalecodec.metadata import MetadataDecoder
 
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
-    InvalidScaleTypeValueException, RuntimeConfiguration
+    InvalidScaleTypeValueException, RuntimeConfiguration, RuntimeConfigurationObject
 from scalecodec.types import GenericMultiAddress, HexBytes
 from scalecodec.type_registry import load_type_registry_preset
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
@@ -408,6 +408,19 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(decode_obj.decode(), f'0x{public_key}')
 
+    def test_multiaddress_ss58_address_as_str_runtime_config(self):
+
+        runtime_config = RuntimeConfigurationObject(ss58_format=2)
+        runtime_config.update_type_registry(load_type_registry_preset("default"))
+
+        obj = ScaleDecoder.get_decoder_class('Multiaddress', runtime_config=runtime_config)
+        ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
+
+        data = obj.encode(ss58_address)
+        decode_obj = ScaleDecoder.get_decoder_class('MultiAddress', data=data, runtime_config=runtime_config)
+
+        self.assertEqual(decode_obj.decode(), ss58_address)
+
     def test_multiaddress_ss58_index_as_str(self):
         obj = ScaleDecoder.get_decoder_class('MultiAddress')
         ss58_address = "F7Hs"
@@ -617,4 +630,24 @@ class TestScaleTypes(unittest.TestCase):
             'HashMap<Vec<u8>, u32>', data=ScaleBytes("0x10043102000000083233180000000832381e00000008343550000000")
         )
         self.assertEqual([('1', 2), ('23', 24), ('28', 30), ('45', 80)], obj.decode())
+
+    def test_account_id_runtime_config(self):
+
+        ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
+        public_key = '0x' + ss58_decode(ss58_address)
+
+        runtime_config = RuntimeConfigurationObject(ss58_format=2)
+        runtime_config.update_type_registry(load_type_registry_preset("default"))
+
+        # Encode
+        obj = ScaleDecoder.get_decoder_class('AccountId', runtime_config=runtime_config)
+        data = obj.encode(ss58_address)
+
+        # Decode
+        decode_obj = ScaleDecoder.get_decoder_class('AccountId', data=data, runtime_config=runtime_config)
+        decode_obj.decode()
+
+        self.assertEqual(decode_obj.value, ss58_address)
+        self.assertEqual(decode_obj.ss58_address, ss58_address)
+        self.assertEqual(decode_obj.public_key, public_key)
 
