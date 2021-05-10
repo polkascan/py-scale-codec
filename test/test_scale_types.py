@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import datetime
+import pydoc_data.topics
 import unittest
 
 from scalecodec import GenericContractExecResult
@@ -630,6 +631,17 @@ class TestScaleTypes(unittest.TestCase):
             'HashMap<Vec<u8>, u32>', data=ScaleBytes("0x10043102000000083233180000000832381e00000008343550000000")
         )
         self.assertEqual([('1', 2), ('23', 24), ('28', 30), ('45', 80)], obj.decode())
+
+    def test_btreeset_encode(self):
+        obj = ScaleDecoder.get_decoder_class('BTreeSet<u32>')
+        data = obj.encode([2, 24, 30, 80])
+        self.assertEqual(data.to_hex(), "0x1002000000180000001e00000050000000")
+
+    def test_btreeset_decode(self):
+        obj = ScaleDecoder.get_decoder_class(
+            'BTreeSet<u32>', data=ScaleBytes("0x1002000000180000001e00000050000000")
+        )
+        self.assertEqual([2, 24, 30, 80], obj.decode())
 
     def test_account_id_runtime_config(self):
 

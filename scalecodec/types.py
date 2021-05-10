@@ -1525,3 +1525,7 @@ class HashMap(Map):
 
 class BTreeMap(Map):
     pass
+
+
+class BTreeSet(Vec):
+    pass
