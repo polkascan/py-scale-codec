@@ -11,5 +11,93 @@
     "ContractExecResult": "ContractExecResultTo260"
   },
   "versioning": [
+    {
+      "runtime_range": [0, 9],
+      "types": {
+        "AliveContractInfo": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "trieId",
+              "TrieId"
+            ],
+            [
+              "storageSize",
+              "u32"
+            ],
+            [
+              "emptyPairCount",
+              "u32"
+            ],
+            [
+              "totalPairCount",
+              "u32"
+            ],
+            [
+              "codeHash",
+              "CodeHash"
+            ],
+            [
+              "rentAllowance",
+              "Balance"
+            ],
+            [
+              "deductBlock",
+              "BlockNumber"
+            ],
+            [
+              "lastWrite",
+              "Option<BlockNumber>"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "runtime_range": [10, null],
+      "types": {
+        "AliveContractInfo": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "trieId",
+              "TrieId"
+            ],
+            [
+              "storageSize",
+              "u32"
+            ],
+            [
+              "pairCount",
+              "u32"
+            ],
+            [
+              "codeHash",
+              "CodeHash"
+            ],
+            [
+              "rentAllowance",
+              "Balance"
+            ],
+            [
+              "rentPaid",
+              "Balance"
+            ],
+            [
+              "deductBlock",
+              "BlockNumber"
+            ],
+            [
+              "lastWrite",
+              "Option<BlockNumber>"
+            ],
+            [
+              "_reserved",
+              "Option<Null>"
+            ]
+          ]
+        }
+      }
+    }
   ]
 }
