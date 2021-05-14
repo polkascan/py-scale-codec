@@ -2597,6 +2597,19 @@
         ]
       ]
     },
+    "HeaderPartial": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "parentHash",
+          "Hash"
+        ],
+        [
+          "number",
+          "BlockNumber"
+        ]
+      ]
+    },
     "DispatchErrorModule": {
       "type": "struct",
       "type_mapping": [
@@ -5653,6 +5666,19 @@
         ],
         [
           "transactionVersion",
+          "u32"
+        ]
+      ]
+    },
+    "RuntimeVersionPartial": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "specName",
+          "Text"
+        ],
+        [
+          "specVersion",
           "u32"
         ]
       ]

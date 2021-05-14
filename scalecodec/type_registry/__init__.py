@@ -21,7 +21,7 @@ from typing import Optional
 import requests
 
 SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'default', 'development', 'kusama', 'polkadot', 'rococo',
-                                   'substrate-node-template', 'westend', 'test')
+                                   'substrate-node-template', 'westend', 'statemint', 'statemine', 'test')
 
 ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/'
 
