@@ -38,7 +38,8 @@
       ]
     },
     "RefCount": "u32",
-    "ValidatorPrefs": "ValidatorPrefsWithBlocked"
+    "ValidatorPrefs": "ValidatorPrefsWithBlocked",
+    "CompactAssignments":  "CompactAssignmentsFrom265"
   },
   "versioning": [
     {
@@ -320,9 +321,15 @@
       }
     },
     {
-      "runtime_range": [2023, null],
+      "runtime_range": [2023, 9009],
       "types": {
         "CompactAssignments": "CompactAssignmentsFrom258"
+      }
+    },
+    {
+      "runtime_range": [9010, null],
+      "types": {
+        "CompactAssignments": "CompactAssignmentsFrom265"
       }
     },
     {
