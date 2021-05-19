@@ -20,7 +20,7 @@
       ]
     },
     "RefCount": "u32",
-    "CompactAssignments": "CompactAssignmentsFrom265"
+    "CompactAssignments": "CompactAssignmentsFrom258"
   },
   "versioning": [
     {
@@ -74,15 +74,9 @@
       }
     },
     {
-      "runtime_range": [43, 9009],
+      "runtime_range": [43, null],
       "types": {
         "CompactAssignments": "CompactAssignmentsFrom258"
-      }
-    },
-    {
-      "runtime_range": [9010, null],
-      "types": {
-        "CompactAssignments": "CompactAssignmentsFrom265"
       }
     },
     {
