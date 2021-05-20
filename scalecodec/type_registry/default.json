@@ -2598,8 +2598,8 @@
         ]
       ]
     },
+    "BridgedBlockHash": "H256",
     "BridgedBlockNumber": "BlockNumber",
-    "BridgedBlockHash": "BlockHash",
     "BridgedHeader": "Header",
     "Precommit": {
       "type": "struct",
@@ -2648,23 +2648,6 @@
         ]
       ]
     },
-    "GrandpaJustification": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "round",
-          "u64"
-        ],
-        [
-          "commit",
-          "Commit"
-        ],
-        [
-          "votes_ancestries",
-          "Vec<BridgedHeader>"
-        ]
-      ]
-    },
     "InitializationData": {
       "type": "struct",
       "type_mapping": [
@@ -2673,33 +2656,104 @@
           "Header"
         ],
         [
-          "authority_list",
+          "authorityList",
           "AuthorityList"
         ],
         [
-          "set_id",
+          "setId",
           "SetId"
         ],
         [
-          "is_halted",
+          "isHalted",
           "bool"
         ]
       ]
     },
     "super::initializationdata<bridgedheader<t, i>>": "InitializationData",
-    "bp_header_chain::authorityset": {
+    "AuthoritySet": {
       "type": "struct",
       "type_mapping": [
         [
-          "authorities",
+          "currentAuthorities",
           "AuthorityList"
         ],
         [
-          "set_id",
-          "SetId"
+          "setId",
+          "u64"
+        ],
+        [
+          "pendingStandardChanges",
+          "ForkTreePendingChange"
+        ],
+        [
+          "pendingForcedChanges",
+          "Vec<PendingChange>"
+        ],
+        [
+          "authoritySetChanges",
+          "AuthoritySetChanges"
         ]
       ]
     },
+    "ForkTreePendingChange": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "roots",
+          "Vec<ForkTreePendingChangeNode>"
+        ],
+        [
+          "bestFinalizedNumber",
+          "Option<BlockNumber>"
+        ]
+      ]
+    },
+    "ForkTreePendingChangeNode": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hash",
+          "BlockHash"
+        ],
+        [
+          "number",
+          "BlockNumber"
+        ],
+        [
+          "data",
+          "PendingChange"
+        ],
+        [
+          "children",
+          "Vec<ForkTreePendingChangeNode>"
+        ]
+      ]
+    },
+    "AuthoritySetChange": "(U64, BlockNumber)",
+    "AuthoritySetChanges": "Vec<AuthoritySetChange>",
+    "DelayKind": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Finalized",
+          "Null"
+        ],
+        [
+          "Best",
+          "DelayKindBest"
+        ]
+      ]
+    },
+    "DelayKindBest": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "medianLastFinalized",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "bp_header_chain::authorityset": "AuthoritySet",
     "HeaderPartial": {
       "type": "struct",
       "type_mapping": [
@@ -4118,6 +4172,70 @@
         [
           "targetNumber",
           "BlockNumber"
+        ]
+      ]
+    },
+    "GrandpaCommit": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "targetHash",
+          "BlockHash"
+        ],
+        [
+          "targetNumber",
+          "BlockNumber"
+        ],
+        [
+          "precommits",
+          "Vec<GrandpaSignedPrecommit>"
+        ]
+      ]
+    },
+    "GrandpaPrecommit": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "targetHash",
+          "BlockHash"
+        ],
+        [
+          "targetNumber",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "GrandpaSignedPrecommit": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "precommit",
+          "GrandpaPrecommit"
+        ],
+        [
+          "signature",
+          "AuthoritySignature"
+        ],
+        [
+          "id",
+          "AuthorityId"
+        ]
+      ]
+    },
+    "GrandpaJustification": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "round",
+          "u64"
+        ],
+        [
+          "commit",
+          "GrandpaCommit"
+        ],
+        [
+          "votesAncestries",
+          "Vec<Header>"
         ]
       ]
     },
@@ -6019,6 +6137,31 @@
         ]
       ]
     },
+    "PendingChange": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nextAuthorities",
+          "AuthorityList"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ],
+        [
+          "canonHeight",
+          "BlockNumber"
+        ],
+        [
+          "canonHash",
+          "BlockHash"
+        ],
+        [
+          "delayKind",
+          "DelayKind"
+        ]
+      ]
+    },
     "PendingPause": {
       "type": "struct",
       "type_mapping": [
@@ -6677,6 +6820,127 @@
         [
           "validatorPayment",
           "Compact<Balance>"
+        ]
+      ]
+    },
+    "ClassId": "u32",
+    "InstanceId": "u32",
+    "DepositBalance": "Balance",
+    "DepositBalanceOf": "Balance",
+    "ClassDetails": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "owner",
+          "AccountId"
+        ],
+        [
+          "issuer",
+          "AccountId"
+        ],
+        [
+          "admin",
+          "AccountId"
+        ],
+        [
+          "freezer",
+          "AccountId"
+        ],
+        [
+          "totalTeposit",
+          "DepositBalance"
+        ],
+        [
+          "freeHolding",
+          "bool"
+        ],
+        [
+          "instances",
+          "u32"
+        ],
+        [
+          "instanceMetadatas",
+          "u32"
+        ],
+        [
+          "isFrozen",
+          "bool"
+        ]
+      ]
+    },
+    "DestroyWitness": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "instances",
+          "Compact<u32>"
+        ],
+        [
+          "instanceMetadatas",
+          "Compact<u32>"
+        ]
+      ]
+    },
+    "InstanceDetails": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "owner",
+          "AccountId"
+        ],
+        [
+          "approved",
+          "Option<AccountId>"
+        ],
+        [
+          "isFrozen",
+          "bool"
+        ],
+        [
+          "deposit",
+          "DepositBalance"
+        ]
+      ]
+    },
+    "ClassMetadata": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "deposit",
+          "DepositBalance"
+        ],
+        [
+          "name",
+          "Vec<u8>"
+        ],
+        [
+          "information",
+          "Vec<u8>"
+        ],
+        [
+          "isFrozen",
+          "bool"
+        ]
+      ]
+    },
+    "InstanceMetadata": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "deposit",
+          "DepositBalance"
+        ],
+        [
+          "name",
+          "Vec<u8>"
+        ],
+        [
+          "information",
+          "Vec<u8>"
+        ],
+        [
+          "isFrozen",
+          "bool"
         ]
       ]
     },
@@ -8484,7 +8748,6 @@
       ]
     },
     "Text, Text": "(Text, Text)",
-    "DestroyWitness": "AssetDestroyWitness",
     "Phase<BlockNumber>": {
       "type": "enum",
       "type_mapping": [
