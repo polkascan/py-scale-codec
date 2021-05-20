@@ -1282,8 +1282,8 @@ class MetadataV13ModuleStorageEntry(ScaleType):
         elif storage_function_type == 'NMap':
             self.type = {
                 "NMapType": {
-                    "hashers": self.process_type('Vec<StorageHasher>').value,
                     "keys": [self.convert_type(k) for k in self.process_type('Vec<Bytes>').value],
+                    "hashers": self.process_type('Vec<StorageHasher>').value,
                     "value": self.convert_type(self.process_type('Bytes').value),
                 }
             }
