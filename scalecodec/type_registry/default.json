@@ -14,6 +14,7 @@
     "H256": "H256",
     "H512": "H512",
     "Hash": "H256",
+    "BlockHash": "Hash",
     "CallHash": "Hash",
     "CallHashOf": "CallHash",
     "Fixed64": "u64",
@@ -2594,6 +2595,108 @@
         [
           "digest",
           "Digest"
+        ]
+      ]
+    },
+    "BridgedBlockNumber": "BlockNumber",
+    "BridgedBlockHash": "BlockHash",
+    "BridgedHeader": "Header",
+    "Precommit": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "target_hash",
+          "BridgedBlockHash"
+        ],
+        [
+          "target_number",
+          "BridgedBlockNumber"
+        ]
+      ]
+    },
+    "SignedPrecommit": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "precommit",
+          "Precommit"
+        ],
+        [
+          "signature",
+          "AuthoritySignature"
+        ],
+        [
+          "id",
+          "AuthorityId"
+        ]
+      ]
+    },
+    "Commit": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "target_hash",
+          "BridgedBlockHash"
+        ],
+        [
+          "target_number",
+          "BridgedBlockNumber"
+        ],
+        [
+          "precommits",
+          "Vec<SignedPrecommit>"
+        ]
+      ]
+    },
+    "GrandpaJustification": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "round",
+          "u64"
+        ],
+        [
+          "commit",
+          "Commit"
+        ],
+        [
+          "votes_ancestries",
+          "Vec<BridgedHeader>"
+        ]
+      ]
+    },
+    "InitializationData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "header",
+          "Header"
+        ],
+        [
+          "authority_list",
+          "AuthorityList"
+        ],
+        [
+          "set_id",
+          "SetId"
+        ],
+        [
+          "is_halted",
+          "bool"
+        ]
+      ]
+    },
+    "super::initializationdata<bridgedheader<t, i>>": "InitializationData",
+    "bp_header_chain::authorityset": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authorities",
+          "AuthorityList"
+        ],
+        [
+          "set_id",
+          "SetId"
         ]
       ]
     },
@@ -5628,7 +5731,6 @@
         "Approve"
       ]
     },
-    "BlockHash": "Hash",
     "UncleEntryItem": {
       "type": "enum",
       "type_mapping": [
