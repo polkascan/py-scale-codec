@@ -8764,6 +8764,7 @@
           "(bool, BlockNumber)"
         ]
       ]
-    }
+    },
+    "Approval<Balance, DepositBalanceOf<T, I>>": "AssetApproval"
   }
 }
