@@ -1,5 +1,5 @@
 {
-  "runtime_id": 260,
+  "runtime_id": 265,
   "types": {
     "Keys": {
       "type": "struct",
@@ -13,7 +13,7 @@
     },
     "ContractExecResult": "ContractExecResultTo260",
     "ValidatorPrefs": "ValidatorPrefsWithBlocked",
-    "AccountInfo": "AccountInfoWithDualRefCount"
+    "AccountInfo": "AccountInfoWithTripleRefCount"
   },
   "versioning": [
     {
@@ -26,11 +26,20 @@
       }
     },
     {
-      "runtime_range": [260, null],
+      "runtime_range": [260, 264],
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
         "AccountInfo": "AccountInfoWithDualRefCount",
+        "ValidatorPrefs": "ValidatorPrefsWithBlocked"
+      }
+    },
+    {
+      "runtime_range": [265, null],
+      "types": {
+        "Address": "MultiAddress",
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithTripRefCount",
         "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     }
