@@ -17,7 +17,7 @@ import math
 from datetime import datetime
 from hashlib import blake2b
 
-from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode
+from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode, is_valid_ss58_address
 
 from scalecodec.base import ScaleType, ScaleBytes
 from scalecodec.exceptions import InvalidScaleTypeValueException, MetadataCallFunctionNotFound
@@ -1466,7 +1466,12 @@ class GenericMultiAddress(Enum):
         self.account_length = self.index
         if self.index == 0:
             value = list(value.values())[0]
-            self.account_id = value[2:]
+
+            if is_valid_ss58_address(value):
+                self.account_id = ss58_decode(value)
+            elif value[0:2] == '0x':
+                self.account_id = value[2:]
+
             return value
         elif self.index == 1:
             self.account_index = list(value.values())[0]
@@ -1480,17 +1485,22 @@ class GenericMultiAddress(Enum):
     def process_encode(self, value):
 
         if type(value) is int:
+            # Implied decoded AccountIndex
             value = {"Index": value}
 
         elif type(value) is str:
             if len(value) <= 8 and value[0:2] != '0x':
+                # Implied raw AccountIndex
                 value = {"Index": ss58_decode_account_index(value)}
-            elif len(value) == 66:
+            elif is_valid_ss58_address(value):
+                # Implied SS58 encoded AccountId
+                value = {"Id": f'0x{ss58_decode(value)}'}
+            elif len(value) == 66 and value[0:2] == '0x':
+                # Implied raw AccountId
                 value = {"Id": value}
             elif len(value) == 42:
+                # Implied raw Address20
                 value = {"Address20": value}
-            elif value[0:2] != '0x':
-                value = {"Id": f'0x{ss58_decode(value)}'}
             else:
                 raise NotImplementedError("Address type not yet supported")
 
