@@ -387,11 +387,14 @@ class ScaleDecoder(ABC):
         self.data_end_offset = self.data.offset
 
         if check_remaining and self.data.offset != self.data.length:
-            raise RemainingScaleBytesNotEmptyException('Current offset: {} / length: {}'.format(self.data.offset, self.data.length))
+            raise RemainingScaleBytesNotEmptyException(
+                f'Decoding "{self.type_string}" - Current offset: {self.data.offset} / length: {self.data.length}'
+            )
 
         if self.data.offset > self.data.length:
             raise RemainingScaleBytesNotEmptyException(
-                'No more bytes available (offset: {} / length: {})'.format(self.data.offset, self.data.length))
+                f'Decoding "{self.type_string}" - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
+            )
 
         return self.value
 
