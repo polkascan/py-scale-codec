@@ -3,7 +3,7 @@
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
-    "AccountInfo": "AccountInfoWithRefCount",
+    "AccountInfo": "AccountInfoWithTripleRefCount",
     "Keys": {
       "type": "struct",
       "type_mapping": [
@@ -20,14 +20,16 @@
       "runtime_range": [0, 99],
       "types": {
         "Address": "AccountIdAddress",
-        "LookupSource": "AccountIdAddress"
+        "LookupSource": "AccountIdAddress",
+        "AccountInfo": "AccountInfoWithRefCount"
       }
     },
     {
       "runtime_range": [100, null],
       "types": {
         "Address": "MultiAddress",
-        "LookupSource": "MultiAddress"
+        "LookupSource": "MultiAddress",
+        "AccountInfo": "AccountInfoWithTripleRefCount"
       }
     }
   ]
