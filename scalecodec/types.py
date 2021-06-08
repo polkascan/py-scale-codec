@@ -816,15 +816,18 @@ class BitVec(ScaleType):
 
         value_int = int.from_bytes(self.get_next_bytes(total), byteorder='little')
 
-        return [bool(value_int & (1 << n)) for n in range(length_obj.value)]
+        return '0b' + bin(value_int)[2:].zfill(length_obj.value)
 
     def process_encode(self, value):
 
         if type(value) is list:
             value = sum(v << i for i, v in enumerate(reversed(value)))
 
+        if type(value) is str and value[0:2] == '0b':
+            value = int(value[2:], 2)
+
         if type(value) is not int:
-            raise ValueError("Provided value is not an int or a list of booleans")
+            raise ValueError("Provided value is not an int, binary str or a list of booleans")
 
         if value == 0:
             return ScaleBytes(b'\x00')

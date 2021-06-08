@@ -537,17 +537,17 @@ class TestScaleTypes(unittest.TestCase):
     def test_bitvec_decode(self):
         obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0c07'))
         obj.decode()
-        self.assertEqual(obj.value, [True, True, True])
+        self.assertEqual(obj.value, '0b111')
 
     def test_bitvec_decode_size2(self):
         obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0803'))
         obj.decode()
-        self.assertEqual(obj.value, [True, True])
+        self.assertEqual(obj.value, '0b11')
 
     def test_bitvec_decode_size_2bytes(self):
         obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x28fd02'))
         obj.decode()
-        self.assertEqual(obj.value, [True, False, True, True, True, True, True, True, False, True])
+        self.assertEqual(obj.value, '0b1011111101')
 
     def test_bitvec_encode_list(self):
         obj = ScaleDecoder.get_decoder_class('BitVec')
@@ -567,6 +567,26 @@ class TestScaleTypes(unittest.TestCase):
     def test_bitvec_encode_list4(self):
         obj = ScaleDecoder.get_decoder_class('BitVec')
         data = obj.encode([True, False, False, True, True, True, True, True, False, True])
+        self.assertEqual(data.to_hex(), '0x287d02')
+
+    def test_bitvec_encode_bin_str(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode('0b00000111')
+        self.assertEqual(data.to_hex(), '0x0c07')
+
+    def test_bitvec_encode_bin_str2(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode('0b00000010')
+        self.assertEqual(data.to_hex(), '0x0802')
+
+    def test_bitvec_encode_bin_str3(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode('0b00000001')
+        self.assertEqual(data.to_hex(), '0x0401')
+
+    def test_bitvec_encode_bin_str4(self):
+        obj = ScaleDecoder.get_decoder_class('BitVec')
+        data = obj.encode('0b00000010_01111101')
         self.assertEqual(data.to_hex(), '0x287d02')
 
     def test_bitvec_encode_int(self):
