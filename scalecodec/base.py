@@ -83,7 +83,10 @@ class RuntimeConfigurationObject:
 
         return name
 
-    def get_decoder_class(self, type_string, spec_version_id='default'):
+    def get_decoder_class(self, type_string: str, spec_version_id='default'):
+
+        if type_string.strip() == '':
+            return None
 
         type_string = self.convert_type_string(type_string)
 

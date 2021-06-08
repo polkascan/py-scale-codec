@@ -8827,6 +8827,46 @@
         ]
       ]
     },
-    "Approval<Balance, DepositBalanceOf<T, I>>": "AssetApproval"
+    "ProxyDefinition": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "delegate",
+          "AccountId"
+        ],
+        [
+          "proxyType",
+          "ProxyType"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "ProxyAnnouncement": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "real",
+          "AccountId"
+        ],
+        [
+          "callHash",
+          "Hash"
+        ],
+        [
+          "height",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "WeakBoundedVec": "BoundedVec",
+    "MaxProxies": "u32",
+    "MaxPending": "u32",
+    "(BoundedVec<ProxyDefinition<AccountId, ProxyType,  BlockNumber>, MaxProxies,>, BalanceOf)": "(BoundedVec<ProxyDefinition, MaxProxies>, BalanceOf)",
+    "(BoundedVec<Announcement<AccountId, CallHashOf,  BlockNumber>, MaxPending,>, BalanceOf,)": "(BoundedVec<ProxyAnnouncement, MaxPending>, BalanceOf)",
+    "Approval<Balance, DepositBalanceOf<T, I>>": "AssetApproval",
+    "Asset.Balance": "TAssetBalance"
   }
 }
