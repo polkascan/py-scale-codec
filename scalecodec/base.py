@@ -16,6 +16,7 @@
 
 import re
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
 
@@ -213,9 +214,8 @@ class RuntimeConfigurationObject:
         # Set chain ID if set
         self.chain_id = type_registry.get('chain_id')
 
-        # Set versioning
-        if 'versioning' in type_registry:
-            self.type_registry['versioning'] = type_registry.get('versioning')
+        self.type_registry['versioning'] = type_registry.get('versioning')
+        self.type_registry['runtime_upgrades'] = type_registry.get('runtime_upgrades')
 
         # Update types
         if 'types' in type_registry:
@@ -234,6 +234,45 @@ class RuntimeConfigurationObject:
                         (not versioning_item['runtime_range'][1] or versioning_item['runtime_range'][1] >= spec_version_id):
                     # Update types in type registry
                     self.update_type_registry_types(versioning_item['types'])
+
+    def get_runtime_id_from_upgrades(self, block_number: int) -> Optional[int]:
+        """
+        Retrieve runtime_id for given block_number if runtime_upgrades are specified in the type registry
+
+        Parameters
+        ----------
+        block_number
+
+        Returns
+        -------
+        Runtime id
+        """
+        if self.type_registry.get('runtime_upgrades'):
+
+            if block_number > self.type_registry['runtime_upgrades'][-1][0]:
+                return
+
+            for idx, (max_block_number, runtime_id) in enumerate(reversed(self.type_registry['runtime_upgrades'])):
+                if block_number >= max_block_number:
+                    return runtime_id
+
+    def set_runtime_upgrades_head(self, block_number: int):
+        """
+        Sets head for given block_number to last runtime_id in runtime_upgrades cache
+
+        Parameters
+        ----------
+        block_number
+
+        Returns
+        -------
+
+        """
+        if self.type_registry.get('runtime_upgrades'):
+            if self.type_registry['runtime_upgrades'][-1][1] == -1:
+                self.type_registry['runtime_upgrades'][-1][0] = block_number
+            elif block_number > self.type_registry['runtime_upgrades'][-1][0]:
+                self.type_registry['runtime_upgrades'].append([block_number, -1])
 
 
 class ScaleBytes:
@@ -391,12 +430,12 @@ class ScaleDecoder(ABC):
 
         if check_remaining and self.data.offset != self.data.length:
             raise RemainingScaleBytesNotEmptyException(
-                f'Decoding "{self.type_string}" - Current offset: {self.data.offset} / length: {self.data.length}'
+                f'Decoding "{self.__class__.__name__}" - Current offset: {self.data.offset} / length: {self.data.length}'
             )
 
         if self.data.offset > self.data.length:
             raise RemainingScaleBytesNotEmptyException(
-                f'Decoding "{self.type_string}" - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
+                f'Decoding "{self.__class__.__name__}" - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
             )
 
         return self.value

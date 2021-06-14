@@ -88,5 +88,29 @@ class TestMultipleRuntimeConfigurations(unittest.TestCase):
         self.assertIsNone(runtime_config2.get_decoder_class('MyNewType'))
 
 
+class TestRuntimeIdCache(unittest.TestCase):
+
+    def test_runtime_id_cache_lookup(self):
+        runtime_config = RuntimeConfigurationObject()
+        runtime_config.update_type_registry(load_type_registry_preset("default"))
+        runtime_config.update_type_registry(load_type_registry_preset("kusama"))
+
+        self.assertEqual(1023, runtime_config.get_runtime_id_from_upgrades(54248))
+        self.assertEqual(1020, runtime_config.get_runtime_id_from_upgrades(0))
+
+    def test_set_head(self):
+        runtime_config = RuntimeConfigurationObject()
+        runtime_config.update_type_registry(load_type_registry_preset("default"))
+        runtime_config.update_type_registry(load_type_registry_preset("kusama"))
+
+        self.assertIsNone(runtime_config.get_runtime_id_from_upgrades(99999999998))
+
+        # Set head to block
+        runtime_config.set_runtime_upgrades_head(99999999999)
+
+        # Check updated cache
+        self.assertGreater(runtime_config.get_runtime_id_from_upgrades(99999999998), 0)
+
+
 if __name__ == '__main__':
     unittest.main()
