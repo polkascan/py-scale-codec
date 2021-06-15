@@ -228,7 +228,7 @@ class RuntimeConfigurationObject:
             self.active_spec_version_id = spec_version_id
 
             # Updated type registry with versioned types
-            for versioning_item in self.type_registry.get('versioning', []):
+            for versioning_item in self.type_registry.get('versioning') or []:
                 # Check if versioning item is in current version range
                 if versioning_item['runtime_range'][0] <= spec_version_id and \
                         (not versioning_item['runtime_range'][1] or versioning_item['runtime_range'][1] >= spec_version_id):
@@ -252,8 +252,8 @@ class RuntimeConfigurationObject:
             if block_number > self.type_registry['runtime_upgrades'][-1][0]:
                 return
 
-            for idx, (max_block_number, runtime_id) in enumerate(reversed(self.type_registry['runtime_upgrades'])):
-                if block_number >= max_block_number:
+            for max_block_number, runtime_id in reversed(self.type_registry['runtime_upgrades']):
+                if block_number >= max_block_number and runtime_id != -1:
                     return runtime_id
 
     def set_runtime_upgrades_head(self, block_number: int):
