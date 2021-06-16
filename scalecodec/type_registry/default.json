@@ -3817,6 +3817,7 @@
       ]
     },
     "ValidationCode": "Bytes",
+    "ValidationCodeHash": "Hash",
     "ValidationData": {
       "type": "struct",
       "type_mapping": [
@@ -6896,7 +6897,7 @@
           "AccountId"
         ],
         [
-          "totalTeposit",
+          "totalDeposit",
           "DepositBalance"
         ],
         [
@@ -6909,6 +6910,10 @@
         ],
         [
           "instanceMetadatas",
+          "u32"
+        ],
+        [
+          "attributes",
           "u32"
         ],
         [
@@ -7892,7 +7897,7 @@
         ],
         [
           "validationCodeHash",
-          "Hash"
+          "ValidationCodeHash"
         ]
       ]
     },
