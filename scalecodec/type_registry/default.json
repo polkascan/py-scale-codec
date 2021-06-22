@@ -5082,6 +5082,7 @@
     },
     "ContractExecResult": "ContractExecResultTo260",
     "ContractStorageKey": "[u8; 32]",
+    "exec::StorageKey": "ContractStorageKey",
     "DeletedContract": {
       "type": "struct",
       "type_mapping": [

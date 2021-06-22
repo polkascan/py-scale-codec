@@ -69,7 +69,7 @@ class RuntimeConfigurationObject:
 
         if name == '()':
             return "Null"
-        if name.lower() in ['vec<u8>', '&[u8]']:
+        if name.lower() in ['vec<u8>', '&[u8]', "& 'static[u8]"]:
             return "Bytes"
         if name.lower() == '<lookup as staticlookup>::source':
             return 'LookupSource'
