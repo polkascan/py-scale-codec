@@ -6943,6 +6943,10 @@
         [
           "instanceMetadatas",
           "Compact<u32>"
+        ],
+        [
+          "attributes",
+          "Compact<u32>"
         ]
       ]
     },
@@ -6975,11 +6979,7 @@
           "DepositBalance"
         ],
         [
-          "name",
-          "Vec<u8>"
-        ],
-        [
-          "information",
+          "data",
           "Vec<u8>"
         ],
         [
@@ -6996,11 +6996,7 @@
           "DepositBalance"
         ],
         [
-          "name",
-          "Vec<u8>"
-        ],
-        [
-          "information",
+          "data",
           "Vec<u8>"
         ],
         [
