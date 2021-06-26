@@ -1,5 +1,5 @@
 {
-  "runtime_id": 30,
+  "runtime_id": 9050,
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
@@ -40,7 +40,7 @@
       ]
     },
     "RefCount": "u32",
-    "CompactAssignments": "CompactAssignmentsFrom258"
+    "CompactAssignments": "CompactAssignmentsWith24"
   },
   "versioning": [
     {
@@ -82,15 +82,15 @@
       }
     },
     {
-      "runtime_range": [23, 9009],
+      "runtime_range": [23, 9000],
       "types": {
-        "CompactAssignments": "CompactAssignmentsFrom258"
+        "CompactAssignments": "CompactAssignmentsWith16"
       }
     },
     {
       "runtime_range": [9010, null],
       "types": {
-        "CompactAssignments": "CompactAssignmentsFrom265"
+        "CompactAssignments": "CompactAssignmentsWith24"
       }
     },
     {
@@ -162,6 +162,6 @@
     [244358, 8], [303079, 9], [314201, 10], [342400, 11], [443963, 12],
     [528470, 13], [687751, 14], [746085, 15], [787923, 16], [799302, 17],
     [1205128, 18], [1603423, 23], [1733218, 24], [2005673, 25], [2436698, 26],
-    [3613564, 27], [3899547, 28], [4345767, 29], [4876134, 30]
+    [3613564, 27], [3899547, 28], [4345767, 29], [4876134, 30], [5661442, 9050]
   ]
 }
