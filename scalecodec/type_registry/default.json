@@ -6865,6 +6865,10 @@
         [
           "Unsigned",
           "(bool, BlockNumber)"
+        ],
+        [
+          "Emergency",
+          "Null"
         ]
       ]
     },
