@@ -150,6 +150,10 @@ class Option(ScaleType):
 
         return ScaleBytes('0x00')
 
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition):
+        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]}"
+
 
 class Bytes(ScaleType):
 
@@ -487,6 +491,9 @@ class Tuple(ScaleType):
 
     def process(self):
 
+        if len(self.type_mapping) == 1:
+            return self.process_type(self.type_mapping[0], metadata=self.metadata).value
+
         result = ()
 
         for member_type in self.type_mapping:
@@ -499,18 +506,20 @@ class Tuple(ScaleType):
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
 
-        if type(value) is list or type(value) is tuple:
-            if len(value) != len(self.type_mapping):
-                raise ValueError('Element count of value ({}) doesn\'t match type_definition ({})'.format(
-                    len(value), len(self.type_mapping))
-                )
+        if type(value) not in (list,  tuple):
+            value = [value]
 
-            for idx, member_type in enumerate(self.type_mapping):
+        if len(value) != len(self.type_mapping):
+            raise ValueError('Element count of value ({}) doesn\'t match type_definition ({})'.format(
+                len(value), len(self.type_mapping))
+            )
 
-                element_obj = self.get_decoder_class(
-                    member_type, metadata=self.metadata, runtime_config=self.runtime_config
-                )
-                data += element_obj.encode(value[idx])
+        for idx, member_type in enumerate(self.type_mapping):
+
+            element_obj = self.get_decoder_class(
+                member_type, metadata=self.metadata, runtime_config=self.runtime_config
+            )
+            data += element_obj.encode(value[idx])
 
         return data
 
@@ -702,27 +711,6 @@ class ProposalPreimage(Struct):
         return result
 
 
-class ValidatorPrefs(Struct):
-    type_string = '(Compact<Balance>)'
-
-    type_mapping = (('commission', 'Compact<Balance>'),)
-
-
-class ValidatorPrefsLegacy(Struct):
-    type_string = '(Compact<u32>,Compact<Balance>)'
-
-    type_mapping = (('unstakeThreshold', 'Compact<u32>'), ('validatorPayment', 'Compact<Balance>'))
-
-
-class Linkage(Struct):
-    type_string = 'Linkage<AccountId>'
-
-    type_mapping = (
-        ('previous', 'Option<AccountId>'),
-        ('next', 'Option<AccountId>')
-    )
-
-
 class GenericAccountId(H256):
 
     def __init__(self, data=None, **kwargs):
@@ -765,6 +753,15 @@ class Vec(ScaleType):
     def process(self):
         element_count = self.process_type('Compact<u32>').value
 
+        # Check for Bytes processing
+        if self.runtime_config.get_decoder_class(self.sub_type) is U8:
+            value = self.get_next_bytes(element_count)
+
+            try:
+                return value.decode()
+            except UnicodeDecodeError:
+                return '0x{}'.format(value.hex())
+
         result = []
         for _ in range(0, element_count):
             element = self.process_type(self.sub_type, metadata=self.metadata)
@@ -775,11 +772,24 @@ class Vec(ScaleType):
 
     def process_encode(self, value):
 
-        if type(value) is not list:
-            raise ValueError("Provided value is not a list")
-
         # encode element count to Compact<u32>
         element_count_compact = CompactU32()
+
+        # Check for Bytes processing
+        if self.runtime_config.get_decoder_class(self.sub_type) is U8:
+            if value[0:2] == '0x':
+                # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
+                value = bytes.fromhex(value[2:])
+                data = element_count_compact.encode(len(value))
+                data += value
+            else:
+                data = element_count_compact.encode(len(value))
+                data += value.encode()
+
+            return data
+
+        if type(value) is not list:
+            raise ValueError("Provided value is not a list")
 
         element_count_compact.encode(len(value))
 
@@ -798,10 +808,31 @@ class Vec(ScaleType):
 class BoundedVec(Vec):
     def __init__(self, data=None, **kwargs):
 
-        # Rebuild sub_type as last item is the upper bound of elements allowed
-        self.sub_type, self.max_elements = [x.strip() for x in self.sub_type.rsplit(',', 1)]
+        if self.sub_type and ',' in self.sub_type:
+            # Rebuild sub_type as last item is the upper bound of elements allowed
+            self.sub_type, self.max_elements = [x.strip() for x in self.sub_type.rsplit(',', 1)]
 
         super().__init__(data, **kwargs)
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition):
+        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]}"
+
+
+class ScaleInfoBoundedVec(Tuple):
+
+    def __init__(self, data=None, **kwargs):
+
+        self.sub_type, self.max_elements = self.type_mapping
+
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        return self.process_type('Vec', sub_type=self.sub_type).value
+
+    def process_encode(self, value):
+        vec_obj = self.get_decoder_class('Vec', sub_type=self.sub_type, runtime_config=self.runtime_config)
+        return vec_obj.process_encode(value)
 
 
 class BitVec(ScaleType):
@@ -958,6 +989,10 @@ class Enum(ScaleType):
         if self.type_mapping:
             try:
                 enum_type_mapping = self.type_mapping[self.index]
+
+                if enum_type_mapping[1] == 'Null':
+                    return enum_type_mapping[0]
+
                 return self.process_type(
                     type_string='Struct', type_mapping=[enum_type_mapping]
                 ).value
@@ -1102,10 +1137,6 @@ class Null(ScaleType):
         return ScaleBytes(bytearray())
 
 
-class InherentOfflineReport(Null):
-    pass
-
-
 class StorageHasher(Enum):
 
     value_list = ['Blake2_128', 'Blake2_256', 'Blake2_128Concat', 'Twox128', 'Twox256', 'Twox64Concat', 'Identity']
@@ -1130,93 +1161,6 @@ class StorageHasher(Enum):
 
     def is_identity(self):
         return self.index == 6
-
-
-class LockPeriods(U8):
-    pass
-
-
-class SessionKey(H256):
-    pass
-
-
-class PrefabWasmModule(Struct):
-    type_string = 'wasm::PrefabWasmModule'
-
-    type_mapping = (
-        ('scheduleVersion', 'Compact<u32>'),
-        ('initial', 'Compact<u32>'),
-        ('maximum', 'Compact<u32>'),
-        ('_reserved', 'Option<Null>'),
-        ('code', 'Bytes'),
-    )
-
-
-class SessionKeysSubstrate(Struct):
-
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-        ('babe', 'AccountId'),
-        ('im_online', 'AccountId'),
-    )
-
-
-class LegacyKeys(Struct):
-
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-        ('babe', 'AccountId'),
-    )
-
-
-class EdgewareKeys(Struct):
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-    )
-
-
-class QueuedKeys(Struct):
-
-    type_string = '(ValidatorId, Keys)'
-
-    type_mapping = (
-        ('validator', 'ValidatorId'),
-        ('keys', 'Keys'),
-    )
-
-
-class LegacyQueuedKeys(Struct):
-
-    type_string = '(ValidatorId, LegacyKeys)'
-
-    type_mapping = (
-        ('validator', 'ValidatorId'),
-        ('keys', 'LegacyKeys'),
-    )
-
-
-class EdgewareQueuedKeys(Struct):
-
-    type_string = '(ValidatorId, EdgewareKeys)'
-
-    type_mapping = (
-        ('validator', 'ValidatorId'),
-        ('keys', 'EdgewareKeys'),
-    )
-
-
-class VecQueuedKeys(Vec):
-    type_string = 'Vec<(ValidatorId, Keys)>'
-
-    def process(self):
-        element_count = self.process_type('Compact<u32>').value
-        result = []
-        for _ in range(0, element_count):
-            element = self.process_type('QueuedKeys')
-            self.elements.append(element)
-            result.append(element.value)
-
-        return result
 
 
 class Conviction(Enum):
@@ -1411,7 +1355,7 @@ class FixedLengthArray(ScaleType):
     def process(self):
 
         if self.element_count:
-            if self.sub_type == 'u8':
+            if self.runtime_config.get_decoder_class(self.sub_type) is U8:
                 return '0x{}'.format(self.get_next_bytes(self.element_count).hex())
             else:
                 result = []
@@ -1427,7 +1371,7 @@ class FixedLengthArray(ScaleType):
 
         value = value or []
 
-        if self.sub_type == 'u8':
+        if self.runtime_config.get_decoder_class(self.sub_type) is U8:
             # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
             if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
                 raise ValueError('Value should start with "0x" and should be {} bytes long'.format(self.element_count))

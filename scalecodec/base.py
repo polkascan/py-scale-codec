@@ -17,7 +17,6 @@
 import re
 from abc import ABC, abstractmethod
 from typing import Optional
-
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
 
 
@@ -45,7 +44,7 @@ class RuntimeConfigurationObject:
 
     def __init__(self, config_id=None, ss58_format=None):
         self.config_id = config_id
-        self.type_registry = {}
+        self.type_registry = {'types': {}}
         self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
@@ -56,14 +55,15 @@ class RuntimeConfigurationObject:
     @classmethod
     def convert_type_string(cls, name):
 
-        name = re.sub(r'T::', "", name, flags=re.IGNORECASE)
+        name = re.sub(r'T::', "", name)
+        name = re.sub(r'^T::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T>', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Trait>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Trait<I>>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Config>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Config<I>>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'\n', "", name)
-        name = re.sub(r'(grandpa|session|slashing|limits|beefy_primitives|opaque)::', "", name)
+        name = re.sub(r'^(grandpa|session|slashing|limits|beefy_primitives|xcm::opaque)::', "", name)
         name = re.sub(r'VecDeque<', "Vec<", name, flags=re.IGNORECASE)
         name = re.sub(r'^Box<(.+)>$', r'\1', name, flags=re.IGNORECASE)
 
@@ -274,6 +274,132 @@ class RuntimeConfigurationObject:
             elif block_number > self.type_registry['runtime_upgrades'][-1][0]:
                 self.type_registry['runtime_upgrades'].append([block_number, -1])
 
+    def get_decoder_class_for_scale_info_definition(self, type_string, scale_info_type):
+
+        decoder_class = None
+        base_decoder_class = None
+
+        # Check if base decoder class is defined for path
+        if 'path' in scale_info_type:
+            path_string = '::'.join(scale_info_type["path"])
+            base_decoder_class = self.get_decoder_class(path_string)
+
+            if base_decoder_class:
+                decoder_class = type(type_string, (base_decoder_class,), {})
+                decoder_class.process_scale_info_definition(scale_info_type)
+
+                return decoder_class
+
+        if "primitive" in scale_info_type["def"]:
+            decoder_class = self.get_decoder_class(scale_info_type["def"]["primitive"])
+
+        elif 'array' in scale_info_type['def']:
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class('FixedLengthArray')
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                'sub_type': f"scale_info::{scale_info_type['def']['array']['type']}",
+                'element_count': scale_info_type['def']['array']['len']
+            })
+
+        elif 'composite' in scale_info_type['def']:
+
+            type_mapping = []
+
+            base_type_string = 'Tuple'
+
+            if 'fields' in scale_info_type['def']['composite']:
+
+                fields = scale_info_type['def']['composite']['fields']
+
+                if all(['name' in f for f in fields]):
+                    base_type_string = 'Struct'
+                    type_mapping = [[field['name'], f"scale_info::{field['type']}"] for field in fields]
+
+                else:
+                    base_type_string = 'Tuple'
+                    type_mapping = [f"scale_info::{field['type']}" for field in fields]
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(base_type_string)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                'type_mapping': type_mapping
+            })
+
+        elif 'sequence' in scale_info_type['def']:
+            # Vec
+            decoder_class = type(type_string, (self.get_decoder_class('Vec'),), {
+                'sub_type': f"scale_info::{scale_info_type['def']['sequence']['type']}"
+            })
+
+        elif 'variant' in scale_info_type['def']:
+            # Enum
+            type_mapping = []
+
+            if 'variants' in scale_info_type['def']['variant']:
+
+                for variant in scale_info_type['def']['variant']['variants']:
+
+                    if 'fields' in variant:
+                        if len(variant['fields']) == 1:
+                            enum_value = f"scale_info::{variant['fields'][0]['type']}"
+                        else:
+                            field_str = ', '.join([f"scale_info::{f['type']}" for f in variant['fields']])
+                            enum_value = f"({field_str})"
+                    else:
+                        enum_value = 'Null'
+
+                    type_mapping.append(
+                        [variant['name'], enum_value]
+                    )
+
+            decoder_class = type(type_string, (self.get_decoder_class("Enum"),), {
+                'type_mapping': type_mapping
+            })
+
+        elif 'tuple' in scale_info_type['def']:
+
+            type_mapping = [f"scale_info::{f}" for f in scale_info_type['def']['tuple']]
+
+            decoder_class = type(type_string, (self.get_decoder_class('Tuple'),), {
+                'type_mapping': type_mapping
+            })
+
+        elif 'compact' in scale_info_type['def']:
+            # Compact
+            decoder_class = type(type_string, (self.get_decoder_class('Compact'),), {
+                'sub_type': f"scale_info::{scale_info_type['def']['compact']['type']}"
+            })
+
+        elif 'phantom' in scale_info_type['def']:
+            decoder_class = type(type_string, (self.get_decoder_class('Null'),), {})
+
+        return decoder_class
+
+    def update_from_scale_info_types(self, scale_info_types: list, prefix: str = ''):
+        for idx, scale_info_type in enumerate(scale_info_types):
+
+            type_string = f"scale_info::{idx}"
+
+            decoder_class = self.get_decoder_class_for_scale_info_definition(
+                type_string, scale_info_type
+            )
+
+            if decoder_class is None:
+                raise NotImplementedError(f"No decoding class found for scale type {idx}")
+
+            if decoder_class:
+                self.type_registry['types'][f"scale_info::{idx}"] = decoder_class
+
+    def add_runtime_metadata_dict_to_type_registry(self, metadata_dict):
+        return self.update_from_scale_info_types(metadata_dict[1]["V14"]['types']['types'], prefix='runtime')
+
+    def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
+        prefix = f"ink::{metadata_dict['source']['hash']}"
+        return self.update_from_scale_info_types(metadata_dict['types'], prefix=prefix)
+
 
 class ScaleBytes:
 
@@ -348,9 +474,6 @@ class ScaleDecoder(ABC):
 
     sub_type = None
 
-    PRIMITIVES = ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128', 'i256', 'h160',
-                  'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]', '&[u8]')
-
     runtime_config = None
 
     def __init__(self, data, sub_type=None, runtime_config=None):
@@ -376,6 +499,12 @@ class ScaleDecoder(ABC):
         self.value = None
         self.data_start_offset = None
         self.data_end_offset = None
+
+    @staticmethod
+    def is_primitive(type_string: str) -> bool:
+        return type_string in ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128',
+                               'i256', 'h160', 'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]',
+                               '&[u8]')
 
     @classmethod
     def build_type_mapping(cls):
@@ -519,5 +648,9 @@ class ScaleType(ScaleDecoder, ABC):
         if not data:
             data = ScaleBytes(bytearray())
         super().__init__(data, sub_type, runtime_config=runtime_config)
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: dict):
+        pass
 
 

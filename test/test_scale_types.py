@@ -120,11 +120,11 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual([None, None], obj.decode())
 
     def test_validatorprefs_struct(self):
-        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', ScaleBytes("0x0c00"))
+        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsTo145', ScaleBytes("0x0c00"))
         obj.decode()
         self.assertEqual(obj.value, {'unstakeThreshold': 3, 'validatorPayment': 0})
 
-    def test_implied_struct(self):
+    def test_tuple(self):
         obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
         obj.decode()
         self.assertEqual(obj.value, (3, 0))

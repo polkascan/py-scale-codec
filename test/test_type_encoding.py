@@ -179,12 +179,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
         value = {'unstakeThreshold': 3, 'validatorPayment': 0}
         scale_data = ScaleBytes("0x0c00")
 
-        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy')
+        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsTo145')
         data = obj.encode(value)
 
         self.assertEqual(str(scale_data), str(data))
 
-        obj_check = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', data)
+        obj_check = ScaleDecoder.get_decoder_class('ValidatorPrefsTo145', data)
 
         self.assertEqual(obj_check.decode(), value)
 
@@ -197,7 +197,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         obj_check = ScaleDecoder.get_decoder_class('RewardDestination', data)
 
-        self.assertEqual(obj_check.decode(), value)
+        self.assertEqual(obj_check.decode(), 'Staked')
 
     def test_enum_type_mapping_encode_decode(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
@@ -208,6 +208,18 @@ class TestScaleTypeEncoding(unittest.TestCase):
         data = obj.encode(value)
 
         obj_check = ScaleDecoder.get_decoder_class('DigestItem', data)
+
+        self.assertEqual(obj_check.decode(), value)
+
+    def test_enum_type_mapping_empty_value_encode_decode(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        value = "Error"
+
+        obj = ScaleDecoder.get_decoder_class('EnumWithoutBaseClass')
+        data = obj.encode(value)
+
+        obj_check = ScaleDecoder.get_decoder_class('EnumWithoutBaseClass', data)
 
         self.assertEqual(obj_check.decode(), value)
 

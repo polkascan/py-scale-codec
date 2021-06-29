@@ -2639,7 +2639,14 @@
          ["beefy", "Beefy"]
       ]
     },
-    "Keys": "SessionKeysSubstrate",
+    "Keys": {
+      "type": "struct",
+      "type_mapping": [
+         ["grandpa", "AccountId"],
+         ["babe", "AccountId"],
+         ["im_online", "AccountId"]
+      ]
+    },
     "Header": {
       "type": "struct",
       "type_mapping": [
