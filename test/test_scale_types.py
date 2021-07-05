@@ -85,6 +85,24 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('bool', ScaleBytes("0x02"))
         self.assertRaises(InvalidScaleTypeValueException, obj.decode)
 
+    def test_string(self):
+        obj = ScaleDecoder.get_decoder_class('String', ScaleBytes("0x1054657374"))
+        obj.decode()
+        self.assertEqual(str(obj), "Test")
+
+        data = obj.encode("Test")
+
+        self.assertEqual("0x1054657374", data.to_hex())
+
+    def test_string_multibyte_chars(self):
+        obj = ScaleDecoder.get_decoder_class('String')
+
+        data = obj.encode('µ')
+        self.assertEqual('0x08c2b5', data.to_hex())
+
+        obj.decode()
+        self.assertEqual(str(obj), "µ")
+
     def test_vec_accountid(self):
         obj = ScaleDecoder.get_decoder_class(
             'Vec<AccountId>',

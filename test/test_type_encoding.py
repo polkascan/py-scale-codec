@@ -140,6 +140,30 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
+    def test_bytes_encode_bytes(self):
+        value = b'This is a test'
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        self.assertEqual("0x385468697320697320612074657374", data.to_hex())
+
+    def test_bytes_encode_bytearray(self):
+        value = bytearray(b'This is a test')
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        self.assertEqual("0x385468697320697320612074657374", data.to_hex())
+
+    def test_bytes_encode_list_of_u8(self):
+        value = [84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 116, 101, 115, 116]
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        self.assertEqual("0x385468697320697320612074657374", data.to_hex())
+
     def test_hexbytes_encode_decode(self):
 
         value = '0x5468697320697320612074657374'

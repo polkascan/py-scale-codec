@@ -168,16 +168,31 @@ class Bytes(ScaleType):
     def process_encode(self, value):
         string_length_compact = CompactU32()
 
-        if value[0:2] == '0x':
-            # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
-            value = bytes.fromhex(value[2:])
-            data = string_length_compact.encode(len(value))
-            data += value
-        else:
-            data = string_length_compact.encode(len(value))
-            data += value.encode()
+        if type(value) is str:
+            if value[0:2] == '0x':
+                # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
+                value = bytes.fromhex(value[2:])
+            else:
+                value = value.encode()
+
+        elif type(value) in (bytearray, list):
+            value = bytes(value)
+
+        if type(value) is not bytes:
+            raise ValueError(f'Cannot encode type "{type(value)}"')
+
+        data = string_length_compact.encode(len(value))
+        data += value
 
         return data
+
+
+class Str(Bytes):
+    pass
+
+
+class String(Bytes):
+    pass
 
 
 class OptionBytes(ScaleType):
@@ -200,23 +215,6 @@ class OptionBytes(ScaleType):
             return ScaleBytes('0x01') + sub_type_obj.encode(value)
 
         return ScaleBytes('0x00')
-
-
-# TODO replace in metadata
-class String(ScaleType):
-
-    def process(self):
-
-        length = self.process_type('Compact<u32>').value
-        value = self.get_next_bytes(length)
-
-        return value.decode()
-
-    def process_encode(self, value):
-        string_length_compact = CompactU32()
-        data = string_length_compact.encode(len(value))
-        data += value.encode()
-        return data
 
 
 class HexBytes(ScaleType):
