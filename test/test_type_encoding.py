@@ -13,23 +13,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import unittest
 
-from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
+from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration, ScaleType
 from scalecodec.metadata import MetadataDecoder
-from scalecodec.type_registry import load_type_registry_preset
+from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
 from scalecodec.types import CompactU32, Vec
-from test.fixtures import kusama_metadata_hex
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        module_path = os.path.dirname(__file__)
+        cls.metadata_fixture_dict = load_type_registry_file(
+            os.path.join(module_path, 'fixtures', 'metadata_hex.json')
+        )
+
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(kusama_metadata_hex))
+        cls.metadata_decoder = MetadataDecoder(ScaleBytes(cls.metadata_fixture_dict["kusama_test"]))
         cls.metadata_decoder.decode()
 
     def setUp(self) -> None:
@@ -140,6 +145,30 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
+    def test_bytes_encode_bytes(self):
+        value = b'This is a test'
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        self.assertEqual("0x385468697320697320612074657374", data.to_hex())
+
+    def test_bytes_encode_bytearray(self):
+        value = bytearray(b'This is a test')
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        self.assertEqual("0x385468697320697320612074657374", data.to_hex())
+
+    def test_bytes_encode_list_of_u8(self):
+        value = [84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 116, 101, 115, 116]
+
+        obj = ScaleDecoder.get_decoder_class('Bytes')
+        data = obj.encode(value)
+
+        self.assertEqual("0x385468697320697320612074657374", data.to_hex())
+
     def test_hexbytes_encode_decode(self):
 
         value = '0x5468697320697320612074657374'
@@ -187,6 +216,27 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj_check = ScaleDecoder.get_decoder_class('ValidatorPrefsTo145', data)
 
         self.assertEqual(obj_check.decode(), value)
+
+    # def test_struct_raw_encode(self):
+    #     RuntimeConfiguration().update_type_registry_types({
+    #         "TestKeys": {
+    #             "type": "struct",
+    #             "type_mapping": [
+    #                 ["grandpa", "AccountId"],
+    #                 ["babe", "AccountId"],
+    #                 ["im_online", "AccountId"],
+    #                 ["authority_discovery", "AccountId"],
+    #                 ["parachains", "AccountId"]
+    #             ]
+    #         },
+    #     })
+    #
+    #     value = {'unstakeThreshold': 3, 'validatorPayment': 0}
+    #     scale_data = ScaleBytes("0x0c00")
+    #
+    #     obj = ScaleDecoder.get_decoder_class('TestKeys')
+    #     data = obj.encode("0x824501a379ab300390fe6d8bfa19c52bf01ec5e5dad515d5bdb10dbe421dd1b318f8dfa2c79e2d691043939acf37596e84e35b2b9ddc34d849c3e31c5b5b290380827a5de7e1f0e4fea3d3bdf4f8191d7eadf2d78c802c95ca61e7c08b6415453207d5d24f35e6ea03240a7e7f5fcb98787cbed77d743d40aad2900be1760a6a")
+    #     self.assertEqual(data.to_hex(), "0x824501a379ab300390fe6d8bfa19c52bf01ec5e5dad515d5bdb10dbe421dd1b318f8dfa2c79e2d691043939acf37596e84e35b2b9ddc34d849c3e31c5b5b290380827a5de7e1f0e4fea3d3bdf4f8191d7eadf2d78c802c95ca61e7c08b6415453207d5d24f35e6ea03240a7e7f5fcb98787cbed77d743d40aad2900be1760a6a")
 
     def test_enum_encode_decode(self):
 
@@ -356,3 +406,18 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj2 = ScaleDecoder.get_decoder_class('Era')
         obj2.encode((256, 120))
         self.assertEqual(str(obj.data), str(obj2.data))
+
+    # def test_all_subclasses_implement_encode(self):
+    #     for scale_type_cls in RuntimeConfiguration.all_subclasses(ScaleType):
+    #         try:
+    #             obj = scale_type_cls()
+    #         except TypeError as e:
+    #             pass
+    #
+    #         try:
+    #             obj.process_encode(None)
+    #         except NotImplementedError:
+    #             self.fail(f'{scale_type_cls.__name__} didn\'t implement process_encode')
+    #         except Exception as e:
+    #             pass
+

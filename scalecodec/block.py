@@ -35,7 +35,7 @@ class Extrinsic(ScaleDecoder):
 
     def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, runtime_config=None, address_type=42):
 
-        assert (type(metadata) == MetadataDecoder)
+        assert (metadata.__class__.__name__ == 'MetadataVersioned')
 
         self.metadata = metadata
         self.address_type = address_type
@@ -160,7 +160,7 @@ class Extrinsic(ScaleDecoder):
 
             for arg in self.call.args:
 
-                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+                arg_type_obj = self.process_type(arg.get_type_string(), metadata=self.metadata)
 
                 self.params.append({
                     'name': arg.name,
@@ -287,16 +287,19 @@ class Extrinsic(ScaleDecoder):
         return "<{}(value={})>".format(self.__class__.__name__, self.value)
 
 
-# Deprecated
+# TODO deprecated
 class ExtrinsicsDecoder(Extrinsic):
     pass
 
 
+# TODO deprecated
 class EventsDecoder(Vec):
     type_string = 'Vec<EventRecord<Event, Hash>>'
 
     def __init__(self, data, metadata=None, **kwargs):
-        assert (not metadata or type(metadata) == MetadataDecoder)
+
+        if metadata and metadata.__class__.__name__ not in ['MetadataDecoder', 'MetadataVersioned']:
+            raise ValueError("metadata not correct")
 
         self.metadata = metadata
         self.elements = []
@@ -314,55 +317,88 @@ class EventsDecoder(Vec):
         return [e.value for e in self.elements]
 
 
-class GenericEvent(ScaleDecoder):
+class GenericEvent(Struct):
 
-    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None):
+    def __init__(self, *args, **kwargs):
 
-        assert (not metadata or type(metadata) == MetadataDecoder)
-
-        self.metadata = metadata
-
-        self.extrinsic_idx = None
-        self.type = None
-        self.params = []
+        self.event_idx = None
+        self.event_index = None
+        self.attributes = []
         self.event = None
         self.event_module = None
 
-        super().__init__(data, sub_type)
+        super().__init__(*args, **kwargs)
 
     def process(self):
 
-        self.type = self.get_next_bytes(2).hex()
+        self.event_index = self.get_next_bytes(2).hex()
 
-        # Decode params
+        # Decode attributes
+        self.event_module = self.metadata.event_index[self.event_index][0]
+        self.event = self.metadata.event_index[self.event_index][1]
 
-        self.event = self.metadata.event_index[self.type][1]
-        self.event_module = self.metadata.event_index[self.type][0]
+        attributes_value = []
 
-        for arg_type in self.event.args:
+        for arg_type in self.event.value['args']:
             arg_type_obj = self.process_type(arg_type)
 
-            self.params.append({
+            self.attributes.append(arg_type_obj)
+
+            attributes_value.append({
                 'type': arg_type,
                 'value': arg_type_obj.serialize()
             })
 
+        self.value_object = {
+            'metadata_pallet': self.event_module,
+            'metadata_event': self.event,
+            'attributes': self.attributes
+        }
+
         return {
-            'extrinsic_idx': self.extrinsic_idx,
-            'type': self.type,
-            'module_id': self.event_module.name,
-            'event_id': self.event.name,
-            'params': self.params,
+            'event_index': self.event_index,
+            'module_id': self.event_module.value['name'],
+            'event_id': self.event.value['name'],
+            'attributes': attributes_value,
         }
 
 
-class EventRecord(ScaleDecoder):
+class GenericEventRecord(Struct):
 
-    def __init__(self, data, sub_type=None, metadata: MetadataDecoder = None, **kwargs):
+    @property
+    def extrinsic_idx(self):
+        return self.value['extrinsic_idx']
 
-        assert (not metadata or type(metadata) == MetadataDecoder)
+    @property
+    def event_module(self):
+        return self.value_object['event'].event_module
 
-        self.metadata = metadata
+    @property
+    def event(self):
+        return self.value_object['event'].event
+
+    @property
+    def params(self):
+        return self.value['attributes']
+
+    def process(self):
+        value = super().process()
+
+        return {
+            'phase': self.value_object['phase'].index,
+            'extrinsic_idx': self.value_object['phase'].value_object[1].value,
+            'event': value['event'],
+            'event_index': value['event']['event_index'],
+            'module_id': value['event']['module_id'],
+            'event_id': value['event']['event_id'],
+            'attributes': value['event']['attributes'],
+            'topics': value['topics']
+        }
+
+
+class EventRecord(Struct):
+
+    def __init__(self, *arg, **kwargs):
 
         self.phase = None
         self.extrinsic_idx = None
@@ -371,25 +407,24 @@ class EventRecord(ScaleDecoder):
         self.event = None
         self.event_module = None
         self.topics = []
+        self.arguments = []
 
-        super().__init__(data, sub_type, **kwargs)
+        super().__init__(*arg, **kwargs)
 
     def process(self):
 
-        # TODO Create option type
-        self.phase = self.get_next_u8()
+        self.phase = self.process_type('Phase')
 
-        if self.phase == 0:
-            self.extrinsic_idx = self.process_type('U32').value
+        if self.phase.index == 0:
+            self.extrinsic_idx = self.phase.value_object[1].value
 
         self.event_index = self.get_next_bytes(2).hex()
 
         # Decode params
-
-        self.event = self.metadata.event_index[self.event_index][1]
         self.event_module = self.metadata.event_index[self.event_index][0]
+        self.event = self.metadata.event_index[self.event_index][1]
 
-        for arg_type in self.event.args:
+        for arg_type in self.event.value['args']:
             arg_type_obj = self.process_type(arg_type)
 
             self.params.append({
@@ -398,15 +433,15 @@ class EventRecord(ScaleDecoder):
             })
 
         # Topics introduced since MetadataV5
-        if self.metadata.version and self.metadata.version.index >= 5:
+        if self.metadata and self.metadata.value_object[1].index >= 5:
             self.topics = self.process_type('Vec<Hash>').value
 
         return {
-            'phase': self.phase,
+            'phase': self.phase.index,
             'extrinsic_idx': self.extrinsic_idx,
             'event_index': self.event_index,
-            'module_id': self.event_module.name,
-            'event_id': self.event.name,
+            'module_id': self.event_module.value['name'],
+            'event_id': self.event.value['name'],
             'params': self.params,
             'topics': self.topics
         }

@@ -138,7 +138,8 @@ class Option(ScaleType):
         option_byte = self.get_next_bytes(1)
 
         if self.sub_type and option_byte != b'\x00':
-            return self.process_type(self.sub_type).value
+            self.value_object = self.process_type(self.sub_type)
+            return self.value_object.value
 
         return None
 
@@ -164,6 +165,8 @@ class Bytes(ScaleType):
         length = self.process_type('Compact<u32>').value
         value = self.get_next_bytes(length)
 
+        self.value_object = value
+
         try:
             return value.decode()
         except UnicodeDecodeError:
@@ -172,16 +175,36 @@ class Bytes(ScaleType):
     def process_encode(self, value):
         string_length_compact = CompactU32()
 
-        if value[0:2] == '0x':
-            # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
-            value = bytes.fromhex(value[2:])
-            data = string_length_compact.encode(len(value))
-            data += value
-        else:
-            data = string_length_compact.encode(len(value))
-            data += value.encode()
+        if type(value) is str:
+            if value[0:2] == '0x':
+                # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
+                value = bytes.fromhex(value[2:])
+            else:
+                value = value.encode()
+
+        elif type(value) in (bytearray, list):
+            value = bytes(value)
+
+        if type(value) is not bytes:
+            raise ValueError(f'Cannot encode type "{type(value)}"')
+
+        data = string_length_compact.encode(len(value))
+        data += value
 
         return data
+
+    def serialize(self):
+        return f'0x{self.value_object.hex()}'
+
+
+class Str(Bytes):
+    def serialize(self):
+        return self.value
+
+
+class String(Bytes):
+    def serialize(self):
+        return self.value
 
 
 class OptionBytes(ScaleType):
@@ -204,23 +227,6 @@ class OptionBytes(ScaleType):
             return ScaleBytes('0x01') + sub_type_obj.encode(value)
 
         return ScaleBytes('0x00')
-
-
-# TODO replace in metadata
-class String(ScaleType):
-
-    def process(self):
-
-        length = self.process_type('Compact<u32>').value
-        value = self.get_next_bytes(length)
-
-        return value.decode()
-
-    def process_encode(self, value):
-        string_length_compact = CompactU32()
-        data = string_length_compact.encode(len(value))
-        data += value.encode()
-        return data
 
 
 class HexBytes(ScaleType):
@@ -458,11 +464,16 @@ class Struct(ScaleType):
     def process(self):
 
         result = {}
+        self.value_object = {}
 
         for key, data_type in self.type_mapping:
             if data_type is None:
                 data_type = 'Null'
-            result[key] = self.process_type(data_type, metadata=self.metadata).value
+            field_obj = self.process_type(data_type, metadata=self.metadata)
+
+            self.value_object[key] = field_obj
+
+            result[key] = field_obj.value
 
         return result
 
@@ -495,11 +506,16 @@ class Tuple(ScaleType):
             return self.process_type(self.type_mapping[0], metadata=self.metadata).value
 
         result = ()
+        self.value_object = ()
 
         for member_type in self.type_mapping:
             if member_type is None:
                 member_type = 'Null'
-            result += (self.process_type(member_type, metadata=self.metadata).value,)
+
+            member_obj = self.process_type(member_type, metadata=self.metadata)
+
+            result += (member_obj.value,)
+            self.value_object += (member_obj,)
 
         return result
 
@@ -768,6 +784,8 @@ class Vec(ScaleType):
             self.elements.append(element)
             result.append(element.value)
 
+        self.value_object = self.elements
+
         return result
 
     def process_encode(self, value):
@@ -990,12 +1008,14 @@ class Enum(ScaleType):
             try:
                 enum_type_mapping = self.type_mapping[self.index]
 
-                if enum_type_mapping[1] == 'Null':
+                if enum_type_mapping[1] is None or enum_type_mapping[1] == 'Null':
                     return enum_type_mapping[0]
 
-                return self.process_type(
-                    type_string='Struct', type_mapping=[enum_type_mapping]
-                ).value
+                result_obj = self.process_type(enum_type_mapping[1])
+
+                self.value_object = (enum_type_mapping[0], result_obj)
+
+                return {enum_type_mapping[0]: result_obj.value}
 
             except IndexError:
                 raise ValueError("Index '{}' not present in Enum type mapping".format(self.index))
@@ -1356,7 +1376,8 @@ class FixedLengthArray(ScaleType):
 
         if self.element_count:
             if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-                return '0x{}'.format(self.get_next_bytes(self.element_count).hex())
+                self.value_object = self.get_next_bytes(self.element_count)
+                return '0x{}'.format(self.value_object.hex())
             else:
                 result = []
                 for idx in range(self.element_count):
@@ -1506,3 +1527,394 @@ class BTreeMap(Map):
 
 class BTreeSet(Vec):
     pass
+
+
+class GenericMetadataAll(Enum):
+
+    def __init__(self, data, sub_type=None, **kwargs):
+        self.__call_index = {}
+        self.event_index = {}
+        self.error_index = {}
+
+        super().__init__(data, sub_type, **kwargs)
+
+    def get_call_function(self, pallet_index, call_index):
+        return self.call_index.get(f'{pallet_index}-{call_index}')
+
+    @property
+    def pallets(self):
+        metadata_obj = self.value_object[1]
+
+        if self.index >= 14:
+            return metadata_obj.value_object['pallets'].value_object
+        else:
+            return metadata_obj.value_object['modules'].value_object
+
+    @property
+    def call_index(self):
+        return self.__call_index
+
+    def get_event(self, pallet_index, event_index):
+        pass
+
+    def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
+
+        if self.index >= 14:
+            raise NotImplementedError()
+        else:
+            for pallet in self.value_object[1].value_object['modules'].value_object:
+                if pallet.value['name'] == name:
+                    return pallet
+
+    def process(self):
+        value = super().process()
+
+        metadata_obj = self.value_object[1]
+
+        if self.index == 14:
+            # TODO V14 processing
+            # Build call index
+            for module in metadata_obj.value_object['pallets'].value_object:
+                if module.value_object['calls'].value_object is not None:
+                    for call_index, call in enumerate(module.value_object['calls'].value_object.value_object['calls'].value_object):
+                        call.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, call_index)
+                        self.call_index[call.lookup] = (module, call)
+        elif self.index in (12, 13):
+
+            for module in metadata_obj.value_object['modules'].value_object:
+
+                # Build call index
+                if module.value_object['calls'].value_object is not None:
+                    for call_index, call in enumerate(module.value_object['calls'].value_object.value_object):
+                        call.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, call_index)
+                        self.call_index[call.lookup] = (module, call)
+
+                # Build event index
+                if module.value_object['events'].value_object is not None:
+                    for event_index, event in enumerate(module.value_object['events'].value_object.value_object):
+                        event.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, event_index)
+                        self.event_index[event.lookup] = (module, event)
+
+                # Create error index
+                if len(module.value_object['errors'].value_object or []) > 0:
+                    for idx, error in enumerate(module.value_object['errors'].value_object):
+                        self.error_index[f'{module.value_object["index"].value_object}-{idx}'] = error
+
+        else:
+            # TODO V9 - V11 processing
+            call_module_index = 0
+            event_module_index = 0
+            error_module_index = 0
+
+            for module in metadata_obj.value_object['modules'].value_object:
+                # Build call index
+                if module.value_object['calls'].value_object is not None:
+                    for call_index, call in enumerate(module.value_object['calls'].value_object.value_object):
+                        call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                        self.call_index[call.lookup] = (module, call)
+                    call_module_index += 1
+
+                # Build event index
+                if module.value_object['events'].value_object is not None:
+                    for event_index, event in enumerate(module.value_object['events'].value_object.value_object):
+                        event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                        self.event_index[event.lookup] = (module, event)
+                    event_module_index += 1
+
+                # Create error index
+                if len(module.value_object['errors'].value_object or []) > 0:
+                    for idx, error in enumerate(module.value_object['errors'].value_object):
+                        self.error_index[f'{error_module_index}-{idx}'] = error
+                    error_module_index += 1
+
+        return value
+
+
+class GenericMetadataVersioned(Tuple):
+
+    @property
+    def call_index(self):
+        return self.value_object[1].call_index
+
+    @property
+    def event_index(self):
+        return self.value_object[1].event_index
+
+    def get_module_error(self, module_index, error_index):
+        return self.value_object[1].error_index.get(f'{module_index}-{error_index}')
+
+    def get_metadata(self):
+        return self.value_object[1]
+
+    @property
+    def pallets(self):
+        return self.value_object[1].pallets
+
+    def process(self):
+        value = super().process()
+
+        # # Create error index
+        # if self.index >= 12:
+        #     for module in self.metadata.modules:
+        #         if len(module.errors or []) > 0:
+        #             for idx, error in enumerate(module.errors):
+        #                 self.error_index[f'{module.index}-{idx}'] = error
+        # else:
+        #     error_module_index = 0
+        #     for module in self.metadata.modules:
+        #         if len(module.errors or []) > 0:
+        #             for idx, error in enumerate(module.errors):
+        #                 self.error_index[f'{error_module_index}-{idx}'] = error
+        #             error_module_index += 1
+
+        return value
+
+    def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
+        metadata = self.get_metadata()
+        return metadata.get_metadata_pallet(name)
+
+
+class GenericRegistryType(Struct):
+
+    def process_encode(self, value):
+        if 'params' not in value:
+            value['params'] = []
+
+        if 'path' not in value:
+            value['path'] = []
+
+        if 'docs' not in value:
+            value['docs'] = []
+
+        return super().process_encode(value)
+
+
+class GenericField(Struct):
+
+    def process_encode(self, value):
+        if 'name' not in value:
+            value['name'] = None
+
+        if 'typeName' not in value:
+            value['typeName'] = None
+
+        if 'docs' not in value:
+            value['docs'] = []
+
+        return super().process_encode(value)
+
+
+class GenericVariant(Struct):
+
+    def process_encode(self, value):
+        if 'index' not in value:
+            value['index'] = None
+
+        if 'discriminant' not in value:
+            value['discriminant'] = None
+
+        if 'fields' not in value:
+            value['fields'] = []
+
+        if 'docs' not in value:
+            value['docs'] = []
+
+        return super().process_encode(value)
+
+
+class GenericTypeDefComposite(Struct):
+    def process_encode(self, value):
+
+        if 'fields' not in value:
+            value['fields'] = []
+
+        return super().process_encode(value)
+
+
+class GenericTypeDefVariant(Struct):
+    def process_encode(self, value):
+
+        if 'variants' not in value:
+            value['variants'] = []
+
+        return super().process_encode(value)
+
+
+class GenericFunctionArgumentMetadata(Struct):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_type_string(self):
+        return self.convert_type(self.value['type'])
+
+    def process(self):
+        value = super().process()
+        return value
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def type(self):
+        return self.convert_type(self.value['type'])
+
+
+class GenericFunctionMetadata(Struct):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    def get_identifier(self):
+        return self.value['name']
+
+    @property
+    def args(self):
+        return self.value_object['args'].value_object
+
+
+class GenericPalletMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    def get_identifier(self):
+        return self.value['name']
+
+    @property
+    def storage(self):
+        storage_functions = self.value_object['storage'].value_object
+
+        if storage_functions:
+            return storage_functions.value_object['entries'].value_object
+
+    @property
+    def calls(self):
+        call_functions = self.value_object['calls'].value_object
+
+        if call_functions:
+            return call_functions.value_object
+
+    @property
+    def events(self):
+        events = self.value_object['events'].value_object
+
+        if events:
+            return events.value_object
+
+    @property
+    def constants(self):
+        return self.value_object['constants'].value_object
+
+    @property
+    def errors(self):
+        return self.value_object['errors'].value_object
+
+    def get_storage_function(self, name: str):
+        storage_functions = self.value_object['storage'].value_object
+
+        if storage_functions.value_object:
+            for storage_function in storage_functions.value_object['entries'].value_object:
+                if storage_function.value['name'] == name:
+                    return storage_function
+
+
+class GenericStorageEntryMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def type(self):
+        return self.value['type']
+
+    def get_value_type_string(self):
+        if 'Plain' in self.value['type']:
+            return self.convert_type(self.value['type']['Plain'])
+        elif 'Map' in self.value['type']:
+            return self.convert_type(self.value['type']['Map']['value'])
+        elif 'DoubleMap' in self.value['type']:
+            return self.convert_type(self.value['type']['DoubleMap']['value'])
+        elif 'NMap' in self.value['type']:
+            return self.convert_type(self.value['type']['NMap']['value'])
+        else:
+            raise NotImplementedError()
+
+    def get_params_type_string(self):
+        if 'Plain' in self.value['type']:
+            return []
+        elif 'Map' in self.value['type']:
+            return [self.convert_type(self.value['type']['Map']['key'])]
+        elif 'DoubleMap' in self.value['type']:
+            return [
+                self.convert_type(self.value['type']['DoubleMap']['key1']),
+                self.convert_type(self.value['type']['DoubleMap']['key2'])
+            ]
+        elif 'NMap' in self.value['type']:
+            return [self.convert_type(k) for k in self.value['type']['NMap']['keys']]
+        else:
+            raise NotImplementedError()
+
+    def get_param_hashers(self):
+        if 'Plain' in self.value['type']:
+            return ['Twox64Concat']
+        elif 'Map' in self.value['type']:
+            return [self.value['type']['Map']['hasher']]
+        elif 'DoubleMap' in self.value['type']:
+            return [
+                self.value['type']['DoubleMap']['hasher'],
+                self.value['type']['DoubleMap']['key2Hasher']
+            ]
+        elif 'NMap' in self.value['type']:
+            return self.value['type']['NMap']['hashers']
+        else:
+            raise NotImplementedError()
+
+
+class GenericEventMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def args(self):
+        return self.value['args']
+
+
+class GenericErrorMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def docs(self):
+        return self.value['documentation']
+
+
+class GenericModuleConstantMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def type(self):
+        return self.convert_type(self.value['type'])
+
+    @property
+    def docs(self):
+        return self.value['documentation']
+
+    @property
+    def constant_value(self):
+        if self.value_object.get('value'):
+            return self.value_object['value'].value_object

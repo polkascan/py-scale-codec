@@ -69,7 +69,7 @@ class TestScaleBytes(unittest.TestCase):
         self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode, False)
 
     def test_str_representation(self):
-        obj = ScaleDecoder.get_decoder_class('Bytes', ScaleBytes("0x1054657374"))
+        obj = ScaleDecoder.get_decoder_class('String', ScaleBytes("0x1054657374"))
         obj.decode()
         self.assertEqual(str(obj), "Test")
 

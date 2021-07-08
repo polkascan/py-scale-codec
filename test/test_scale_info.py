@@ -26,7 +26,7 @@ from scalecodec.types import GenericAccountId, Null
 from scalecodec.base import RuntimeConfigurationObject, ScaleDecoder, ScaleBytes
 
 from scalecodec.metadata import TypeRegistry
-from scalecodec.type_registry import load_type_registry_file
+from scalecodec.type_registry import load_type_registry_file, load_type_registry_preset
 
 
 class ScaleInfoTestCase(unittest.TestCase):
@@ -34,14 +34,14 @@ class ScaleInfoTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         module_path = os.path.dirname(__file__)
-        metadata_dict = load_type_registry_file(os.path.join(module_path, 'fixtures', 'polkadot-metadata0.json'))
+        cls.metadata_dict = load_type_registry_file(os.path.join(module_path, 'fixtures', 'polkadot-metadata0.json'))
 
         scale_info_defaults = load_type_registry_file(os.path.join(module_path, 'fixtures', 'scale_info_defaults.json'))
 
         cls.runtime_config = RuntimeConfigurationObject(ss58_format=42)
         cls.runtime_config.update_type_registry(scale_info_defaults)
 
-        cls.runtime_config.update_from_scale_info_types(metadata_dict[1]["V14"]['types']['types'])
+        cls.runtime_config.update_from_scale_info_types(cls.metadata_dict[1]["V14"]['types']['types'])
 
     def test_path_overrides(self):
         account_cls = self.runtime_config.get_decoder_class('scale_info::0')
@@ -229,6 +229,26 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_unknown_scale_info_type(self):
         with self.assertRaises(NotImplementedError):
             self.runtime_config.update_from_scale_info_types([{'def': 'unknown'}])
+
+
+# class PortableRegistryTestCase(unittest.TestCase):
+#
+#     def test_encode_dict_to_portable_registry(self):
+#         runtime_config = RuntimeConfigurationObject()
+#         runtime_config.update_type_registry(load_type_registry_preset("metadata_types"))
+#
+#         module_path = os.path.dirname(__file__)
+#         metadata_dict = load_type_registry_file(os.path.join(module_path, 'fixtures', 'polkadot-metadata0.json'))
+#
+#         registry_obj = ScaleDecoder.get_decoder_class('PortableRegistry', runtime_config=runtime_config)
+#
+#         registry_obj.encode(metadata_dict[1]["V14"]['types'])
+#
+#         self.assertIsNotNone(registry_obj.value)
+#
+#         registry_obj.decode()
+#
+#         self.assertIsNotNone(registry_obj.value_object)
 
 
 if __name__ == '__main__':

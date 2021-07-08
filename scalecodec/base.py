@@ -42,7 +42,7 @@ class RuntimeConfigurationObject:
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self, config_id=None, ss58_format=None):
+    def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False):
         self.config_id = config_id
         self.type_registry = {'types': {}}
         self.__initial_state = False
@@ -50,6 +50,7 @@ class RuntimeConfigurationObject:
         self.active_spec_version_id = None
         self.chain_id = None
 
+        self.only_primitives_on_init = only_primitives_on_init
         self.ss58_format = ss58_format
 
     @classmethod
@@ -141,8 +142,7 @@ class RuntimeConfigurationObject:
     def clear_type_registry(self):
 
         if not self.__initial_state:
-            self.type_registry = {'types': {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
-                                            cls.type_string}}
+            self.type_registry = {'types': {}}
 
             # Class names that contains '<' are excluded because of a side effect that is introduced in
             # get_decoder_class: "Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as
@@ -155,7 +155,7 @@ class RuntimeConfigurationObject:
         self.__initial_state = True
 
     def update_type_registry_types(self, types_dict):
-        from scalecodec.types import Enum, Struct, Set
+        from scalecodec.types import Enum, Struct, Set, Tuple
 
         self.__initial_state = False
 
@@ -164,20 +164,35 @@ class RuntimeConfigurationObject:
             if type(decoder_class_data) == dict:
 
                 # Create dynamic decoder class
+                base_cls = None
+
+                if decoder_class_data.get('base_class'):
+                    base_cls = self.get_decoder_class(decoder_class_data['base_class'])
+                    if base_cls is None:
+                        raise ValueError(f"Specified base_class '{decoder_class_data['base_class']}' for type " +
+                                         f"'{type_string}' not found")
+
                 if decoder_class_data['type'] == 'struct':
 
-                    if decoder_class_data.get('base_class'):
-                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
-                    else:
+                    if base_cls is None:
                         base_cls = Struct
 
-                    decoder_class = type(type_string, (base_cls,), {'type_mapping': decoder_class_data['type_mapping']})
+                    decoder_class = type(type_string, (base_cls,), {
+                        'type_mapping': decoder_class_data.get('type_mapping')
+                    })
+
+                elif decoder_class_data['type'] == 'tuple':
+
+                    if base_cls is None:
+                        base_cls = Tuple
+
+                    decoder_class = type(type_string, (base_cls,), {
+                        'type_mapping': decoder_class_data.get('type_mapping')
+                    })
 
                 elif decoder_class_data['type'] == 'enum':
 
-                    if decoder_class_data.get('base_class'):
-                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
-                    else:
+                    if base_cls is None:
                         base_cls = Enum
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -187,9 +202,7 @@ class RuntimeConfigurationObject:
 
                 elif decoder_class_data['type'] == 'set':
 
-                    if decoder_class_data.get('base_class'):
-                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
-                    else:
+                    if base_cls is None:
                         base_cls = Set
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -497,6 +510,7 @@ class ScaleDecoder(ABC):
         self.data = data
         self.raw_value = ''
         self.value = None
+        self.value_object = None
         self.data_start_offset = None
         self.data_end_offset = None
 
@@ -555,16 +569,20 @@ class ScaleDecoder(ABC):
     def decode(self, check_remaining=True):
         self.data_start_offset = self.data.offset
         self.value = self.process()
+
+        if self.value_object is None:
+            self.value_object = self.value
+
         self.data_end_offset = self.data.offset
 
         if check_remaining and self.data.offset != self.data.length:
             raise RemainingScaleBytesNotEmptyException(
-                f'Decoding "{self.__class__.__name__}" - Current offset: {self.data.offset} / length: {self.data.length}'
+                f'Decoding <{self.__class__.__name__}> - Current offset: {self.data.offset} / length: {self.data.length}'
             )
 
         if self.data.offset > self.data.length:
             raise RemainingScaleBytesNotEmptyException(
-                f'Decoding "{self.__class__.__name__}" - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
+                f'Decoding <{self.__class__.__name__}> - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
             )
 
         return self.value

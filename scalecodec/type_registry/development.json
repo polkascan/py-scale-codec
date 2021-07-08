@@ -1,5 +1,5 @@
 {
-  "runtime_id": 265,
+  "runtime_id": 267,
   "types": {
     "Keys": {
       "type": "struct",
@@ -30,7 +30,7 @@
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
-        "AccountInfo": "AccountInfoWithDualRefCount",
+        "AccountInfo": "AccountInfoWithRefCount",
         "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     },
@@ -39,7 +39,7 @@
       "types": {
         "Address": "MultiAddress",
         "LookupSource": "MultiAddress",
-        "AccountInfo": "AccountInfoWithTripRefCount",
+        "AccountInfo": "AccountInfoWithTripleRefCount",
         "ValidatorPrefs": "ValidatorPrefsWithBlocked"
       }
     }

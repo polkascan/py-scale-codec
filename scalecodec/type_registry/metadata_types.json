@@ -1,5 +1,7 @@
 {
   "types": {
+    "Type": "Bytes",
+    "Text": "Bytes",
     "DoubleMapTypeV9": {
       "type": "struct",
       "type_mapping": [
@@ -27,6 +29,7 @@
     },
     "ErrorMetadataV9": {
       "type": "struct",
+      "base_class": "GenericErrorMetadata",
       "type_mapping": [
         [
           "name",
@@ -40,6 +43,7 @@
     },
     "EventMetadataV9": {
       "type": "struct",
+      "base_class": "GenericEventMetadata",
       "type_mapping": [
         [
           "name",
@@ -57,6 +61,7 @@
     },
     "FunctionArgumentMetadataV9": {
       "type": "struct",
+      "base_class": "GenericFunctionArgumentMetadata",
       "type_mapping": [
         [
           "name",
@@ -70,6 +75,7 @@
     },
     "FunctionMetadataV9": {
       "type": "struct",
+      "base_class": "GenericFunctionMetadata",
       "type_mapping": [
         [
           "name",
@@ -117,6 +123,7 @@
     },
     "ModuleConstantMetadataV9": {
       "type": "struct",
+      "base_class": "GenericModuleConstantMetadata",
       "type_mapping": [
         [
           "name",
@@ -138,6 +145,7 @@
     },
     "ModuleMetadataV9": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -167,6 +175,7 @@
     },
     "StorageEntryMetadataV9": {
       "type": "struct",
+      "base_class": "GenericStorageEntryMetadata",
       "type_mapping": [
         [
           "name",
@@ -248,7 +257,7 @@
           "Text"
         ],
         [
-          "items",
+          "entries",
           "Vec<StorageEntryMetadataV9>"
         ]
       ]
@@ -315,6 +324,7 @@
     "ModuleConstantMetadataV10": "ModuleConstantMetadataV9",
     "ModuleMetadataV10": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -345,6 +355,7 @@
     "StorageEntryModifierV10": "StorageEntryModifierV9",
     "StorageEntryMetadataV10": {
       "type": "struct",
+      "base_class": "GenericStorageEntryMetadata",
       "type_mapping": [
         [
           "name",
@@ -359,7 +370,7 @@
           "StorageEntryTypeV10"
         ],
         [
-          "fallback",
+          "default",
           "Bytes"
         ],
         [
@@ -393,7 +404,7 @@
           "Text"
         ],
         [
-          "items",
+          "entries",
           "Vec<StorageEntryMetadataV10>"
         ]
       ]
@@ -506,6 +517,7 @@
     "ModuleConstantMetadataV11": "ModuleConstantMetadataV10",
     "ModuleMetadataV11": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -536,6 +548,7 @@
     "StorageEntryModifierV11": "StorageEntryModifierV10",
     "StorageEntryMetadataV11": {
       "type": "struct",
+      "base_class": "GenericStorageEntryMetadata",
       "type_mapping": [
         [
           "name",
@@ -546,7 +559,7 @@
           "StorageEntryModifierV11"
         ],
         [
-          "ty",
+          "type",
           "StorageEntryTypeV11"
         ],
         [
@@ -624,6 +637,7 @@
     "ModuleConstantMetadataV12": "ModuleConstantMetadataV11",
     "ModuleMetadataV12": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -680,9 +694,10 @@
         ]
       ]
     },
-    "ModuleConstantMetadataV13": "ModuleConstantMetadataV12",
+    "ModuleConstantMetadataV13": "ModuleConstantMetadataV9",
     "ModuleMetadataV13": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -734,6 +749,7 @@
     "StorageEntryModifierV13": "StorageEntryModifierV12",
     "StorageEntryMetadataV13": {
       "type": "struct",
+      "base_class": "GenericStorageEntryMetadata",
       "type_mapping": [
         [
           "name",
@@ -748,7 +764,7 @@
           "StorageEntryTypeV13"
         ],
         [
-          "fallback",
+          "default",
           "Bytes"
         ],
         [
@@ -786,7 +802,7 @@
           "Text"
         ],
         [
-          "items",
+          "entries",
           "Vec<StorageEntryMetadataV13>"
         ]
       ]
@@ -810,42 +826,43 @@
     "StorageHasher": "StorageHasherV13",
     "MetadataAll": {
       "type": "enum",
+      "base_class": "GenericMetadataAll",
       "type_mapping": [
         [
           "V0",
-          "DoNotConstruct<MetadataV0>"
+          "Null"
         ],
         [
           "V1",
-          "DoNotConstruct<MetadataV1>"
+          "Null"
         ],
         [
           "V2",
-          "DoNotConstruct<MetadataV2>"
+          "Null"
         ],
         [
           "V3",
-          "DoNotConstruct<MetadataV3>"
+          "Null"
         ],
         [
           "V4",
-          "DoNotConstruct<MetadataV4>"
+          "Null"
         ],
         [
           "V5",
-          "DoNotConstruct<MetadataV5>"
+          "Null"
         ],
         [
           "V6",
-          "DoNotConstruct<MetadataV6>"
+          "Null"
         ],
         [
           "V7",
-          "DoNotConstruct<MetadataV7>"
+          "Null"
         ],
         [
           "V8",
-          "DoNotConstruct<MetadataV8>"
+          "Null"
         ],
         [
           "V9",
@@ -866,6 +883,520 @@
         [
           "V13",
           "MetadataV13"
+        ],
+        [
+          "V14",
+          "MetadataV14"
+        ]
+      ]
+    },
+    "MetadataVersioned": {
+      "type": "tuple",
+      "base_class": "GenericMetadataVersioned",
+      "type_mapping": ["[u8; 4]", "MetadataAll"]
+    },
+    "MetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "types",
+          "PortableRegistry"
+        ],
+        [
+          "pallets",
+          "Vec<PalletMetadataV14>"
+        ],
+        [
+          "extrinsic",
+          "ExtrinsicMetadataV14"
+        ]
+      ]
+    },
+    "PalletMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "storage",
+          "Option<StorageMetadataV14>"
+        ],
+        [
+          "calls",
+          "Option<PalletCallMetadataV14>"
+        ],
+        [
+          "event",
+          "Option<PalletEventMetadataV14>"
+        ],
+        [
+          "constants",
+          "Vec<PalletConstantMetadataV14>"
+        ],
+        [
+          "error",
+          "Option<PalletErrorMetadataV14>"
+        ],
+        [
+          "index",
+          "u8"
+        ]
+      ]
+    },
+    "TypeId": "u32",
+    "StorageMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "prefix",
+          "Text"
+        ],
+        [
+          "entries",
+          "Vec<StorageEntryMetadataV14>"
+        ]
+      ]
+    },
+    "StorageEntryMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "modifier",
+          "StorageEntryModifierV13"
+        ],
+        [
+          "type",
+          "StorageEntryTypeV14"
+        ],
+        [
+          "default",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "StorageEntryTypeV14": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Plain",
+          "TypeId"
+        ],
+        [
+          "Map",
+          "MapTypeV14"
+        ],
+        [
+          "DoubleMap",
+          "DoubleMapTypeV14"
+        ],
+        [
+          "NMap",
+          "NMapTypeV14"
+        ]
+      ]
+    },
+    "MapTypeV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV11"
+        ],
+        [
+          "key",
+          "TypeId"
+        ],
+        [
+          "value",
+          "TypeId"
+        ],
+        [
+          "unused",
+          "bool"
+        ]
+      ]
+    },
+    "DoubleMapTypeV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "hasher",
+          "StorageHasherV11"
+        ],
+        [
+          "key1",
+          "TypeId"
+        ],
+        [
+          "key2",
+          "TypeId"
+        ],
+        [
+          "value",
+          "TypeId"
+        ],
+        [
+          "key2_hasher",
+          "StorageHasherV11"
+        ]
+      ]
+    },
+    "NMapTypeV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "keys",
+          "TypeId"
+        ],
+        [
+          "hashers",
+          "Vec<StorageHasherV13>"
+        ],
+        [
+          "value",
+          "TypeId"
+        ]
+      ]
+    },
+    "PalletCallMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "ty",
+          "TypeId"
+        ],
+        [
+          "calls",
+          "Vec<FunctionMetadataV14>"
+        ]
+      ]
+    },
+    "FunctionArgumentMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "ty",
+          "TypeId"
+        ]
+      ]
+    },
+    "FunctionMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "String"
+        ],
+        [
+          "arguments",
+          "Vec<FunctionArgumentMetadataV14>"
+        ],
+        [
+          "documentation",
+          "Vec<String>"
+        ]
+      ]
+    },
+    "PalletEventMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "ty",
+          "TypeId"
+        ]
+      ]
+    },
+    "PalletConstantMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "String"
+        ],
+         [
+          "ty",
+          "TypeId"
+        ],
+        [
+          "value",
+          "Bytes"
+        ],
+        [
+          "documentation",
+          "Vec<String>"
+        ]
+      ]
+    },
+    "PalletErrorMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "ty",
+          "TypeId"
+        ]
+      ]
+    },
+    "ExtrinsicMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "ty",
+          "TypeId"
+        ],
+        [
+          "version",
+          "u8"
+        ],
+        [
+          "signed_extensions",
+          "Vec<SignedExtensionMetadataV14>"
+        ]
+      ]
+    },
+    "SignedExtensionMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "identifier",
+          "String"
+        ],
+        [
+          "ty",
+          "TypeId"
+        ]
+      ]
+    },
+    "---------------------------------------------------------------------------------------------": "Null",
+    "TypeParameter": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "String"
+        ],
+        [
+          "type",
+          "Option<TypeId>"
+        ]
+      ]
+    },
+    "RegistryType": {
+      "type": "struct",
+      "base_class": "GenericRegistryType",
+      "type_mapping": [
+        [
+          "path",
+          "Vec<String>"
+        ],
+        [
+          "params",
+          "Vec<TypeParameter>"
+        ],
+        [
+          "def",
+          "TypeDef"
+        ],
+        [
+          "docs",
+          "Vec<String>"
+        ]
+      ]
+    },
+    "PortableRegistry": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "types",
+          "Vec<RegistryType>"
+        ]
+      ]
+    },
+    "TypeDef": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "composite",
+          "TypeDefComposite"
+        ],
+        [
+          "variant",
+          "TypeDefVariant"
+        ],
+        [
+          "sequence",
+          "TypeDefSequence"
+        ],
+        [
+          "array",
+          "TypeDefArray"
+        ],
+        [
+          "tuple",
+          "TypeDefTuple"
+        ],
+        [
+          "primitive",
+          "TypeDefPrimitive"
+        ],
+        [
+          "compact",
+          "TypeDefCompact"
+        ],
+        [
+          "phantom",
+          "TypeDefPhantom"
+        ],
+        [
+          "bitsequence",
+          "TypeDefBitSequence"
+        ]
+      ]
+    },
+    "Field": {
+      "type": "struct",
+      "base_class": "GenericField",
+      "type_mapping": [
+        [
+          "name",
+          "Option<String>"
+        ],
+        [
+          "type",
+          "TypeId"
+        ],
+        [
+          "typeName",
+          "Option<String>"
+        ],
+        [
+          "docs",
+          "Vec<String>"
+        ]
+      ]
+    },
+    "TypeDefComposite": {
+      "type": "struct",
+      "base_class": "GenericTypeDefComposite",
+      "type_mapping": [
+        [
+          "fields",
+          "Vec<Field>"
+        ]
+      ]
+    },
+    "TypeDefVariant": {
+      "type": "struct",
+      "base_class": "GenericTypeDefVariant",
+      "type_mapping": [
+        [
+          "variants",
+          "Vec<Variant>"
+        ]
+      ]
+    },
+    "Variant": {
+      "type": "struct",
+      "base_class": "GenericVariant",
+      "type_mapping": [
+        [
+          "name",
+          "String"
+        ],
+        [
+          "fields",
+          "Vec<Field>"
+        ],
+        [
+          "index",
+          "Option<u8>"
+        ],
+        [
+          "discriminant",
+          "Option<u64>"
+        ],
+        [
+          "docs",
+          "Vec<String>"
+        ]
+      ]
+    },
+    "TypeDefSequence": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "type",
+          "TypeId"
+        ]
+      ]
+    },
+    "TypeDefArray": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "len",
+          "u32"
+        ],
+        [
+          "type",
+          "TypeId"
+        ]
+      ]
+    },
+    "TypeDefTuple": "Vec<TypeId>",
+    "TypeDefPrimitive": {
+      "type": "enum",
+      "value_list": [
+          "bool",
+          "char",
+          "str",
+          "u8",
+          "u16",
+          "u32",
+          "u64",
+          "u128",
+          "u256",
+          "i8",
+          "i16",
+          "i32",
+          "i64",
+          "i128",
+          "i256"
+      ]
+    },
+    "TypeDefCompact": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "type",
+          "TypeId"
+        ]
+      ]
+    },
+    "TypeDefPhantom": "Null",
+    "TypeDefBitSequence": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "bit_store_type",
+          "TypeId"
+        ],
+        [
+          "bit_order_type",
+          "TypeId"
         ]
       ]
     }

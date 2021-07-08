@@ -21,7 +21,6 @@ from scalecodec.block import ExtrinsicsDecoder
 from scalecodec.metadata import MetadataDecoder
 from scalecodec.type_registry import load_type_registry_preset
 
-from scalecodec.types import CompactU32, Vec
 from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
 
 
@@ -31,13 +30,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
-
     @classmethod
     def setUpClass(cls):
         RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_1045_hex))
+        cls.metadata_decoder = ScaleDecoder.get_decoder_class('MetadataVersioned', data=ScaleBytes(metadata_1045_hex))
         cls.metadata_decoder.decode()
 
     def test_decode_balance_transfer_payload(self):
@@ -2189,7 +2187,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
         RuntimeConfiguration().set_active_spec_version_id(1)
 
-        metadata_decoder = MetadataDecoder(ScaleBytes(metadata_substrate_node_template))
+        metadata_decoder = ScaleDecoder.get_decoder_class(
+            'MetadataVersioned', ScaleBytes(metadata_substrate_node_template)
+        )
         metadata_decoder.decode()
 
         extrinsic_scale = '0x4102841c0d1aa34c4be7eaddc924b30bab35e45ec22307f2f7304d6e5f9c8f3753de560186be385b2f7b25525518259b00e6b8a61e7e821544f102dca9b6d89c60fc327922229c975c2fa931992b17ab9d5b26f9848eeeff44e0333f6672a98aa8b113836935040005031c0d1aa34c4be7eaddc924b30bab35e45ec22307f2f7304d6e5f9c8f3753de560f0080c6a47e8d03'
@@ -2214,7 +2214,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
         RuntimeConfiguration().set_active_spec_version_id(1)
 
-        metadata_decoder = MetadataDecoder(ScaleBytes(metadata_substrate_node_template))
+        metadata_decoder = ScaleDecoder.get_decoder_class(
+            'MetadataVersioned', ScaleBytes(metadata_substrate_node_template)
+        )
         metadata_decoder.decode()
 
         extrinsic = ExtrinsicsDecoder(metadata=metadata_decoder)

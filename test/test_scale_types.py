@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import datetime
-import pydoc_data.topics
+import os
 import unittest
 
 from scalecodec import GenericContractExecResult
@@ -24,17 +24,21 @@ from scalecodec.metadata import MetadataDecoder
 
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException, RuntimeConfiguration, RuntimeConfigurationObject
-from scalecodec.types import GenericMultiAddress, HexBytes
-from scalecodec.type_registry import load_type_registry_preset
+from scalecodec.types import GenericMultiAddress
+from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
-from test.fixtures import metadata_v10_hex
 
 
 class TestScaleTypes(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v10_hex))
+        module_path = os.path.dirname(__file__)
+        cls.metadata_fixture_dict = load_type_registry_file(
+            os.path.join(module_path, 'fixtures', 'metadata_hex.json')
+        )
+
+        cls.metadata_decoder = MetadataDecoder(ScaleBytes(cls.metadata_fixture_dict['V10']))
         cls.metadata_decoder.decode()
 
     def setUp(self) -> None:
@@ -84,6 +88,24 @@ class TestScaleTypes(unittest.TestCase):
     def test_compact_bool_invalid(self):
         obj = ScaleDecoder.get_decoder_class('bool', ScaleBytes("0x02"))
         self.assertRaises(InvalidScaleTypeValueException, obj.decode)
+
+    def test_string(self):
+        obj = ScaleDecoder.get_decoder_class('String', ScaleBytes("0x1054657374"))
+        obj.decode()
+        self.assertEqual(str(obj), "Test")
+
+        data = obj.encode("Test")
+
+        self.assertEqual("0x1054657374", data.to_hex())
+
+    def test_string_multibyte_chars(self):
+        obj = ScaleDecoder.get_decoder_class('String')
+
+        data = obj.encode('µ')
+        self.assertEqual('0x08c2b5', data.to_hex())
+
+        obj.decode()
+        self.assertEqual(str(obj), "µ")
 
     def test_vec_accountid(self):
         obj = ScaleDecoder.get_decoder_class(

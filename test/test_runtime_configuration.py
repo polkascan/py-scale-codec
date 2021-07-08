@@ -44,22 +44,24 @@ class TestScaleDecoderClasses(unittest.TestCase):
                     if type(sub_type_string) in [list, tuple]:
                         sub_type_string = sub_type_string[1]
 
-                    sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_type_string)
+                    if sub_type_string is not None:
 
-                    self.assertIsNotNone(sub_decoding_cls,
-                                         msg=f' Sub type "{sub_type_string}" didn\'t return decoding class')
+                        sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_type_string)
 
-                    # Try to decode sub_type if present
-                    if sub_decoding_cls.sub_type:
-                        if sub_decoding_cls.sub_type[0] == '(':
-                            sub_sub_type_parts = [sub_decoding_cls.sub_type]
-                        else:
-                            sub_sub_type_parts = sub_decoding_cls.sub_type.split(',')
+                        self.assertIsNotNone(sub_decoding_cls,
+                                             msg=f' Sub type "{sub_type_string}" didn\'t return decoding class')
 
-                        for sub_sub_type_part in sub_sub_type_parts:
-                            sub_sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_sub_type_part.strip())
-                            self.assertIsNotNone(sub_sub_decoding_cls,
-                                                 msg=f' Sub type "{sub_sub_type_part}" didn\'t return decoding class')
+                        # Try to decode sub_type if present
+                        if sub_decoding_cls.sub_type:
+                            if sub_decoding_cls.sub_type[0] == '(':
+                                sub_sub_type_parts = [sub_decoding_cls.sub_type]
+                            else:
+                                sub_sub_type_parts = sub_decoding_cls.sub_type.split(',')
+
+                            for sub_sub_type_part in sub_sub_type_parts:
+                                sub_sub_decoding_cls = RuntimeConfiguration().get_decoder_class(sub_sub_type_part.strip())
+                                self.assertIsNotNone(sub_sub_decoding_cls,
+                                                     msg=f' Sub type "{sub_sub_type_part}" didn\'t return decoding class')
 
 
 class TestMultipleRuntimeConfigurations(unittest.TestCase):

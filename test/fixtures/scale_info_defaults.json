@@ -1,6 +1,7 @@
 {
   "types": {
     "str": "Bytes",
+    "Compact<Moment>": "CompactMoment",
     "sp_core::crypto::AccountId32": "GenericAccountId",
     "!!!!!sp_core::crypto::GenericConsensusEngineId": "GenericConsensusEngineId",
     "frame_support::storage::weak_bounded_vec::WeakBoundedVec": "BoundedVec",
