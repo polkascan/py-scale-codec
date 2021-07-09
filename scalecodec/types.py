@@ -207,6 +207,14 @@ class String(Bytes):
         return self.value
 
 
+class Str(Bytes):
+    pass
+
+
+class String(Bytes):
+    pass
+
+
 class OptionBytes(ScaleType):
 
     type_string = 'Option<Vec<u8>>'
