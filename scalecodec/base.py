@@ -326,7 +326,7 @@ class RuntimeConfigurationObject:
 
                 fields = scale_info_type['def']['composite']['fields']
 
-                if all(['name' in f for f in fields]):
+                if all([f.get('name') for f in fields]):
                     base_type_string = 'Struct'
                     type_mapping = [[field['name'], f"scale_info::{field['type']}"] for field in fields]
 
@@ -356,7 +356,9 @@ class RuntimeConfigurationObject:
                 for variant in scale_info_type['def']['variant']['variants']:
 
                     if 'fields' in variant:
-                        if len(variant['fields']) == 1:
+                        if len(variant['fields']) == 0:
+                            enum_value = 'Null'
+                        elif len(variant['fields']) == 1:
                             enum_value = f"scale_info::{variant['fields'][0]['type']}"
                         else:
                             field_str = ', '.join([f"scale_info::{f['type']}" for f in variant['fields']])
@@ -406,7 +408,10 @@ class RuntimeConfigurationObject:
             if decoder_class:
                 self.type_registry['types'][f"scale_info::{idx}"] = decoder_class
 
-    def add_runtime_metadata_dict_to_type_registry(self, metadata_dict):
+    def add_portable_registry(self, metadata: 'GenericMetadataVersioned'):
+        if metadata.value_object[1].index < 14:
+            raise ValueError("Metadata does not contain PortableRegistry")
+        metadata_dict = metadata.value
         return self.update_from_scale_info_types(metadata_dict[1]["V14"]['types']['types'], prefix='runtime')
 
     def add_contract_metadata_dict_to_type_registry(self, metadata_dict):

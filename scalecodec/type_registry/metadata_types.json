@@ -1083,26 +1083,28 @@
     },
     "FunctionArgumentMetadataV14": {
       "type": "struct",
+      "base_class": "GenericScaleInfoFunctionArgumentMetadata",
       "type_mapping": [
         [
           "name",
           "Text"
         ],
         [
-          "ty",
+          "type",
           "TypeId"
         ]
       ]
     },
     "FunctionMetadataV14": {
       "type": "struct",
+      "base_class": "GenericFunctionMetadata",
       "type_mapping": [
         [
           "name",
           "String"
         ],
         [
-          "arguments",
+          "args",
           "Vec<FunctionArgumentMetadataV14>"
         ],
         [

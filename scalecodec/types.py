@@ -153,7 +153,7 @@ class Option(ScaleType):
 
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition):
-        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]}"
+        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]['type']}"
 
 
 class Bytes(ScaleType):
@@ -205,14 +205,6 @@ class Str(Bytes):
 class String(Bytes):
     def serialize(self):
         return self.value
-
-
-class Str(Bytes):
-    pass
-
-
-class String(Bytes):
-    pass
 
 
 class OptionBytes(ScaleType):
@@ -842,7 +834,7 @@ class BoundedVec(Vec):
 
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition):
-        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]}"
+        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]['type']}"
 
 
 class ScaleInfoBoundedVec(Tuple):
@@ -1041,7 +1033,7 @@ class Enum(ScaleType):
                 value = {value: None}
 
             if type(value) != dict:
-                raise ValueError("Value must be a dict when type_mapping is set, not '{}'".format(value))
+                raise ValueError("Value must be a dict or str when type_mapping is set, not '{}'".format(value))
 
             if len(value) != 1:
                 raise ValueError("Value for enum with type_mapping can only have one value")
@@ -1926,3 +1918,7 @@ class GenericModuleConstantMetadata(Struct):
     def constant_value(self):
         if self.value_object.get('value'):
             return self.value_object['value'].value_object
+
+
+class GenericScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
+    pass
