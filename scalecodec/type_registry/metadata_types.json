@@ -1,7 +1,9 @@
 {
   "types": {
     "Type": "Bytes",
-    "Text": "Bytes",
+    "Text": "String",
+    "Hash": "H256",
+    "Call": "GenericCall",
     "DoubleMapTypeV9": {
       "type": "struct",
       "type_mapping": [
@@ -179,7 +181,7 @@
       "type_mapping": [
         [
           "name",
-          "Text"
+          "String"
         ],
         [
           "modifier",
@@ -359,7 +361,7 @@
       "type_mapping": [
         [
           "name",
-          "Text"
+          "String"
         ],
         [
           "modifier",
@@ -753,7 +755,7 @@
       "type_mapping": [
         [
           "name",
-          "Text"
+          "String"
         ],
         [
           "modifier",
@@ -830,39 +832,39 @@
       "type_mapping": [
         [
           "V0",
-          "Null"
+          "TypeNotSupported<MetadataV0>"
         ],
         [
           "V1",
-          "Null"
+          "TypeNotSupported<MetadataV1>"
         ],
         [
           "V2",
-          "Null"
+          "TypeNotSupported<MetadataV2>"
         ],
         [
           "V3",
-          "Null"
+          "TypeNotSupported<MetadataV3>"
         ],
         [
           "V4",
-          "Null"
+          "TypeNotSupported<MetadataV4>"
         ],
         [
           "V5",
-          "Null"
+          "TypeNotSupported<MetadataV5>"
         ],
         [
           "V6",
-          "Null"
+          "TypeNotSupported<MetadataV6>"
         ],
         [
           "V7",
-          "Null"
+          "TypeNotSupported<MetadataV7>"
         ],
         [
           "V8",
-          "Null"
+          "TypeNotSupported<MetadataV8>"
         ],
         [
           "V9",
@@ -914,6 +916,7 @@
     },
     "PalletMetadataV14": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -945,7 +948,7 @@
         ]
       ]
     },
-    "TypeId": "u32",
+    "SiLookupTypeId": "u32",
     "StorageMetadataV14": {
       "type": "struct",
       "type_mapping": [
@@ -961,10 +964,11 @@
     },
     "StorageEntryMetadataV14": {
       "type": "struct",
+      "base_class": "ScaleInfoStorageEntryMetadata",
       "type_mapping": [
         [
           "name",
-          "Text"
+          "String"
         ],
         [
           "modifier",
@@ -989,7 +993,7 @@
       "type_mapping": [
         [
           "Plain",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "Map",
@@ -1014,15 +1018,11 @@
         ],
         [
           "key",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "value",
-          "TypeId"
-        ],
-        [
-          "unused",
-          "bool"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1035,15 +1035,15 @@
         ],
         [
           "key1",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "key2",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "value",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "key2_hasher",
@@ -1056,7 +1056,7 @@
       "type_mapping": [
         [
           "keys",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "hashers",
@@ -1064,7 +1064,7 @@
         ],
         [
           "value",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1073,7 +1073,7 @@
       "type_mapping": [
         [
           "ty",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "calls",
@@ -1091,7 +1091,7 @@
         ],
         [
           "type",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1118,7 +1118,7 @@
       "type_mapping": [
         [
           "ty",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1131,7 +1131,7 @@
         ],
          [
           "ty",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "value",
@@ -1148,7 +1148,7 @@
       "type_mapping": [
         [
           "ty",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1157,7 +1157,7 @@
       "type_mapping": [
         [
           "ty",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "version",
@@ -1178,7 +1178,11 @@
         ],
         [
           "ty",
-          "TypeId"
+          "SiLookupTypeId"
+        ],
+        [
+          "additional_signed",
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1192,7 +1196,7 @@
         ],
         [
           "type",
-          "Option<TypeId>"
+          "Option<SiLookupTypeId>"
         ]
       ]
     },
@@ -1278,7 +1282,7 @@
         ],
         [
           "type",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "typeName",
@@ -1341,7 +1345,7 @@
       "type_mapping": [
         [
           "type",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1354,11 +1358,11 @@
         ],
         [
           "type",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
-    "TypeDefTuple": "Vec<TypeId>",
+    "TypeDefTuple": "Vec<SiLookupTypeId>",
     "TypeDefPrimitive": {
       "type": "enum",
       "value_list": [
@@ -1384,7 +1388,7 @@
       "type_mapping": [
         [
           "type",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1394,13 +1398,257 @@
       "type_mapping": [
         [
           "bit_store_type",
-          "TypeId"
+          "SiLookupTypeId"
         ],
         [
           "bit_order_type",
-          "TypeId"
+          "SiLookupTypeId"
         ]
       ]
+    },
+    "DigestItem": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Other",
+          "Bytes"
+        ],
+        [
+          "AuthoritiesChange",
+          "Vec<AuthorityId>"
+        ],
+        [
+          "ChangesTrieRoot",
+          "Hash"
+        ],
+        [
+          "SealV0",
+          "SealV0"
+        ],
+        [
+          "Consensus",
+          "Consensus"
+        ],
+        [
+          "Seal",
+          "Seal"
+        ],
+        [
+          "PreRuntime",
+          "PreRuntime"
+        ],
+        [
+          "ChangesTrieSignal",
+          "ChangesTrieSignal"
+        ]
+      ]
+    },
+    "PreRuntime": "GenericPreRuntime",
+    "SealV0": "GenericSealV0",
+    "Seal": "GenericSeal",
+    "Consensus": "GenericConsensus",
+    "ConsensusEngineId": "GenericConsensusEngineId",
+    "VrfData": "[u8; 32]",
+    "VrfProof": "[u8; 64]",
+    "RawAuraPreDigest": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "slotNumber",
+          "u64"
+        ]
+      ]
+    },
+    "RawBabePreDigest": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Phantom",
+          "Null"
+        ],
+        [
+          "Primary",
+          "RawBabePreDigestPrimary"
+        ],
+        [
+          "SecondaryPlain",
+          "RawBabePreDigestSecondaryPlain"
+        ],
+        [
+          "SecondaryVRF",
+          "RawBabePreDigestSecondaryVRF"
+        ]
+      ]
+    },
+    "RawBabePreDigestPrimary": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "vrfOutput",
+          "VrfOutput"
+        ],
+        [
+          "vrfProof",
+          "VrfProof"
+        ]
+      ]
+    },
+    "RawBabePreDigestSecondaryPlain": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ]
+      ]
+    },
+    "RawBabePreDigestSecondaryVRF": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authorityIndex",
+          "u32"
+        ],
+        [
+          "slotNumber",
+          "SlotNumber"
+        ],
+        [
+          "vrfOutput",
+          "VrfOutput"
+        ],
+        [
+          "vrfProof",
+          "VrfProof"
+        ]
+      ]
+    },
+    "Extrinsic": "GenericExtrinsic",
+    "Inherent": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "call",
+          "Call"
+        ]
+      ]
+    },
+    "ExtrinsicV4": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "address",
+          "Address"
+        ],
+        [
+          "signature",
+          "MultiSignature"
+        ],
+        [
+          "era",
+          "Era"
+        ],
+        [
+          "nonce",
+          "Compact<Index>"
+        ],
+        [
+          "tip",
+          "Compact<Balance>"
+        ],
+        [
+          "call",
+          "Call"
+        ]
+      ]
+    },
+    "ExtrinsicPayloadValue": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "call",
+          "CallBytes"
+        ],
+        [
+          "era",
+          "Era"
+        ],
+        [
+          "nonce",
+          "Compact<Index>"
+        ],
+        [
+          "tip",
+          "Compact<Balance>"
+        ],
+        [
+          "specVersion",
+          "u32"
+        ],
+        [
+          "transactionVersion",
+          "u32"
+        ],
+        [
+          "genesisHash",
+          "Hash"
+        ],
+        [
+          "blockHash",
+          "Hash"
+        ]
+      ]
+    },
+    "Address": "GenericMultiAddress",
+    "AccountId": "GenericAccountId",
+    "Signature": "H512",
+    "Index": "u32",
+    "Balance": "u128",
+    "EcdsaSignature": "[u8; 65]",
+    "Ed25519Signature": "H512",
+    "Sr25519Signature": "H512",
+    "AnySignature": "H512",
+    "MultiSignature": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Ed25519",
+          "Ed25519Signature"
+        ],
+        [
+          "Sr25519",
+          "Sr25519Signature"
+        ],
+        [
+          "Ecdsa",
+          "EcdsaSignature"
+        ]
+      ]
+    },
+    "Compact<Moment>": "CompactMoment",
+    "sp_core::crypto::AccountId32": "GenericAccountId",
+    "sp_runtime::multiaddress::MultiAddress": "GenericMultiAddress",
+    "*::Event": {
+      "type": "struct",
+      "base_class": "GenericScaleInfoEvent",
+      "type_mapping": []
+    },
+    "*::EventRecord": {
+      "type": "struct",
+      "base_class": "GenericEventRecord",
+      "type_mapping": []
     }
   }
 }

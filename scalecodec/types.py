@@ -152,8 +152,8 @@ class Option(ScaleType):
         return ScaleBytes('0x00')
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition):
-        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]['type']}"
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
 
 
 class Bytes(ScaleType):
@@ -755,6 +755,10 @@ class GenericAccountId(H256):
 
         return value
 
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        return
+
 
 class GenericAccountIndex(U32):
     pass
@@ -833,8 +837,8 @@ class BoundedVec(Vec):
         super().__init__(data, **kwargs)
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition):
-        cls.sub_type = f"scale_info::{scale_info_definition['params'][0]['type']}"
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
 
 
 class ScaleInfoBoundedVec(Tuple):
@@ -1011,7 +1015,7 @@ class Enum(ScaleType):
                 if enum_type_mapping[1] is None or enum_type_mapping[1] == 'Null':
                     return enum_type_mapping[0]
 
-                result_obj = self.process_type(enum_type_mapping[1])
+                result_obj = self.process_type(enum_type_mapping[1], metadata=self.metadata)
 
                 self.value_object = (enum_type_mapping[0], result_obj)
 
@@ -1211,7 +1215,7 @@ class GenericCall(ScaleType):
     def __init__(self, data, **kwargs):
         self.call_index = None
         self.call_function = None
-        self.call_args = []
+        self.call_args = {}
         self.call_module = None
         self.call_hash = None
 
@@ -1225,12 +1229,16 @@ class GenericCall(ScaleType):
 
         call_bytes = bytes.fromhex(self.call_index)
 
+        call_args_serialized = []
+
         for arg in self.call_function.args:
             arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
 
             call_bytes += arg_type_obj.get_used_bytes()
 
-            self.call_args.append({
+            self.call_args[arg.name] = arg_type_obj
+
+            call_args_serialized.append({
                 'name': arg.name,
                 'type': arg.type,
                 'value': arg_type_obj.serialize()
@@ -1238,11 +1246,19 @@ class GenericCall(ScaleType):
 
         call_hash = blake2b(call_bytes, digest_size=32).digest()
 
+        self.value_object = {
+            'call_index': f'0x{self.call_index}',
+            'call_function': self.call_function,
+            'call_module': self.call_module,
+            'call_args': self.call_args,
+            'call_hash': f'0x{call_hash.hex()}'
+        }
+
         return {
             'call_index': f'0x{self.call_index}',
             'call_function': self.call_function.name,
             'call_module': self.call_module.name,
-            'call_args': self.call_args,
+            'call_args': call_args_serialized,
             'call_hash': f'0x{call_hash.hex()}'
         }
 
@@ -1554,13 +1570,22 @@ class GenericMetadataAll(Enum):
     def call_index(self):
         return self.__call_index
 
+    @property
+    def portable_registry(self):
+        if self.index >= 14:
+            return self.value_object[1].value_object['types']
+        else:
+            raise ValueError("Metadata does not contain PortableRegistry")
+
     def get_event(self, pallet_index, event_index):
         pass
 
     def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
 
         if self.index >= 14:
-            raise NotImplementedError()
+            for pallet in self.value_object[1].value_object['pallets'].value_object:
+                if pallet.value['name'] == name:
+                    return pallet
         else:
             for pallet in self.value_object[1].value_object['modules'].value_object:
                 if pallet.value['name'] == name:
@@ -1571,7 +1596,7 @@ class GenericMetadataAll(Enum):
 
         metadata_obj = self.value_object[1]
 
-        if self.index == 14:
+        if self.index >= 14:
             # TODO V14 processing
             # Build call index
             for module in metadata_obj.value_object['pallets'].value_object:
@@ -1579,6 +1604,17 @@ class GenericMetadataAll(Enum):
                     for call_index, call in enumerate(module.value_object['calls'].value_object.value_object['calls'].value_object):
                         call.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, call_index)
                         self.call_index[call.lookup] = (module, call)
+
+                # Build event index
+                if module.value_object['event'].value_object is not None:
+                    self.event_index["{:02x}".format(module.value_object["index"].value_object)] = \
+                        f"scale_info::{module.value_object['event'].value['ty']}"
+
+                # # Create error index
+                # if len(module.value_object['errors'].value_object or []) > 0:
+                #     for idx, error in enumerate(module.value_object['errors'].value_object):
+                #         self.error_index[f'{module.value_object["index"].value_object}-{idx}'] = error
+
         elif self.index in (12, 13):
 
             for module in metadata_obj.value_object['modules'].value_object:
@@ -1647,6 +1683,10 @@ class GenericMetadataVersioned(Tuple):
         return self.value_object[1]
 
     @property
+    def portable_registry(self):
+        return self.value_object[1].portable_registry
+
+    @property
     def pallets(self):
         return self.value_object[1].pallets
 
@@ -1675,6 +1715,10 @@ class GenericMetadataVersioned(Tuple):
 
 
 class GenericRegistryType(Struct):
+
+    @property
+    def docs(self):
+        return self.value['docs']
 
     def process_encode(self, value):
         if 'params' not in value:
@@ -1745,9 +1789,6 @@ class GenericFunctionArgumentMetadata(Struct):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_type_string(self):
-        return self.convert_type(self.value['type'])
-
     def process(self):
         value = super().process()
         return value
@@ -1777,6 +1818,10 @@ class GenericFunctionMetadata(Struct):
     def args(self):
         return self.value_object['args'].value_object
 
+    @property
+    def docs(self):
+        return self.value['documentation']
+
 
 class GenericPalletMetadata(Struct):
 
@@ -1803,10 +1848,18 @@ class GenericPalletMetadata(Struct):
 
     @property
     def events(self):
-        events = self.value_object['events'].value_object
 
-        if events:
-            return events.value_object
+        if 'event' in self.value_object:
+            if self.value_object['event'].value_object:
+                return self.value_object['event'].value_object.value['ty']
+        elif 'events' in self.value_object:
+
+            events = self.value_object['events'].value_object
+
+            if events:
+                return events.value_object
+        else:
+            raise ValueError('Events not present in pallet')
 
     @property
     def constants(self):
@@ -1814,7 +1867,15 @@ class GenericPalletMetadata(Struct):
 
     @property
     def errors(self):
-        return self.value_object['errors'].value_object
+        if 'error' in self.value_object:
+            if self.value_object['error'].value_object:
+                return self.value_object['error'].value_object.value['ty']
+
+        elif 'errors' in self.value_object:
+            return self.value_object['errors'].value_object
+
+        else:
+            raise ValueError('Events not present in pallet')
 
     def get_storage_function(self, name: str):
         storage_functions = self.value_object['storage'].value_object
@@ -1835,15 +1896,18 @@ class GenericStorageEntryMetadata(Struct):
     def type(self):
         return self.value['type']
 
+    def get_type_string_for_type(self, ty):
+        return self.convert_type(ty)
+
     def get_value_type_string(self):
         if 'Plain' in self.value['type']:
-            return self.convert_type(self.value['type']['Plain'])
+            return self.get_type_string_for_type(self.value['type']['Plain'])
         elif 'Map' in self.value['type']:
-            return self.convert_type(self.value['type']['Map']['value'])
+            return self.get_type_string_for_type(self.value['type']['Map']['value'])
         elif 'DoubleMap' in self.value['type']:
-            return self.convert_type(self.value['type']['DoubleMap']['value'])
+            return self.get_type_string_for_type(self.value['type']['DoubleMap']['value'])
         elif 'NMap' in self.value['type']:
-            return self.convert_type(self.value['type']['NMap']['value'])
+            return self.get_type_string_for_type(self.value['type']['NMap']['value'])
         else:
             raise NotImplementedError()
 
@@ -1851,14 +1915,14 @@ class GenericStorageEntryMetadata(Struct):
         if 'Plain' in self.value['type']:
             return []
         elif 'Map' in self.value['type']:
-            return [self.convert_type(self.value['type']['Map']['key'])]
+            return [self.get_type_string_for_type(self.value['type']['Map']['key'])]
         elif 'DoubleMap' in self.value['type']:
             return [
-                self.convert_type(self.value['type']['DoubleMap']['key1']),
-                self.convert_type(self.value['type']['DoubleMap']['key2'])
+                self.get_type_string_for_type(self.value['type']['DoubleMap']['key1']),
+                self.get_type_string_for_type(self.value['type']['DoubleMap']['key2'])
             ]
         elif 'NMap' in self.value['type']:
-            return [self.convert_type(k) for k in self.value['type']['NMap']['keys']]
+            return [self.get_type_string_for_type(k) for k in self.value['type']['NMap']['keys']]
         else:
             raise NotImplementedError()
 
@@ -1876,6 +1940,12 @@ class GenericStorageEntryMetadata(Struct):
             return self.value['type']['NMap']['hashers']
         else:
             raise NotImplementedError()
+
+
+class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
+
+    def get_type_string_for_type(self, ty):
+        return f'scale_info::{ty}'
 
 
 class GenericEventMetadata(Struct):
@@ -1921,4 +1991,7 @@ class GenericModuleConstantMetadata(Struct):
 
 
 class GenericScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
-    pass
+
+    @property
+    def type(self):
+        return f"scale_info::{self.value['type']}"

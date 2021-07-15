@@ -18,7 +18,7 @@ import os
 import unittest
 from pathlib import Path
 
-from scalecodec.block import EventsDecoder, ExtrinsicsDecoder
+from scalecodec.block import Extrinsic
 
 from scalecodec.metadata import MetadataDecoder
 
@@ -47,7 +47,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
         events_payload_1020 = '0x14000000000000001027000001010000010000000000102700000001000002000000000040420f0000010000030000000d05e8f6971c000000000000000000000000000003000000000101060020a10700000100'
         # events_payload_1022 = '0x14000000000000001027000001010000010000000000102700000001000002000000000040420f0000010000030000000d054cb927160000000000000000000000000000030000000001011000a0860100000100'
 
-        events_decoder = EventsDecoder(
+        events_decoder = ScaleDecoder.get_decoder_class(
+            'Vec<EventRecord>',
             data=ScaleBytes(events_payload_1020),
             metadata=self.metadata_decoder
         )
@@ -58,7 +59,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
         # Change runtime version id
         RuntimeConfiguration().set_active_spec_version_id(1020)
 
-        events_decoder = EventsDecoder(
+        events_decoder = ScaleDecoder.get_decoder_class(
+            'Vec<EventRecord>',
             data=ScaleBytes(events_payload_1020),
             metadata=self.metadata_decoder
         )
@@ -156,7 +158,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         # Change runtime version id
         RuntimeConfiguration().set_active_spec_version_id(1030)
 
-        extrinsics_decoder = ExtrinsicsDecoder(
+        extrinsics_decoder = Extrinsic(
             data=ScaleBytes(extrinsic_payload_1030),
             metadata=self.metadata_decoder
         )
@@ -170,7 +172,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         # Change runtime version id
         RuntimeConfiguration().set_active_spec_version_id(1040)
 
-        extrinsics_decoder = ExtrinsicsDecoder(
+        extrinsics_decoder = Extrinsic(
             data=ScaleBytes(extrinsic_payload_1040),
             metadata=self.metadata_decoder
         )

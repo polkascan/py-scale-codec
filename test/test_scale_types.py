@@ -47,6 +47,28 @@ class TestScaleTypes(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
+    def test_automatic_decode(self):
+        obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
+        self.assertEqual(obj.value, 64302)
+
+    def test_multiple_decode_without_error(self):
+        obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
+        obj.decode()
+        obj.decode()
+        self.assertEqual(obj.value, 64302)
+
+    def test_value_equals_value_serialized(self):
+        obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+        obj.decode()
+        self.assertEqual(obj.value, obj.value_serialized)
+        self.assertNotEqual(obj.value, obj.value_object)
+
+    def test_value_object(self):
+        obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+        obj.decode()
+        self.assertEqual(obj.value_object[0].value_object, 3)
+        self.assertEqual(obj.value_object[1].value_object, 0)
+
     def test_compact_u32(self):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x02093d00"))
         obj.decode()

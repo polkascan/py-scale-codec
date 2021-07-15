@@ -748,7 +748,7 @@
       ]
     },
     "EventIndex": "u32",
-    "Extrinsic": "ExtrinsicsDecoder",
+    "Extrinsic": "Extrinsic",
     "ExtrinsicPayloadValue": {
       "type": "struct",
       "type_mapping": [
@@ -10059,6 +10059,7 @@
     },
     "PalletMetadataV14": {
       "type": "struct",
+      "base_class": "GenericPalletMetadata",
       "type_mapping": [
         [
           "name",

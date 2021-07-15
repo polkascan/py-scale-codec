@@ -13,16 +13,140 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import warnings
 from hashlib import blake2b
 from collections import OrderedDict
 
-from scalecodec.base import ScaleDecoder, ScaleBytes
+from scalecodec.base import ScaleDecoder, ScaleBytes, ScaleType
 from scalecodec.types import FixedLengthArray
-from scalecodec.metadata import MetadataDecoder
 from scalecodec.types import Vec, Enum, Bytes, Struct
 
 
-class Extrinsic(ScaleDecoder):
+class OpaqueExtrinsic(Struct):
+    type_mapping = (
+        ('length', 'Compact<u32>'),
+        ('extrinsic', 'ExtrinsicVersioned')
+    )
+
+    def extract_extrinsic(self):
+        pass
+
+    def process(self):
+        return super().process()
+
+
+class ExtrinsicVersioned(Enum):
+    type_mapping = (
+        ('InherentV0', 'InherentV0'),
+        ('InherentV1', 'InherentV1'),
+        ('InherentV2', 'InherentV2'),
+        ('InherentV3', 'InherentV3'),
+        ('InherentV4', 'InherentV4'),
+        ('ExtrinsicV0', 'ExtrinsicV0'),
+        ('ExtrinsicV1', 'ExtrinsicV1'),
+        ('ExtrinsicV2', 'ExtrinsicV2'),
+        ('ExtrinsicV3', 'ExtrinsicV3'),
+        ('ExtrinsicV4', 'ExtrinsicV4')
+    )
+
+    def process(self):
+        return super().process()
+
+
+class TypeNotSupported(ScaleType):
+
+    def process(self):
+        raise ValueError(f"Scale type '{self.sub_type}' not support")
+
+    def process_encode(self, value):
+        raise ValueError(f"Scale type '{self.sub_type}' not support")
+
+
+class GenericExtrinsic(ScaleType):
+
+    def __init__(self, *arg, **kwargs):
+        self.signed = None
+        super().__init__(*arg, **kwargs)
+
+    @property
+    def extrinsic_hash(self):
+        if self.signed:
+            return blake2b(self.data.data, digest_size=32).digest()
+
+    def process(self):
+        self.value_object = {
+            'extrinsic_length': self.process_type('Compact<u32>'),
+        }
+
+        value = {}
+
+        version = self.process_type('u8').value
+
+        self.signed = (version & 128) == 128
+
+        if self.signed:
+            extrinsic_versions = (
+                'TypeNotSupported<ExtrinsicV0>',
+                'TypeNotSupported<ExtrinsicV1>',
+                'TypeNotSupported<ExtrinsicV2>',
+                'TypeNotSupported<ExtrinsicV3>',
+                'ExtrinsicV4'
+            )
+            extrinsic_version_idx = version & 127
+            if extrinsic_version_idx >= len(extrinsic_versions):
+                raise ValueError(f"Unsupported Extrinsic version '{extrinsic_version_idx}'")
+
+            extrinsic_version = extrinsic_versions[extrinsic_version_idx]
+
+            self.value_object.update(self.process_type(extrinsic_version, metadata=self.metadata).value_object)
+            value['extrinsic_hash'] = f'0x{self.extrinsic_hash.hex()}'
+        else:
+            self.value_object.update(self.process_type('Inherent', metadata=self.metadata).value_object)
+            value['extrinsic_hash'] = None
+
+        value.update({key: value.serialize() for (key, value) in self.value_object.items()})
+
+        return value
+
+    def process_encode(self, value):
+
+        # Backwards compatibility cases
+        if 'address' not in value and 'account_id' in value:
+            value['address'] = value['account_id']
+
+        if 'signature_version' in value:
+            multisig_cls = self.runtime_config.get_decoder_class('MultiSignature')
+            value['signature'] = {
+                multisig_cls.type_mapping[value['signature_version']][0]: value['signature']
+            }
+
+        if 'call' not in value:
+            value['call'] = {
+                'call_function': value['call_function'],
+                'call_module': value['call_module'],
+                'call_args': value['call_args'],
+            }
+
+        # Determine version (Fixed to V4 for now)
+        if 'address' in value:
+            data = ScaleBytes('0x84')
+            self.signed = True
+        else:
+            data = ScaleBytes('0x04')
+            self.signed = False
+
+        if self.signed:
+            extrinsic = self.get_decoder_class('ExtrinsicV4', runtime_config=self.runtime_config, metadata=self.metadata)
+            data += extrinsic.encode(value)
+
+        # Wrap payload with a length Compact<u32>
+        length_obj = self.get_decoder_class('Compact<u32>', runtime_config=self.runtime_config)
+        data = length_obj.encode(data.length) + data
+
+        return data
+
+
+class Extrinsic(GenericExtrinsic):
     type_mapping = (
         ('extrinsic_length', 'Compact<u32>'),
         ('version_info', 'u8'),
@@ -33,11 +157,8 @@ class Extrinsic(ScaleDecoder):
         ('call_index', '(u8,u8)'),
     )
 
-    def __init__(self, data=None, sub_type=None, metadata: MetadataDecoder = None, runtime_config=None, address_type=42):
+    def __init__(self, *args, address_type=42, **kwargs):
 
-        assert (metadata.__class__.__name__ == 'MetadataVersioned')
-
-        self.metadata = metadata
         self.address_type = address_type
         self.extrinsic_length = None
         self.extrinsic_hash = None
@@ -55,7 +176,8 @@ class Extrinsic(ScaleDecoder):
         self.call_args = None
         self.params_raw = None
         self.params = []
-        super().__init__(data, sub_type=sub_type, runtime_config=runtime_config)
+
+        super().__init__(*args, **kwargs)
 
     def generate_hash(self):
         if self.contains_transaction:
@@ -160,7 +282,7 @@ class Extrinsic(ScaleDecoder):
 
             for arg in self.call.args:
 
-                arg_type_obj = self.process_type(arg.get_type_string(), metadata=self.metadata)
+                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
 
                 self.params.append({
                     'name': arg.name,
@@ -289,7 +411,10 @@ class Extrinsic(ScaleDecoder):
 
 # TODO deprecated
 class ExtrinsicsDecoder(Extrinsic):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn("ExtrinsicsDecoder will be removed in the future", DeprecationWarning)
+        super().__init__(*args, **kwargs)
 
 
 # TODO deprecated
@@ -297,6 +422,7 @@ class EventsDecoder(Vec):
     type_string = 'Vec<EventRecord<Event, Hash>>'
 
     def __init__(self, data, metadata=None, **kwargs):
+        warnings.warn("EventsDecoder will be removed in the future", DeprecationWarning)
 
         if metadata and metadata.__class__.__name__ not in ['MetadataDecoder', 'MetadataVersioned']:
             raise ValueError("metadata not correct")
@@ -317,7 +443,7 @@ class EventsDecoder(Vec):
         return [e.value for e in self.elements]
 
 
-class GenericEvent(Struct):
+class GenericEvent(Enum):
 
     def __init__(self, *args, **kwargs):
 
@@ -363,6 +489,30 @@ class GenericEvent(Struct):
         }
 
 
+class GenericScaleInfoEvent(Enum):
+
+    def __init__(self, *args, **kwargs):
+
+        self.event_index = None
+        self.event = None
+        self.event_module = None
+
+        super().__init__(*args, **kwargs)
+
+    def process(self):
+
+        super().process()
+
+        self.event_index = bytes([self.index, self.value_object[1].index]).hex()
+
+        return {
+            'event_index': self.event_index,
+            'module_id': self.value_object[0],
+            'event_id': self.value_object[1].value_object[0],
+            'attributes': self.value_object[1].value_object[1].value,
+        }
+
+
 class GenericEventRecord(Struct):
 
     @property
@@ -388,7 +538,7 @@ class GenericEventRecord(Struct):
             'phase': self.value_object['phase'].index,
             'extrinsic_idx': self.value_object['phase'].value_object[1].value,
             'event': value['event'],
-            'event_index': value['event']['event_index'],
+            'event_index': self.value_object['event'].index,
             'module_id': value['event']['module_id'],
             'event_id': value['event']['event_id'],
             'attributes': value['event']['attributes'],
