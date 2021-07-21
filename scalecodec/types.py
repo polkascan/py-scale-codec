@@ -480,6 +480,8 @@ class Struct(ScaleType):
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
 
+        self.value_object = {}
+
         for key, data_type in self.type_mapping:
             if key not in value:
                 raise ValueError('Element "{}" of struct is missing in given value'.format(key))
@@ -488,6 +490,7 @@ class Struct(ScaleType):
                 type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
             )
             data += element_obj.encode(value[key])
+            self.value_object[key] = element_obj
 
         return data
 
@@ -521,6 +524,7 @@ class Tuple(ScaleType):
 
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
+        self.value_object = ()
 
         if type(value) not in (list,  tuple):
             value = [value]
@@ -536,6 +540,7 @@ class Tuple(ScaleType):
                 member_type, metadata=self.metadata, runtime_config=self.runtime_config
             )
             data += element_obj.encode(value[idx])
+            self.value_object += (element_obj,)
 
         return data
 
@@ -799,14 +804,25 @@ class Vec(ScaleType):
 
         # Check for Bytes processing
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            if value[0:2] == '0x':
-                # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
-                value = bytes.fromhex(value[2:])
-                data = element_count_compact.encode(len(value))
-                data += value
-            else:
-                data = element_count_compact.encode(len(value))
-                data += value.encode()
+            string_length_compact = CompactU32()
+
+            if type(value) is str:
+                if value[0:2] == '0x':
+                    # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
+                    value = bytes.fromhex(value[2:])
+                else:
+                    value = value.encode()
+
+            elif type(value) in (bytearray, list):
+                value = bytes(value)
+
+            if type(value) is not bytes:
+                raise ValueError(f'Cannot encode type "{type(value)}"')
+
+            self.value_object = value
+
+            data = string_length_compact.encode(len(value))
+            data += value
 
             return data
 
@@ -816,6 +832,7 @@ class Vec(ScaleType):
         element_count_compact.encode(len(value))
 
         data = element_count_compact.data
+        self.value_object = []
 
         for element in value:
 
@@ -823,8 +840,12 @@ class Vec(ScaleType):
                 type_string=self.sub_type, metadata=self.metadata, runtime_config=self.runtime_config
             )
             data += element_obj.encode(element)
+            self.value_object.append(element_obj)
 
         return data
+
+    def __len__(self):
+        return len(self.value_object)
 
 
 class BoundedVec(Vec):
@@ -881,6 +902,8 @@ class BitVec(ScaleType):
 
         if type(value) is not int:
             raise ValueError("Provided value is not an int, binary str or a list of booleans")
+
+        self.value_object = value
 
         if value == 0:
             return ScaleBytes(b'\x00')
@@ -1048,10 +1071,12 @@ class Enum(ScaleType):
                         self.index = idx
                         struct_obj = self.get_decoder_class(
                             type_string='Struct',
-                            type_mapping=[self.type_mapping[self.index]],
+                            type_mapping=[(item_key, item_value)],
                             runtime_config=self.runtime_config
                         )
-                        return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
+                        struct_data = struct_obj.encode(value)
+                        self.value_object = (item_key, struct_obj)
+                        return ScaleBytes(bytearray([self.index])) + struct_data
 
                 raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
@@ -1210,8 +1235,6 @@ class GenericVote(U8):
 
 class GenericCall(ScaleType):
 
-    type_string = "Box<Call>"
-
     def __init__(self, data, **kwargs):
         self.call_index = None
         self.call_function = None
@@ -1223,87 +1246,204 @@ class GenericCall(ScaleType):
 
     def process(self):
 
-        self.call_index = self.get_next_bytes(2).hex()
+        if self.metadata.portable_registry:
+            pallet_index = self.process_type('U8')
 
-        self.call_module, self.call_function = self.metadata.call_index[self.call_index]
+            self.call_module = self.metadata.get_pallet_by_index(pallet_index.value)
+            call_type_string = self.call_module['calls'].value_object.get_type_string()
 
-        call_bytes = bytes.fromhex(self.call_index)
+            call_obj = self.process_type(call_type_string)
 
-        call_args_serialized = []
+            self.call_index = "{:02x}{:02x}".format(pallet_index.value, call_obj.index)
 
-        for arg in self.call_function.args:
-            arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+            self.call_function = call_obj.scale_info_type['def'][1].get_variant_by_index(call_obj.index)
 
-            call_bytes += arg_type_obj.get_used_bytes()
+            self.call_args = self.call_function['fields']
 
-            self.call_args[arg.name] = arg_type_obj
+            call_hash = blake2b(self.get_used_bytes(), digest_size=32).digest()
 
-            call_args_serialized.append({
-                'name': arg.name,
-                'type': arg.type,
-                'value': arg_type_obj.serialize()
-            })
+            # Check args format
+            if type(call_obj[1].value_object) is not tuple:
+                call_args_values = (call_obj[1],)
+            else:
+                call_args_values = call_obj[1]
 
-        call_hash = blake2b(call_bytes, digest_size=32).digest()
+            call_args = []
 
-        self.value_object = {
-            'call_index': f'0x{self.call_index}',
-            'call_function': self.call_function,
-            'call_module': self.call_module,
-            'call_args': self.call_args,
-            'call_hash': f'0x{call_hash.hex()}'
-        }
+            for idx, call_arg in enumerate(self.call_args):
+                call_args.append({
+                    'name': call_arg.value['name'],
+                    'type': self.convert_type(call_arg.value['typeName']),
+                    'value': call_args_values[idx].value
+                })
+                self.call_args[idx].value_object['value'] = call_args_values[idx]
 
-        return {
-            'call_index': f'0x{self.call_index}',
-            'call_function': self.call_function.name,
-            'call_module': self.call_module.name,
-            'call_args': call_args_serialized,
-            'call_hash': f'0x{call_hash.hex()}'
-        }
+            self.value_object = {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function,
+                'call_module': self.call_module,
+                'call_args': self.call_args,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
+
+            return {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function.name,
+                'call_module': self.call_module.name,
+                'call_args': call_args,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
+
+        else:
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+            self.call_module, self.call_function = self.metadata.call_index[self.call_index]
+
+            call_bytes = bytes.fromhex(self.call_index)
+
+            call_args_serialized = []
+
+            for arg in self.call_function.args:
+                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+                call_bytes += arg_type_obj.get_used_bytes()
+
+                self.call_args[arg.name] = arg_type_obj
+
+                call_args_serialized.append({
+                    'name': arg.name,
+                    'type': arg.type,
+                    'value': arg_type_obj.serialize()
+                })
+
+            call_hash = blake2b(call_bytes, digest_size=32).digest()
+
+            self.value_object = {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function,
+                'call_module': self.call_module,
+                'call_args': self.call_args,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
+
+            return {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function.name,
+                'call_module': self.call_module.name,
+                'call_args': call_args_serialized,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
 
     def process_encode(self, value):
+
+        self.value_object = {}
 
         if type(value) is not dict:
             raise TypeError("value must be of type dict to encode a GenericCall")
 
-        # Check requirements
-        if 'call_index' in value:
-            self.call_index = value['call_index']
+        if self.metadata.portable_registry:
+            if 'call_index' in value:
+                raise NotImplementedError()
+            elif 'call_module' in value and 'call_function' in value:
+                self.call_module = self.metadata.get_metadata_pallet(value['call_module'])
+                self.value_object['call_module'] = self.call_module
 
-        elif 'call_module' in value and 'call_function' in value:
-            # Look up call module from metadata
-            for call_index, (call_module, call_function) in self.metadata.call_index.items():
+            elif not self.call_module or not self.call_function:
+                raise ValueError('No call module and function specified')
 
-                if call_module.name == value['call_module'] and call_function.name == value['call_function']:
-                    self.call_index = call_index
-                    self.call_module = call_module
-                    self.call_function = call_function
-                    break
+            if not self.call_module:
+                raise ValueError(f"Pallet '{value['call_module']}' not found")
 
-            if not self.call_index:
-                raise MetadataCallFunctionNotFound(
-                    f"Call function '{value['call_module']}.{value['call_function']}' not found in metadata"
-                )
+            data = ScaleBytes(self.call_module['index'].get_used_bytes())
 
-        elif not self.call_module or not self.call_function:
-            raise ValueError('No call module and function specified')
+            call_type_string = self.call_module['calls'].value_object.get_type_string()
 
-        data = ScaleBytes(bytearray.fromhex(self.call_index))
+            call_obj = self.get_decoder_class(call_type_string, runtime_config=self.runtime_config)
 
-        # Encode call params
-        if len(self.call_function.args) > 0:
-            for arg in self.call_function.args:
-                if arg.name not in value['call_args']:
-                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
-                else:
-                    param_value = value['call_args'][arg.name]
+            # Retrieve used variant of call type
+            self.call_function = call_obj.scale_info_type['def'][1].get_variant_by_name(value['call_function'])
 
-                    arg_obj = self.get_decoder_class(
-                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
+            if not self.call_function:
+                raise ValueError(f"Call function '{value['call_module']}.{value['call_function']}' not found")
+
+            self.value_object['call_function'] = self.call_function
+
+            data += ScaleBytes(self.call_function['index'].get_used_bytes())
+
+            self.call_index = "{:02x}{:02x}".format(
+                self.call_module.value['index'], self.call_function.value['index']
+            )
+
+            self.call_args = self.call_function['fields']
+
+            # Encode call params
+            if len(self.call_args) > 0:
+                self.value_object['call_args'] = {}
+
+                for arg in self.call_args:
+                    if arg.value['name'] not in value['call_args']:
+                        raise ValueError('Parameter \'{}\' not specified'.format(arg.value['name']))
+                    else:
+                        param_value = value['call_args'][arg.value['name']]
+
+                        arg_obj = self.get_decoder_class(
+                            type_string=arg.get_type_string(),
+                            metadata=self.metadata,
+                            runtime_config=self.runtime_config
+                        )
+                        data += arg_obj.encode(param_value)
+
+                        self.value_object['call_args'][arg.value['name']] = arg_obj
+
+            self.call_hash = blake2b(data.data, digest_size=32).digest()
+
+            return data
+
+        else:
+
+            # Check requirements
+            if 'call_index' in value:
+                self.call_index = self.value_object['call_index'] = value['call_index']
+
+            elif 'call_module' in value and 'call_function' in value:
+                # Look up call module from metadata
+                for call_index, (call_module, call_function) in self.metadata.call_index.items():
+
+                    if call_module.name == value['call_module'] and call_function.name == value['call_function']:
+                        self.call_index = self.value_object['call_index'] = call_index
+                        self.call_module = self.value_object['call_module'] = call_module
+                        self.call_function = self.value_object['call_function'] = call_function
+                        break
+
+                if not self.call_index:
+                    raise MetadataCallFunctionNotFound(
+                        f"Call function '{value['call_module']}.{value['call_function']}' not found in metadata"
                     )
-                    data += arg_obj.encode(param_value)
-        return data
+
+            elif not self.call_module or not self.call_function:
+                raise ValueError('No call module and function specified')
+
+            data = ScaleBytes(bytearray.fromhex(self.call_index))
+
+            # Encode call params
+            if len(self.call_function.args) > 0:
+                self.value_object['call_args'] = {}
+
+                for arg in self.call_function.args:
+                    if arg.name not in value['call_args']:
+                        raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
+                    else:
+                        param_value = value['call_args'][arg.name]
+
+                        arg_obj = self.get_decoder_class(
+                            type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
+                        )
+                        data += arg_obj.encode(param_value)
+
+                        self.value_object['call_args'][arg.name] = arg_obj
+
+            return data
 
 
 class GenericContractExecResult(Enum):
@@ -1574,8 +1714,6 @@ class GenericMetadataAll(Enum):
     def portable_registry(self):
         if self.index >= 14:
             return self.value_object[1].value_object['types']
-        else:
-            raise ValueError("Metadata does not contain PortableRegistry")
 
     def get_event(self, pallet_index, event_index):
         pass
@@ -1583,11 +1721,11 @@ class GenericMetadataAll(Enum):
     def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
 
         if self.index >= 14:
-            for pallet in self.value_object[1].value_object['pallets'].value_object:
+            for pallet in self[1]['pallets']:
                 if pallet.value['name'] == name:
                     return pallet
         else:
-            for pallet in self.value_object[1].value_object['modules'].value_object:
+            for pallet in self[1]['modules']:
                 if pallet.value['name'] == name:
                     return pallet
 
@@ -1596,55 +1734,35 @@ class GenericMetadataAll(Enum):
 
         metadata_obj = self.value_object[1]
 
-        if self.index >= 14:
-            # TODO V14 processing
-            # Build call index
-            for module in metadata_obj.value_object['pallets'].value_object:
-                if module.value_object['calls'].value_object is not None:
-                    for call_index, call in enumerate(module.value_object['calls'].value_object.value_object['calls'].value_object):
-                        call.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, call_index)
-                        self.call_index[call.lookup] = (module, call)
-
-                # Build event index
-                if module.value_object['event'].value_object is not None:
-                    self.event_index["{:02x}".format(module.value_object["index"].value_object)] = \
-                        f"scale_info::{module.value_object['event'].value['ty']}"
-
-                # # Create error index
-                # if len(module.value_object['errors'].value_object or []) > 0:
-                #     for idx, error in enumerate(module.value_object['errors'].value_object):
-                #         self.error_index[f'{module.value_object["index"].value_object}-{idx}'] = error
-
-        elif self.index in (12, 13):
-
-            for module in metadata_obj.value_object['modules'].value_object:
+        if self.index in (12, 13):
+            for module in metadata_obj['modules']:
 
                 # Build call index
-                if module.value_object['calls'].value_object is not None:
-                    for call_index, call in enumerate(module.value_object['calls'].value_object.value_object):
-                        call.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, call_index)
+                if module['calls'].value is not None:
+                    for call_index, call in enumerate(module['calls']):
+                        call.lookup = "{:02x}{:02x}".format(module["index"].value, call_index)
                         self.call_index[call.lookup] = (module, call)
 
                 # Build event index
-                if module.value_object['events'].value_object is not None:
-                    for event_index, event in enumerate(module.value_object['events'].value_object.value_object):
-                        event.lookup = "{:02x}{:02x}".format(module.value_object["index"].value_object, event_index)
+                if module['events'].value is not None:
+                    for event_index, event in enumerate(module['events']):
+                        event.lookup = "{:02x}{:02x}".format(module["index"].value, event_index)
                         self.event_index[event.lookup] = (module, event)
 
                 # Create error index
-                if len(module.value_object['errors'].value_object or []) > 0:
-                    for idx, error in enumerate(module.value_object['errors'].value_object):
-                        self.error_index[f'{module.value_object["index"].value_object}-{idx}'] = error
+                if len(module['errors'].value_object or []) > 0:
+                    for idx, error in enumerate(module['errors']):
+                        self.error_index[f'{module["index"].value_object}-{idx}'] = error
 
-        else:
+        elif self.index < 12:
             # TODO V9 - V11 processing
             call_module_index = 0
             event_module_index = 0
             error_module_index = 0
 
-            for module in metadata_obj.value_object['modules'].value_object:
+            for module in metadata_obj['modules'].value_object:
                 # Build call index
-                if module.value_object['calls'].value_object is not None:
+                if module['calls'].value_object is not None:
                     for call_index, call in enumerate(module.value_object['calls'].value_object.value_object):
                         call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
                         self.call_index[call.lookup] = (module, call)
@@ -1713,6 +1831,12 @@ class GenericMetadataVersioned(Tuple):
         metadata = self.get_metadata()
         return metadata.get_metadata_pallet(name)
 
+    def get_pallet_by_index(self, index: int):
+        try:
+            return self.pallets[index]
+        except IndexError:
+            raise ValueError(f'Pallet for index "{index}" not found')
+
 
 class GenericRegistryType(Struct):
 
@@ -1735,6 +1859,9 @@ class GenericRegistryType(Struct):
 
 class GenericField(Struct):
 
+    def get_type_string(self):
+        return f"scale_info::{self.value['type']}"
+
     def process_encode(self, value):
         if 'name' not in value:
             value['name'] = None
@@ -1749,6 +1876,10 @@ class GenericField(Struct):
 
 
 class GenericVariant(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
 
     def process_encode(self, value):
         if 'index' not in value:
@@ -1776,6 +1907,17 @@ class GenericTypeDefComposite(Struct):
 
 
 class GenericTypeDefVariant(Struct):
+
+    def get_variant_by_name(self, name: str) -> GenericVariant:
+        for variant in self.value_object['variants']:
+            if variant['name'].value == name:
+                return variant
+
+    def get_variant_by_index(self, index: int) -> GenericVariant:
+        for variant in self.value_object['variants']:
+            if variant['index'].value == index:
+                return variant
+
     def process_encode(self, value):
 
         if 'variants' not in value:
@@ -1821,6 +1963,12 @@ class GenericFunctionMetadata(Struct):
     @property
     def docs(self):
         return self.value['documentation']
+
+
+class ScaleInfoCallMetadata(Struct):
+
+    def get_type_string(self):
+        return f"scale_info::{self.value['ty']}"
 
 
 class GenericPalletMetadata(Struct):
@@ -1881,7 +2029,7 @@ class GenericPalletMetadata(Struct):
         storage_functions = self.value_object['storage'].value_object
 
         if storage_functions.value_object:
-            for storage_function in storage_functions.value_object['entries'].value_object:
+            for storage_function in storage_functions['entries']:
                 if storage_function.value['name'] == name:
                     return storage_function
 
@@ -1990,7 +2138,14 @@ class GenericModuleConstantMetadata(Struct):
             return self.value_object['value'].value_object
 
 
-class GenericScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
+class ScaleInfoModuleConstantMetadata(GenericModuleConstantMetadata):
+
+    @property
+    def type(self):
+        return f"scale_info::{self.value['type']}"
+
+
+class ScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
 
     @property
     def type(self):

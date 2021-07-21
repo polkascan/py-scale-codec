@@ -948,7 +948,7 @@
         ]
       ]
     },
-    "SiLookupTypeId": "u32",
+    "SiLookupTypeId": "Compact<u32>",
     "StorageMetadataV14": {
       "type": "struct",
       "type_mapping": [
@@ -1070,20 +1070,17 @@
     },
     "PalletCallMetadataV14": {
       "type": "struct",
+      "base_class": "ScaleInfoCallMetadata",
       "type_mapping": [
         [
           "ty",
           "SiLookupTypeId"
-        ],
-        [
-          "calls",
-          "Vec<FunctionMetadataV14>"
         ]
       ]
     },
     "FunctionArgumentMetadataV14": {
       "type": "struct",
-      "base_class": "GenericScaleInfoFunctionArgumentMetadata",
+      "base_class": "ScaleInfoFunctionArgumentMetadata",
       "type_mapping": [
         [
           "name",
@@ -1124,13 +1121,14 @@
     },
     "PalletConstantMetadataV14": {
       "type": "struct",
+      "base_class": "ScaleInfoModuleConstantMetadata",
       "type_mapping": [
         [
           "name",
           "String"
         ],
          [
-          "ty",
+          "type",
           "SiLookupTypeId"
         ],
         [
@@ -1222,12 +1220,25 @@
         ]
       ]
     },
+    "PortableType": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "id",
+          "SiLookupTypeId"
+        ],
+        [
+          "type",
+          "RegistryType"
+        ]
+      ]
+    },
     "PortableRegistry": {
       "type": "struct",
       "type_mapping": [
         [
           "types",
-          "Vec<RegistryType>"
+          "Vec<PortableType>"
         ]
       ]
     },
@@ -1328,11 +1339,7 @@
         ],
         [
           "index",
-          "Option<u8>"
-        ],
-        [
-          "discriminant",
-          "Option<u64>"
+          "u8"
         ],
         [
           "docs",
@@ -1403,135 +1410,6 @@
         [
           "bit_order_type",
           "SiLookupTypeId"
-        ]
-      ]
-    },
-    "DigestItem": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "Other",
-          "Bytes"
-        ],
-        [
-          "AuthoritiesChange",
-          "Vec<AuthorityId>"
-        ],
-        [
-          "ChangesTrieRoot",
-          "Hash"
-        ],
-        [
-          "SealV0",
-          "SealV0"
-        ],
-        [
-          "Consensus",
-          "Consensus"
-        ],
-        [
-          "Seal",
-          "Seal"
-        ],
-        [
-          "PreRuntime",
-          "PreRuntime"
-        ],
-        [
-          "ChangesTrieSignal",
-          "ChangesTrieSignal"
-        ]
-      ]
-    },
-    "PreRuntime": "GenericPreRuntime",
-    "SealV0": "GenericSealV0",
-    "Seal": "GenericSeal",
-    "Consensus": "GenericConsensus",
-    "ConsensusEngineId": "GenericConsensusEngineId",
-    "VrfData": "[u8; 32]",
-    "VrfProof": "[u8; 64]",
-    "RawAuraPreDigest": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "slotNumber",
-          "u64"
-        ]
-      ]
-    },
-    "RawBabePreDigest": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "Phantom",
-          "Null"
-        ],
-        [
-          "Primary",
-          "RawBabePreDigestPrimary"
-        ],
-        [
-          "SecondaryPlain",
-          "RawBabePreDigestSecondaryPlain"
-        ],
-        [
-          "SecondaryVRF",
-          "RawBabePreDigestSecondaryVRF"
-        ]
-      ]
-    },
-    "RawBabePreDigestPrimary": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "authorityIndex",
-          "u32"
-        ],
-        [
-          "slotNumber",
-          "SlotNumber"
-        ],
-        [
-          "vrfOutput",
-          "VrfOutput"
-        ],
-        [
-          "vrfProof",
-          "VrfProof"
-        ]
-      ]
-    },
-    "RawBabePreDigestSecondaryPlain": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "authorityIndex",
-          "u32"
-        ],
-        [
-          "slotNumber",
-          "SlotNumber"
-        ]
-      ]
-    },
-    "RawBabePreDigestSecondaryVRF": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "authorityIndex",
-          "u32"
-        ],
-        [
-          "slotNumber",
-          "SlotNumber"
-        ],
-        [
-          "vrfOutput",
-          "VrfOutput"
-        ],
-        [
-          "vrfProof",
-          "VrfProof"
         ]
       ]
     },
@@ -1639,6 +1517,7 @@
     },
     "Compact<Moment>": "CompactMoment",
     "sp_core::crypto::AccountId32": "GenericAccountId",
+    "DigestItem": "sp_runtime::generic::digest::DigestItem",
     "sp_runtime::multiaddress::MultiAddress": "GenericMultiAddress",
     "*::Event": {
       "type": "struct",

@@ -360,9 +360,14 @@ class RuntimeConfigurationObject:
             # Enum
             type_mapping = []
 
-            if 'variants' in scale_info_type.value['def']['variant']:
+            variants = scale_info_type.value['def']['variant']['variants']
 
-                for variant in scale_info_type.value['def']['variant']['variants']:
+            if len(variants) > 0:
+                # Create placeholder list
+                variant_length = max([v['index'] for v in variants]) + 1
+                type_mapping = [None] * variant_length
+
+                for variant in variants:
 
                     if 'fields' in variant:
                         if len(variant['fields']) == 0:
@@ -375,9 +380,8 @@ class RuntimeConfigurationObject:
                     else:
                         enum_value = 'Null'
 
-                    type_mapping.append(
-                        [variant['name'], enum_value]
-                    )
+                    # Put mapping in right order in list
+                    type_mapping[variant['index']] = [variant['name'], enum_value]
 
             if base_decoder_class is None:
                 base_decoder_class = self.get_decoder_class("Enum")
@@ -416,12 +420,14 @@ class RuntimeConfigurationObject:
         return decoder_class
 
     def update_from_scale_info_types(self, scale_info_types: list, prefix: str = ''):
-        for idx, scale_info_type in enumerate(scale_info_types):
+        for scale_info_type in scale_info_types:
+
+            idx = scale_info_type['id'].value
 
             type_string = f"scale_info::{idx}"
 
             decoder_class = self.get_decoder_class_for_scale_info_definition(
-                type_string, scale_info_type
+                type_string, scale_info_type['type']
             )
 
             if decoder_class is None:
@@ -430,8 +436,9 @@ class RuntimeConfigurationObject:
             if decoder_class:
                 self.type_registry['types'][f"scale_info::{idx}"] = decoder_class
 
-                if len(scale_info_type.value.get('path', [])) > 0:
-                    self.type_registry['types']['::'.join(scale_info_type.value['path']).lower()] = decoder_class
+                if len(scale_info_type['type'].value.get('path', [])) > 0:
+                    path_string = '::'.join(scale_info_type['type'].value['path']).lower()
+                    self.type_registry['types'][path_string] = decoder_class
 
     def add_portable_registry(self, metadata: 'GenericMetadataVersioned'):
 
@@ -652,6 +659,8 @@ class ScaleDecoder(ABC):
         if isinstance(value, self.__class__):
             # Accept instance of current class directly
             self.data = value.data
+            self.value_object = self.value_object
+            self.value_serialized = self.value_serialized
             return value.data
 
         if value is not None:
@@ -659,6 +668,10 @@ class ScaleDecoder(ABC):
             self.decoded = True
 
         self.data = self.process_encode(self.value_serialized)
+
+        if self.value_object is None:
+            self.value_object = self.value_serialized
+
         return self.data
 
     def process_encode(self, value):
@@ -743,5 +756,28 @@ class ScaleType(ScaleDecoder, ABC):
         else:
             return other == self.value_serialized
 
+    def __gt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized > other.value_serialized
+        else:
+            return self.value_serialized > other
+
+    def __ge__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized >= other.value_serialized
+        else:
+            return self.value_serialized >= other
+
+    def __lt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized < other.value_serialized
+        else:
+            return self.value_serialized < other
+
+    def __le__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized <= other.value_serialized
+        else:
+            return self.value_serialized <= other
 
 

@@ -2496,6 +2496,7 @@
         ]
       ]
     },
+    "sp_runtime::generic::digest::DigestItem": "DigestItem",
     "Digest": {
       "type": "struct",
       "type_mapping": [

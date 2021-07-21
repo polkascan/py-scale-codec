@@ -135,13 +135,24 @@ class GenericExtrinsic(ScaleType):
             data = ScaleBytes('0x04')
             self.signed = False
 
+        self.value_object = {}
+
         if self.signed:
-            extrinsic = self.get_decoder_class('ExtrinsicV4', runtime_config=self.runtime_config, metadata=self.metadata)
-            data += extrinsic.encode(value)
+            extrinsic = self.get_decoder_class(
+                'ExtrinsicV4', runtime_config=self.runtime_config, metadata=self.metadata
+            )
+        else:
+            extrinsic = self.get_decoder_class('Inherent', runtime_config=self.runtime_config,
+                                               metadata=self.metadata)
+
+        data += extrinsic.encode(value)
+        self.value_object.update(extrinsic.value_object)
 
         # Wrap payload with a length Compact<u32>
         length_obj = self.get_decoder_class('Compact<u32>', runtime_config=self.runtime_config)
         data = length_obj.encode(data.length) + data
+
+        self.value_object['extrinsic_length'] = length_obj
 
         return data
 
@@ -508,8 +519,8 @@ class GenericScaleInfoEvent(Enum):
         return {
             'event_index': self.event_index,
             'module_id': self.value_object[0],
-            'event_id': self.value_object[1].value_object[0],
-            'attributes': self.value_object[1].value_object[1].value,
+            'event_id': self.value_object[1][0],
+            'attributes': self.value_object[1][1].value,
         }
 
 
@@ -536,7 +547,7 @@ class GenericEventRecord(Struct):
 
         return {
             'phase': self.value_object['phase'].index,
-            'extrinsic_idx': self.value_object['phase'].value_object[1].value,
+            'extrinsic_idx': self.value_object['phase'][1].value,
             'event': value['event'],
             'event_index': self.value_object['event'].index,
             'module_id': value['event']['module_id'],
