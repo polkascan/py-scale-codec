@@ -20,8 +20,6 @@ from pathlib import Path
 
 from scalecodec.block import Extrinsic
 
-from scalecodec.metadata import MetadataDecoder
-
 from scalecodec.base import RuntimeConfiguration, ScaleBytes, ScaleDecoder
 from scalecodec.type_registry import load_type_registry_preset
 
@@ -31,6 +29,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         RuntimeConfiguration().clear_type_registry()
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
 
@@ -165,9 +164,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         extrinsic_data = extrinsics_decoder.decode()
 
-        self.assertEqual(extrinsic_data['call_function'], 'set_identity')
-        self.assertEqual(extrinsic_data['call_module'], 'Identity')
-        self.assertNotIn('twitter', extrinsic_data['params'][0]['value'])
+        self.assertEqual(extrinsic_data['call']['call_function'], 'set_identity')
+        self.assertEqual(extrinsic_data['call']['call_module'], 'Identity')
+        self.assertNotIn('twitter', extrinsic_data['call']['call_args'][0]['value'])
 
         # Change runtime version id
         RuntimeConfiguration().set_active_spec_version_id(1040)
@@ -179,9 +178,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         extrinsic_data = extrinsics_decoder.decode()
 
-        self.assertEqual(extrinsic_data['call_function'], 'set_identity')
-        self.assertEqual(extrinsic_data['call_module'], 'Identity')
-        self.assertIn('twitter', extrinsic_data['params'][0]['value'])
+        self.assertEqual(extrinsic_data['call']['call_function'], 'set_identity')
+        self.assertEqual(extrinsic_data['call']['call_module'], 'Identity')
+        self.assertIn('twitter', extrinsic_data['call']['call_args'][0]['value'])
 
     def test_valid_type_registry_presets(self):
         preset_path = os.path.join(os.path.dirname(__file__), '..', 'scalecodec', 'type_registry')

@@ -22,37 +22,6 @@ from scalecodec.types import FixedLengthArray
 from scalecodec.types import Vec, Enum, Bytes, Struct
 
 
-class OpaqueExtrinsic(Struct):
-    type_mapping = (
-        ('length', 'Compact<u32>'),
-        ('extrinsic', 'ExtrinsicVersioned')
-    )
-
-    def extract_extrinsic(self):
-        pass
-
-    def process(self):
-        return super().process()
-
-
-class ExtrinsicVersioned(Enum):
-    type_mapping = (
-        ('InherentV0', 'InherentV0'),
-        ('InherentV1', 'InherentV1'),
-        ('InherentV2', 'InherentV2'),
-        ('InherentV3', 'InherentV3'),
-        ('InherentV4', 'InherentV4'),
-        ('ExtrinsicV0', 'ExtrinsicV0'),
-        ('ExtrinsicV1', 'ExtrinsicV1'),
-        ('ExtrinsicV2', 'ExtrinsicV2'),
-        ('ExtrinsicV3', 'ExtrinsicV3'),
-        ('ExtrinsicV4', 'ExtrinsicV4')
-    )
-
-    def process(self):
-        return super().process()
-
-
 class TypeNotSupported(ScaleType):
 
     def process(self):
@@ -122,9 +91,9 @@ class GenericExtrinsic(ScaleType):
 
         if 'call' not in value:
             value['call'] = {
-                'call_function': value['call_function'],
-                'call_module': value['call_module'],
-                'call_args': value['call_args'],
+                'call_function': value.get('call_function'),
+                'call_module': value.get('call_module'),
+                'call_args': value.get('call_args'),
             }
 
         # Determine version (Fixed to V4 for now)
@@ -158,6 +127,10 @@ class GenericExtrinsic(ScaleType):
 
 
 class Extrinsic(GenericExtrinsic):
+    pass
+
+
+class Extrinsic2(GenericExtrinsic):
     type_mapping = (
         ('extrinsic_length', 'Compact<u32>'),
         ('version_info', 'u8'),
@@ -418,40 +391,6 @@ class Extrinsic(GenericExtrinsic):
 
     def __repr__(self):
         return "<{}(value={})>".format(self.__class__.__name__, self.value)
-
-
-# TODO deprecated
-class ExtrinsicsDecoder(Extrinsic):
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn("ExtrinsicsDecoder will be removed in the future", DeprecationWarning)
-        super().__init__(*args, **kwargs)
-
-
-# TODO deprecated
-class EventsDecoder(Vec):
-    type_string = 'Vec<EventRecord<Event, Hash>>'
-
-    def __init__(self, data, metadata=None, **kwargs):
-        warnings.warn("EventsDecoder will be removed in the future", DeprecationWarning)
-
-        if metadata and metadata.__class__.__name__ not in ['MetadataDecoder', 'MetadataVersioned']:
-            raise ValueError("metadata not correct")
-
-        self.metadata = metadata
-        self.elements = []
-
-        super().__init__(data, metadata=metadata, **kwargs)
-
-    def process(self):
-        element_count = self.process_type('Compact<u32>').value
-
-        for i in range(0, element_count):
-            element = self.process_type('EventRecord', metadata=self.metadata)
-            element.value['event_idx'] = i
-            self.elements.append(element)
-
-        return [e.value for e in self.elements]
 
 
 class GenericEvent(Enum):

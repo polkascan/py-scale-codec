@@ -679,6 +679,10 @@ class Era(ScaleType):
             return 2**64 - 1
         return self.birth(current) + self.period
 
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        return
+
 
 class Bool(ScaleType):
 
@@ -860,22 +864,6 @@ class BoundedVec(Vec):
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
         cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
-
-
-class ScaleInfoBoundedVec(Tuple):
-
-    def __init__(self, data=None, **kwargs):
-
-        self.sub_type, self.max_elements = self.type_mapping
-
-        super().__init__(data, **kwargs)
-
-    def process(self):
-        return self.process_type('Vec', sub_type=self.sub_type).value
-
-    def process_encode(self, value):
-        vec_obj = self.get_decoder_class('Vec', sub_type=self.sub_type, runtime_config=self.runtime_config)
-        return vec_obj.process_encode(value)
 
 
 class BitVec(ScaleType):
@@ -1114,7 +1102,7 @@ class Data(Enum):
         if self.index == 0:
             return {'None': None}
 
-        elif self.index >= 1 and self.index <= 33:
+        elif 1 <= self.index <= 33:
             # Determine value of Raw type (length is processed in index byte)
             data = self.get_next_bytes(self.index - 1)
 
@@ -1124,7 +1112,7 @@ class Data(Enum):
                 value = '0x{}'.format(data.hex())
             return {"Raw": value}
 
-        elif self.index >= 34 and self.index <= 37:
+        elif 34 <= self.index <= 37:
 
             enum_value = self.type_mapping[self.index - 32][0]
 
@@ -1175,6 +1163,10 @@ class Data(Enum):
                         return ScaleBytes(bytearray([self.index + 32])) + struct_obj.encode(enum_value)
 
             raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        return
 
 
 class Null(ScaleType):
@@ -1615,12 +1607,15 @@ class GenericMultiAddress(Enum):
         elif type(value) is str:
             if len(value) <= 8 and value[0:2] != '0x':
                 # Implied raw AccountIndex
-                value = {"Index": ss58_decode_account_index(value)}
+                self.account_index = ss58_decode_account_index(value)
+                value = {"Index": self.account_index}
             elif is_valid_ss58_address(value):
                 # Implied SS58 encoded AccountId
-                value = {"Id": f'0x{ss58_decode(value)}'}
+                self.account_id = ss58_decode(value)
+                value = {"Id": f'0x{self.account_id}'}
             elif len(value) == 66 and value[0:2] == '0x':
                 # Implied raw AccountId
+                self.account_id = value[2:]
                 value = {"Id": value}
             elif len(value) == 42:
                 # Implied raw Address20
@@ -1989,10 +1984,7 @@ class GenericPalletMetadata(Struct):
 
     @property
     def calls(self):
-        call_functions = self.value_object['calls'].value_object
-
-        if call_functions:
-            return call_functions.value_object
+        return self.value_object['calls'].value_object
 
     @property
     def events(self):

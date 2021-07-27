@@ -139,6 +139,13 @@ class RuntimeConfigurationObject:
 
         return decoder_class
 
+    def create_scale_object(self, type_string: str, data=None, **kwargs) -> 'ScaleType':
+
+        decoder_class = self.get_decoder_class(type_string)
+
+        if decoder_class:
+            return decoder_class(data=data, **kwargs)
+
     def clear_type_registry(self):
 
         if not self.__initial_state:
@@ -365,7 +372,7 @@ class RuntimeConfigurationObject:
             if len(variants) > 0:
                 # Create placeholder list
                 variant_length = max([v['index'] for v in variants]) + 1
-                type_mapping = [None] * variant_length
+                type_mapping = [(None, 'Null')] * variant_length
 
                 for variant in variants:
 
@@ -381,7 +388,7 @@ class RuntimeConfigurationObject:
                         enum_value = 'Null'
 
                     # Put mapping in right order in list
-                    type_mapping[variant['index']] = [variant['name'], enum_value]
+                    type_mapping[variant['index']] = (variant['name'], enum_value)
 
             if base_decoder_class is None:
                 base_decoder_class = self.get_decoder_class("Enum")
@@ -410,8 +417,8 @@ class RuntimeConfigurationObject:
         else:
             raise NotImplementedError(f"RegistryTypeDef not implemented")
 
-        if 'path' in scale_info_type.value:
-            decoder_class.type_string = '::'.join(scale_info_type.value['path'])
+        # if 'path' in scale_info_type.value:
+        #     decoder_class.type_string = '::'.join(scale_info_type.value['path'])
 
         # Link ScaleInfo RegistryType to decoder class
 
@@ -734,7 +741,7 @@ class ScaleType(ScaleDecoder, ABC):
         ----------
         data: ScaleBytes
         sub_type: str
-        metadata: MetadataDecoder
+        metadata: VersionedMetadata
         runtime_config: RuntimeConfigurationObject
         """
         self.metadata = metadata

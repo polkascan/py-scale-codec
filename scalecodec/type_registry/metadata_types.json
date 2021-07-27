@@ -897,6 +897,15 @@
       "base_class": "GenericMetadataVersioned",
       "type_mapping": ["[u8; 4]", "MetadataAll"]
     },
+    "MetadataV0": "Null",
+    "MetadataV1": "Null",
+    "MetadataV2": "Null",
+    "MetadataV3": "Null",
+    "MetadataV4": "Null",
+    "MetadataV5": "Null",
+    "MetadataV6": "Null",
+    "MetadataV7": "Null",
+    "MetadataV8": "Null",
     "MetadataV14": {
       "type": "struct",
       "type_mapping": [
@@ -1184,7 +1193,6 @@
         ]
       ]
     },
-    "---------------------------------------------------------------------------------------------": "Null",
     "TypeParameter": {
       "type": "struct",
       "type_mapping": [
@@ -1517,8 +1525,12 @@
     },
     "Compact<Moment>": "CompactMoment",
     "sp_core::crypto::AccountId32": "GenericAccountId",
-    "DigestItem": "sp_runtime::generic::digest::DigestItem",
     "sp_runtime::multiaddress::MultiAddress": "GenericMultiAddress",
+    "sp_runtime::generic::era::Era": "Era",
+    "pallet_democracy::vote::Vote": "GenericVote",
+    "pallet_identity::types::Data": "Data",
+    "frame_support::storage::bounded_vec::BoundedVec": "BoundedVec",
+    "frame_support::storage::weak_bounded_vec::WeakBoundedVec": "BoundedVec",
     "*::Event": {
       "type": "struct",
       "base_class": "GenericScaleInfoEvent",

@@ -20,8 +20,6 @@ import unittest
 
 from scalecodec import GenericContractExecResult
 
-from scalecodec.metadata import MetadataDecoder
-
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException, RuntimeConfiguration, RuntimeConfigurationObject
 from scalecodec.types import GenericMultiAddress
@@ -37,8 +35,11 @@ class TestScaleTypes(unittest.TestCase):
         cls.metadata_fixture_dict = load_type_registry_file(
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
 
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(cls.metadata_fixture_dict['V10']))
+        cls.metadata_decoder = ScaleDecoder.get_decoder_class(
+            'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict['V10'])
+        )
         cls.metadata_decoder.decode()
 
     def setUp(self) -> None:
@@ -47,9 +48,9 @@ class TestScaleTypes(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
-    def test_automatic_decode(self):
-        obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
-        self.assertEqual(obj.value, 64302)
+    # def test_automatic_decode(self):
+    #     obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
+    #     self.assertEqual(obj.value, 64302)
 
     def test_multiple_decode_without_error(self):
         obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
@@ -57,17 +58,23 @@ class TestScaleTypes(unittest.TestCase):
         obj.decode()
         self.assertEqual(obj.value, 64302)
 
-    def test_value_equals_value_serialized(self):
+    def test_value_equals_value_serialized_and_value_object(self):
         obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
         obj.decode()
         self.assertEqual(obj.value, obj.value_serialized)
-        self.assertNotEqual(obj.value, obj.value_object)
+        self.assertEqual(obj.value, obj.value_object)
 
     def test_value_object(self):
         obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
         obj.decode()
         self.assertEqual(obj.value_object[0].value_object, 3)
         self.assertEqual(obj.value_object[1].value_object, 0)
+
+    def test_value_object_shorthand(self):
+        obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+        obj.decode()
+        self.assertEqual(obj[0], 3)
+        self.assertEqual(obj[1], 0)
 
     def test_compact_u32(self):
         obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x02093d00"))

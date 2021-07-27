@@ -24,7 +24,7 @@ Decode a SCALE-encoded Compact\<Balance\>
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
-obj = ScaleDecoder.get_decoder_class('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
+obj = RuntimeConfiguration().create_scale_object('Compact<Balance>', data=ScaleBytes("0x130080cd103d71bc22"))
 obj.decode()
 print(obj.value)
 ```
@@ -33,7 +33,7 @@ Encode to Compact\<Balance\>
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
-obj = ScaleDecoder.get_decoder_class('Compact<Balance>')
+obj = RuntimeConfiguration().create_scale_object('Compact<Balance>')
 scale_data = obj.encode(2503000000000000000)
 print(scale_data)
 ```
@@ -43,7 +43,7 @@ Encode to Vec\<Bytes\>
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 value = ['test', 'vec']
-obj = ScaleDecoder.get_decoder_class('Vec<Bytes>')
+obj = RuntimeConfiguration().create_scale_object('Vec<Bytes>')
 scale_data = obj.encode(value)
 print(scale_data)
 ```
@@ -92,11 +92,10 @@ runtime_config_polkadot.update_type_registry(load_type_registry_preset("default"
 runtime_config_polkadot.update_type_registry(load_type_registry_preset("polkadot"))
 
 # Decode extrinsic using Kusama runtime configuration
-extrinsic = ScaleDecoder.get_decoder_class(
+extrinsic = runtime_config_kusama.create_scale_object(
     type_string='Extrinsic', 
     data=ScaleBytes(extrinsic_data),
-    metadata=metadata_decoder, 
-    runtime_config=runtime_config_kusama
+    metadata=metadata_decoder
 )
 extrinsic.decode()
 

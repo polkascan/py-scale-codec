@@ -16,11 +16,10 @@
 import os
 import unittest
 
-from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration, ScaleType
-from scalecodec.metadata import MetadataDecoder
+from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
-from scalecodec.types import CompactU32, Vec
+from scalecodec.types import CompactU32
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
@@ -33,8 +32,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
 
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(cls.metadata_fixture_dict["kusama_test"]))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+
+        cls.metadata_decoder = ScaleDecoder.get_decoder_class(
+            'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict["kusama_test"])
+        )
+
         cls.metadata_decoder.decode()
 
     def setUp(self) -> None:

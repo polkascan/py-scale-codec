@@ -26,16 +26,21 @@ from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
 class TestScaleTypeEncoding(unittest.TestCase):
 
     def setUp(self) -> None:
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
     @classmethod
     def setUpClass(cls):
         RuntimeConfiguration().clear_type_registry()
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
 
         cls.metadata_decoder = ScaleDecoder.get_decoder_class('MetadataVersioned', data=ScaleBytes(metadata_1045_hex))
         cls.metadata_decoder.decode()
+
+        # TODO test with V14 metadata
+        # cls.metadata_scale_info = ScaleDecoder.get_decoder_class('MetadataVersioned', data=ScaleBytes(metadata_1045_hex))
+        # cls.metadata_scale_info.decode()
 
     def test_decode_balance_transfer_payload(self):
         unsigned_payload = "0xa8040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8"
@@ -46,22 +51,20 @@ class TestScaleTypeEncoding(unittest.TestCase):
         )
         extrinsic.decode()
 
-        call_module, call_function = self.metadata_decoder.call_index[extrinsic.call_index]
-
         # Check call module
-        self.assertEqual(call_module.name, 'Balances')
+        self.assertEqual(extrinsic['call']['call_module'].name, 'Balances')
 
         # Check call function
-        self.assertEqual(call_function.name, 'transfer')
+        self.assertEqual(extrinsic['call']['call_function'].name, 'transfer')
 
         # Check destination address for balance transfer
-        self.assertEqual(extrinsic.params[0]['type'], 'LookupSource')
-        self.assertEqual(extrinsic.params[0]['value'],
+        self.assertEqual(extrinsic.value['call']['call_args'][0]['type'], 'LookupSource')
+        self.assertEqual(extrinsic.value['call']['call_args'][0]['value'],
                          '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409')
 
         # Check value of balance transfer
-        self.assertEqual(extrinsic.params[1]['type'], 'Compact<Balance>')
-        self.assertEqual(extrinsic.params[1]['value'], 1000000000000)
+        self.assertEqual(extrinsic.value['call']['call_args'][1]['type'], 'Compact<Balance>')
+        self.assertEqual(extrinsic.value['call']['call_args'][1]['value'], 1000000000000)
 
     def test_encode_attestations_more_attestations_payload(self):
         extrinsic = Extrinsic(metadata=self.metadata_decoder)
@@ -2180,17 +2183,18 @@ class TestScaleTypeEncoding(unittest.TestCase):
         extrinsic_value = {
             'account_id': '5E9oDs9PjpsBbxXxRE9uMaZZhnBAV38n2ouLB28oecBDdeQo',
             'signature_version': 1,
-            'signature': '728b4057661816aa24918219ff90d10a34f1db4e81494d23c83ef54991980f77cf901acd970cb36d3c9c9e166d27a83a3aee648d4085e2bdb9e7622c0538e381',
-            'call_function': 'transfer',
-            'call_module': 'balances',
+            'signature': '0x728b4057661816aa24918219ff90d10a34f1db4e81494d23c83ef54991980f77cf901acd970cb36d3c9c9e166d27a83a3aee648d4085e2bdb9e7622c0538e381',
+            'call': {
+                'call_function': 'transfer',
+                'call_module': 'Balances',
+                'call_args': {
+                    'dest': '0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d',
+                    'value': 1000000000000
+                }
+            },
             'nonce': 0,
             'era': '00',
-            'tip': 0,
-            'params': [
-                {'name': 'dest', 'type': 'Address',
-                 'value': '0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d'},
-                {'name': 'value', 'type': 'Compact<Balance>', 'value': 1000000000000}
-            ]
+            'tip': 0
         }
 
         extrinsic_hex = extrinsic.encode(extrinsic_value)
@@ -2204,7 +2208,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         decoded_extrinsic = obj.decode()
 
         self.assertEqual(extrinsic_value['signature'], decoded_extrinsic['signature'])
-        self.assertEqual(extrinsic_value['params'][0]['value'], decoded_extrinsic['params'][0]['value'])
+        self.assertEqual(extrinsic_value['call']['call_args']['dest'], decoded_extrinsic['call']['call_args'][0]['value'])
 
     def test_decode_mortal_extrinsic(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
@@ -2220,18 +2224,18 @@ class TestScaleTypeEncoding(unittest.TestCase):
         extrinsic = Extrinsic(metadata=metadata_decoder, data=ScaleBytes(extrinsic_scale))
         extrinsic.decode()
 
-        self.assertEqual(extrinsic.call.name, 'transfer_keep_alive')
+        self.assertEqual(extrinsic['call']['call_function'].name, 'transfer_keep_alive')
 
         era_obj = ScaleDecoder.get_decoder_class('Era')
         era_obj.encode({'period': 666, 'current': 4950})
 
-        self.assertEqual(extrinsic.era.period, era_obj.period)
-        self.assertEqual(extrinsic.era.phase, era_obj.phase)
-        self.assertEqual('0x{}'.format(extrinsic.era.raw_value), str(era_obj.data))
+        self.assertEqual(extrinsic['era'].period, era_obj.period)
+        self.assertEqual(extrinsic['era'].phase, era_obj.phase)
+        self.assertEqual(extrinsic['era'].get_used_bytes(), era_obj.data.data)
 
         # Check lifetime of transaction
-        self.assertEqual(extrinsic.era.birth(4955), 4950)
-        self.assertEqual(extrinsic.era.death(4955), 5974)
+        self.assertEqual(extrinsic['era'].birth(4955), 4950)
+        self.assertEqual(extrinsic['era'].death(4955), 5974)
 
     def test_encode_mortal_extrinsic(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
@@ -2248,16 +2252,17 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'account_id': '5ChV6DCRkvaTfwNHsiE2y3oQyPwTJqDPmhEUoEx1t1dupThE',
             'signature_version': 1,
             'signature': '0x86be385b2f7b25525518259b00e6b8a61e7e821544f102dca9b6d89c60fc327922229c975c2fa931992b17ab9d5b26f9848eeeff44e0333f6672a98aa8b11383',
-            'call_function': 'transfer_keep_alive',
-            'call_module': 'balances',
+            'call': {
+                'call_function': 'transfer_keep_alive',
+                'call_module': 'Balances',
+                'call_args': {
+                    'dest': '5ChV6DCRkvaTfwNHsiE2y3oQyPwTJqDPmhEUoEx1t1dupThE',
+                    'value': 1000000000000000
+                }
+            },
             'nonce': 1,
             'era': {'period': 666, 'current': 4950},
-            'tip': 0,
-            'params': [
-                {'name': 'dest', 'type': 'Address',
-                 'value': '5ChV6DCRkvaTfwNHsiE2y3oQyPwTJqDPmhEUoEx1t1dupThE'},
-                {'name': 'value', 'type': 'Compact<Balance>', 'value': 1000000000000000}
-            ]
+            'tip': 0
         }
 
         extrinsic_hex = extrinsic.encode(extrinsic_value)
