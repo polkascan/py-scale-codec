@@ -734,3 +734,15 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(decode_obj.ss58_address, ss58_address)
         self.assertEqual(decode_obj.public_key, public_key)
 
+    def test_generic_vote(self):
+        runtime_config = RuntimeConfigurationObject(ss58_format=2)
+
+        vote = runtime_config.create_scale_object('GenericVote')
+        data = vote.encode({'aye': True, 'conviction': 'Locked2x'})
+
+        self.assertEqual('0x82', data.to_hex())
+
+        vote.decode(ScaleBytes('0x04'))
+
+        self.assertEqual(vote.value, {'aye': False, 'conviction': 'Locked4x'})
+

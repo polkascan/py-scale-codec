@@ -1222,7 +1222,40 @@ class GenericBlock(ScaleType):
 
 
 class GenericVote(U8):
-    pass
+
+    def process(self):
+        value = super().process()
+
+        conviction = self.runtime_config.create_scale_object(
+            'Conviction',
+        )
+
+        conviction.decode(ScaleBytes(bytearray([value & Conviction.CONVICTION_MASK])))
+
+        aye = (value & 0b1000_0000) == 0b1000_0000
+
+        self.value_object = {
+            'aye': aye,
+            'conviction': conviction
+        }
+
+        return {
+            'aye': aye,
+            'conviction': conviction.value
+        }
+
+    def process_encode(self, value):
+
+        if type(value) is dict:
+            conviction = self.runtime_config.create_scale_object('Conviction')
+            conviction.encode(value['conviction'])
+
+            value = conviction.index | (0b1000_0000 if value['aye'] else 0)
+
+        if type(value) is not int:
+            raise ValueError('Incorrect format for vote')
+
+        return super().process_encode(value)
 
 
 class GenericCall(ScaleType):
