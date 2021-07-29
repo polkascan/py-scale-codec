@@ -35,7 +35,9 @@ class TestScaleTypeEncoding(unittest.TestCase):
         RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
 
-        cls.metadata_decoder = ScaleDecoder.get_decoder_class('MetadataVersioned', data=ScaleBytes(metadata_1045_hex))
+        cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
+            'MetadataVersioned', data=ScaleBytes(metadata_1045_hex)
+        )
         cls.metadata_decoder.decode()
 
         # TODO test with V14 metadata
@@ -2135,7 +2137,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(str(payload), "0xb4041800040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
 
     def test_encode_utility_batch_payload_scaletype(self):
-        call = ScaleDecoder.get_decoder_class("Call", metadata=self.metadata_decoder)
+        call = RuntimeConfiguration().create_scale_object("Call", metadata=self.metadata_decoder)
 
         call.encode({
             'call_module': 'Balances',
@@ -2199,7 +2201,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         extrinsic_hex = extrinsic.encode(extrinsic_value)
 
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             "Extrinsic",
             data=extrinsic_hex,
             metadata=self.metadata_decoder
@@ -2214,7 +2216,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
         RuntimeConfiguration().set_active_spec_version_id(1)
 
-        metadata_decoder = ScaleDecoder.get_decoder_class(
+        metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', ScaleBytes(metadata_substrate_node_template)
         )
         metadata_decoder.decode()
@@ -2226,7 +2228,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(extrinsic['call']['call_function'].name, 'transfer_keep_alive')
 
-        era_obj = ScaleDecoder.get_decoder_class('Era')
+        era_obj = RuntimeConfiguration().create_scale_object('Era')
         era_obj.encode({'period': 666, 'current': 4950})
 
         self.assertEqual(extrinsic['era'].period, era_obj.period)
@@ -2241,7 +2243,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("substrate-node-template"))
         RuntimeConfiguration().set_active_spec_version_id(1)
 
-        metadata_decoder = ScaleDecoder.get_decoder_class(
+        metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', ScaleBytes(metadata_substrate_node_template)
         )
         metadata_decoder.decode()

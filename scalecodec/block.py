@@ -107,18 +107,15 @@ class GenericExtrinsic(ScaleType):
         self.value_object = {}
 
         if self.signed:
-            extrinsic = self.get_decoder_class(
-                'ExtrinsicV4', runtime_config=self.runtime_config, metadata=self.metadata
-            )
+            extrinsic = self.runtime_config.create_scale_object('ExtrinsicV4', metadata=self.metadata)
         else:
-            extrinsic = self.get_decoder_class('Inherent', runtime_config=self.runtime_config,
-                                               metadata=self.metadata)
+            extrinsic = self.runtime_config.create_scale_object('Inherent', metadata=self.metadata)
 
         data += extrinsic.encode(value)
         self.value_object.update(extrinsic.value_object)
 
         # Wrap payload with a length Compact<u32>
-        length_obj = self.get_decoder_class('Compact<u32>', runtime_config=self.runtime_config)
+        length_obj = self.runtime_config.create_scale_object('Compact<u32>')
         data = length_obj.encode(data.length) + data
 
         self.value_object['extrinsic_length'] = length_obj
@@ -128,269 +125,6 @@ class GenericExtrinsic(ScaleType):
 
 class Extrinsic(GenericExtrinsic):
     pass
-
-
-class Extrinsic2(GenericExtrinsic):
-    type_mapping = (
-        ('extrinsic_length', 'Compact<u32>'),
-        ('version_info', 'u8'),
-        ('address', 'Address'),
-        ('signature', 'Signature'),
-        ('nonce', 'Compact<u32>'),
-        ('era', 'Era'),
-        ('call_index', '(u8,u8)'),
-    )
-
-    def __init__(self, *args, address_type=42, **kwargs):
-
-        self.address_type = address_type
-        self.extrinsic_length = None
-        self.extrinsic_hash = None
-        self.version_info = None
-        self.contains_transaction = False
-        self.address = None
-        self.signature_version = None
-        self.signature = None
-        self.nonce = None
-        self.era = None
-        self.tip = None
-        self.call_index = None
-        self.call_module = None
-        self.call = None
-        self.call_args = None
-        self.params_raw = None
-        self.params = []
-
-        super().__init__(*args, **kwargs)
-
-    def generate_hash(self):
-        if self.contains_transaction:
-            return blake2b(self.data.data, digest_size=32).digest().hex()
-
-    def process(self):
-        # TODO for all attributes
-
-        attribute_types = OrderedDict(self.type_mapping)
-
-        self.extrinsic_length = self.process_type('Compact<u32>').value
-
-        if self.extrinsic_length != self.data.get_remaining_length():
-            # Fallback for legacy version
-            self.extrinsic_length = None
-            self.data.reset()
-
-        self.version_info = self.get_next_bytes(1).hex()
-
-        self.contains_transaction = int(self.version_info, 16) >= 80
-
-        if self.version_info == '01' or self.version_info == '81':
-
-            if self.contains_transaction:
-                self.address = self.process_type('Address')
-
-                self.signature = self.process_type('Signature').value
-
-                self.nonce = self.process_type(attribute_types['nonce'])
-
-                self.era = self.process_type('Era')
-
-                self.extrinsic_hash = self.generate_hash()
-
-            self.call_index = self.get_next_bytes(2).hex()
-
-        elif self.version_info == '02' or self.version_info == '82':
-
-            if self.contains_transaction:
-                self.address = self.process_type('Address')
-
-                self.signature = self.process_type('Signature').value
-
-                self.era = self.process_type('Era')
-
-                self.nonce = self.process_type('Compact<Index>')
-
-                self.tip = self.process_type('Compact<Balance>')
-
-                self.extrinsic_hash = self.generate_hash()
-
-            self.call_index = self.get_next_bytes(2).hex()
-
-        elif self.version_info == '03' or self.version_info == '83':
-
-            if self.contains_transaction:
-                self.address = self.process_type('Address')
-
-                self.signature = self.process_type('Signature').value
-
-                self.era = self.process_type('Era')
-
-                self.nonce = self.process_type('Compact<Index>')
-
-                self.tip = self.process_type('Compact<Balance>')
-
-                self.extrinsic_hash = self.generate_hash()
-
-            self.call_index = self.get_next_bytes(2).hex()
-
-        elif self.version_info == '04' or self.version_info == '84':
-
-            if self.contains_transaction:
-                self.address = self.process_type('Address')
-
-                multi_signature = self.process_type("MultiSignature")
-
-                self.signature_version = multi_signature.index
-
-                self.signature = multi_signature.get_enum_value()
-
-                self.era = self.process_type('Era')
-
-                self.nonce = self.process_type('Compact<Index>')
-
-                self.tip = self.process_type('Compact<Balance>')
-
-                self.extrinsic_hash = self.generate_hash()
-
-            self.call_index = self.get_next_bytes(2).hex()
-        else:
-            raise NotImplementedError('Extrinsics version "{}" is not implemented'.format(self.version_info))
-
-        if self.call_index:
-
-            self.params_raw = self.data.data[self.data.offset:]
-
-            # Decode params
-
-            self.call = self.metadata.call_index[self.call_index][1]
-            self.call_module = self.metadata.call_index[self.call_index][0]
-
-            for arg in self.call.args:
-
-                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
-
-                self.params.append({
-                    'name': arg.name,
-                    'type': arg.type,
-                    'value': arg_type_obj.serialize()
-                })
-
-        result = {
-            'extrinsic_length': self.extrinsic_length,
-            'version_info': self.version_info,
-        }
-
-        if self.contains_transaction:
-            result['account_length'] = self.address.account_length
-            result['account_id'] = self.address.account_id
-            result['account_index'] = self.address.account_index
-            result['account_idx'] = self.address.account_idx
-            result['signature_version'] = self.signature_version
-            result['signature'] = self.signature.replace('0x', '')
-            result['extrinsic_hash'] = self.extrinsic_hash
-        if self.call_index:
-            result['call_index'] = self.call_index
-            result['call_function'] = self.call.get_identifier()
-            result['call_module'] = self.call_module.get_identifier()
-
-        if self.nonce:
-            result['nonce'] = self.nonce.value
-
-        if self.era:
-            result['era'] = self.era.value
-
-        if self.tip:
-            result['tip'] = self.tip.value
-
-        result['params'] = self.params
-
-        return result
-
-    def process_encode(self, value):
-
-        if 'call_index' in value:
-            self.call_index = value['call_index']
-
-        elif 'call_module' in value and 'call_function' in value:
-            # Look up call module from metadata
-            for call_index, (call_module, call) in self.metadata.call_index.items():
-                if call_module.name.lower() == value['call_module'].lower() and call.name == value['call_function']:
-                    self.call_index = call_index
-                    self.call_module = call_module
-                    self.call = call
-                    break
-
-            if not self.call_index:
-                raise ValueError('Specified call module and function not found in metadata')
-
-        elif not self.call_module or not self.call:
-            raise ValueError('No call module and function specified')
-
-        # Determine version (Fixed to V4 for now)
-        if 'account_id' in value:
-            self.version_info = '84'
-            self.contains_transaction = True
-        else:
-            self.version_info = '04'
-            self.contains_transaction = False
-
-        if self.contains_transaction:
-            data = ScaleBytes('0x84')
-
-            self.address = self.get_decoder_class('Address', metadata=self.metadata, runtime_config=self.runtime_config)
-            data += self.address.encode(value['account_id'])
-
-            self.signature_version = self.get_decoder_class(
-                'U8', metadata=self.metadata, runtime_config=self.runtime_config
-            )
-            data += self.signature_version.encode(value['signature_version'])
-
-            self.signature = self.get_decoder_class(
-                'Signature', metadata=self.metadata, runtime_config=self.runtime_config
-            )
-            data += self.signature.encode('0x{}'.format(value['signature'].replace('0x', '')))
-
-            self.era = self.get_decoder_class('Era', metadata=self.metadata, runtime_config=self.runtime_config)
-            data += self.era.encode(value['era'])
-
-            self.nonce = self.get_decoder_class(
-                'Compact<Index>', metadata=self.metadata, runtime_config=self.runtime_config
-            )
-            data += self.nonce.encode(value['nonce'])
-
-            self.tip = self.get_decoder_class(
-                'Compact<Balance>', metadata=self.metadata, runtime_config=self.runtime_config
-            )
-            data += self.tip.encode(value['tip'])
-
-        else:
-            data = ScaleBytes('0x04')
-
-        data += ScaleBytes(bytearray.fromhex(self.call_index))
-
-        if not value.get('call_args') and value.get('params'):
-            value['call_args'] = {call_arg['name']: call_arg['value'] for call_arg in value.get('params')}
-
-        # Encode call params
-        if len(self.call.args) > 0:
-            for arg in self.call.args:
-                if arg.name not in value.get('call_args', {}):
-                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
-                else:
-                    param_value = value['call_args'][arg.name]
-
-                    arg_obj = self.get_decoder_class(
-                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
-                    )
-                    data += arg_obj.encode(param_value)
-
-        # Wrap payload with a length Compact<u32>
-        length_obj = self.get_decoder_class('Compact<u32>', runtime_config=self.runtime_config)
-        data = length_obj.encode(data.length) + data
-
-        return data
-
-    def __repr__(self):
-        return "<{}(value={})>".format(self.__class__.__name__, self.value)
 
 
 class GenericEvent(Enum):
@@ -588,10 +322,9 @@ class GenericPreRuntime(Struct):
 
         if value['engine'] == 'BABE':
             # Determine block producer
-            babe_predigest = self.get_decoder_class(
+            babe_predigest = self.runtime_config.create_scale_object(
                 type_string='RawBabePreDigest',
-                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', ''))),
-                runtime_config=self.runtime_config
+                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', '')))
             )
 
             babe_predigest.decode()
@@ -605,10 +338,9 @@ class GenericPreRuntime(Struct):
 
         if value['engine'] == 'aura':
 
-            aura_predigest = self.get_decoder_class(
+            aura_predigest = self.runtime_config.create_scale_object(
                 type_string='RawAuraPreDigest',
-                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', ''))),
-                runtime_config=self.runtime_config
+                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', '')))
             )
             aura_predigest.decode()
 

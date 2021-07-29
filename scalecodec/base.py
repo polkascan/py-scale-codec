@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import re
+import warnings
 from abc import ABC, abstractmethod
 from typing import Optional
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
@@ -140,11 +141,18 @@ class RuntimeConfigurationObject:
         return decoder_class
 
     def create_scale_object(self, type_string: str, data=None, **kwargs) -> 'ScaleType':
+        """
 
+        Returns
+        -------
+        ScaleType
+        """
         decoder_class = self.get_decoder_class(type_string)
 
         if decoder_class:
             return decoder_class(data=data, **kwargs)
+
+        raise NotImplementedError('Decoder class for "{}" not found'.format(type_string))
 
     def clear_type_registry(self):
 
@@ -478,17 +486,17 @@ class ScaleBytes:
 
         self.length = len(self.data)
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length: int) -> bytearray:
         data = self.data[self.offset:self.offset + length]
         self.offset += length
         return data
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -> bytearray:
         data = self.data[self.offset:]
         self.offset = self.length
         return data
 
-    def get_remaining_length(self):
+    def get_remaining_length(self) -> int:
         return self.length - self.offset
 
     def reset(self):
@@ -521,7 +529,7 @@ class ScaleBytes:
         if type(data) == bytearray:
             return ScaleBytes(self.data + data)
 
-    def to_hex(self):
+    def to_hex(self) -> str:
         return f'0x{self.data.hex()}'
 
 
@@ -537,7 +545,7 @@ class ScaleDecoder(ABC):
 
     runtime_config = None
 
-    def __init__(self, data, sub_type=None, runtime_config=None):
+    def __init__(self, data: ScaleBytes, sub_type: str = None, runtime_config: RuntimeConfigurationObject = None):
 
         if sub_type:
             self.sub_type = sub_type
@@ -603,33 +611,37 @@ class ScaleDecoder(ABC):
 
             cls.type_mapping = type_mapping
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length) -> bytearray:
         data = self.data.get_next_bytes(length)
         self.raw_value += data.hex()
         return data
 
-    def get_next_u8(self):
+    def get_next_u8(self) -> int:
         return int.from_bytes(self.get_next_bytes(1), byteorder='little')
 
-    def get_next_bool(self):
+    def get_next_bool(self) -> bool:
         data = self.get_next_bytes(1)
         if data not in [b'\x00', b'\x01']:
             raise InvalidScaleTypeValueException('Invalid value for datatype "bool"')
         return data == b'\x01'
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -> bytearray:
         data = self.data.get_remaining_bytes()
         self.raw_value += data.hex()
         return data
 
-    def get_used_bytes(self):
+    def get_used_bytes(self) -> bytearray:
         return self.data.data[self.data_start_offset:self.data_end_offset]
 
     @abstractmethod
     def process(self):
         raise NotImplementedError
 
-    def decode(self, check_remaining=True):
+    def decode(self, data: ScaleBytes = None, check_remaining=True):
+
+        if data is not None:
+            self.decoded = False
+            self.data = data
 
         if not self.decoded:
 
@@ -700,6 +712,8 @@ class ScaleDecoder(ABC):
         ScaleType
         """
 
+        warnings.warn("Use RuntimeConfigurationObject.create_scale_object() instead", DeprecationWarning)
+
         if not runtime_config:
             runtime_config = RuntimeConfiguration()
 
@@ -714,7 +728,7 @@ class ScaleDecoder(ABC):
 
     # TODO rename to decode_type (confusing when encoding is introduced)
     def process_type(self, type_string, **kwargs):
-        obj = self.get_decoder_class(type_string, self.data, runtime_config=self.runtime_config, **kwargs)
+        obj = self.runtime_config.create_scale_object(type_string, self.data, **kwargs)
         obj.decode(check_remaining=False)
         return obj
 

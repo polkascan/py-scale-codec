@@ -94,10 +94,9 @@ runtime_config_polkadot.update_type_registry(load_type_registry_preset("polkadot
 # Decode extrinsic using Kusama runtime configuration
 extrinsic = runtime_config_kusama.create_scale_object(
     type_string='Extrinsic', 
-    data=ScaleBytes(extrinsic_data),
     metadata=metadata_decoder
 )
-extrinsic.decode()
+extrinsic.decode(ScaleBytes(extrinsic_data))
 
 ``` 
 

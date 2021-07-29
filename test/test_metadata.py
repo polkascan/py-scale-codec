@@ -33,8 +33,8 @@ class TestMetadataRegistry(unittest.TestCase):
         )
 
     def test_metadata_registry_v9(self):
-        metadata_obj = ScaleDecoder.get_decoder_class(
-            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V9']), runtime_config=self.runtime_config
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V9'])
         )
         metadata_obj.decode()
         self.assertEqual(metadata_obj.value_object[1].index, 9)
@@ -44,8 +44,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
     def test_metadata_registry_v10(self):
-        metadata_obj = ScaleDecoder.get_decoder_class(
-            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V10']), runtime_config=self.runtime_config
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V10'])
         )
         metadata_obj.decode()
         self.assertEqual(metadata_obj.value_object[1].index, 10)
@@ -55,8 +55,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
     def test_metadata_registry_v11(self):
-        metadata_obj = ScaleDecoder.get_decoder_class(
-            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V11']), runtime_config=self.runtime_config
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V11'])
         )
         metadata_obj.decode()
         self.assertEqual(metadata_obj.value_object[1].index, 11)
@@ -66,8 +66,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
     def test_metadata_registry_v12(self):
-        metadata_obj = ScaleDecoder.get_decoder_class(
-            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V12']), runtime_config=self.runtime_config
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V12'])
         )
         metadata_obj.decode()
         self.assertEqual(metadata_obj.value_object[1].index, 12)
@@ -78,8 +78,8 @@ class TestMetadataRegistry(unittest.TestCase):
 
     def test_metadata_registry_v13(self):
 
-        metadata_obj = ScaleDecoder.get_decoder_class(
-            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V13']), runtime_config=self.runtime_config
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V13'])
         )
         metadata_obj.decode()
         self.assertEqual(metadata_obj.value_object[1].index, 13)
@@ -89,8 +89,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
     def test_metadata_registry_decode_v14(self):
-        metadata_obj = ScaleDecoder.get_decoder_class(
-            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V14']), runtime_config=self.runtime_config
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V14'])
         )
         metadata_obj.decode()
         self.assertEqual(metadata_obj.value_object[1].index, 14)
