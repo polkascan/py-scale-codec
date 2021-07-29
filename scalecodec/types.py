@@ -1558,5 +1558,9 @@ class BTreeMap(Map):
     pass
 
 
+class BoundedBTreeMap(BTreeMap):
+    pass
+
+
 class BTreeSet(Vec):
     pass
