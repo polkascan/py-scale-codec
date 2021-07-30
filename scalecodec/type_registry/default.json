@@ -4031,6 +4031,28 @@
       ]
     },
     "ElectionScore": "[u128; 3]",
+    "SubmissionIndicesOf": "BoundedBTreeMap<ElectionScore, u32>",
+    "SignedSubmissionOf": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "solution",
+          "RawSolution"
+        ],
+        [
+          "reward",
+          "Balance"
+        ]
+      ]
+    },
     "ElectionSize": {
       "type": "struct",
       "type_mapping": [
