@@ -41,43 +41,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 import os
-
 import requests
 
-TYPE_REGISTRY_CONFIG = [
-    {
-        &#39;name&#39;: &#39;default&#39;,
-        &#39;remote&#39;: &#39;https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/default.json&#39;
-    },
-    {
-        &#39;name&#39;: &#39;polkadot&#39;,
-        &#39;remote&#39;: &#39;https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/polkadot.json&#39;
-    },
-    {
-        &#39;name&#39;: &#39;kusama&#39;,
-        &#39;remote&#39;: &#39;https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/kusama.json&#39;
-    },
-    {
-        &#39;name&#39;: &#39;kulupu&#39;,
-        &#39;remote&#39;: &#39;https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/kulupu.json&#39;
-    }
-]
+from scalecodec.type_registry import SUPPORTED_TYPE_REGISTRY_PRESETS, ONLINE_BASE_URL
 
 
 def update_type_registries():
 
-    for type_registry in TYPE_REGISTRY_CONFIG:
+    for type_registry in SUPPORTED_TYPE_REGISTRY_PRESETS:
 
-        remote_type_reg = requests.get(type_registry[&#39;remote&#39;]).content
+        result = requests.get(f&#39;{ONLINE_BASE_URL}{type_registry}.json&#39;)
 
-        module_path = os.path.dirname(__file__)
-        path = os.path.join(module_path, &#39;type_registry/{}.json&#39;.format(type_registry[&#39;name&#39;]))
+        if result.status_code == 200:
+            remote_type_reg = result.content
 
-        f = open(path, &#39;wb&#39;)
-        f.write(remote_type_reg)
-        f.close()
+            module_path = os.path.dirname(__file__)
+            path = os.path.join(module_path, &#39;type_registry/{}.json&#39;.format(type_registry))
+
+            f = open(path, &#39;wb&#39;)
+            f.write(remote_type_reg)
+            f.close()
 
 
 if __name__ == &#39;__main__&#39;:
@@ -104,16 +88,19 @@ if __name__ == &#39;__main__&#39;:
 </summary>
 <pre><code class="python">def update_type_registries():
 
-    for type_registry in TYPE_REGISTRY_CONFIG:
+    for type_registry in SUPPORTED_TYPE_REGISTRY_PRESETS:
 
-        remote_type_reg = requests.get(type_registry[&#39;remote&#39;]).content
+        result = requests.get(f&#39;{ONLINE_BASE_URL}{type_registry}.json&#39;)
 
-        module_path = os.path.dirname(__file__)
-        path = os.path.join(module_path, &#39;type_registry/{}.json&#39;.format(type_registry[&#39;name&#39;]))
+        if result.status_code == 200:
+            remote_type_reg = result.content
 
-        f = open(path, &#39;wb&#39;)
-        f.write(remote_type_reg)
-        f.close()</code></pre>
+            module_path = os.path.dirname(__file__)
+            path = os.path.join(module_path, &#39;type_registry/{}.json&#39;.format(type_registry))
+
+            f = open(path, &#39;wb&#39;)
+            f.write(remote_type_reg)
+            f.close()</code></pre>
 </details>
 </dd>
 </dl>

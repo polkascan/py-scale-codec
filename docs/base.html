@@ -43,8 +43,9 @@
 # limitations under the License.
 
 import re
+import warnings
 from abc import ABC, abstractmethod
-
+from typing import Optional
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
 
 
@@ -70,13 +71,55 @@ class RuntimeConfigurationObject:
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self, config_id=None):
+    def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False):
         self.config_id = config_id
-        self.type_registry = {}
+        self.type_registry = {&#39;types&#39;: {}}
+        self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
+        self.chain_id = None
 
-    def get_decoder_class(self, type_string, spec_version_id=&#39;default&#39;):
+        self.only_primitives_on_init = only_primitives_on_init
+        self.ss58_format = ss58_format
+
+    @classmethod
+    def convert_type_string(cls, name):
+
+        name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;^T::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Trait&lt;I&gt;&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Config&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Config&lt;I&gt;&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;^(grandpa|session|slashing|limits|beefy_primitives|xcm::opaque)::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;VecDeque&lt;&#39;, &#34;Vec&lt;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;^Box&lt;(.+)&gt;$&#39;, r&#39;\1&#39;, name, flags=re.IGNORECASE)
+
+        if name == &#39;()&#39;:
+            return &#34;Null&#34;
+        if name.lower() in [&#39;vec&lt;u8&gt;&#39;, &#39;&amp;[u8]&#39;, &#34;&amp; &#39;static[u8]&#34;]:
+            return &#34;Bytes&#34;
+        if name.lower() == &#39;&lt;lookup as staticlookup&gt;::source&#39;:
+            return &#39;LookupSource&#39;
+        if name.lower() == &#39;&lt;balance as hascompact&gt;::type&#39;:
+            return &#39;Compact&lt;Balance&gt;&#39;
+        if name.lower() == &#39;&lt;blocknumber as hascompact&gt;::type&#39;:
+            return &#39;Compact&lt;BlockNumber&gt;&#39;
+        if name.lower() == &#39;&lt;moment as hascompact&gt;::type&#39;:
+            return &#39;Compact&lt;Moment&gt;&#39;
+        if name.lower() == &#39;&lt;inherentofflinereport as inherentofflinereport&gt;::inherent&#39;:
+            return &#39;InherentOfflineReport&#39;
+
+        return name
+
+    def get_decoder_class(self, type_string: str, spec_version_id=&#39;default&#39;):
+
+        if type_string.strip() == &#39;&#39;:
+            return None
+
+        type_string = self.convert_type_string(type_string)
 
         decoder_class = self.type_registry.get(&#39;types&#39;, {}).get(type_string.lower(), None)
 
@@ -100,7 +143,7 @@ class RuntimeConfigurationObject:
             # Custom tuples
             elif type_string != &#39;()&#39; and type_string[0] == &#39;(&#39; and type_string[-1] == &#39;)&#39;:
 
-                decoder_class = type(type_string, (self.get_decoder_class(&#39;struct&#39;),), {
+                decoder_class = type(type_string, (self.get_decoder_class(&#39;tuple&#39;),), {
                     &#39;type_string&#39;: type_string
                 })
 
@@ -125,33 +168,74 @@ class RuntimeConfigurationObject:
 
         return decoder_class
 
+    def create_scale_object(self, type_string: str, data=None, **kwargs) -&gt; &#39;ScaleType&#39;:
+        &#34;&#34;&#34;
+
+        Returns
+        -------
+        ScaleType
+        &#34;&#34;&#34;
+        decoder_class = self.get_decoder_class(type_string)
+
+        if decoder_class:
+            return decoder_class(data=data, **kwargs)
+
+        raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))
+
     def clear_type_registry(self):
-        self.type_registry = {&#39;types&#39;: {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
-                                        cls.type_string}}
-        self.type_registry[&#39;types&#39;].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+        if not self.__initial_state:
+            self.type_registry = {&#39;types&#39;: {}}
+
+            # Class names that contains &#39;&lt;&#39; are excluded because of a side effect that is introduced in
+            # get_decoder_class: &#34;Create dynamic class for Part1&lt;Part2&gt; based on Part1 and set class variable Part2 as
+            # sub_type&#34; which won&#39;t get reset because class definitions always remain globally
+
+            self.type_registry[&#39;types&#39;].update(
+                {cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if &#39;&lt;&#39; not in cls.__name__}
+            )
+
+        self.__initial_state = True
 
     def update_type_registry_types(self, types_dict):
-        from scalecodec.types import Enum, Struct, Set
+        from scalecodec.types import Enum, Struct, Set, Tuple
+
+        self.__initial_state = False
 
         for type_string, decoder_class_data in types_dict.items():
 
             if type(decoder_class_data) == dict:
 
                 # Create dynamic decoder class
+                base_cls = None
+
+                if decoder_class_data.get(&#39;base_class&#39;):
+                    base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
+                    if base_cls is None:
+                        raise ValueError(f&#34;Specified base_class &#39;{decoder_class_data[&#39;base_class&#39;]}&#39; for type &#34; +
+                                         f&#34;&#39;{type_string}&#39; not found&#34;)
+
                 if decoder_class_data[&#39;type&#39;] == &#39;struct&#39;:
 
-                    if decoder_class_data.get(&#39;base_class&#39;):
-                        base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                    else:
+                    if base_cls is None:
                         base_cls = Struct
 
-                    decoder_class = type(type_string, (base_cls,), {&#39;type_mapping&#39;: decoder_class_data[&#39;type_mapping&#39;]})
+                    decoder_class = type(type_string, (base_cls,), {
+                        &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                    })
+
+                elif decoder_class_data[&#39;type&#39;] == &#39;tuple&#39;:
+
+                    if base_cls is None:
+                        base_cls = Tuple
+
+                    decoder_class = type(type_string, (base_cls,), {
+                        &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                    })
 
                 elif decoder_class_data[&#39;type&#39;] == &#39;enum&#39;:
 
-                    if decoder_class_data.get(&#39;base_class&#39;):
-                        base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                    else:
+                    if base_cls is None:
                         base_cls = Enum
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -161,9 +245,7 @@ class RuntimeConfigurationObject:
 
                 elif decoder_class_data[&#39;type&#39;] == &#39;set&#39;:
 
-                    if decoder_class_data.get(&#39;base_class&#39;):
-                        base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                    else:
+                    if base_cls is None:
                         base_cls = Set
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -185,9 +267,11 @@ class RuntimeConfigurationObject:
         # Set runtime ID if set
         self.active_spec_version_id = type_registry.get(&#39;runtime_id&#39;)
 
-        # Set versioning
-        if &#39;versioning&#39; in type_registry:
-            self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+        # Set chain ID if set
+        self.chain_id = type_registry.get(&#39;chain_id&#39;)
+
+        self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+        self.type_registry[&#39;runtime_upgrades&#39;] = type_registry.get(&#39;runtime_upgrades&#39;)
 
         # Update types
         if &#39;types&#39; in type_registry:
@@ -200,12 +284,218 @@ class RuntimeConfigurationObject:
             self.active_spec_version_id = spec_version_id
 
             # Updated type registry with versioned types
-            for versioning_item in self.type_registry.get(&#39;versioning&#39;, []):
+            for versioning_item in self.type_registry.get(&#39;versioning&#39;) or []:
                 # Check if versioning item is in current version range
                 if versioning_item[&#39;runtime_range&#39;][0] &lt;= spec_version_id and \
                         (not versioning_item[&#39;runtime_range&#39;][1] or versioning_item[&#39;runtime_range&#39;][1] &gt;= spec_version_id):
                     # Update types in type registry
                     self.update_type_registry_types(versioning_item[&#39;types&#39;])
+
+    def get_runtime_id_from_upgrades(self, block_number: int) -&gt; Optional[int]:
+        &#34;&#34;&#34;
+        Retrieve runtime_id for given block_number if runtime_upgrades are specified in the type registry
+
+        Parameters
+        ----------
+        block_number
+
+        Returns
+        -------
+        Runtime id
+        &#34;&#34;&#34;
+        if self.type_registry.get(&#39;runtime_upgrades&#39;):
+
+            if block_number &gt; self.type_registry[&#39;runtime_upgrades&#39;][-1][0]:
+                return
+
+            for max_block_number, runtime_id in reversed(self.type_registry[&#39;runtime_upgrades&#39;]):
+                if block_number &gt;= max_block_number and runtime_id != -1:
+                    return runtime_id
+
+    def set_runtime_upgrades_head(self, block_number: int):
+        &#34;&#34;&#34;
+        Sets head for given block_number to last runtime_id in runtime_upgrades cache
+
+        Parameters
+        ----------
+        block_number
+
+        Returns
+        -------
+
+        &#34;&#34;&#34;
+        if self.type_registry.get(&#39;runtime_upgrades&#39;):
+            if self.type_registry[&#39;runtime_upgrades&#39;][-1][1] == -1:
+                self.type_registry[&#39;runtime_upgrades&#39;][-1][0] = block_number
+            elif block_number &gt; self.type_registry[&#39;runtime_upgrades&#39;][-1][0]:
+                self.type_registry[&#39;runtime_upgrades&#39;].append([block_number, -1])
+
+    def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: &#39;RegistryType&#39;):
+
+        decoder_class = None
+        base_decoder_class = None
+
+        # Check if base decoder class is defined for path
+        if &#39;path&#39; in scale_info_type.value and len(scale_info_type.value[&#39;path&#39;]) &gt; 0:
+            path_string = &#39;::&#39;.join(scale_info_type.value[&#34;path&#34;])
+            base_decoder_class = self.get_decoder_class(path_string)
+
+            if base_decoder_class is None:
+                # Try generic type
+                catch_all_path = &#39;*::&#39; * (len(scale_info_type.value[&#39;path&#39;]) - 1) + scale_info_type.value[&#34;path&#34;][-1]
+                base_decoder_class = self.get_decoder_class(catch_all_path)
+
+            if base_decoder_class and hasattr(base_decoder_class, &#39;process_scale_info_definition&#39;):
+                # if process_scale_info_definition is implemented result is final
+                decoder_class = type(type_string, (base_decoder_class,), {})
+                decoder_class.process_scale_info_definition(scale_info_type)
+
+                # Link ScaleInfo RegistryType to decoder class
+                decoder_class.scale_info_type = scale_info_type
+
+                return decoder_class
+
+        if &#34;primitive&#34; in scale_info_type.value[&#34;def&#34;]:
+            decoder_class = self.get_decoder_class(scale_info_type.value[&#34;def&#34;][&#34;primitive&#34;])
+
+        elif &#39;array&#39; in scale_info_type.value[&#39;def&#39;]:
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(&#39;FixedLengthArray&#39;)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;array&#39;][&#39;type&#39;]}&#34;,
+                &#39;element_count&#39;: scale_info_type.value[&#39;def&#39;][&#39;array&#39;][&#39;len&#39;]
+            })
+
+        elif &#39;composite&#39; in scale_info_type.value[&#39;def&#39;]:
+
+            type_mapping = []
+
+            base_type_string = &#39;Tuple&#39;
+
+            if &#39;fields&#39; in scale_info_type.value[&#39;def&#39;][&#39;composite&#39;]:
+
+                fields = scale_info_type.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]
+
+                if all([f.get(&#39;name&#39;) for f in fields]):
+                    base_type_string = &#39;Struct&#39;
+                    type_mapping = [[field[&#39;name&#39;], f&#34;scale_info::{field[&#39;type&#39;]}&#34;] for field in fields]
+
+                else:
+                    base_type_string = &#39;Tuple&#39;
+                    type_mapping = [f&#34;scale_info::{field[&#39;type&#39;]}&#34; for field in fields]
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(base_type_string)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                &#39;type_mapping&#39;: type_mapping
+            })
+
+        elif &#39;sequence&#39; in scale_info_type.value[&#39;def&#39;]:
+            # Vec
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Vec&#39;),), {
+                &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;sequence&#39;][&#39;type&#39;]}&#34;
+            })
+
+        elif &#39;variant&#39; in scale_info_type.value[&#39;def&#39;]:
+            # Enum
+            type_mapping = []
+
+            variants = scale_info_type.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]
+
+            if len(variants) &gt; 0:
+                # Create placeholder list
+                variant_length = max([v[&#39;index&#39;] for v in variants]) + 1
+                type_mapping = [(None, &#39;Null&#39;)] * variant_length
+
+                for variant in variants:
+
+                    if &#39;fields&#39; in variant:
+                        if len(variant[&#39;fields&#39;]) == 0:
+                            enum_value = &#39;Null&#39;
+                        elif len(variant[&#39;fields&#39;]) == 1:
+                            enum_value = f&#34;scale_info::{variant[&#39;fields&#39;][0][&#39;type&#39;]}&#34;
+                        else:
+                            field_str = &#39;, &#39;.join([f&#34;scale_info::{f[&#39;type&#39;]}&#34; for f in variant[&#39;fields&#39;]])
+                            enum_value = f&#34;({field_str})&#34;
+                    else:
+                        enum_value = &#39;Null&#39;
+
+                    # Put mapping in right order in list
+                    type_mapping[variant[&#39;index&#39;]] = (variant[&#39;name&#39;], enum_value)
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(&#34;Enum&#34;)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                &#39;type_mapping&#39;: type_mapping
+            })
+
+        elif &#39;tuple&#39; in scale_info_type.value[&#39;def&#39;]:
+
+            type_mapping = [f&#34;scale_info::{f}&#34; for f in scale_info_type.value[&#39;def&#39;][&#39;tuple&#39;]]
+
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Tuple&#39;),), {
+                &#39;type_mapping&#39;: type_mapping
+            })
+
+        elif &#39;compact&#39; in scale_info_type.value[&#39;def&#39;]:
+            # Compact
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Compact&#39;),), {
+                &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;compact&#39;][&#39;type&#39;]}&#34;
+            })
+
+        elif &#39;phantom&#39; in scale_info_type.value[&#39;def&#39;]:
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Null&#39;),), {})
+
+        else:
+            raise NotImplementedError(f&#34;RegistryTypeDef not implemented&#34;)
+
+        # if &#39;path&#39; in scale_info_type.value:
+        #     decoder_class.type_string = &#39;::&#39;.join(scale_info_type.value[&#39;path&#39;])
+
+        # Link ScaleInfo RegistryType to decoder class
+
+        decoder_class.scale_info_type = scale_info_type
+
+        return decoder_class
+
+    def update_from_scale_info_types(self, scale_info_types: list, prefix: str = &#39;&#39;):
+        for scale_info_type in scale_info_types:
+
+            idx = scale_info_type[&#39;id&#39;].value
+
+            type_string = f&#34;scale_info::{idx}&#34;
+
+            decoder_class = self.get_decoder_class_for_scale_info_definition(
+                type_string, scale_info_type[&#39;type&#39;]
+            )
+
+            if decoder_class is None:
+                raise NotImplementedError(f&#34;No decoding class found for scale type {idx}&#34;)
+
+            if decoder_class:
+                self.type_registry[&#39;types&#39;][f&#34;scale_info::{idx}&#34;] = decoder_class
+
+                if len(scale_info_type[&#39;type&#39;].value.get(&#39;path&#39;, [])) &gt; 0:
+                    path_string = &#39;::&#39;.join(scale_info_type[&#39;type&#39;].value[&#39;path&#39;]).lower()
+                    self.type_registry[&#39;types&#39;][path_string] = decoder_class
+
+    def add_portable_registry(self, metadata: &#39;GenericMetadataVersioned&#39;):
+
+        scale_info_types = metadata.portable_registry.value_object[&#39;types&#39;].value_object
+
+        self.update_from_scale_info_types(scale_info_types, prefix=&#39;runtime&#39;)
+
+        # Todo process extrinsic types
+        pass
+
+    def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
+        # TODO
+        prefix = f&#34;ink::{metadata_dict[&#39;source&#39;][&#39;hash&#39;]}&#34;
+        return self.update_from_scale_info_types(metadata_dict[&#39;types&#39;], prefix=prefix)
 
 
 class ScaleBytes:
@@ -224,17 +514,17 @@ class ScaleBytes:
 
         self.length = len(self.data)
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length: int) -&gt; bytearray:
         data = self.data[self.offset:self.offset + length]
         self.offset += length
         return data
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -&gt; bytearray:
         data = self.data[self.offset:]
         self.offset = self.length
         return data
 
-    def get_remaining_length(self):
+    def get_remaining_length(self) -&gt; int:
         return self.length - self.offset
 
     def reset(self):
@@ -247,6 +537,9 @@ class ScaleBytes:
         if not hasattr(other, &#39;data&#39;):
             return False
         return self.data == other.data
+
+    def __len__(self):
+        return len(self.data)
 
     def __repr__(self):
         return &#34;&lt;{}(data=0x{})&gt;&#34;.format(self.__class__.__name__, self.data.hex())
@@ -264,7 +557,7 @@ class ScaleBytes:
         if type(data) == bytearray:
             return ScaleBytes(self.data + data)
 
-    def to_hex(self):
+    def to_hex(self) -&gt; str:
         return f&#39;0x{self.data.hex()}&#39;
 
 
@@ -278,12 +571,9 @@ class ScaleDecoder(ABC):
 
     sub_type = None
 
-    PRIMITIVES = (&#39;bool&#39;, &#39;u8&#39;, &#39;u16&#39;, &#39;u32&#39;, &#39;u64&#39;, &#39;u128&#39;, &#39;u256&#39;, &#39;i8&#39;, &#39;i16&#39;, &#39;i32&#39;, &#39;i64&#39;, &#39;i128&#39;, &#39;i256&#39;, &#39;h160&#39;,
-                  &#39;h256&#39;, &#39;h512&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 8]&#39;, &#39;[u8; 16]&#39;, &#39;[u8; 32]&#39;, &#39;&amp;[u8]&#39;)
-
     runtime_config = None
 
-    def __init__(self, data, sub_type=None, runtime_config=None):
+    def __init__(self, data: ScaleBytes, sub_type: str = None, runtime_config: RuntimeConfigurationObject = None):
 
         if sub_type:
             self.sub_type = sub_type
@@ -294,15 +584,40 @@ class ScaleDecoder(ABC):
         if data:
             assert(type(data) == ScaleBytes)
 
-        if not runtime_config:
-            # if no runtime config is provided, fallback on singleton
-            runtime_config = RuntimeConfiguration()
+        if runtime_config:
+            self.runtime_config = runtime_config
 
-        self.runtime_config = runtime_config
+        if not self.runtime_config:
+            # if no runtime config is provided, fallback on singleton
+            self.runtime_config = RuntimeConfiguration()
 
         self.data = data
         self.raw_value = &#39;&#39;
-        self.value = None
+
+        self.value_object = None
+        self.value_serialized = None
+
+        self.decoded = False
+
+        self.data_start_offset = None
+        self.data_end_offset = None
+
+    @property
+    def value(self):
+        # TODO fix
+        # if not self.decoded:
+        #     self.decode()
+        return self.value_serialized
+
+    @value.setter
+    def value(self, value):
+        self.value_serialized = value
+
+    @staticmethod
+    def is_primitive(type_string: str) -&gt; bool:
+        return type_string in (&#39;bool&#39;, &#39;u8&#39;, &#39;u16&#39;, &#39;u32&#39;, &#39;u64&#39;, &#39;u128&#39;, &#39;u256&#39;, &#39;i8&#39;, &#39;i16&#39;, &#39;i32&#39;, &#39;i64&#39;, &#39;i128&#39;,
+                               &#39;i256&#39;, &#39;h160&#39;, &#39;h256&#39;, &#39;h512&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 8]&#39;, &#39;[u8; 16]&#39;, &#39;[u8; 32]&#39;,
+                               &#39;&amp;[u8]&#39;)
 
     @classmethod
     def build_type_mapping(cls):
@@ -319,60 +634,91 @@ class ScaleDecoder(ABC):
                 for sub_type in sub_types:
                     tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(&#39;,&#39;, &#39;|&#39;))
 
-            n = 1
-            for struct_element in tuple_contents.split(&#39;,&#39;):
-                type_mapping += ((&#39;col{}&#39;.format(n), struct_element.strip().replace(&#39;|&#39;, &#39;,&#39;)),)
-                n += 1
+            for tuple_element in tuple_contents.split(&#39;,&#39;):
+                type_mapping += (tuple_element.strip().replace(&#39;|&#39;, &#39;,&#39;),)
 
             cls.type_mapping = type_mapping
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length) -&gt; bytearray:
         data = self.data.get_next_bytes(length)
         self.raw_value += data.hex()
         return data
 
-    def get_next_u8(self):
+    def get_next_u8(self) -&gt; int:
         return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;)
 
-    def get_next_bool(self):
+    def get_next_bool(self) -&gt; bool:
         data = self.get_next_bytes(1)
         if data not in [b&#39;\x00&#39;, b&#39;\x01&#39;]:
             raise InvalidScaleTypeValueException(&#39;Invalid value for datatype &#34;bool&#34;&#39;)
         return data == b&#39;\x01&#39;
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -&gt; bytearray:
         data = self.data.get_remaining_bytes()
         self.raw_value += data.hex()
         return data
+
+    def get_used_bytes(self) -&gt; bytearray:
+        return self.data.data[self.data_start_offset:self.data_end_offset]
 
     @abstractmethod
     def process(self):
         raise NotImplementedError
 
-    def decode(self, check_remaining=True):
-        self.value = self.process()
+    def decode(self, data: ScaleBytes = None, check_remaining=True):
 
-        if check_remaining and self.data.offset != self.data.length:
-            raise RemainingScaleBytesNotEmptyException(&#39;Current offset: {} / length: {}&#39;.format(self.data.offset, self.data.length))
+        if data is not None:
+            self.decoded = False
+            self.data = data
 
-        if self.data.offset &gt; self.data.length:
-            raise RemainingScaleBytesNotEmptyException(
-                &#39;No more bytes available (offset: {} / length: {})&#39;.format(self.data.offset, self.data.length))
+        if not self.decoded:
+
+            self.data_start_offset = self.data.offset
+            self.value_serialized = self.process()
+            self.decoded = True
+
+            if self.value_object is None:
+                # Default for value_object if not explicitly defined
+                self.value_object = self.value_serialized
+
+            self.data_end_offset = self.data.offset
+
+            if check_remaining and self.data.offset != self.data.length:
+                raise RemainingScaleBytesNotEmptyException(
+                    f&#39;Decoding &lt;{self.__class__.__name__}&gt; - Current offset: {self.data.offset} / length: {self.data.length}&#39;
+                )
+
+            if self.data.offset &gt; self.data.length:
+                raise RemainingScaleBytesNotEmptyException(
+                    f&#39;Decoding &lt;{self.__class__.__name__}&gt; - No more bytes available (needed: {self.data.offset} / total: {self.data.length})&#39;
+                )
 
         return self.value
 
     def __str__(self):
-        return str(self.value) or &#39;&#39;
+        return str(self.serialize()) or &#39;&#39;
 
     def __repr__(self):
-        return &#34;&lt;{}(value={})&gt;&#34;.format(self.__class__.__name__, self.value)
+        return &#34;&lt;{}(value={})&gt;&#34;.format(self.__class__.__name__, self.serialize())
 
     def encode(self, value=None):
 
-        if value is not None:
-            self.value = value
+        if isinstance(value, self.__class__):
+            # Accept instance of current class directly
+            self.data = value.data
+            self.value_object = self.value_object
+            self.value_serialized = self.value_serialized
+            return value.data
 
-        self.data = self.process_encode(self.value)
+        if value is not None:
+            self.value_serialized = value
+            self.decoded = True
+
+        self.data = self.process_encode(self.value_serialized)
+
+        if self.value_object is None:
+            self.value_object = self.value_serialized
+
         return self.data
 
     def process_encode(self, value):
@@ -394,13 +740,13 @@ class ScaleDecoder(ABC):
         ScaleType
         &#34;&#34;&#34;
 
-        type_string = cls.convert_type(type_string)
+        warnings.warn(&#34;Use RuntimeConfigurationObject.create_scale_object() instead&#34;, DeprecationWarning)
 
         if not runtime_config:
             runtime_config = RuntimeConfiguration()
 
         decoder_class = runtime_config.get_decoder_class(
-            type_string.lower(),
+            type_string,
             spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
         )
         if decoder_class:
@@ -410,51 +756,25 @@ class ScaleDecoder(ABC):
 
     # TODO rename to decode_type (confusing when encoding is introduced)
     def process_type(self, type_string, **kwargs):
-        obj = self.get_decoder_class(type_string, self.data, runtime_config=self.runtime_config, **kwargs)
+        obj = self.runtime_config.create_scale_object(type_string, self.data, **kwargs)
         obj.decode(check_remaining=False)
         return obj
 
     def serialize(self):
-        return self.value
+        return self.value_serialized
 
-    # TODO convert to TYPE_ALIAS per class Address: TYPE_ALIAS = (&#39;&lt;Lookup as StaticLookup&gt;::Source&#39;,)
     @classmethod
     def convert_type(cls, name):
-
-        name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;(grandpa|session|slashing)::&#39;, &#34;&#34;, name)
-
-        if name == &#39;()&#39;:
-            return &#34;Null&#34;
-        if name in [&#39;Vec&lt;u8&gt;&#39;, &#39;&amp;[u8]&#39;]:
-            return &#34;Bytes&#34;
-        if name == &#39;&lt;Lookup as StaticLookup&gt;::Source&#39;:
-            return &#39;Address&#39;
-        if name == &#39;Vec&lt;&lt;Lookup as StaticLookup&gt;::Source&gt;&#39;:
-            return &#39;Vec&lt;Address&gt;&#39;
-        if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
-            return &#39;Compact&lt;Balance&gt;&#39;
-        if name == &#39;&lt;BlockNumber as HasCompact&gt;::Type&#39;:
-            return &#39;Compact&lt;BlockNumber&gt;&#39;
-        if name == &#39;&lt;Moment as HasCompact&gt;::Type&#39;:
-            return &#39;Compact&lt;Moment&gt;&#39;
-        if name == &#39;&lt;InherentOfflineReport as InherentOfflineReport&gt;::Inherent&#39;:
-            return &#39;InherentOfflineReport&#39;
-        if name == &#39;RawAddress&#39;:
-            return &#39;Address&#39;
-
-        return name
+        return RuntimeConfigurationObject.convert_type_string(name)
 
 
 class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
     pass
 
 
-# TODO move type_string and sub_type behaviour to this sub class
 class ScaleType(ScaleDecoder, ABC):
+
+    scale_info_type: &#39;GenericRegistryType&#39; = None
 
     def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):
         &#34;&#34;&#34;
@@ -463,13 +783,51 @@ class ScaleType(ScaleDecoder, ABC):
         ----------
         data: ScaleBytes
         sub_type: str
-        metadata: MetadataDecoder
+        metadata: VersionedMetadata
         runtime_config: RuntimeConfigurationObject
         &#34;&#34;&#34;
         self.metadata = metadata
+
         if not data:
             data = ScaleBytes(bytearray())
-        super().__init__(data, sub_type, runtime_config=runtime_config)</code></pre>
+        super().__init__(data, sub_type, runtime_config=runtime_config)
+
+    def __getitem__(self, item):
+        return self.value_object[item]
+
+    def __iter__(self):
+        for item in self.value_object:
+            yield item
+
+    def __eq__(self, other):
+        if isinstance(other, ScaleType):
+            return other.value_serialized == self.value_serialized
+        else:
+            return other == self.value_serialized
+
+    def __gt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &gt; other.value_serialized
+        else:
+            return self.value_serialized &gt; other
+
+    def __ge__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &gt;= other.value_serialized
+        else:
+            return self.value_serialized &gt;= other
+
+    def __lt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &lt; other.value_serialized
+        else:
+            return self.value_serialized &lt; other
+
+    def __le__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &lt;= other.value_serialized
+        else:
+            return self.value_serialized &lt;= other</code></pre>
 </details>
 </section>
 <section>
@@ -483,7 +841,7 @@ class ScaleType(ScaleDecoder, ABC):
 <dl>
 <dt id="scalecodec.base.RuntimeConfiguration"><code class="flex name class">
 <span>class <span class="ident">RuntimeConfiguration</span></span>
-<span>(</span><span>config_id=None)</span>
+<span>(</span><span>config_id=None, ss58_format=None, only_primitives_on_init=False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -498,10 +856,20 @@ class ScaleType(ScaleDecoder, ABC):
 <ul class="hlist">
 <li><a title="scalecodec.base.RuntimeConfigurationObject" href="#scalecodec.base.RuntimeConfigurationObject">RuntimeConfigurationObject</a></li>
 </ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.RuntimeConfigurationObject" href="#scalecodec.base.RuntimeConfigurationObject">RuntimeConfigurationObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.create_scale_object" href="#scalecodec.base.RuntimeConfigurationObject.create_scale_object">create_scale_object</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.get_runtime_id_from_upgrades" href="#scalecodec.base.RuntimeConfigurationObject.get_runtime_id_from_upgrades">get_runtime_id_from_upgrades</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.set_runtime_upgrades_head" href="#scalecodec.base.RuntimeConfigurationObject.set_runtime_upgrades_head">set_runtime_upgrades_head</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="scalecodec.base.RuntimeConfigurationObject"><code class="flex name class">
 <span>class <span class="ident">RuntimeConfigurationObject</span></span>
-<span>(</span><span>config_id=None)</span>
+<span>(</span><span>config_id=None, ss58_format=None, only_primitives_on_init=False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -516,13 +884,55 @@ class ScaleType(ScaleDecoder, ABC):
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self, config_id=None):
+    def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False):
         self.config_id = config_id
-        self.type_registry = {}
+        self.type_registry = {&#39;types&#39;: {}}
+        self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
+        self.chain_id = None
 
-    def get_decoder_class(self, type_string, spec_version_id=&#39;default&#39;):
+        self.only_primitives_on_init = only_primitives_on_init
+        self.ss58_format = ss58_format
+
+    @classmethod
+    def convert_type_string(cls, name):
+
+        name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;^T::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Trait&lt;I&gt;&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Config&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;&lt;T as Config&lt;I&gt;&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;^(grandpa|session|slashing|limits|beefy_primitives|xcm::opaque)::&#39;, &#34;&#34;, name)
+        name = re.sub(r&#39;VecDeque&lt;&#39;, &#34;Vec&lt;&#34;, name, flags=re.IGNORECASE)
+        name = re.sub(r&#39;^Box&lt;(.+)&gt;$&#39;, r&#39;\1&#39;, name, flags=re.IGNORECASE)
+
+        if name == &#39;()&#39;:
+            return &#34;Null&#34;
+        if name.lower() in [&#39;vec&lt;u8&gt;&#39;, &#39;&amp;[u8]&#39;, &#34;&amp; &#39;static[u8]&#34;]:
+            return &#34;Bytes&#34;
+        if name.lower() == &#39;&lt;lookup as staticlookup&gt;::source&#39;:
+            return &#39;LookupSource&#39;
+        if name.lower() == &#39;&lt;balance as hascompact&gt;::type&#39;:
+            return &#39;Compact&lt;Balance&gt;&#39;
+        if name.lower() == &#39;&lt;blocknumber as hascompact&gt;::type&#39;:
+            return &#39;Compact&lt;BlockNumber&gt;&#39;
+        if name.lower() == &#39;&lt;moment as hascompact&gt;::type&#39;:
+            return &#39;Compact&lt;Moment&gt;&#39;
+        if name.lower() == &#39;&lt;inherentofflinereport as inherentofflinereport&gt;::inherent&#39;:
+            return &#39;InherentOfflineReport&#39;
+
+        return name
+
+    def get_decoder_class(self, type_string: str, spec_version_id=&#39;default&#39;):
+
+        if type_string.strip() == &#39;&#39;:
+            return None
+
+        type_string = self.convert_type_string(type_string)
 
         decoder_class = self.type_registry.get(&#39;types&#39;, {}).get(type_string.lower(), None)
 
@@ -546,7 +956,7 @@ class ScaleType(ScaleDecoder, ABC):
             # Custom tuples
             elif type_string != &#39;()&#39; and type_string[0] == &#39;(&#39; and type_string[-1] == &#39;)&#39;:
 
-                decoder_class = type(type_string, (self.get_decoder_class(&#39;struct&#39;),), {
+                decoder_class = type(type_string, (self.get_decoder_class(&#39;tuple&#39;),), {
                     &#39;type_string&#39;: type_string
                 })
 
@@ -571,33 +981,74 @@ class ScaleType(ScaleDecoder, ABC):
 
         return decoder_class
 
+    def create_scale_object(self, type_string: str, data=None, **kwargs) -&gt; &#39;ScaleType&#39;:
+        &#34;&#34;&#34;
+
+        Returns
+        -------
+        ScaleType
+        &#34;&#34;&#34;
+        decoder_class = self.get_decoder_class(type_string)
+
+        if decoder_class:
+            return decoder_class(data=data, **kwargs)
+
+        raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))
+
     def clear_type_registry(self):
-        self.type_registry = {&#39;types&#39;: {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
-                                        cls.type_string}}
-        self.type_registry[&#39;types&#39;].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})
+
+        if not self.__initial_state:
+            self.type_registry = {&#39;types&#39;: {}}
+
+            # Class names that contains &#39;&lt;&#39; are excluded because of a side effect that is introduced in
+            # get_decoder_class: &#34;Create dynamic class for Part1&lt;Part2&gt; based on Part1 and set class variable Part2 as
+            # sub_type&#34; which won&#39;t get reset because class definitions always remain globally
+
+            self.type_registry[&#39;types&#39;].update(
+                {cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if &#39;&lt;&#39; not in cls.__name__}
+            )
+
+        self.__initial_state = True
 
     def update_type_registry_types(self, types_dict):
-        from scalecodec.types import Enum, Struct, Set
+        from scalecodec.types import Enum, Struct, Set, Tuple
+
+        self.__initial_state = False
 
         for type_string, decoder_class_data in types_dict.items():
 
             if type(decoder_class_data) == dict:
 
                 # Create dynamic decoder class
+                base_cls = None
+
+                if decoder_class_data.get(&#39;base_class&#39;):
+                    base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
+                    if base_cls is None:
+                        raise ValueError(f&#34;Specified base_class &#39;{decoder_class_data[&#39;base_class&#39;]}&#39; for type &#34; +
+                                         f&#34;&#39;{type_string}&#39; not found&#34;)
+
                 if decoder_class_data[&#39;type&#39;] == &#39;struct&#39;:
 
-                    if decoder_class_data.get(&#39;base_class&#39;):
-                        base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                    else:
+                    if base_cls is None:
                         base_cls = Struct
 
-                    decoder_class = type(type_string, (base_cls,), {&#39;type_mapping&#39;: decoder_class_data[&#39;type_mapping&#39;]})
+                    decoder_class = type(type_string, (base_cls,), {
+                        &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                    })
+
+                elif decoder_class_data[&#39;type&#39;] == &#39;tuple&#39;:
+
+                    if base_cls is None:
+                        base_cls = Tuple
+
+                    decoder_class = type(type_string, (base_cls,), {
+                        &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                    })
 
                 elif decoder_class_data[&#39;type&#39;] == &#39;enum&#39;:
 
-                    if decoder_class_data.get(&#39;base_class&#39;):
-                        base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                    else:
+                    if base_cls is None:
                         base_cls = Enum
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -607,9 +1058,7 @@ class ScaleType(ScaleDecoder, ABC):
 
                 elif decoder_class_data[&#39;type&#39;] == &#39;set&#39;:
 
-                    if decoder_class_data.get(&#39;base_class&#39;):
-                        base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                    else:
+                    if base_cls is None:
                         base_cls = Set
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -631,9 +1080,11 @@ class ScaleType(ScaleDecoder, ABC):
         # Set runtime ID if set
         self.active_spec_version_id = type_registry.get(&#39;runtime_id&#39;)
 
-        # Set versioning
-        if &#39;versioning&#39; in type_registry:
-            self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+        # Set chain ID if set
+        self.chain_id = type_registry.get(&#39;chain_id&#39;)
+
+        self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+        self.type_registry[&#39;runtime_upgrades&#39;] = type_registry.get(&#39;runtime_upgrades&#39;)
 
         # Update types
         if &#39;types&#39; in type_registry:
@@ -646,12 +1097,218 @@ class ScaleType(ScaleDecoder, ABC):
             self.active_spec_version_id = spec_version_id
 
             # Updated type registry with versioned types
-            for versioning_item in self.type_registry.get(&#39;versioning&#39;, []):
+            for versioning_item in self.type_registry.get(&#39;versioning&#39;) or []:
                 # Check if versioning item is in current version range
                 if versioning_item[&#39;runtime_range&#39;][0] &lt;= spec_version_id and \
                         (not versioning_item[&#39;runtime_range&#39;][1] or versioning_item[&#39;runtime_range&#39;][1] &gt;= spec_version_id):
                     # Update types in type registry
-                    self.update_type_registry_types(versioning_item[&#39;types&#39;])</code></pre>
+                    self.update_type_registry_types(versioning_item[&#39;types&#39;])
+
+    def get_runtime_id_from_upgrades(self, block_number: int) -&gt; Optional[int]:
+        &#34;&#34;&#34;
+        Retrieve runtime_id for given block_number if runtime_upgrades are specified in the type registry
+
+        Parameters
+        ----------
+        block_number
+
+        Returns
+        -------
+        Runtime id
+        &#34;&#34;&#34;
+        if self.type_registry.get(&#39;runtime_upgrades&#39;):
+
+            if block_number &gt; self.type_registry[&#39;runtime_upgrades&#39;][-1][0]:
+                return
+
+            for max_block_number, runtime_id in reversed(self.type_registry[&#39;runtime_upgrades&#39;]):
+                if block_number &gt;= max_block_number and runtime_id != -1:
+                    return runtime_id
+
+    def set_runtime_upgrades_head(self, block_number: int):
+        &#34;&#34;&#34;
+        Sets head for given block_number to last runtime_id in runtime_upgrades cache
+
+        Parameters
+        ----------
+        block_number
+
+        Returns
+        -------
+
+        &#34;&#34;&#34;
+        if self.type_registry.get(&#39;runtime_upgrades&#39;):
+            if self.type_registry[&#39;runtime_upgrades&#39;][-1][1] == -1:
+                self.type_registry[&#39;runtime_upgrades&#39;][-1][0] = block_number
+            elif block_number &gt; self.type_registry[&#39;runtime_upgrades&#39;][-1][0]:
+                self.type_registry[&#39;runtime_upgrades&#39;].append([block_number, -1])
+
+    def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: &#39;RegistryType&#39;):
+
+        decoder_class = None
+        base_decoder_class = None
+
+        # Check if base decoder class is defined for path
+        if &#39;path&#39; in scale_info_type.value and len(scale_info_type.value[&#39;path&#39;]) &gt; 0:
+            path_string = &#39;::&#39;.join(scale_info_type.value[&#34;path&#34;])
+            base_decoder_class = self.get_decoder_class(path_string)
+
+            if base_decoder_class is None:
+                # Try generic type
+                catch_all_path = &#39;*::&#39; * (len(scale_info_type.value[&#39;path&#39;]) - 1) + scale_info_type.value[&#34;path&#34;][-1]
+                base_decoder_class = self.get_decoder_class(catch_all_path)
+
+            if base_decoder_class and hasattr(base_decoder_class, &#39;process_scale_info_definition&#39;):
+                # if process_scale_info_definition is implemented result is final
+                decoder_class = type(type_string, (base_decoder_class,), {})
+                decoder_class.process_scale_info_definition(scale_info_type)
+
+                # Link ScaleInfo RegistryType to decoder class
+                decoder_class.scale_info_type = scale_info_type
+
+                return decoder_class
+
+        if &#34;primitive&#34; in scale_info_type.value[&#34;def&#34;]:
+            decoder_class = self.get_decoder_class(scale_info_type.value[&#34;def&#34;][&#34;primitive&#34;])
+
+        elif &#39;array&#39; in scale_info_type.value[&#39;def&#39;]:
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(&#39;FixedLengthArray&#39;)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;array&#39;][&#39;type&#39;]}&#34;,
+                &#39;element_count&#39;: scale_info_type.value[&#39;def&#39;][&#39;array&#39;][&#39;len&#39;]
+            })
+
+        elif &#39;composite&#39; in scale_info_type.value[&#39;def&#39;]:
+
+            type_mapping = []
+
+            base_type_string = &#39;Tuple&#39;
+
+            if &#39;fields&#39; in scale_info_type.value[&#39;def&#39;][&#39;composite&#39;]:
+
+                fields = scale_info_type.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]
+
+                if all([f.get(&#39;name&#39;) for f in fields]):
+                    base_type_string = &#39;Struct&#39;
+                    type_mapping = [[field[&#39;name&#39;], f&#34;scale_info::{field[&#39;type&#39;]}&#34;] for field in fields]
+
+                else:
+                    base_type_string = &#39;Tuple&#39;
+                    type_mapping = [f&#34;scale_info::{field[&#39;type&#39;]}&#34; for field in fields]
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(base_type_string)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                &#39;type_mapping&#39;: type_mapping
+            })
+
+        elif &#39;sequence&#39; in scale_info_type.value[&#39;def&#39;]:
+            # Vec
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Vec&#39;),), {
+                &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;sequence&#39;][&#39;type&#39;]}&#34;
+            })
+
+        elif &#39;variant&#39; in scale_info_type.value[&#39;def&#39;]:
+            # Enum
+            type_mapping = []
+
+            variants = scale_info_type.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]
+
+            if len(variants) &gt; 0:
+                # Create placeholder list
+                variant_length = max([v[&#39;index&#39;] for v in variants]) + 1
+                type_mapping = [(None, &#39;Null&#39;)] * variant_length
+
+                for variant in variants:
+
+                    if &#39;fields&#39; in variant:
+                        if len(variant[&#39;fields&#39;]) == 0:
+                            enum_value = &#39;Null&#39;
+                        elif len(variant[&#39;fields&#39;]) == 1:
+                            enum_value = f&#34;scale_info::{variant[&#39;fields&#39;][0][&#39;type&#39;]}&#34;
+                        else:
+                            field_str = &#39;, &#39;.join([f&#34;scale_info::{f[&#39;type&#39;]}&#34; for f in variant[&#39;fields&#39;]])
+                            enum_value = f&#34;({field_str})&#34;
+                    else:
+                        enum_value = &#39;Null&#39;
+
+                    # Put mapping in right order in list
+                    type_mapping[variant[&#39;index&#39;]] = (variant[&#39;name&#39;], enum_value)
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(&#34;Enum&#34;)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                &#39;type_mapping&#39;: type_mapping
+            })
+
+        elif &#39;tuple&#39; in scale_info_type.value[&#39;def&#39;]:
+
+            type_mapping = [f&#34;scale_info::{f}&#34; for f in scale_info_type.value[&#39;def&#39;][&#39;tuple&#39;]]
+
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Tuple&#39;),), {
+                &#39;type_mapping&#39;: type_mapping
+            })
+
+        elif &#39;compact&#39; in scale_info_type.value[&#39;def&#39;]:
+            # Compact
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Compact&#39;),), {
+                &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;compact&#39;][&#39;type&#39;]}&#34;
+            })
+
+        elif &#39;phantom&#39; in scale_info_type.value[&#39;def&#39;]:
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;Null&#39;),), {})
+
+        else:
+            raise NotImplementedError(f&#34;RegistryTypeDef not implemented&#34;)
+
+        # if &#39;path&#39; in scale_info_type.value:
+        #     decoder_class.type_string = &#39;::&#39;.join(scale_info_type.value[&#39;path&#39;])
+
+        # Link ScaleInfo RegistryType to decoder class
+
+        decoder_class.scale_info_type = scale_info_type
+
+        return decoder_class
+
+    def update_from_scale_info_types(self, scale_info_types: list, prefix: str = &#39;&#39;):
+        for scale_info_type in scale_info_types:
+
+            idx = scale_info_type[&#39;id&#39;].value
+
+            type_string = f&#34;scale_info::{idx}&#34;
+
+            decoder_class = self.get_decoder_class_for_scale_info_definition(
+                type_string, scale_info_type[&#39;type&#39;]
+            )
+
+            if decoder_class is None:
+                raise NotImplementedError(f&#34;No decoding class found for scale type {idx}&#34;)
+
+            if decoder_class:
+                self.type_registry[&#39;types&#39;][f&#34;scale_info::{idx}&#34;] = decoder_class
+
+                if len(scale_info_type[&#39;type&#39;].value.get(&#39;path&#39;, [])) &gt; 0:
+                    path_string = &#39;::&#39;.join(scale_info_type[&#39;type&#39;].value[&#39;path&#39;]).lower()
+                    self.type_registry[&#39;types&#39;][path_string] = decoder_class
+
+    def add_portable_registry(self, metadata: &#39;GenericMetadataVersioned&#39;):
+
+        scale_info_types = metadata.portable_registry.value_object[&#39;types&#39;].value_object
+
+        self.update_from_scale_info_types(scale_info_types, prefix=&#39;runtime&#39;)
+
+        # Todo process extrinsic types
+        pass
+
+    def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
+        # TODO
+        prefix = f&#34;ink::{metadata_dict[&#39;source&#39;][&#39;hash&#39;]}&#34;
+        return self.update_from_scale_info_types(metadata_dict[&#39;types&#39;], prefix=prefix)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -674,9 +1331,85 @@ def all_subclasses(cls, class_):
         [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])</code></pre>
 </details>
 </dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.convert_type_string"><code class="name flex">
+<span>def <span class="ident">convert_type_string</span></span>(<span>name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def convert_type_string(cls, name):
+
+    name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
+    name = re.sub(r&#39;^T::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;&lt;T as Trait&lt;I&gt;&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;&lt;T as Config&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;&lt;T as Config&lt;I&gt;&gt;::&#39;, &#34;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
+    name = re.sub(r&#39;^(grandpa|session|slashing|limits|beefy_primitives|xcm::opaque)::&#39;, &#34;&#34;, name)
+    name = re.sub(r&#39;VecDeque&lt;&#39;, &#34;Vec&lt;&#34;, name, flags=re.IGNORECASE)
+    name = re.sub(r&#39;^Box&lt;(.+)&gt;$&#39;, r&#39;\1&#39;, name, flags=re.IGNORECASE)
+
+    if name == &#39;()&#39;:
+        return &#34;Null&#34;
+    if name.lower() in [&#39;vec&lt;u8&gt;&#39;, &#39;&amp;[u8]&#39;, &#34;&amp; &#39;static[u8]&#34;]:
+        return &#34;Bytes&#34;
+    if name.lower() == &#39;&lt;lookup as staticlookup&gt;::source&#39;:
+        return &#39;LookupSource&#39;
+    if name.lower() == &#39;&lt;balance as hascompact&gt;::type&#39;:
+        return &#39;Compact&lt;Balance&gt;&#39;
+    if name.lower() == &#39;&lt;blocknumber as hascompact&gt;::type&#39;:
+        return &#39;Compact&lt;BlockNumber&gt;&#39;
+    if name.lower() == &#39;&lt;moment as hascompact&gt;::type&#39;:
+        return &#39;Compact&lt;Moment&gt;&#39;
+    if name.lower() == &#39;&lt;inherentofflinereport as inherentofflinereport&gt;::inherent&#39;:
+        return &#39;InherentOfflineReport&#39;
+
+    return name</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="scalecodec.base.RuntimeConfigurationObject.add_contract_metadata_dict_to_type_registry"><code class="name flex">
+<span>def <span class="ident">add_contract_metadata_dict_to_type_registry</span></span>(<span>self, metadata_dict)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
+    # TODO
+    prefix = f&#34;ink::{metadata_dict[&#39;source&#39;][&#39;hash&#39;]}&#34;
+    return self.update_from_scale_info_types(metadata_dict[&#39;types&#39;], prefix=prefix)</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.add_portable_registry"><code class="name flex">
+<span>def <span class="ident">add_portable_registry</span></span>(<span>self, metadata: GenericMetadataVersioned)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_portable_registry(self, metadata: &#39;GenericMetadataVersioned&#39;):
+
+    scale_info_types = metadata.portable_registry.value_object[&#39;types&#39;].value_object
+
+    self.update_from_scale_info_types(scale_info_types, prefix=&#39;runtime&#39;)
+
+    # Todo process extrinsic types
+    pass</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.base.RuntimeConfigurationObject.clear_type_registry"><code class="name flex">
 <span>def <span class="ident">clear_type_registry</span></span>(<span>self)</span>
 </code></dt>
@@ -687,13 +1420,51 @@ def all_subclasses(cls, class_):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clear_type_registry(self):
-    self.type_registry = {&#39;types&#39;: {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
-                                    cls.type_string}}
-    self.type_registry[&#39;types&#39;].update({cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)})</code></pre>
+
+    if not self.__initial_state:
+        self.type_registry = {&#39;types&#39;: {}}
+
+        # Class names that contains &#39;&lt;&#39; are excluded because of a side effect that is introduced in
+        # get_decoder_class: &#34;Create dynamic class for Part1&lt;Part2&gt; based on Part1 and set class variable Part2 as
+        # sub_type&#34; which won&#39;t get reset because class definitions always remain globally
+
+        self.type_registry[&#39;types&#39;].update(
+            {cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if &#39;&lt;&#39; not in cls.__name__}
+        )
+
+    self.__initial_state = True</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.create_scale_object"><code class="name flex">
+<span>def <span class="ident">create_scale_object</span></span>(<span>self, type_string: str, data=None, **kwargs) ‑> <a title="scalecodec.base.ScaleType" href="#scalecodec.base.ScaleType">ScaleType</a></span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="scalecodec.base.ScaleType" href="#scalecodec.base.ScaleType">ScaleType</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_scale_object(self, type_string: str, data=None, **kwargs) -&gt; &#39;ScaleType&#39;:
+    &#34;&#34;&#34;
+
+    Returns
+    -------
+    ScaleType
+    &#34;&#34;&#34;
+    decoder_class = self.get_decoder_class(type_string)
+
+    if decoder_class:
+        return decoder_class(data=data, **kwargs)
+
+    raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.RuntimeConfigurationObject.get_decoder_class"><code class="name flex">
-<span>def <span class="ident">get_decoder_class</span></span>(<span>self, type_string, spec_version_id='default')</span>
+<span>def <span class="ident">get_decoder_class</span></span>(<span>self, type_string: str, spec_version_id='default')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -701,7 +1472,12 @@ def all_subclasses(cls, class_):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_decoder_class(self, type_string, spec_version_id=&#39;default&#39;):
+<pre><code class="python">def get_decoder_class(self, type_string: str, spec_version_id=&#39;default&#39;):
+
+    if type_string.strip() == &#39;&#39;:
+        return None
+
+    type_string = self.convert_type_string(type_string)
 
     decoder_class = self.type_registry.get(&#39;types&#39;, {}).get(type_string.lower(), None)
 
@@ -725,7 +1501,7 @@ def all_subclasses(cls, class_):
         # Custom tuples
         elif type_string != &#39;()&#39; and type_string[0] == &#39;(&#39; and type_string[-1] == &#39;)&#39;:
 
-            decoder_class = type(type_string, (self.get_decoder_class(&#39;struct&#39;),), {
+            decoder_class = type(type_string, (self.get_decoder_class(&#39;tuple&#39;),), {
                 &#39;type_string&#39;: type_string
             })
 
@@ -751,6 +1527,189 @@ def all_subclasses(cls, class_):
     return decoder_class</code></pre>
 </details>
 </dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.get_decoder_class_for_scale_info_definition"><code class="name flex">
+<span>def <span class="ident">get_decoder_class_for_scale_info_definition</span></span>(<span>self, type_string: str, scale_info_type: RegistryType)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: &#39;RegistryType&#39;):
+
+    decoder_class = None
+    base_decoder_class = None
+
+    # Check if base decoder class is defined for path
+    if &#39;path&#39; in scale_info_type.value and len(scale_info_type.value[&#39;path&#39;]) &gt; 0:
+        path_string = &#39;::&#39;.join(scale_info_type.value[&#34;path&#34;])
+        base_decoder_class = self.get_decoder_class(path_string)
+
+        if base_decoder_class is None:
+            # Try generic type
+            catch_all_path = &#39;*::&#39; * (len(scale_info_type.value[&#39;path&#39;]) - 1) + scale_info_type.value[&#34;path&#34;][-1]
+            base_decoder_class = self.get_decoder_class(catch_all_path)
+
+        if base_decoder_class and hasattr(base_decoder_class, &#39;process_scale_info_definition&#39;):
+            # if process_scale_info_definition is implemented result is final
+            decoder_class = type(type_string, (base_decoder_class,), {})
+            decoder_class.process_scale_info_definition(scale_info_type)
+
+            # Link ScaleInfo RegistryType to decoder class
+            decoder_class.scale_info_type = scale_info_type
+
+            return decoder_class
+
+    if &#34;primitive&#34; in scale_info_type.value[&#34;def&#34;]:
+        decoder_class = self.get_decoder_class(scale_info_type.value[&#34;def&#34;][&#34;primitive&#34;])
+
+    elif &#39;array&#39; in scale_info_type.value[&#39;def&#39;]:
+
+        if base_decoder_class is None:
+            base_decoder_class = self.get_decoder_class(&#39;FixedLengthArray&#39;)
+
+        decoder_class = type(type_string, (base_decoder_class,), {
+            &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;array&#39;][&#39;type&#39;]}&#34;,
+            &#39;element_count&#39;: scale_info_type.value[&#39;def&#39;][&#39;array&#39;][&#39;len&#39;]
+        })
+
+    elif &#39;composite&#39; in scale_info_type.value[&#39;def&#39;]:
+
+        type_mapping = []
+
+        base_type_string = &#39;Tuple&#39;
+
+        if &#39;fields&#39; in scale_info_type.value[&#39;def&#39;][&#39;composite&#39;]:
+
+            fields = scale_info_type.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]
+
+            if all([f.get(&#39;name&#39;) for f in fields]):
+                base_type_string = &#39;Struct&#39;
+                type_mapping = [[field[&#39;name&#39;], f&#34;scale_info::{field[&#39;type&#39;]}&#34;] for field in fields]
+
+            else:
+                base_type_string = &#39;Tuple&#39;
+                type_mapping = [f&#34;scale_info::{field[&#39;type&#39;]}&#34; for field in fields]
+
+        if base_decoder_class is None:
+            base_decoder_class = self.get_decoder_class(base_type_string)
+
+        decoder_class = type(type_string, (base_decoder_class,), {
+            &#39;type_mapping&#39;: type_mapping
+        })
+
+    elif &#39;sequence&#39; in scale_info_type.value[&#39;def&#39;]:
+        # Vec
+        decoder_class = type(type_string, (self.get_decoder_class(&#39;Vec&#39;),), {
+            &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;sequence&#39;][&#39;type&#39;]}&#34;
+        })
+
+    elif &#39;variant&#39; in scale_info_type.value[&#39;def&#39;]:
+        # Enum
+        type_mapping = []
+
+        variants = scale_info_type.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]
+
+        if len(variants) &gt; 0:
+            # Create placeholder list
+            variant_length = max([v[&#39;index&#39;] for v in variants]) + 1
+            type_mapping = [(None, &#39;Null&#39;)] * variant_length
+
+            for variant in variants:
+
+                if &#39;fields&#39; in variant:
+                    if len(variant[&#39;fields&#39;]) == 0:
+                        enum_value = &#39;Null&#39;
+                    elif len(variant[&#39;fields&#39;]) == 1:
+                        enum_value = f&#34;scale_info::{variant[&#39;fields&#39;][0][&#39;type&#39;]}&#34;
+                    else:
+                        field_str = &#39;, &#39;.join([f&#34;scale_info::{f[&#39;type&#39;]}&#34; for f in variant[&#39;fields&#39;]])
+                        enum_value = f&#34;({field_str})&#34;
+                else:
+                    enum_value = &#39;Null&#39;
+
+                # Put mapping in right order in list
+                type_mapping[variant[&#39;index&#39;]] = (variant[&#39;name&#39;], enum_value)
+
+        if base_decoder_class is None:
+            base_decoder_class = self.get_decoder_class(&#34;Enum&#34;)
+
+        decoder_class = type(type_string, (base_decoder_class,), {
+            &#39;type_mapping&#39;: type_mapping
+        })
+
+    elif &#39;tuple&#39; in scale_info_type.value[&#39;def&#39;]:
+
+        type_mapping = [f&#34;scale_info::{f}&#34; for f in scale_info_type.value[&#39;def&#39;][&#39;tuple&#39;]]
+
+        decoder_class = type(type_string, (self.get_decoder_class(&#39;Tuple&#39;),), {
+            &#39;type_mapping&#39;: type_mapping
+        })
+
+    elif &#39;compact&#39; in scale_info_type.value[&#39;def&#39;]:
+        # Compact
+        decoder_class = type(type_string, (self.get_decoder_class(&#39;Compact&#39;),), {
+            &#39;sub_type&#39;: f&#34;scale_info::{scale_info_type.value[&#39;def&#39;][&#39;compact&#39;][&#39;type&#39;]}&#34;
+        })
+
+    elif &#39;phantom&#39; in scale_info_type.value[&#39;def&#39;]:
+        decoder_class = type(type_string, (self.get_decoder_class(&#39;Null&#39;),), {})
+
+    else:
+        raise NotImplementedError(f&#34;RegistryTypeDef not implemented&#34;)
+
+    # if &#39;path&#39; in scale_info_type.value:
+    #     decoder_class.type_string = &#39;::&#39;.join(scale_info_type.value[&#39;path&#39;])
+
+    # Link ScaleInfo RegistryType to decoder class
+
+    decoder_class.scale_info_type = scale_info_type
+
+    return decoder_class</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.get_runtime_id_from_upgrades"><code class="name flex">
+<span>def <span class="ident">get_runtime_id_from_upgrades</span></span>(<span>self, block_number: int) ‑> Union[int, NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieve runtime_id for given block_number if runtime_upgrades are specified in the type registry</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>block_number</code></strong></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Runtime id</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_runtime_id_from_upgrades(self, block_number: int) -&gt; Optional[int]:
+    &#34;&#34;&#34;
+    Retrieve runtime_id for given block_number if runtime_upgrades are specified in the type registry
+
+    Parameters
+    ----------
+    block_number
+
+    Returns
+    -------
+    Runtime id
+    &#34;&#34;&#34;
+    if self.type_registry.get(&#39;runtime_upgrades&#39;):
+
+        if block_number &gt; self.type_registry[&#39;runtime_upgrades&#39;][-1][0]:
+            return
+
+        for max_block_number, runtime_id in reversed(self.type_registry[&#39;runtime_upgrades&#39;]):
+            if block_number &gt;= max_block_number and runtime_id != -1:
+                return runtime_id</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.base.RuntimeConfigurationObject.set_active_spec_version_id"><code class="name flex">
 <span>def <span class="ident">set_active_spec_version_id</span></span>(<span>self, spec_version_id)</span>
 </code></dt>
@@ -767,12 +1726,77 @@ def all_subclasses(cls, class_):
         self.active_spec_version_id = spec_version_id
 
         # Updated type registry with versioned types
-        for versioning_item in self.type_registry.get(&#39;versioning&#39;, []):
+        for versioning_item in self.type_registry.get(&#39;versioning&#39;) or []:
             # Check if versioning item is in current version range
             if versioning_item[&#39;runtime_range&#39;][0] &lt;= spec_version_id and \
                     (not versioning_item[&#39;runtime_range&#39;][1] or versioning_item[&#39;runtime_range&#39;][1] &gt;= spec_version_id):
                 # Update types in type registry
                 self.update_type_registry_types(versioning_item[&#39;types&#39;])</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.set_runtime_upgrades_head"><code class="name flex">
+<span>def <span class="ident">set_runtime_upgrades_head</span></span>(<span>self, block_number: int)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets head for given block_number to last runtime_id in runtime_upgrades cache</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>block_number</code></strong></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_runtime_upgrades_head(self, block_number: int):
+    &#34;&#34;&#34;
+    Sets head for given block_number to last runtime_id in runtime_upgrades cache
+
+    Parameters
+    ----------
+    block_number
+
+    Returns
+    -------
+
+    &#34;&#34;&#34;
+    if self.type_registry.get(&#39;runtime_upgrades&#39;):
+        if self.type_registry[&#39;runtime_upgrades&#39;][-1][1] == -1:
+            self.type_registry[&#39;runtime_upgrades&#39;][-1][0] = block_number
+        elif block_number &gt; self.type_registry[&#39;runtime_upgrades&#39;][-1][0]:
+            self.type_registry[&#39;runtime_upgrades&#39;].append([block_number, -1])</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.RuntimeConfigurationObject.update_from_scale_info_types"><code class="name flex">
+<span>def <span class="ident">update_from_scale_info_types</span></span>(<span>self, scale_info_types: list, prefix: str = '')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_from_scale_info_types(self, scale_info_types: list, prefix: str = &#39;&#39;):
+    for scale_info_type in scale_info_types:
+
+        idx = scale_info_type[&#39;id&#39;].value
+
+        type_string = f&#34;scale_info::{idx}&#34;
+
+        decoder_class = self.get_decoder_class_for_scale_info_definition(
+            type_string, scale_info_type[&#39;type&#39;]
+        )
+
+        if decoder_class is None:
+            raise NotImplementedError(f&#34;No decoding class found for scale type {idx}&#34;)
+
+        if decoder_class:
+            self.type_registry[&#39;types&#39;][f&#34;scale_info::{idx}&#34;] = decoder_class
+
+            if len(scale_info_type[&#39;type&#39;].value.get(&#39;path&#39;, [])) &gt; 0:
+                path_string = &#39;::&#39;.join(scale_info_type[&#39;type&#39;].value[&#39;path&#39;]).lower()
+                self.type_registry[&#39;types&#39;][path_string] = decoder_class</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.RuntimeConfigurationObject.update_type_registry"><code class="name flex">
@@ -789,9 +1813,11 @@ def all_subclasses(cls, class_):
     # Set runtime ID if set
     self.active_spec_version_id = type_registry.get(&#39;runtime_id&#39;)
 
-    # Set versioning
-    if &#39;versioning&#39; in type_registry:
-        self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+    # Set chain ID if set
+    self.chain_id = type_registry.get(&#39;chain_id&#39;)
+
+    self.type_registry[&#39;versioning&#39;] = type_registry.get(&#39;versioning&#39;)
+    self.type_registry[&#39;runtime_upgrades&#39;] = type_registry.get(&#39;runtime_upgrades&#39;)
 
     # Update types
     if &#39;types&#39; in type_registry:
@@ -808,27 +1834,44 @@ def all_subclasses(cls, class_):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def update_type_registry_types(self, types_dict):
-    from scalecodec.types import Enum, Struct, Set
+    from scalecodec.types import Enum, Struct, Set, Tuple
+
+    self.__initial_state = False
 
     for type_string, decoder_class_data in types_dict.items():
 
         if type(decoder_class_data) == dict:
 
             # Create dynamic decoder class
+            base_cls = None
+
+            if decoder_class_data.get(&#39;base_class&#39;):
+                base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
+                if base_cls is None:
+                    raise ValueError(f&#34;Specified base_class &#39;{decoder_class_data[&#39;base_class&#39;]}&#39; for type &#34; +
+                                     f&#34;&#39;{type_string}&#39; not found&#34;)
+
             if decoder_class_data[&#39;type&#39;] == &#39;struct&#39;:
 
-                if decoder_class_data.get(&#39;base_class&#39;):
-                    base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                else:
+                if base_cls is None:
                     base_cls = Struct
 
-                decoder_class = type(type_string, (base_cls,), {&#39;type_mapping&#39;: decoder_class_data[&#39;type_mapping&#39;]})
+                decoder_class = type(type_string, (base_cls,), {
+                    &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                })
+
+            elif decoder_class_data[&#39;type&#39;] == &#39;tuple&#39;:
+
+                if base_cls is None:
+                    base_cls = Tuple
+
+                decoder_class = type(type_string, (base_cls,), {
+                    &#39;type_mapping&#39;: decoder_class_data.get(&#39;type_mapping&#39;)
+                })
 
             elif decoder_class_data[&#39;type&#39;] == &#39;enum&#39;:
 
-                if decoder_class_data.get(&#39;base_class&#39;):
-                    base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                else:
+                if base_cls is None:
                     base_cls = Enum
 
                 decoder_class = type(type_string, (base_cls,), {
@@ -838,9 +1881,7 @@ def all_subclasses(cls, class_):
 
             elif decoder_class_data[&#39;type&#39;] == &#39;set&#39;:
 
-                if decoder_class_data.get(&#39;base_class&#39;):
-                    base_cls = self.get_decoder_class(decoder_class_data[&#39;base_class&#39;])
-                else:
+                if base_cls is None:
                     base_cls = Set
 
                 decoder_class = type(type_string, (base_cls,), {
@@ -886,17 +1927,17 @@ def all_subclasses(cls, class_):
 
         self.length = len(self.data)
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length: int) -&gt; bytearray:
         data = self.data[self.offset:self.offset + length]
         self.offset += length
         return data
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -&gt; bytearray:
         data = self.data[self.offset:]
         self.offset = self.length
         return data
 
-    def get_remaining_length(self):
+    def get_remaining_length(self) -&gt; int:
         return self.length - self.offset
 
     def reset(self):
@@ -909,6 +1950,9 @@ def all_subclasses(cls, class_):
         if not hasattr(other, &#39;data&#39;):
             return False
         return self.data == other.data
+
+    def __len__(self):
+        return len(self.data)
 
     def __repr__(self):
         return &#34;&lt;{}(data=0x{})&gt;&#34;.format(self.__class__.__name__, self.data.hex())
@@ -926,13 +1970,13 @@ def all_subclasses(cls, class_):
         if type(data) == bytearray:
             return ScaleBytes(self.data + data)
 
-    def to_hex(self):
+    def to_hex(self) -&gt; str:
         return f&#39;0x{self.data.hex()}&#39;</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="scalecodec.base.ScaleBytes.get_next_bytes"><code class="name flex">
-<span>def <span class="ident">get_next_bytes</span></span>(<span>self, length)</span>
+<span>def <span class="ident">get_next_bytes</span></span>(<span>self, length: int) ‑> bytearray</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -940,14 +1984,14 @@ def all_subclasses(cls, class_):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_next_bytes(self, length):
+<pre><code class="python">def get_next_bytes(self, length: int) -&gt; bytearray:
     data = self.data[self.offset:self.offset + length]
     self.offset += length
     return data</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleBytes.get_remaining_bytes"><code class="name flex">
-<span>def <span class="ident">get_remaining_bytes</span></span>(<span>self)</span>
+<span>def <span class="ident">get_remaining_bytes</span></span>(<span>self) ‑> bytearray</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -955,14 +1999,14 @@ def all_subclasses(cls, class_):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_remaining_bytes(self):
+<pre><code class="python">def get_remaining_bytes(self) -&gt; bytearray:
     data = self.data[self.offset:]
     self.offset = self.length
     return data</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleBytes.get_remaining_length"><code class="name flex">
-<span>def <span class="ident">get_remaining_length</span></span>(<span>self)</span>
+<span>def <span class="ident">get_remaining_length</span></span>(<span>self) ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -970,7 +2014,7 @@ def all_subclasses(cls, class_):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_remaining_length(self):
+<pre><code class="python">def get_remaining_length(self) -&gt; int:
     return self.length - self.offset</code></pre>
 </details>
 </dd>
@@ -988,7 +2032,7 @@ def all_subclasses(cls, class_):
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleBytes.to_hex"><code class="name flex">
-<span>def <span class="ident">to_hex</span></span>(<span>self)</span>
+<span>def <span class="ident">to_hex</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -996,7 +2040,7 @@ def all_subclasses(cls, class_):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def to_hex(self):
+<pre><code class="python">def to_hex(self) -&gt; str:
     return f&#39;0x{self.data.hex()}&#39;</code></pre>
 </details>
 </dd>
@@ -1004,7 +2048,7 @@ def all_subclasses(cls, class_):
 </dd>
 <dt id="scalecodec.base.ScaleDecoder"><code class="flex name class">
 <span>class <span class="ident">ScaleDecoder</span></span>
-<span>(</span><span>data, sub_type=None, runtime_config=None)</span>
+<span>(</span><span>data: <a title="scalecodec.base.ScaleBytes" href="#scalecodec.base.ScaleBytes">ScaleBytes</a>, sub_type: str = None, runtime_config: <a title="scalecodec.base.RuntimeConfigurationObject" href="#scalecodec.base.RuntimeConfigurationObject">RuntimeConfigurationObject</a> = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1023,12 +2067,9 @@ inheritance.</p></div>
 
     sub_type = None
 
-    PRIMITIVES = (&#39;bool&#39;, &#39;u8&#39;, &#39;u16&#39;, &#39;u32&#39;, &#39;u64&#39;, &#39;u128&#39;, &#39;u256&#39;, &#39;i8&#39;, &#39;i16&#39;, &#39;i32&#39;, &#39;i64&#39;, &#39;i128&#39;, &#39;i256&#39;, &#39;h160&#39;,
-                  &#39;h256&#39;, &#39;h512&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 8]&#39;, &#39;[u8; 16]&#39;, &#39;[u8; 32]&#39;, &#39;&amp;[u8]&#39;)
-
     runtime_config = None
 
-    def __init__(self, data, sub_type=None, runtime_config=None):
+    def __init__(self, data: ScaleBytes, sub_type: str = None, runtime_config: RuntimeConfigurationObject = None):
 
         if sub_type:
             self.sub_type = sub_type
@@ -1039,15 +2080,40 @@ inheritance.</p></div>
         if data:
             assert(type(data) == ScaleBytes)
 
-        if not runtime_config:
-            # if no runtime config is provided, fallback on singleton
-            runtime_config = RuntimeConfiguration()
+        if runtime_config:
+            self.runtime_config = runtime_config
 
-        self.runtime_config = runtime_config
+        if not self.runtime_config:
+            # if no runtime config is provided, fallback on singleton
+            self.runtime_config = RuntimeConfiguration()
 
         self.data = data
         self.raw_value = &#39;&#39;
-        self.value = None
+
+        self.value_object = None
+        self.value_serialized = None
+
+        self.decoded = False
+
+        self.data_start_offset = None
+        self.data_end_offset = None
+
+    @property
+    def value(self):
+        # TODO fix
+        # if not self.decoded:
+        #     self.decode()
+        return self.value_serialized
+
+    @value.setter
+    def value(self, value):
+        self.value_serialized = value
+
+    @staticmethod
+    def is_primitive(type_string: str) -&gt; bool:
+        return type_string in (&#39;bool&#39;, &#39;u8&#39;, &#39;u16&#39;, &#39;u32&#39;, &#39;u64&#39;, &#39;u128&#39;, &#39;u256&#39;, &#39;i8&#39;, &#39;i16&#39;, &#39;i32&#39;, &#39;i64&#39;, &#39;i128&#39;,
+                               &#39;i256&#39;, &#39;h160&#39;, &#39;h256&#39;, &#39;h512&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 8]&#39;, &#39;[u8; 16]&#39;, &#39;[u8; 32]&#39;,
+                               &#39;&amp;[u8]&#39;)
 
     @classmethod
     def build_type_mapping(cls):
@@ -1064,60 +2130,91 @@ inheritance.</p></div>
                 for sub_type in sub_types:
                     tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(&#39;,&#39;, &#39;|&#39;))
 
-            n = 1
-            for struct_element in tuple_contents.split(&#39;,&#39;):
-                type_mapping += ((&#39;col{}&#39;.format(n), struct_element.strip().replace(&#39;|&#39;, &#39;,&#39;)),)
-                n += 1
+            for tuple_element in tuple_contents.split(&#39;,&#39;):
+                type_mapping += (tuple_element.strip().replace(&#39;|&#39;, &#39;,&#39;),)
 
             cls.type_mapping = type_mapping
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length) -&gt; bytearray:
         data = self.data.get_next_bytes(length)
         self.raw_value += data.hex()
         return data
 
-    def get_next_u8(self):
+    def get_next_u8(self) -&gt; int:
         return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;)
 
-    def get_next_bool(self):
+    def get_next_bool(self) -&gt; bool:
         data = self.get_next_bytes(1)
         if data not in [b&#39;\x00&#39;, b&#39;\x01&#39;]:
             raise InvalidScaleTypeValueException(&#39;Invalid value for datatype &#34;bool&#34;&#39;)
         return data == b&#39;\x01&#39;
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -&gt; bytearray:
         data = self.data.get_remaining_bytes()
         self.raw_value += data.hex()
         return data
+
+    def get_used_bytes(self) -&gt; bytearray:
+        return self.data.data[self.data_start_offset:self.data_end_offset]
 
     @abstractmethod
     def process(self):
         raise NotImplementedError
 
-    def decode(self, check_remaining=True):
-        self.value = self.process()
+    def decode(self, data: ScaleBytes = None, check_remaining=True):
 
-        if check_remaining and self.data.offset != self.data.length:
-            raise RemainingScaleBytesNotEmptyException(&#39;Current offset: {} / length: {}&#39;.format(self.data.offset, self.data.length))
+        if data is not None:
+            self.decoded = False
+            self.data = data
 
-        if self.data.offset &gt; self.data.length:
-            raise RemainingScaleBytesNotEmptyException(
-                &#39;No more bytes available (offset: {} / length: {})&#39;.format(self.data.offset, self.data.length))
+        if not self.decoded:
+
+            self.data_start_offset = self.data.offset
+            self.value_serialized = self.process()
+            self.decoded = True
+
+            if self.value_object is None:
+                # Default for value_object if not explicitly defined
+                self.value_object = self.value_serialized
+
+            self.data_end_offset = self.data.offset
+
+            if check_remaining and self.data.offset != self.data.length:
+                raise RemainingScaleBytesNotEmptyException(
+                    f&#39;Decoding &lt;{self.__class__.__name__}&gt; - Current offset: {self.data.offset} / length: {self.data.length}&#39;
+                )
+
+            if self.data.offset &gt; self.data.length:
+                raise RemainingScaleBytesNotEmptyException(
+                    f&#39;Decoding &lt;{self.__class__.__name__}&gt; - No more bytes available (needed: {self.data.offset} / total: {self.data.length})&#39;
+                )
 
         return self.value
 
     def __str__(self):
-        return str(self.value) or &#39;&#39;
+        return str(self.serialize()) or &#39;&#39;
 
     def __repr__(self):
-        return &#34;&lt;{}(value={})&gt;&#34;.format(self.__class__.__name__, self.value)
+        return &#34;&lt;{}(value={})&gt;&#34;.format(self.__class__.__name__, self.serialize())
 
     def encode(self, value=None):
 
-        if value is not None:
-            self.value = value
+        if isinstance(value, self.__class__):
+            # Accept instance of current class directly
+            self.data = value.data
+            self.value_object = self.value_object
+            self.value_serialized = self.value_serialized
+            return value.data
 
-        self.data = self.process_encode(self.value)
+        if value is not None:
+            self.value_serialized = value
+            self.decoded = True
+
+        self.data = self.process_encode(self.value_serialized)
+
+        if self.value_object is None:
+            self.value_object = self.value_serialized
+
         return self.data
 
     def process_encode(self, value):
@@ -1139,13 +2236,13 @@ inheritance.</p></div>
         ScaleType
         &#34;&#34;&#34;
 
-        type_string = cls.convert_type(type_string)
+        warnings.warn(&#34;Use RuntimeConfigurationObject.create_scale_object() instead&#34;, DeprecationWarning)
 
         if not runtime_config:
             runtime_config = RuntimeConfiguration()
 
         decoder_class = runtime_config.get_decoder_class(
-            type_string.lower(),
+            type_string,
             spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
         )
         if decoder_class:
@@ -1155,43 +2252,16 @@ inheritance.</p></div>
 
     # TODO rename to decode_type (confusing when encoding is introduced)
     def process_type(self, type_string, **kwargs):
-        obj = self.get_decoder_class(type_string, self.data, runtime_config=self.runtime_config, **kwargs)
+        obj = self.runtime_config.create_scale_object(type_string, self.data, **kwargs)
         obj.decode(check_remaining=False)
         return obj
 
     def serialize(self):
-        return self.value
+        return self.value_serialized
 
-    # TODO convert to TYPE_ALIAS per class Address: TYPE_ALIAS = (&#39;&lt;Lookup as StaticLookup&gt;::Source&#39;,)
     @classmethod
     def convert_type(cls, name):
-
-        name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
-        name = re.sub(r&#39;(grandpa|session|slashing)::&#39;, &#34;&#34;, name)
-
-        if name == &#39;()&#39;:
-            return &#34;Null&#34;
-        if name in [&#39;Vec&lt;u8&gt;&#39;, &#39;&amp;[u8]&#39;]:
-            return &#34;Bytes&#34;
-        if name == &#39;&lt;Lookup as StaticLookup&gt;::Source&#39;:
-            return &#39;Address&#39;
-        if name == &#39;Vec&lt;&lt;Lookup as StaticLookup&gt;::Source&gt;&#39;:
-            return &#39;Vec&lt;Address&gt;&#39;
-        if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
-            return &#39;Compact&lt;Balance&gt;&#39;
-        if name == &#39;&lt;BlockNumber as HasCompact&gt;::Type&#39;:
-            return &#39;Compact&lt;BlockNumber&gt;&#39;
-        if name == &#39;&lt;Moment as HasCompact&gt;::Type&#39;:
-            return &#39;Compact&lt;Moment&gt;&#39;
-        if name == &#39;&lt;InherentOfflineReport as InherentOfflineReport&gt;::Inherent&#39;:
-            return &#39;InherentOfflineReport&#39;
-        if name == &#39;RawAddress&#39;:
-            return &#39;Address&#39;
-
-        return name</code></pre>
+        return RuntimeConfigurationObject.convert_type_string(name)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1200,30 +2270,9 @@ inheritance.</p></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="scalecodec.base.ScaleType" href="#scalecodec.base.ScaleType">ScaleType</a></li>
-<li><a title="scalecodec.block.EventRecord" href="block.html#scalecodec.block.EventRecord">EventRecord</a></li>
-<li><a title="scalecodec.block.Extrinsic" href="block.html#scalecodec.block.Extrinsic">Extrinsic</a></li>
-<li><a title="scalecodec.block.GenericEvent" href="block.html#scalecodec.block.GenericEvent">GenericEvent</a></li>
-<li><a title="scalecodec.metadata.MetadataDecoder" href="metadata.html#scalecodec.metadata.MetadataDecoder">MetadataDecoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV0Decoder" href="metadata.html#scalecodec.metadata.MetadataV0Decoder">MetadataV0Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV10Decoder" href="metadata.html#scalecodec.metadata.MetadataV10Decoder">MetadataV10Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV11Decoder" href="metadata.html#scalecodec.metadata.MetadataV11Decoder">MetadataV11Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV12Decoder" href="metadata.html#scalecodec.metadata.MetadataV12Decoder">MetadataV12Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV1Decoder" href="metadata.html#scalecodec.metadata.MetadataV1Decoder">MetadataV1Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV2Decoder" href="metadata.html#scalecodec.metadata.MetadataV2Decoder">MetadataV2Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV3Decoder" href="metadata.html#scalecodec.metadata.MetadataV3Decoder">MetadataV3Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV4Decoder" href="metadata.html#scalecodec.metadata.MetadataV4Decoder">MetadataV4Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV5Decoder" href="metadata.html#scalecodec.metadata.MetadataV5Decoder">MetadataV5Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV6Decoder" href="metadata.html#scalecodec.metadata.MetadataV6Decoder">MetadataV6Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV7Decoder" href="metadata.html#scalecodec.metadata.MetadataV7Decoder">MetadataV7Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV8Decoder" href="metadata.html#scalecodec.metadata.MetadataV8Decoder">MetadataV8Decoder</a></li>
-<li><a title="scalecodec.metadata.MetadataV9Decoder" href="metadata.html#scalecodec.metadata.MetadataV9Decoder">MetadataV9Decoder</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="scalecodec.base.ScaleDecoder.PRIMITIVES"><code class="name">var <span class="ident">PRIMITIVES</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="scalecodec.base.ScaleDecoder.debug"><code class="name">var <span class="ident">debug</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1271,10 +2320,8 @@ def build_type_mapping(cls):
             for sub_type in sub_types:
                 tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(&#39;,&#39;, &#39;|&#39;))
 
-        n = 1
-        for struct_element in tuple_contents.split(&#39;,&#39;):
-            type_mapping += ((&#39;col{}&#39;.format(n), struct_element.strip().replace(&#39;|&#39;, &#39;,&#39;)),)
-            n += 1
+        for tuple_element in tuple_contents.split(&#39;,&#39;):
+            type_mapping += (tuple_element.strip().replace(&#39;|&#39;, &#39;,&#39;),)
 
         cls.type_mapping = type_mapping</code></pre>
 </details>
@@ -1290,33 +2337,7 @@ def build_type_mapping(cls):
 </summary>
 <pre><code class="python">@classmethod
 def convert_type(cls, name):
-
-    name = re.sub(r&#39;T::&#39;, &#34;&#34;, name)
-    name = re.sub(r&#39;&lt;T&gt;&#39;, &#34;&#34;, name)
-    name = re.sub(r&#39;&lt;T as Trait&gt;::&#39;, &#34;&#34;, name)
-    name = re.sub(r&#39;\n&#39;, &#34;&#34;, name)
-    name = re.sub(r&#39;(grandpa|session|slashing)::&#39;, &#34;&#34;, name)
-
-    if name == &#39;()&#39;:
-        return &#34;Null&#34;
-    if name in [&#39;Vec&lt;u8&gt;&#39;, &#39;&amp;[u8]&#39;]:
-        return &#34;Bytes&#34;
-    if name == &#39;&lt;Lookup as StaticLookup&gt;::Source&#39;:
-        return &#39;Address&#39;
-    if name == &#39;Vec&lt;&lt;Lookup as StaticLookup&gt;::Source&gt;&#39;:
-        return &#39;Vec&lt;Address&gt;&#39;
-    if name == &#39;&lt;Balance as HasCompact&gt;::Type&#39;:
-        return &#39;Compact&lt;Balance&gt;&#39;
-    if name == &#39;&lt;BlockNumber as HasCompact&gt;::Type&#39;:
-        return &#39;Compact&lt;BlockNumber&gt;&#39;
-    if name == &#39;&lt;Moment as HasCompact&gt;::Type&#39;:
-        return &#39;Compact&lt;Moment&gt;&#39;
-    if name == &#39;&lt;InherentOfflineReport as InherentOfflineReport&gt;::Inherent&#39;:
-        return &#39;InherentOfflineReport&#39;
-    if name == &#39;RawAddress&#39;:
-        return &#39;Address&#39;
-
-    return name</code></pre>
+    return RuntimeConfigurationObject.convert_type_string(name)</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleDecoder.get_decoder_class"><code class="name flex">
@@ -1359,13 +2380,13 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
     ScaleType
     &#34;&#34;&#34;
 
-    type_string = cls.convert_type(type_string)
+    warnings.warn(&#34;Use RuntimeConfigurationObject.create_scale_object() instead&#34;, DeprecationWarning)
 
     if not runtime_config:
         runtime_config = RuntimeConfiguration()
 
     decoder_class = runtime_config.get_decoder_class(
-        type_string.lower(),
+        type_string,
         spec_version_id=kwargs.get(&#39;spec_version_id&#39;, &#39;default&#39;)
     )
     if decoder_class:
@@ -1374,11 +2395,8 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
     raise NotImplementedError(&#39;Decoder class for &#34;{}&#34; not found&#39;.format(type_string))</code></pre>
 </details>
 </dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="scalecodec.base.ScaleDecoder.decode"><code class="name flex">
-<span>def <span class="ident">decode</span></span>(<span>self, check_remaining=True)</span>
+<dt id="scalecodec.base.ScaleDecoder.is_primitive"><code class="name flex">
+<span>def <span class="ident">is_primitive</span></span>(<span>type_string: str) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1386,15 +2404,70 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def decode(self, check_remaining=True):
-    self.value = self.process()
+<pre><code class="python">@staticmethod
+def is_primitive(type_string: str) -&gt; bool:
+    return type_string in (&#39;bool&#39;, &#39;u8&#39;, &#39;u16&#39;, &#39;u32&#39;, &#39;u64&#39;, &#39;u128&#39;, &#39;u256&#39;, &#39;i8&#39;, &#39;i16&#39;, &#39;i32&#39;, &#39;i64&#39;, &#39;i128&#39;,
+                           &#39;i256&#39;, &#39;h160&#39;, &#39;h256&#39;, &#39;h512&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 4]&#39;, &#39;[u8; 8]&#39;, &#39;[u8; 16]&#39;, &#39;[u8; 32]&#39;,
+                           &#39;&amp;[u8]&#39;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.base.ScaleDecoder.value"><code class="name">var <span class="ident">value</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def value(self):
+    # TODO fix
+    # if not self.decoded:
+    #     self.decode()
+    return self.value_serialized</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.base.ScaleDecoder.decode"><code class="name flex">
+<span>def <span class="ident">decode</span></span>(<span>self, data: <a title="scalecodec.base.ScaleBytes" href="#scalecodec.base.ScaleBytes">ScaleBytes</a> = None, check_remaining=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode(self, data: ScaleBytes = None, check_remaining=True):
 
-    if check_remaining and self.data.offset != self.data.length:
-        raise RemainingScaleBytesNotEmptyException(&#39;Current offset: {} / length: {}&#39;.format(self.data.offset, self.data.length))
+    if data is not None:
+        self.decoded = False
+        self.data = data
 
-    if self.data.offset &gt; self.data.length:
-        raise RemainingScaleBytesNotEmptyException(
-            &#39;No more bytes available (offset: {} / length: {})&#39;.format(self.data.offset, self.data.length))
+    if not self.decoded:
+
+        self.data_start_offset = self.data.offset
+        self.value_serialized = self.process()
+        self.decoded = True
+
+        if self.value_object is None:
+            # Default for value_object if not explicitly defined
+            self.value_object = self.value_serialized
+
+        self.data_end_offset = self.data.offset
+
+        if check_remaining and self.data.offset != self.data.length:
+            raise RemainingScaleBytesNotEmptyException(
+                f&#39;Decoding &lt;{self.__class__.__name__}&gt; - Current offset: {self.data.offset} / length: {self.data.length}&#39;
+            )
+
+        if self.data.offset &gt; self.data.length:
+            raise RemainingScaleBytesNotEmptyException(
+                f&#39;Decoding &lt;{self.__class__.__name__}&gt; - No more bytes available (needed: {self.data.offset} / total: {self.data.length})&#39;
+            )
 
     return self.value</code></pre>
 </details>
@@ -1410,15 +2483,27 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 </summary>
 <pre><code class="python">def encode(self, value=None):
 
-    if value is not None:
-        self.value = value
+    if isinstance(value, self.__class__):
+        # Accept instance of current class directly
+        self.data = value.data
+        self.value_object = self.value_object
+        self.value_serialized = self.value_serialized
+        return value.data
 
-    self.data = self.process_encode(self.value)
+    if value is not None:
+        self.value_serialized = value
+        self.decoded = True
+
+    self.data = self.process_encode(self.value_serialized)
+
+    if self.value_object is None:
+        self.value_object = self.value_serialized
+
     return self.data</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleDecoder.get_next_bool"><code class="name flex">
-<span>def <span class="ident">get_next_bool</span></span>(<span>self)</span>
+<span>def <span class="ident">get_next_bool</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1426,7 +2511,7 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_next_bool(self):
+<pre><code class="python">def get_next_bool(self) -&gt; bool:
     data = self.get_next_bytes(1)
     if data not in [b&#39;\x00&#39;, b&#39;\x01&#39;]:
         raise InvalidScaleTypeValueException(&#39;Invalid value for datatype &#34;bool&#34;&#39;)
@@ -1434,7 +2519,7 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleDecoder.get_next_bytes"><code class="name flex">
-<span>def <span class="ident">get_next_bytes</span></span>(<span>self, length)</span>
+<span>def <span class="ident">get_next_bytes</span></span>(<span>self, length) ‑> bytearray</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1442,14 +2527,14 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_next_bytes(self, length):
+<pre><code class="python">def get_next_bytes(self, length) -&gt; bytearray:
     data = self.data.get_next_bytes(length)
     self.raw_value += data.hex()
     return data</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleDecoder.get_next_u8"><code class="name flex">
-<span>def <span class="ident">get_next_u8</span></span>(<span>self)</span>
+<span>def <span class="ident">get_next_u8</span></span>(<span>self) ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1457,12 +2542,12 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_next_u8(self):
+<pre><code class="python">def get_next_u8(self) -&gt; int:
     return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;)</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleDecoder.get_remaining_bytes"><code class="name flex">
-<span>def <span class="ident">get_remaining_bytes</span></span>(<span>self)</span>
+<span>def <span class="ident">get_remaining_bytes</span></span>(<span>self) ‑> bytearray</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1470,10 +2555,23 @@ def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_remaining_bytes(self):
+<pre><code class="python">def get_remaining_bytes(self) -&gt; bytearray:
     data = self.data.get_remaining_bytes()
     self.raw_value += data.hex()
     return data</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.base.ScaleDecoder.get_used_bytes"><code class="name flex">
+<span>def <span class="ident">get_used_bytes</span></span>(<span>self) ‑> bytearray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_used_bytes(self) -&gt; bytearray:
+    return self.data.data[self.data_start_offset:self.data_end_offset]</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.base.ScaleDecoder.process"><code class="name flex">
@@ -1513,7 +2611,7 @@ def process(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def process_type(self, type_string, **kwargs):
-    obj = self.get_decoder_class(type_string, self.data, runtime_config=self.runtime_config, **kwargs)
+    obj = self.runtime_config.create_scale_object(type_string, self.data, **kwargs)
     obj.decode(check_remaining=False)
     return obj</code></pre>
 </details>
@@ -1528,7 +2626,7 @@ def process(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def serialize(self):
-    return self.value</code></pre>
+    return self.value_serialized</code></pre>
 </details>
 </dd>
 </dl>
@@ -1546,7 +2644,7 @@ inheritance.</p>
 <dd>&nbsp;</dd>
 <dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>&nbsp;</dd>
-<dt><strong><code>metadata</code></strong> :&ensp;<code>MetadataDecoder</code></dt>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
 <dd>&nbsp;</dd>
 <dt><strong><code>runtime_config</code></strong> :&ensp;<code><a title="scalecodec.base.RuntimeConfigurationObject" href="#scalecodec.base.RuntimeConfigurationObject">RuntimeConfigurationObject</a></code></dt>
 <dd>&nbsp;</dd>
@@ -1557,6 +2655,8 @@ inheritance.</p>
 </summary>
 <pre><code class="python">class ScaleType(ScaleDecoder, ABC):
 
+    scale_info_type: &#39;GenericRegistryType&#39; = None
+
     def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):
         &#34;&#34;&#34;
 
@@ -1564,13 +2664,51 @@ inheritance.</p>
         ----------
         data: ScaleBytes
         sub_type: str
-        metadata: MetadataDecoder
+        metadata: VersionedMetadata
         runtime_config: RuntimeConfigurationObject
         &#34;&#34;&#34;
         self.metadata = metadata
+
         if not data:
             data = ScaleBytes(bytearray())
-        super().__init__(data, sub_type, runtime_config=runtime_config)</code></pre>
+        super().__init__(data, sub_type, runtime_config=runtime_config)
+
+    def __getitem__(self, item):
+        return self.value_object[item]
+
+    def __iter__(self):
+        for item in self.value_object:
+            yield item
+
+    def __eq__(self, other):
+        if isinstance(other, ScaleType):
+            return other.value_serialized == self.value_serialized
+        else:
+            return other == self.value_serialized
+
+    def __gt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &gt; other.value_serialized
+        else:
+            return self.value_serialized &gt; other
+
+    def __ge__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &gt;= other.value_serialized
+        else:
+            return self.value_serialized &gt;= other
+
+    def __lt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &lt; other.value_serialized
+        else:
+            return self.value_serialized &lt; other
+
+    def __le__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized &lt;= other.value_serialized
+        else:
+            return self.value_serialized &lt;= other</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1579,30 +2717,8 @@ inheritance.</p>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scalecodec.metadata.MetadataModule" href="metadata.html#scalecodec.metadata.MetadataModule">MetadataModule</a></li>
-<li><a title="scalecodec.metadata.MetadataModuleCall" href="metadata.html#scalecodec.metadata.MetadataModuleCall">MetadataModuleCall</a></li>
-<li><a title="scalecodec.metadata.MetadataModuleCallArgument" href="metadata.html#scalecodec.metadata.MetadataModuleCallArgument">MetadataModuleCallArgument</a></li>
-<li><a title="scalecodec.metadata.MetadataModuleError" href="metadata.html#scalecodec.metadata.MetadataModuleError">MetadataModuleError</a></li>
-<li><a title="scalecodec.metadata.MetadataModuleEvent" href="metadata.html#scalecodec.metadata.MetadataModuleEvent">MetadataModuleEvent</a></li>
-<li><a title="scalecodec.metadata.MetadataModuleStorage" href="metadata.html#scalecodec.metadata.MetadataModuleStorage">MetadataModuleStorage</a></li>
-<li><a title="scalecodec.metadata.MetadataV0Event" href="metadata.html#scalecodec.metadata.MetadataV0Event">MetadataV0Event</a></li>
-<li><a title="scalecodec.metadata.MetadataV0EventModule" href="metadata.html#scalecodec.metadata.MetadataV0EventModule">MetadataV0EventModule</a></li>
-<li><a title="scalecodec.metadata.MetadataV0Module" href="metadata.html#scalecodec.metadata.MetadataV0Module">MetadataV0Module</a></li>
-<li><a title="scalecodec.metadata.MetadataV0ModuleFunction" href="metadata.html#scalecodec.metadata.MetadataV0ModuleFunction">MetadataV0ModuleFunction</a></li>
-<li><a title="scalecodec.metadata.MetadataV0ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV0ModuleStorage">MetadataV0ModuleStorage</a></li>
-<li><a title="scalecodec.metadata.MetadataV0Section" href="metadata.html#scalecodec.metadata.MetadataV0Section">MetadataV0Section</a></li>
-<li><a title="scalecodec.metadata.MetadataV12Module" href="metadata.html#scalecodec.metadata.MetadataV12Module">MetadataV12Module</a></li>
-<li><a title="scalecodec.metadata.MetadataV1Module" href="metadata.html#scalecodec.metadata.MetadataV1Module">MetadataV1Module</a></li>
-<li><a title="scalecodec.metadata.MetadataV1ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV1ModuleStorage">MetadataV1ModuleStorage</a></li>
-<li><a title="scalecodec.metadata.MetadataV4Module" href="metadata.html#scalecodec.metadata.MetadataV4Module">MetadataV4Module</a></li>
-<li><a title="scalecodec.metadata.MetadataV4ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV4ModuleStorage">MetadataV4ModuleStorage</a></li>
-<li><a title="scalecodec.metadata.MetadataV5Module" href="metadata.html#scalecodec.metadata.MetadataV5Module">MetadataV5Module</a></li>
-<li><a title="scalecodec.metadata.MetadataV5ModuleStorage" href="metadata.html#scalecodec.metadata.MetadataV5ModuleStorage">MetadataV5ModuleStorage</a></li>
-<li><a title="scalecodec.metadata.MetadataV6Module" href="metadata.html#scalecodec.metadata.MetadataV6Module">MetadataV6Module</a></li>
-<li><a title="scalecodec.metadata.MetadataV6ModuleConstants" href="metadata.html#scalecodec.metadata.MetadataV6ModuleConstants">MetadataV6ModuleConstants</a></li>
-<li><a title="scalecodec.metadata.MetadataV7ModuleStorageEntry" href="metadata.html#scalecodec.metadata.MetadataV7ModuleStorageEntry">MetadataV7ModuleStorageEntry</a></li>
+<li><a title="scalecodec.types.BitVec" href="types.html#scalecodec.types.BitVec">BitVec</a></li>
 <li><a title="scalecodec.types.Bool" href="types.html#scalecodec.types.Bool">Bool</a></li>
-<li><a title="scalecodec.types.BoxProposal" href="types.html#scalecodec.types.BoxProposal">BoxProposal</a></li>
 <li><a title="scalecodec.types.Bytes" href="types.html#scalecodec.types.Bytes">Bytes</a></li>
 <li><a title="scalecodec.types.CallBytes" href="types.html#scalecodec.types.CallBytes">CallBytes</a></li>
 <li><a title="scalecodec.types.Compact" href="types.html#scalecodec.types.Compact">Compact</a></li>
@@ -1612,6 +2728,7 @@ inheritance.</p>
 <li><a title="scalecodec.types.GenericAddress" href="types.html#scalecodec.types.GenericAddress">GenericAddress</a></li>
 <li><a title="scalecodec.types.GenericBlock" href="types.html#scalecodec.types.GenericBlock">GenericBlock</a></li>
 <li><a title="scalecodec.types.GenericCall" href="types.html#scalecodec.types.GenericCall">GenericCall</a></li>
+<li><a title="scalecodec.types.GenericExtrinsic" href="types.html#scalecodec.types.GenericExtrinsic">GenericExtrinsic</a></li>
 <li><a title="scalecodec.types.H160" href="types.html#scalecodec.types.H160">H160</a></li>
 <li><a title="scalecodec.types.H256" href="types.html#scalecodec.types.H256">H256</a></li>
 <li><a title="scalecodec.types.H512" href="types.html#scalecodec.types.H512">H512</a></li>
@@ -1622,19 +2739,29 @@ inheritance.</p>
 <li><a title="scalecodec.types.I32" href="types.html#scalecodec.types.I32">I32</a></li>
 <li><a title="scalecodec.types.I64" href="types.html#scalecodec.types.I64">I64</a></li>
 <li><a title="scalecodec.types.I8" href="types.html#scalecodec.types.I8">I8</a></li>
+<li><a title="scalecodec.types.Map" href="types.html#scalecodec.types.Map">Map</a></li>
 <li><a title="scalecodec.types.Null" href="types.html#scalecodec.types.Null">Null</a></li>
 <li><a title="scalecodec.types.Option" href="types.html#scalecodec.types.Option">Option</a></li>
 <li><a title="scalecodec.types.OptionBytes" href="types.html#scalecodec.types.OptionBytes">OptionBytes</a></li>
 <li><a title="scalecodec.types.Set" href="types.html#scalecodec.types.Set">Set</a></li>
-<li><a title="scalecodec.types.String" href="types.html#scalecodec.types.String">String</a></li>
 <li><a title="scalecodec.types.Struct" href="types.html#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.types.Tuple" href="types.html#scalecodec.types.Tuple">Tuple</a></li>
+<li><a title="scalecodec.types.TypeNotSupported" href="types.html#scalecodec.types.TypeNotSupported">TypeNotSupported</a></li>
 <li><a title="scalecodec.types.U128" href="types.html#scalecodec.types.U128">U128</a></li>
 <li><a title="scalecodec.types.U16" href="types.html#scalecodec.types.U16">U16</a></li>
+<li><a title="scalecodec.types.U256" href="types.html#scalecodec.types.U256">U256</a></li>
 <li><a title="scalecodec.types.U32" href="types.html#scalecodec.types.U32">U32</a></li>
 <li><a title="scalecodec.types.U64" href="types.html#scalecodec.types.U64">U64</a></li>
 <li><a title="scalecodec.types.U8" href="types.html#scalecodec.types.U8">U8</a></li>
 <li><a title="scalecodec.types.Vec" href="types.html#scalecodec.types.Vec">Vec</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.base.ScaleType.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : GenericRegistryType</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="scalecodec.base.ScaleDecoder" href="#scalecodec.base.ScaleDecoder">ScaleDecoder</a></b></code>:
@@ -1697,10 +2824,18 @@ type(name, bases, dict) -&gt; a new type</p></div>
 <li>
 <h4><code><a title="scalecodec.base.RuntimeConfigurationObject" href="#scalecodec.base.RuntimeConfigurationObject">RuntimeConfigurationObject</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.add_contract_metadata_dict_to_type_registry" href="#scalecodec.base.RuntimeConfigurationObject.add_contract_metadata_dict_to_type_registry">add_contract_metadata_dict_to_type_registry</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.add_portable_registry" href="#scalecodec.base.RuntimeConfigurationObject.add_portable_registry">add_portable_registry</a></code></li>
 <li><code><a title="scalecodec.base.RuntimeConfigurationObject.all_subclasses" href="#scalecodec.base.RuntimeConfigurationObject.all_subclasses">all_subclasses</a></code></li>
 <li><code><a title="scalecodec.base.RuntimeConfigurationObject.clear_type_registry" href="#scalecodec.base.RuntimeConfigurationObject.clear_type_registry">clear_type_registry</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.convert_type_string" href="#scalecodec.base.RuntimeConfigurationObject.convert_type_string">convert_type_string</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.create_scale_object" href="#scalecodec.base.RuntimeConfigurationObject.create_scale_object">create_scale_object</a></code></li>
 <li><code><a title="scalecodec.base.RuntimeConfigurationObject.get_decoder_class" href="#scalecodec.base.RuntimeConfigurationObject.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.get_decoder_class_for_scale_info_definition" href="#scalecodec.base.RuntimeConfigurationObject.get_decoder_class_for_scale_info_definition">get_decoder_class_for_scale_info_definition</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.get_runtime_id_from_upgrades" href="#scalecodec.base.RuntimeConfigurationObject.get_runtime_id_from_upgrades">get_runtime_id_from_upgrades</a></code></li>
 <li><code><a title="scalecodec.base.RuntimeConfigurationObject.set_active_spec_version_id" href="#scalecodec.base.RuntimeConfigurationObject.set_active_spec_version_id">set_active_spec_version_id</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.set_runtime_upgrades_head" href="#scalecodec.base.RuntimeConfigurationObject.set_runtime_upgrades_head">set_runtime_upgrades_head</a></code></li>
+<li><code><a title="scalecodec.base.RuntimeConfigurationObject.update_from_scale_info_types" href="#scalecodec.base.RuntimeConfigurationObject.update_from_scale_info_types">update_from_scale_info_types</a></code></li>
 <li><code><a title="scalecodec.base.RuntimeConfigurationObject.update_type_registry" href="#scalecodec.base.RuntimeConfigurationObject.update_type_registry">update_type_registry</a></code></li>
 <li><code><a title="scalecodec.base.RuntimeConfigurationObject.update_type_registry_types" href="#scalecodec.base.RuntimeConfigurationObject.update_type_registry_types">update_type_registry_types</a></code></li>
 </ul>
@@ -1718,7 +2853,6 @@ type(name, bases, dict) -&gt; a new type</p></div>
 <li>
 <h4><code><a title="scalecodec.base.ScaleDecoder" href="#scalecodec.base.ScaleDecoder">ScaleDecoder</a></code></h4>
 <ul class="two-column">
-<li><code><a title="scalecodec.base.ScaleDecoder.PRIMITIVES" href="#scalecodec.base.ScaleDecoder.PRIMITIVES">PRIMITIVES</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.build_type_mapping" href="#scalecodec.base.ScaleDecoder.build_type_mapping">build_type_mapping</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.convert_type" href="#scalecodec.base.ScaleDecoder.convert_type">convert_type</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.debug" href="#scalecodec.base.ScaleDecoder.debug">debug</a></code></li>
@@ -1729,6 +2863,8 @@ type(name, bases, dict) -&gt; a new type</p></div>
 <li><code><a title="scalecodec.base.ScaleDecoder.get_next_bytes" href="#scalecodec.base.ScaleDecoder.get_next_bytes">get_next_bytes</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.get_next_u8" href="#scalecodec.base.ScaleDecoder.get_next_u8">get_next_u8</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.get_remaining_bytes" href="#scalecodec.base.ScaleDecoder.get_remaining_bytes">get_remaining_bytes</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.get_used_bytes" href="#scalecodec.base.ScaleDecoder.get_used_bytes">get_used_bytes</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.is_primitive" href="#scalecodec.base.ScaleDecoder.is_primitive">is_primitive</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.process" href="#scalecodec.base.ScaleDecoder.process">process</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.process_encode" href="#scalecodec.base.ScaleDecoder.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.process_type" href="#scalecodec.base.ScaleDecoder.process_type">process_type</a></code></li>
@@ -1737,10 +2873,14 @@ type(name, bases, dict) -&gt; a new type</p></div>
 <li><code><a title="scalecodec.base.ScaleDecoder.sub_type" href="#scalecodec.base.ScaleDecoder.sub_type">sub_type</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.type_mapping" href="#scalecodec.base.ScaleDecoder.type_mapping">type_mapping</a></code></li>
 <li><code><a title="scalecodec.base.ScaleDecoder.type_string" href="#scalecodec.base.ScaleDecoder.type_string">type_string</a></code></li>
+<li><code><a title="scalecodec.base.ScaleDecoder.value" href="#scalecodec.base.ScaleDecoder.value">value</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="scalecodec.base.ScaleType" href="#scalecodec.base.ScaleType">ScaleType</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.base.ScaleType.scale_info_type" href="#scalecodec.base.ScaleType.scale_info_type">scale_info_type</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="scalecodec.base.Singleton" href="#scalecodec.base.Singleton">Singleton</a></code></h4>

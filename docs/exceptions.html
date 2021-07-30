@@ -48,6 +48,10 @@ class RemainingScaleBytesNotEmptyException(Exception):
 
 
 class InvalidScaleTypeValueException(Exception):
+    pass
+
+
+class MetadataCallFunctionNotFound(ValueError):
     pass</code></pre>
 </details>
 </section>
@@ -75,6 +79,26 @@ class InvalidScaleTypeValueException(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="scalecodec.exceptions.MetadataCallFunctionNotFound"><code class="flex name class">
+<span>class <span class="ident">MetadataCallFunctionNotFound</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MetadataCallFunctionNotFound(ValueError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
 </ul>
@@ -116,6 +140,9 @@ class InvalidScaleTypeValueException(Exception):
 <ul>
 <li>
 <h4><code><a title="scalecodec.exceptions.InvalidScaleTypeValueException" href="#scalecodec.exceptions.InvalidScaleTypeValueException">InvalidScaleTypeValueException</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scalecodec.exceptions.MetadataCallFunctionNotFound" href="#scalecodec.exceptions.MetadataCallFunctionNotFound">MetadataCallFunctionNotFound</a></code></h4>
 </li>
 <li>
 <h4><code><a title="scalecodec.exceptions.RemainingScaleBytesNotEmptyException" href="#scalecodec.exceptions.RemainingScaleBytesNotEmptyException">RemainingScaleBytesNotEmptyException</a></code></h4>
