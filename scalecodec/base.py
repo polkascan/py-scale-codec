@@ -564,7 +564,6 @@ class ScaleDecoder(ABC):
             self.runtime_config = RuntimeConfiguration()
 
         self.data = data
-        self.raw_value = ''
 
         self.value_object = None
         self.value_serialized = None
@@ -613,7 +612,6 @@ class ScaleDecoder(ABC):
 
     def get_next_bytes(self, length) -> bytearray:
         data = self.data.get_next_bytes(length)
-        self.raw_value += data.hex()
         return data
 
     def get_next_u8(self) -> int:
@@ -627,7 +625,6 @@ class ScaleDecoder(ABC):
 
     def get_remaining_bytes(self) -> bytearray:
         data = self.data.get_remaining_bytes()
-        self.raw_value += data.hex()
         return data
 
     def get_used_bytes(self) -> bytearray:

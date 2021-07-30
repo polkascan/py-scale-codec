@@ -1511,7 +1511,7 @@ class OpaqueCall(Bytes):
         try:
             call_obj = self.runtime_config.create_scale_object(
                 type_string='Call',
-                data=ScaleBytes('0x{}'.format(self.raw_value)),
+                data=ScaleBytes(self.get_used_bytes()),
                 metadata=self.metadata
             )
 
