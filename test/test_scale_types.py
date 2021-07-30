@@ -18,7 +18,7 @@ import datetime
 import os
 import unittest
 
-from scalecodec import GenericContractExecResult
+from scalecodec.types import GenericContractExecResult
 
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException, RuntimeConfiguration, RuntimeConfigurationObject

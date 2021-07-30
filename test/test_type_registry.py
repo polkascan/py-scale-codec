@@ -18,7 +18,7 @@ import os
 import unittest
 from pathlib import Path
 
-from scalecodec.block import Extrinsic
+from scalecodec.types import Extrinsic
 
 from scalecodec.base import RuntimeConfiguration, ScaleBytes, ScaleDecoder
 from scalecodec.type_registry import load_type_registry_preset

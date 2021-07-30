@@ -17,7 +17,7 @@
 import unittest
 
 from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
-from scalecodec.block import Extrinsic
+from scalecodec.types import Extrinsic
 from scalecodec.type_registry import load_type_registry_preset
 
 from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
