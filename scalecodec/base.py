@@ -17,8 +17,11 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
+
+if TYPE_CHECKING:
+    from scalecodec.types import GenericMetadataVersioned, GenericRegistryType
 
 
 class Singleton(type):
@@ -302,7 +305,7 @@ class RuntimeConfigurationObject:
             elif block_number > self.type_registry['runtime_upgrades'][-1][0]:
                 self.type_registry['runtime_upgrades'].append([block_number, -1])
 
-    def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: 'RegistryType'):
+    def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: 'GenericRegistryType'):
 
         decoder_class = None
         base_decoder_class = None
