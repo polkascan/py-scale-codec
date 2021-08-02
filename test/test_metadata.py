@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import pickle
 import unittest
 
 from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfigurationObject
@@ -98,6 +99,22 @@ class TestMetadataRegistry(unittest.TestCase):
 
         self.assertGreater(len(metadata_obj[1][1]['pallets']), 0)
         self.assertGreater(len(metadata_obj.value[1]['V14']['pallets']), 0)
+
+
+    def test_pickle_test(self):
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V14'])
+        )
+        metadata_obj.decode()
+
+        # for name, decoder_class in self.runtime_config.type_registry['types'].items():
+        #     import __main__
+        #
+        #     globals()[decoder_class.__name__] = decoder_class
+
+        # assert(type(metadata_obj) is globals()['MetadataVersioned'])
+
+        pickle_data = pickle.dumps(metadata_obj)
 
 
 

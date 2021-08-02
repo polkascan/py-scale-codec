@@ -90,10 +90,10 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'new_uncles': [
                     {
-                        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "parent_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
                         "number": 0,
-                        "stateRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                        "extrinsicsRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "state_root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "extrinsics_root": "0x0000000000000000000000000000000000000000000000000000000000000000",
                         "digest": {"logs": []}
                     }
                 ]
@@ -1067,7 +1067,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
                     "web": {"None": None},
                     "riot": {"Raw": "Test3"},
                     "email": {"None": None},
-                    "pgpFingerprint": None,
+                    "pgp_fingerprint": None,
                     "image": {"None": None},
                     "twitter": {"None": None}
                 }
@@ -1118,8 +1118,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'ImOnline',
             'call_function': 'heartbeat',
             'call_args': {
-                'heartbeat': {"blockNumber": 500000, "networkState": {"peerId": "0x012345", "externalAddresses": []},
-                              "sessionIndex": 1, "authorityIndex": 3},
+                'heartbeat': {"block_number": 500000, "network_state": {"peer_id": "0x012345", "external_addresses": []},
+                              "session_index": 1, "authority_index": 3},
                 '_signature': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
@@ -1136,28 +1136,28 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_args': {
                 'heads': [{
                     'candidate': {
-                        "parachainIndex": 1,
+                        "parachain_index": 1,
                         "collator": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                        "relayParent": "0x1ec24d8af5e02482f603722c203659c3373304098d26c6b65be03a2b9e79cc0d",
+                        "relay_parent": "0x1ec24d8af5e02482f603722c203659c3373304098d26c6b65be03a2b9e79cc0d",
                         "signature": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-                        "headData": "0x012345",
-                        "balanceUploads": [],
-                        "egressQueueRoots": [],
+                        "head_data": "0x012345",
+                        "balance_uploads": [],
+                        "egress_queue_roots": [],
                         "fees": 0,
-                        "povBlockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                        "blockDataHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "pov_block_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "block_data_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
                         "commitments": {
                             "fees": 0,
-                            "upwardMessages": [],
-                            "horizontalMessages": [],
-                            "headData": "",
-                            "hrmpWatermark": 1,
-                            "newValidationCode": None,
-                            "processedDownwardMessages": 1
+                            "upward_messages": [],
+                            "horizontal_messages": [],
+                            "head_data": "",
+                            "hrmp_watermark": 1,
+                            "new_validation_code": None,
+                            "processed_downward_messages": 1
                         }
                     },
-                    'validityVotes': [],
-                    'validatorIndices': []
+                    'validity_votes': [],
+                    'validator_indices': []
                 }]
             }
         })

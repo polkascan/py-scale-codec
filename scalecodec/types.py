@@ -2111,7 +2111,7 @@ class GenericStorageEntryMetadata(Struct):
         elif 'DoubleMap' in self.value['type']:
             return [
                 self.value['type']['DoubleMap']['hasher'],
-                self.value['type']['DoubleMap']['key2Hasher']
+                self.value['type']['DoubleMap']['key2_hasher']
             ]
         elif 'NMap' in self.value['type']:
             return self.value['type']['NMap']['hashers']
@@ -2492,8 +2492,8 @@ class GenericPreRuntime(Struct):
                 babe_predigest_value = list(babe_predigest.value.values())[0]
 
                 value['data'] = babe_predigest_value
-                self.authority_index = babe_predigest_value['authorityIndex']
-                self.slot_number = babe_predigest_value['slotNumber']
+                self.authority_index = babe_predigest_value['authority_index']
+                self.slot_number = babe_predigest_value['slot_number']
 
         if value['engine'] == 'aura':
 
@@ -2504,7 +2504,7 @@ class GenericPreRuntime(Struct):
             aura_predigest.decode()
 
             value['data'] = aura_predigest.value
-            self.slot_number = aura_predigest.value['slotNumber']
+            self.slot_number = aura_predigest.value['slot_number']
 
         return value
 

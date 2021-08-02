@@ -50,7 +50,7 @@
              ["deposit", "Balance"],
              ["closes", "Option<BlockNumber>"],
              ["tips", "Vec<OpenTipTip>"],
-             ["findersFee", "bool"]
+             ["finders_fee", "bool"]
           ]
         }
       }
@@ -85,10 +85,10 @@
         "Heartbeat": {
           "type": "struct",
           "type_mapping": [
-             ["blockNumber", "BlockNumber"],
-             ["networkState", "OpaqueNetworkState"],
-             ["sessionIndex", "SessionIndex"],
-             ["authorityIndex", "AuthIndex"]
+             ["block_number", "BlockNumber"],
+             ["network_state", "OpaqueNetworkState"],
+             ["session_index", "SessionIndex"],
+             ["authority_index", "AuthIndex"]
           ]
         },
         "DispatchInfo": {
@@ -96,7 +96,7 @@
           "type_mapping": [
              ["weight", "Weight"],
              ["class", "DispatchClass"],
-             ["paysFee", "bool"]
+             ["pays_fee", "bool"]
           ]
         }
       }
@@ -107,11 +107,11 @@
         "Heartbeat": {
           "type": "struct",
           "type_mapping": [
-             ["blockNumber", "BlockNumber"],
-             ["networkState", "OpaqueNetworkState"],
-             ["sessionIndex", "SessionIndex"],
-             ["authorityIndex", "AuthIndex"],
-             ["validatorsLen", "u32"]
+             ["block_number", "BlockNumber"],
+             ["network_state", "OpaqueNetworkState"],
+             ["session_index", "SessionIndex"],
+             ["authority_index", "AuthIndex"],
+             ["validators_len", "u32"]
           ]
         },
         "DispatchInfo": {
@@ -119,7 +119,7 @@
           "type_mapping": [
              ["weight", "Weight"],
              ["class", "DispatchClass"],
-             ["paysFee", "Pays"]
+             ["pays_fee", "Pays"]
           ]
         }
       }

@@ -173,7 +173,7 @@ class TestScaleTypes(unittest.TestCase):
     def test_validatorprefs_struct(self):
         obj = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145', ScaleBytes("0x0c00"))
         obj.decode()
-        self.assertEqual(obj.value, {'unstakeThreshold': 3, 'validatorPayment': 0})
+        self.assertEqual(obj.value, {'unstake_threshold': 3, 'validator_payment': 0})
 
     def test_tuple(self):
         obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))

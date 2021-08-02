@@ -80,7 +80,7 @@
              ["web", "Data"],
              ["riot", "Data"],
              ["email", "Data"],
-             ["pgpFingerprint", "Option<H160>"],
+             ["pgp_fingerprint", "Option<H160>"],
              ["image", "Data"]
           ]
         }
@@ -98,7 +98,7 @@
              ["web", "Data"],
              ["riot", "Data"],
              ["email", "Data"],
-             ["pgpFingerprint", "Option<H160>"],
+             ["pgp_fingerprint", "Option<H160>"],
              ["image", "Data"],
              ["twitter", "Data"]
           ]
@@ -111,8 +111,8 @@
         "SlashingSpans": {
           "type": "struct",
           "type_mapping": [
-             ["spanIndex", "SpanIndex"],
-             ["lastStart", "EraIndex"],
+             ["span_index", "SpanIndex"],
+             ["last_start", "EraIndex"],
              ["prior", "Vec<EraIndex>"]
           ]
         }
@@ -124,9 +124,9 @@
         "SlashingSpans": {
           "type": "struct",
           "type_mapping": [
-             ["spanIndex", "SpanIndex"],
-             ["lastStart", "EraIndex"],
-             ["lastNonzeroSlash", "EraIndex"],
+             ["span_index", "SpanIndex"],
+             ["last_start", "EraIndex"],
+             ["last_nonzero_slash", "EraIndex"],
              ["prior", "Vec<EraIndex>"]
           ]
         }
@@ -184,7 +184,7 @@
               "Vec<UnlockChunk>"
             ],
             [
-              "claimedRewards",
+              "claimed_rewards",
               "Vec<EraIndex>"
             ]
           ]
@@ -243,10 +243,10 @@
         "Heartbeat": {
           "type": "struct",
           "type_mapping": [
-             ["blockNumber", "BlockNumber"],
-             ["networkState", "OpaqueNetworkState"],
-             ["sessionIndex", "SessionIndex"],
-             ["authorityIndex", "AuthIndex"]
+             ["block_number", "BlockNumber"],
+             ["network_state", "OpaqueNetworkState"],
+             ["session_index", "SessionIndex"],
+             ["authority_index", "AuthIndex"]
           ]
         },
         "DispatchInfo": {
@@ -254,7 +254,7 @@
           "type_mapping": [
              ["weight", "Weight"],
              ["class", "DispatchClass"],
-             ["paysFee", "bool"]
+             ["pays_fee", "bool"]
           ]
         }
       }
@@ -265,11 +265,11 @@
         "Heartbeat": {
           "type": "struct",
           "type_mapping": [
-             ["blockNumber", "BlockNumber"],
-             ["networkState", "OpaqueNetworkState"],
-             ["sessionIndex", "SessionIndex"],
-             ["authorityIndex", "AuthIndex"],
-             ["validatorsLen", "u32"]
+             ["block_number", "BlockNumber"],
+             ["network_state", "OpaqueNetworkState"],
+             ["session_index", "SessionIndex"],
+             ["authority_index", "AuthIndex"],
+             ["validators_len", "u32"]
           ]
         },
         "DispatchInfo": {
@@ -277,7 +277,7 @@
           "type_mapping": [
              ["weight", "Weight"],
              ["class", "DispatchClass"],
-             ["paysFee", "Pays"]
+             ["pays_fee", "Pays"]
           ]
         }
       }
@@ -309,7 +309,7 @@
              ["deposit", "Balance"],
              ["closes", "Option<BlockNumber>"],
              ["tips", "Vec<OpenTipTip>"],
-             ["findersFee", "bool"]
+             ["finders_fee", "bool"]
           ]
         }
       }

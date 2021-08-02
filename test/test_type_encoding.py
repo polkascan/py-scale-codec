@@ -208,7 +208,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_struct_encode_decode(self):
 
-        value = {'unstakeThreshold': 3, 'validatorPayment': 0}
+        value = {'unstake_threshold': 3, 'validator_payment': 0}
         scale_data = ScaleBytes("0x0c00")
 
         obj = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145')

@@ -24,7 +24,7 @@
           "Type"
         ],
         [
-          "key2Hasher",
+          "key2_hasher",
           "StorageHasherV9"
         ]
       ]
@@ -284,7 +284,7 @@
           "Type"
         ],
         [
-          "key2Hasher",
+          "key2_hasher",
           "StorageHasherV10"
         ]
       ]
@@ -460,7 +460,7 @@
           "Type"
         ],
         [
-          "key2Hasher",
+          "key2_hasher",
           "StorageHasherV11"
         ]
       ]
@@ -475,7 +475,7 @@
           "u8"
         ],
         [
-          "signedExtensions",
+          "signed_extensions",
           "Vec<Text>"
         ]
       ]
@@ -735,7 +735,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "keyVec",
+          "keys",
           "Vec<Type>"
         ],
         [
@@ -1480,19 +1480,19 @@
           "Compact<Balance>"
         ],
         [
-          "specVersion",
+          "spec_version",
           "u32"
         ],
         [
-          "transactionVersion",
+          "transaction_version",
           "u32"
         ],
         [
-          "genesisHash",
+          "genesis_hash",
           "Hash"
         ],
         [
-          "blockHash",
+          "block_hash",
           "Hash"
         ]
       ]

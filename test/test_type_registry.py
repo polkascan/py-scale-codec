@@ -120,7 +120,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
               "Vec<UnlockChunk>"
             ],
             [
-              "lastReward",
+              "last_reward",
               "Option<EraIndex>"
             ]
           ])
@@ -146,7 +146,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
               "Vec<UnlockChunk>"
             ],
             [
-              "claimedRewards",
+              "claimed_rewards",
               "Vec<EraIndex>"
             ]
           ])
