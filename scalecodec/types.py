@@ -202,9 +202,8 @@ class Str(Bytes):
         return self.value
 
 
-class String(Bytes):
-    def serialize(self):
-        return self.value
+class String(Str):
+    pass
 
 
 class OptionBytes(ScaleType):
@@ -1870,6 +1869,16 @@ class GenericMetadataVersioned(Tuple):
             raise ValueError(f'Pallet for index "{index}" not found')
 
 
+class GenericStringType(String):
+    @property
+    def name(self):
+        return None
+
+    @property
+    def type(self):
+        return self.value
+
+
 class GenericRegistryType(Struct):
 
     @property
@@ -1891,6 +1900,18 @@ class GenericRegistryType(Struct):
 
 class GenericField(Struct):
 
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def docs(self):
+        return self.value['docs']
+
+    @property
+    def type(self):
+        return self.convert_type(self.value['typeName'])
+
     def get_type_string(self):
         return f"scale_info::{self.value['type']}"
 
@@ -1910,8 +1931,16 @@ class GenericField(Struct):
 class GenericVariant(Struct):
 
     @property
+    def args(self):
+        return self.value_object['fields']
+
+    @property
     def name(self):
         return self.value['name']
+
+    @property
+    def docs(self):
+        return self.value['docs']
 
     def process_encode(self, value):
         if 'index' not in value:
@@ -2002,6 +2031,42 @@ class ScaleInfoCallMetadata(Struct):
     def get_type_string(self):
         return f"scale_info::{self.value['ty']}"
 
+    @property
+    def calls(self):
+        if self.value_object:
+            call_enum = self.runtime_config.get_decoder_class(
+                self.get_type_string()
+            )
+            return call_enum.scale_info_type['def'][1]['variants']
+        else:
+            return []
+
+
+class ScaleInfoPalletErrorMetadata(Struct):
+    def get_type_string(self):
+        return f"scale_info::{self.value['ty']}"
+
+    @property
+    def errors(self):
+        if self.value_object:
+            error_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return error_enum.scale_info_type['def'][1]['variants']
+        else:
+            return []
+
+
+class ScaleInfoPalletEventMetadata(Struct):
+    def get_type_string(self):
+        return f"scale_info::{self.value['ty']}"
+
+    @property
+    def events(self):
+        if self.value_object:
+            event_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return event_enum.scale_info_type['def'][1]['variants']
+        else:
+            return []
+
 
 class GenericPalletMetadata(Struct):
 
@@ -2025,18 +2090,10 @@ class GenericPalletMetadata(Struct):
 
     @property
     def events(self):
+        events = self.value_object['events'].value_object
 
-        if 'event' in self.value_object:
-            if self.value_object['event'].value_object:
-                return self.value_object['event'].value_object.value['ty']
-        elif 'events' in self.value_object:
-
-            events = self.value_object['events'].value_object
-
-            if events:
-                return events.value_object
-        else:
-            raise ValueError('Events not present in pallet')
+        if events:
+            return events.value_object
 
     @property
     def constants(self):
@@ -2044,15 +2101,7 @@ class GenericPalletMetadata(Struct):
 
     @property
     def errors(self):
-        if 'error' in self.value_object:
-            if self.value_object['error'].value_object:
-                return self.value_object['error'].value_object.value['ty']
-
-        elif 'errors' in self.value_object:
-            return self.value_object['errors'].value_object
-
-        else:
-            raise ValueError('Events not present in pallet')
+        return self.value_object['errors'].value_object
 
     def get_storage_function(self, name: str):
         storage_functions = self.value_object['storage'].value_object
@@ -2061,6 +2110,30 @@ class GenericPalletMetadata(Struct):
             for storage_function in storage_functions['entries']:
                 if storage_function.value['name'] == name:
                     return storage_function
+
+
+class ScaleInfoPalletMetadata(GenericPalletMetadata):
+
+    @property
+    def calls(self):
+        if self.value_object['calls'].value_object:
+            return self.value_object['calls'].value_object.calls
+        else:
+            return []
+
+    @property
+    def events(self):
+        if self.value_object['event'].value_object:
+            return self.value_object['event'].value_object.events
+        else:
+            return []
+
+    @property
+    def errors(self):
+        if self.value_object['error'].value_object:
+            return self.value_object['error'].value_object.errors
+        else:
+            return []
 
 
 class GenericStorageEntryMetadata(Struct):
@@ -2124,6 +2197,24 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
     def get_type_string_for_type(self, ty):
         return f'scale_info::{ty}'
 
+    def get_params_type_string(self):
+        if 'Plain' in self.value['type']:
+            return []
+        elif 'Map' in self.value['type']:
+            return [self.get_type_string_for_type(self.value['type']['Map']['key'])]
+        elif 'DoubleMap' in self.value['type']:
+            return [
+                self.get_type_string_for_type(self.value['type']['DoubleMap']['key1']),
+                self.get_type_string_for_type(self.value['type']['DoubleMap']['key2'])
+            ]
+        elif 'NMap' in self.value['type']:
+            key_type_string = self.get_type_string_for_type(self.value['type']['NMap']['keys'])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            return nmap_key_scale_type.type_mapping
+        else:
+            raise NotImplementedError()
+
 
 class GenericEventMetadata(Struct):
 
@@ -2133,7 +2224,7 @@ class GenericEventMetadata(Struct):
 
     @property
     def args(self):
-        return self.value['args']
+        return self.value_object['args']
 
 
 class GenericErrorMetadata(Struct):

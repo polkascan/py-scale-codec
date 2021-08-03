@@ -1,6 +1,6 @@
 {
   "types": {
-    "Type": "Bytes",
+    "Type": "GenericStringType",
     "Text": "String",
     "Hash": "H256",
     "Call": "GenericCall",
@@ -925,7 +925,7 @@
     },
     "PalletMetadataV14": {
       "type": "struct",
-      "base_class": "GenericPalletMetadata",
+      "base_class": "ScaleInfoPalletMetadata",
       "type_mapping": [
         [
           "name",
@@ -1121,6 +1121,7 @@
     },
     "PalletEventMetadataV14": {
       "type": "struct",
+      "base_class": "ScaleInfoPalletEventMetadata",
       "type_mapping": [
         [
           "ty",
@@ -1152,6 +1153,7 @@
     },
     "PalletErrorMetadataV14": {
       "type": "struct",
+      "base_class": "ScaleInfoPalletErrorMetadata",
       "type_mapping": [
         [
           "ty",
