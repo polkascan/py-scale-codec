@@ -2197,21 +2197,33 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
     def get_type_string_for_type(self, ty):
         return f'scale_info::{ty}'
 
+    def get_value_type_string(self):
+        if 'Plain' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Plain'])
+        elif 'Map' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Map']['value'])
+        else:
+            raise NotImplementedError()
+
     def get_params_type_string(self):
         if 'Plain' in self.value['type']:
             return []
         elif 'Map' in self.value['type']:
-            return [self.get_type_string_for_type(self.value['type']['Map']['key'])]
-        elif 'DoubleMap' in self.value['type']:
-            return [
-                self.get_type_string_for_type(self.value['type']['DoubleMap']['key1']),
-                self.get_type_string_for_type(self.value['type']['DoubleMap']['key2'])
-            ]
-        elif 'NMap' in self.value['type']:
-            key_type_string = self.get_type_string_for_type(self.value['type']['NMap']['keys'])
+            key_type_string = self.get_type_string_for_type(self.value['type']['Map']['key'])
             nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
 
-            return nmap_key_scale_type.type_mapping
+            if nmap_key_scale_type.type_mapping:
+                return nmap_key_scale_type.type_mapping
+            else:
+                return [key_type_string]
+        else:
+            raise NotImplementedError()
+
+    def get_param_hashers(self):
+        if 'Plain' in self.value['type']:
+            return ['Twox64Concat']
+        elif 'Map' in self.value['type']:
+            return self.value['type']['Map']['hashers']
         else:
             raise NotImplementedError()
 

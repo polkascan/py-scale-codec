@@ -147,7 +147,7 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_unnamed_struct_one_element(self):
         # ('sp_arithmetic::per_things::percent', <class 'abc.scale_info::205'>)
         obj = self.runtime_config.create_scale_object(
-            'scale_info::205',
+            'scale_info::206',
             ScaleBytes("0x04")
         )
         obj.decode()
@@ -159,7 +159,7 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_unnamed_struct_multiple_elements(self):
         # pallet_democracy::vote::PriorLock
         obj = self.runtime_config.create_scale_object(
-            'scale_info::376',
+            'scale_info::378',
             ScaleBytes("0x0c00000022000000000000000000000000000000")
         )
 
@@ -205,7 +205,7 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_weak_bounded_vec(self):
         # 87 = ['frame_support', 'storage', 'weak_bounded_vec', 'WeakBoundedVec']
         obj = self.runtime_config.create_scale_object(
-            'scale_info::318',
+            'scale_info::319',
             ScaleBytes("0x0401020304050607080a00000000000000000000000000000000")
         )
         obj.decode()
@@ -216,10 +216,9 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual('0x0401020304050607080a00000000000000000000000000000000', data.to_hex())
 
     def test_bounded_vec(self):
-        # 'scale_info::92' = frame_support::storage::bounded_vec::BoundedVec
-        # 455 -> 457
+        # 'scale_info::91' = frame_support::storage::bounded_vec::BoundedVec
         obj = self.runtime_config.create_scale_object(
-            'scale_info::455',
+            'scale_info::458',
             ScaleBytes("0x04d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d91ead4e484ff0e6731477381b8baaf891170121eb90f26b980b07512f2c2f02601000000")
         )
 
@@ -254,9 +253,9 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual('0x0854657374313233', data.to_hex())
 
     def test_era(self):
-        # 'scale_info::498' = sp_runtime::generic::era::era
+        # 'scale_info::506' = sp_runtime::generic::era::era
         obj = self.runtime_config.create_scale_object(
-            'scale_info::498',
+            'scale_info::506',
             ScaleBytes("0x4e9c")
         )
         obj.decode()

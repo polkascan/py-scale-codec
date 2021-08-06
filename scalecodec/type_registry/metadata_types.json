@@ -1007,14 +1007,6 @@
         [
           "Map",
           "MapTypeV14"
-        ],
-        [
-          "DoubleMap",
-          "DoubleMapTypeV14"
-        ],
-        [
-          "NMap",
-          "NMapTypeV14"
         ]
       ]
     },
@@ -1022,54 +1014,12 @@
       "type": "struct",
       "type_mapping": [
         [
-          "hasher",
-          "StorageHasherV11"
+          "hashers",
+          "Vec<StorageHasherV13>"
         ],
         [
           "key",
           "SiLookupTypeId"
-        ],
-        [
-          "value",
-          "SiLookupTypeId"
-        ]
-      ]
-    },
-    "DoubleMapTypeV14": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "hasher",
-          "StorageHasherV11"
-        ],
-        [
-          "key1",
-          "SiLookupTypeId"
-        ],
-        [
-          "key2",
-          "SiLookupTypeId"
-        ],
-        [
-          "value",
-          "SiLookupTypeId"
-        ],
-        [
-          "key2_hasher",
-          "StorageHasherV11"
-        ]
-      ]
-    },
-    "NMapTypeV14": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "keys",
-          "SiLookupTypeId"
-        ],
-        [
-          "hashers",
-          "Vec<StorageHasherV13>"
         ],
         [
           "value",
