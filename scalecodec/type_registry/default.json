@@ -1934,7 +1934,7 @@
           "NetworkId"
         ],
         [
-          "index",
+          "key",
           "[u8; 20]"
         ]
       ]
@@ -2668,6 +2668,62 @@
     "BridgedBlockHash": "H256",
     "BridgedBlockNumber": "BlockNumber",
     "BridgedHeader": "Header",
+    "CallOrigin": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "SourceRoot",
+          "Null"
+        ],
+        [
+          "TargetAccount",
+          "(AccountId, MultiSigner, MultiSignature)"
+        ],
+        [
+          "SourceAccount",
+          "AccountId"
+        ]
+      ]
+    },
+    "ChainId": "[u8; 4]",
+    "DeliveredMessages": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "begin",
+          "MessageNonce"
+        ],
+        [
+          "end",
+          "MessageNonce"
+        ],
+        [
+          "dispatchResults",
+          "BitVec"
+        ]
+      ]
+    },
+    "DispatchFeePayment": {
+      "type": "enum",
+      "value_list": [
+        "AtSourceChain",
+        "AtTargetChain"
+      ]
+    },
+    "InboundLaneData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "relayers",
+          "Vec<UnrewardedRelayer>"
+        ],
+        [
+          "lastConfirmedNonce",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "InboundRelayer": "AccountId",
     "Precommit": {
       "type": "struct",
       "type_mapping": [
@@ -3879,7 +3935,7 @@
       "type_mapping": [
         [
           "upgradeTimes",
-          "Vec<BlockNumber>"
+          "Vec<ReplacementTimes>"
         ],
         [
           "lastPruned",
@@ -5054,6 +5110,44 @@
         ]
       ]
     },
+    "ContractExecResultTo267": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "gasConsumed",
+          "u64"
+        ],
+        [
+          "debugMessage",
+          "Text"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
+        ]
+      ]
+    },
+    "ContractExecResultFrom268": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "gasConsumed",
+          "u64"
+        ],
+        [
+          "gasRequired",
+          "u64"
+        ],
+        [
+          "debugMessage",
+          "Text"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
+        ]
+      ]
+    },
     "ContractExecResultErrModule": {
       "type": "struct",
       "type_mapping": [
@@ -6138,6 +6232,159 @@
         ]
       ]
     },
+    "LaneId": "[u8; 4]",
+    "MessageData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "payload",
+          "Bytes"
+        ],
+        [
+          "fee",
+          "Balance"
+        ]
+      ]
+    },
+    "MessagesDeliveryProofOf": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "bridgedHeaderHash",
+          "BlockHash"
+        ],
+        [
+          "storageProof",
+          "Vec<Bytes>"
+        ],
+        [
+          "lane",
+          "LaneId"
+        ]
+      ]
+    },
+    "MessageKey": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "laneId",
+          "LaneId"
+        ],
+        [
+          "nonce",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "MessageNonce": "u64",
+    "MessagesProofOf": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "bridgedHeaderHash",
+          "BridgedBlockHash"
+        ],
+        [
+          "storageProof",
+          "Vec<Bytes>"
+        ],
+        [
+          "lane",
+          "LaneId"
+        ],
+        [
+          "noncesStart",
+          "MessageNonce"
+        ],
+        [
+          "noncesEnd",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "OperatingMode": {
+      "type": "enum",
+      "value_list": [
+        "Normal",
+        "RejectingOutboundMessages",
+        "Halted"
+      ]
+    },
+    "OutboundLaneData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "latestGeneratedNonce",
+          "MessageNonce"
+        ],
+        [
+          "latestReceivedNonce",
+          "MessageNonce"
+        ],
+        [
+          "oldestUnprunedNonce",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "OutboundMessageFee": "Balance",
+    "OutboundPayload": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "specVersion",
+          "u32"
+        ],
+        [
+          "weight",
+          "Weight"
+        ],
+        [
+          "origin",
+          "CallOrigin"
+        ],
+        [
+          "dispatchFeePayment",
+          "DispatchFeePayment"
+        ],
+        [
+          "call",
+          "Bytes"
+        ]
+      ]
+    },
+    "Parameter": "Null",
+    "RelayerId": "AccountId",
+    "UnrewardedRelayer": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "relayer",
+          "RelayerId"
+        ],
+        [
+          "messages",
+          "DeliveredMessages"
+        ]
+      ]
+    },
+    "UnrewardedRelayersState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "unrewardedRelayer_Entries",
+          "MessageNonce"
+        ],
+        [
+          "messagesInOldestEntry",
+          "MessageNonce"
+        ],
+        [
+          "totalMessages",
+          "MessageNonce"
+        ]
+      ]
+    },
     "FundIndex": "u32",
     "LastContribution": {
       "type": "enum",
@@ -6391,6 +6638,23 @@
         [
           "PendingResume",
           "PendingResume"
+        ]
+      ]
+    },
+    "AccountInfoWithRefCountU8": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nonce",
+          "Index"
+        ],
+        [
+          "refcount",
+          "u8"
+        ],
+        [
+          "data",
+          "AccountData"
         ]
       ]
     },
@@ -8857,6 +9121,19 @@
       ]
     },
     "Remark": "[u8; 32]",
+    "ReplacementTimes": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "expectedAt",
+          "BlockNumber"
+        ],
+        [
+          "activatedAt",
+          "BlockNumber"
+        ]
+      ]
+    },
     "Retriable": {
       "type": "enum",
       "type_mapping": [
@@ -8941,6 +9218,19 @@
       ]
     },
     "SignedAvailabilityBitfields": "Vec<SignedAvailabilityBitfield>",
+    "UpgradeGoAhead": {
+      "type": "enum",
+      "value_list": [
+        "Abort",
+        "GoAhead"
+      ]
+    },
+    "UpgradeRestriction": {
+      "type": "enum",
+      "value_list": [
+        "Present"
+      ]
+    },
     "UpwardMessage": "Bytes",
     "CallIndex": "(u8, u8)",
     "LotteryConfig": {
