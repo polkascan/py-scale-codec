@@ -3670,7 +3670,7 @@
         ],
         [
           "statements",
-          "Vec<(DisputeStatement, ValidatorIndex, ValidatorSignature)>"
+          "Vec<(DisputeStatement, ParaValidatorIndex, ValidatorSignature)>"
         ]
       ]
     },
@@ -3690,11 +3690,23 @@
     },
     "ValidDisputeStatementKind": {
       "type": "enum",
-      "value_list": [
-        "Explicit",
-        "BackingSeconded",
-        "BackingValid",
-        "ApprovalChecking"
+      "type_mapping": [
+        [
+          "Explicit",
+          "Null"
+        ],
+        [
+          "BackingSeconded",
+          "Hash"
+        ],
+        [
+          "BackingValid",
+          "Hash"
+        ],
+        [
+          "ApprovalChecking",
+          "Null"
+        ]
       ]
     },
     "InvalidDisputeStatementKind": {
