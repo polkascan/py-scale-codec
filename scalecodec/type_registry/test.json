@@ -103,6 +103,21 @@
           "Value4": 8,
           "Value5": 16
         }
+    },
+     "EnumSpecifiedIndex": {
+        "type": "enum",
+        "value_list": {
+            "ACA": 0,
+            "AUSD": 1,
+            "DOT": 2,
+            "LDOT": 3,
+            "RENBTC": 4,
+            "KAR": 128,
+            "KUSD": 129,
+            "KSM": 130,
+            "LKSM": 131,
+            "CASH": 140
+        }
     }
   }
 }

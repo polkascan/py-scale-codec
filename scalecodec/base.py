@@ -180,8 +180,14 @@ class RuntimeConfigurationObject:
                     else:
                         base_cls = Enum
 
+                    value_list = decoder_class_data.get('value_list')
+
+                    if type(value_list) is dict:
+                        # Transform value_list with explictly specified index numbers
+                        value_list = {i: v for v, i in value_list.items()}
+
                     decoder_class = type(type_string, (base_cls,), {
-                        'value_list': decoder_class_data.get('value_list'),
+                        'value_list': value_list,
                         'type_mapping': decoder_class_data.get('type_mapping')
                     })
 

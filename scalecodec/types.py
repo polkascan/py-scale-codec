@@ -995,7 +995,13 @@ class Enum(ScaleType):
                 raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
         else:
-            for idx, item in enumerate(self.value_list):
+
+            if type(self.value_list) is dict:
+                value_list = self.value_list.items()
+            else:
+                value_list = enumerate(self.value_list)
+
+            for idx, item in value_list:
                 if item == value:
                     self.index = idx
                     return ScaleBytes(bytearray([self.index]))

@@ -650,6 +650,18 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('EnumWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
 
+    def test_enum_with_specified_index_number(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = ScaleDecoder.get_decoder_class('EnumSpecifiedIndex')
+
+        data = obj.encode("KSM")
+        self.assertEqual("0x82", data.to_hex())
+
+        obj = ScaleDecoder.get_decoder_class('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
+
+        self.assertEqual("KAR", obj.decode())
+
     def test_set_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
