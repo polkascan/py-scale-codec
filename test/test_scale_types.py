@@ -641,6 +641,20 @@ class TestScaleTypes(unittest.TestCase):
         obj = ScaleDecoder.get_decoder_class('StructWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
 
+    def test_struct_with_nested_struct(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = ScaleDecoder.get_decoder_class('StructWithNestedStruct')
+
+        data = obj.encode({'flat': 12, 'after': 6, 'nested': {'a': 1, 'b': 2}})
+
+        self.assertEqual(data.to_hex(), '0x0c010206')
+
+        obj = ScaleDecoder.get_decoder_class('StructWithNestedStruct', data=ScaleBytes('0x0c010206'))
+        value = obj.decode()
+
+        self.assertEqual({'flat': 12, 'nested': {'a': 1, 'b': 2}, 'after': 6}, value)
+
     def test_enum_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 

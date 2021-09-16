@@ -456,7 +456,18 @@ class Struct(ScaleType):
         for key, data_type in self.type_mapping:
             if data_type is None:
                 data_type = 'Null'
-            result[key] = self.process_type(data_type, metadata=self.metadata).value
+
+            if type(data_type) is dict:
+                # Nested struct
+                sub_type_mapping = [[k, v] for k, v in data_type.items()]
+                decoding_cls = type('NestedStruct', (Struct,), {'type_mapping': sub_type_mapping})
+                element_obj = decoding_cls(
+                    data=self.data, metadata=self.metadata, runtime_config=self.runtime_config
+                )
+                result[key] = element_obj.decode(check_remaining=False)
+            else:
+
+                result[key] = self.process_type(data_type, metadata=self.metadata).value
 
         return result
 
@@ -467,9 +478,19 @@ class Struct(ScaleType):
             if key not in value:
                 raise ValueError('Element "{}" of struct is missing in given value'.format(key))
 
-            element_obj = self.get_decoder_class(
-                type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
-            )
+            if type(data_type) is dict:
+                # Nested struct
+                sub_type_mapping = [[k, v] for k, v in data_type.items()]
+                decoding_cls = type('NestedStruct', (Struct,), {'type_mapping': sub_type_mapping})
+                element_obj = decoding_cls(
+                    metadata=self.metadata, runtime_config=self.runtime_config
+                )
+            else:
+
+                element_obj = self.get_decoder_class(
+                    type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
+                )
+
             data += element_obj.encode(value[key])
 
         return data
