@@ -2898,6 +2898,41 @@
         "Fast"
       ]
     },
+    "DisputeLocation": {
+      "type": "enum",
+      "value_list": [
+        "Local",
+        "Remote"
+      ]
+    },
+    "DisputeResult": {
+      "type": "enum",
+      "value_list": [
+        "Valid",
+        "Invalid"
+      ]
+    },
+    "DisputeState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "validatorsFor",
+          "BitVec"
+        ],
+        [
+          "validatorsAgainst",
+          "BitVec"
+        ],
+        [
+          "start",
+          "BlockNumber"
+        ],
+        [
+          "concludedAt",
+          "Option<BlockNumber>"
+        ]
+      ]
+    },
     "IncomingParachainDeploy": {
       "type": "struct",
       "type_mapping": [
