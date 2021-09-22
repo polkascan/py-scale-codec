@@ -19,6 +19,7 @@
 
 import unittest
 
+from scalecodec import Struct
 from scalecodec.base import RuntimeConfiguration, RuntimeConfigurationObject
 from scalecodec.type_registry import load_type_registry_preset
 
@@ -48,7 +49,11 @@ class TestScaleDecoderClasses(unittest.TestCase):
 
                     if sub_type_string is not None:
 
-                        sub_decoding_cls = self.runtime_config.get_decoder_class(sub_type_string)
+                        if type(sub_type_string) is dict:
+                            sub_type_mapping = [[k, v] for k, v in sub_type_string.items()]
+                            sub_decoding_cls = type(type_string, (Struct,), {'type_mapping': sub_type_mapping})
+                        else:
+                            sub_decoding_cls = self.runtime_config.get_decoder_class(sub_type_string)
 
                         self.assertIsNotNone(sub_decoding_cls,
                                              msg=f' Sub type "{sub_type_string}" didn\'t return decoding class')
