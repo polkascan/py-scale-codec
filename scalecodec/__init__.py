@@ -14,7 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO temp import all to make sure types classes are registered with RuntimeConfiguration.
-# TODO implemented type mapping registry per spec version id (/runtime)
+# Import all type to make sure types classes are registered when RuntimeConfiguration inits.
 from .types import *
-from .block import *

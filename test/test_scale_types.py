@@ -15,26 +15,31 @@
 # limitations under the License.
 
 import datetime
-import pydoc_data.topics
+import os
 import unittest
 
-from scalecodec import GenericContractExecResult
-
-from scalecodec.metadata import MetadataDecoder
+from scalecodec.types import GenericContractExecResult
 
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException, RuntimeConfiguration, RuntimeConfigurationObject
-from scalecodec.types import GenericMultiAddress, HexBytes
-from scalecodec.type_registry import load_type_registry_preset
+from scalecodec.types import GenericMultiAddress
+from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
-from test.fixtures import metadata_v10_hex
 
 
 class TestScaleTypes(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.metadata_decoder = MetadataDecoder(ScaleBytes(metadata_v10_hex))
+        module_path = os.path.dirname(__file__)
+        cls.metadata_fixture_dict = load_type_registry_file(
+            os.path.join(module_path, 'fixtures', 'metadata_hex.json')
+        )
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+
+        cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
+            'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict['V10'])
+        )
         cls.metadata_decoder.decode()
 
     def setUp(self) -> None:
@@ -43,50 +48,78 @@ class TestScaleTypes(unittest.TestCase):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
+    # def test_automatic_decode(self):
+    #     obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
+    #     self.assertEqual(obj.value, 64302)
+
+    def test_multiple_decode_without_error(self):
+        obj = RuntimeConfiguration().create_scale_object('u16', ScaleBytes("0x2efb"))
+        obj.decode()
+        obj.decode()
+        self.assertEqual(obj.value, 64302)
+
+    def test_value_equals_value_serialized_and_value_object(self):
+        obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+        obj.decode()
+        self.assertEqual(obj.value, obj.value_serialized)
+        self.assertEqual(obj.value, obj.value_object)
+
+    def test_value_object(self):
+        obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+        obj.decode()
+        self.assertEqual(obj.value_object[0].value_object, 3)
+        self.assertEqual(obj.value_object[1].value_object, 0)
+
+    def test_value_object_shorthand(self):
+        obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+        obj.decode()
+        self.assertEqual(obj[0], 3)
+        self.assertEqual(obj[1], 0)
+
     def test_compact_u32(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x02093d00"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes("0x02093d00"))
         obj.decode()
         self.assertEqual(obj.value, 1000000)
 
     def test_compact_u32_1byte(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x18"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes("0x18"))
         obj.decode()
         self.assertEqual(obj.value, 6)
 
     def test_compact_u32_remaining_bytes(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x02093d0001"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes("0x02093d0001"))
         self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
 
     def test_compact_u32_invalid(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes("0x"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes("0x"))
         self.assertRaises(InvalidScaleTypeValueException, obj.decode)
 
     def test_u16(self):
-        obj = ScaleDecoder.get_decoder_class('u16', ScaleBytes("0x2efb"))
+        obj = RuntimeConfiguration().create_scale_object('u16', ScaleBytes("0x2efb"))
         obj.decode()
         self.assertEqual(obj.value, 64302)
 
     def test_i16(self):
-        obj = ScaleDecoder.get_decoder_class('i16', ScaleBytes("0x2efb"))
+        obj = RuntimeConfiguration().create_scale_object('i16', ScaleBytes("0x2efb"))
         obj.decode()
         self.assertEqual(obj.value, -1234)
 
     def test_compact_bool_true(self):
-        obj = ScaleDecoder.get_decoder_class('bool', ScaleBytes("0x01"))
+        obj = RuntimeConfiguration().create_scale_object('bool', ScaleBytes("0x01"))
         obj.decode()
         self.assertEqual(obj.value, True)
 
     def test_compact_bool_false(self):
-        obj = ScaleDecoder.get_decoder_class('bool', ScaleBytes("0x00"))
+        obj = RuntimeConfiguration().create_scale_object('bool', ScaleBytes("0x00"))
         obj.decode()
         self.assertEqual(obj.value, False)
 
     def test_compact_bool_invalid(self):
-        obj = ScaleDecoder.get_decoder_class('bool', ScaleBytes("0x02"))
+        obj = RuntimeConfiguration().create_scale_object('bool', ScaleBytes("0x02"))
         self.assertRaises(InvalidScaleTypeValueException, obj.decode)
 
     def test_string(self):
-        obj = ScaleDecoder.get_decoder_class('String', ScaleBytes("0x1054657374"))
+        obj = RuntimeConfiguration().create_scale_object('String', ScaleBytes("0x1054657374"))
         obj.decode()
         self.assertEqual(str(obj), "Test")
 
@@ -95,7 +128,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual("0x1054657374", data.to_hex())
 
     def test_string_multibyte_chars(self):
-        obj = ScaleDecoder.get_decoder_class('String')
+        obj = RuntimeConfiguration().create_scale_object('String')
 
         data = obj.encode('µ')
         self.assertEqual('0x08c2b5', data.to_hex())
@@ -104,7 +137,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(str(obj), "µ")
 
     def test_vec_accountid(self):
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             'Vec<AccountId>',
             ScaleBytes("0x0865d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b97765d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b977")
         )
@@ -115,40 +148,40 @@ class TestScaleTypes(unittest.TestCase):
         ])
 
     def test_bounded_vec_encode(self):
-        obj = ScaleDecoder.get_decoder_class('BoundedVec<Hash, maxproposals>')
+        obj = RuntimeConfiguration().create_scale_object('BoundedVec<Hash, maxproposals>')
         value = obj.encode(['0xe1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236'])
         self.assertEqual(str(value), '0x04e1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236')
 
-        obj = ScaleDecoder.get_decoder_class('BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>')
+        obj = RuntimeConfiguration().create_scale_object('BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>')
         self.assertEqual(obj.sub_type, 'Option<RegistrarInfo<BalanceOf, AccountId>>')
 
         value = obj.encode([None, None])
         self.assertEqual(str(value), '0x080000')
 
     def test_bounded_vec_decode(self):
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             'BoundedVec<Hash, maxproposals>',
             data=ScaleBytes('0x04e1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236')
         )
         self.assertEqual(obj.decode(), ['0xe1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236'])
 
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             'BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>', data=ScaleBytes('0x080000')
         )
         self.assertEqual([None, None], obj.decode())
 
     def test_validatorprefs_struct(self):
-        obj = ScaleDecoder.get_decoder_class('ValidatorPrefsLegacy', ScaleBytes("0x0c00"))
+        obj = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145', ScaleBytes("0x0c00"))
         obj.decode()
-        self.assertEqual(obj.value, {'unstakeThreshold': 3, 'validatorPayment': 0})
+        self.assertEqual(obj.value, {'unstake_threshold': 3, 'validator_payment': 0})
 
-    def test_implied_struct(self):
-        obj = ScaleDecoder.get_decoder_class('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
+    def test_tuple(self):
+        obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
         obj.decode()
         self.assertEqual(obj.value, (3, 0))
 
     def test_address(self):
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             'Address',
             ScaleBytes("0xff1fa9d1bd1db014b65872ee20aee4fd4d3a942d95d3357f463ea6c799130b6318")
         )
@@ -156,22 +189,22 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, '1fa9d1bd1db014b65872ee20aee4fd4d3a942d95d3357f463ea6c799130b6318')
 
     def test_moment(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<Moment>', ScaleBytes("0x03d68b655c"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<Moment>', ScaleBytes("0x03d68b655c"))
         obj.decode()
         self.assertEqual(obj.value, datetime.datetime(2019, 2, 14, 15, 40, 6))
 
     def test_balance(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
         obj.decode()
         self.assertEqual(obj.value, 2503000000000000000)
 
     def test_type_registry(self):
         # Example type SpecificTestType only define in type registry 'default'
-        self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'SpecificTestType', ScaleBytes("0x01000000"))
+        self.assertRaises(NotImplementedError, RuntimeConfiguration().create_scale_object, 'SpecificTestType', ScaleBytes("0x01000000"))
 
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('SpecificTestType', ScaleBytes("0x06000000"))
+        obj = RuntimeConfiguration().create_scale_object('SpecificTestType', ScaleBytes("0x06000000"))
         obj.decode()
         self.assertEqual(obj.value, 6)
 
@@ -179,18 +212,18 @@ class TestScaleTypes(unittest.TestCase):
         # Type BlockNumber defined as U32 in type registry 'kusama'
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
 
-        obj = ScaleDecoder.get_decoder_class('BlockNumber', ScaleBytes("0x0000000000000001"))
+        obj = RuntimeConfiguration().create_scale_object('BlockNumber', ScaleBytes("0x0000000000000001"))
         self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
 
         # Type BlockNumber changed to U64 in type registry 'test'
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('BlockNumber', ScaleBytes("0x0000000000000001"))
+        obj = RuntimeConfiguration().create_scale_object('BlockNumber', ScaleBytes("0x0000000000000001"))
         obj.decode()
         self.assertEqual(obj.value, 72057594037927936)
 
     def test_unknown_decoder_class(self):
-        self.assertRaises(NotImplementedError, ScaleDecoder.get_decoder_class, 'UnknownType123', ScaleBytes("0x0c00"))
+        self.assertRaises(NotImplementedError, RuntimeConfiguration().create_scale_object, 'UnknownType123', ScaleBytes("0x0c00"))
 
     def test_unknown_dynamic_type(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
@@ -212,17 +245,17 @@ class TestScaleTypes(unittest.TestCase):
     def test_dynamic_set(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
-        obj = ScaleDecoder.get_decoder_class('WithdrawReasons', ScaleBytes("0x0100000000000000"))
+        obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x0100000000000000"))
         obj.decode()
 
         self.assertEqual(obj.value, ["TransactionPayment"])
 
-        obj = ScaleDecoder.get_decoder_class('WithdrawReasons', ScaleBytes("0x0300000000000000"))
+        obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x0300000000000000"))
         obj.decode()
 
         self.assertEqual(obj.value, ["TransactionPayment", "Transfer"])
 
-        obj = ScaleDecoder.get_decoder_class('WithdrawReasons', ScaleBytes("0x1600000000000000"))
+        obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x1600000000000000"))
         obj.decode()
 
         self.assertEqual(obj.value, ["Transfer", "Reserve", "Tip"])
@@ -247,20 +280,20 @@ class TestScaleTypes(unittest.TestCase):
             }
         })
 
-        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x0100000000000000"))
+        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x0100000000000000"))
         self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
 
-        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x01000000"))
+        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x01000000"))
         obj.decode()
 
         self.assertEqual(obj.value, ["Value1"])
 
-        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x03000000"))
+        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x03000000"))
         obj.decode()
 
         self.assertEqual(obj.value, ["Value1", "Value2"])
 
-        obj = ScaleDecoder.get_decoder_class('CustomU32Set', ScaleBytes("0x16000000"))
+        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x16000000"))
         obj.decode()
 
         self.assertEqual(obj.value, ["Value2", "Value3", "Value5"])
@@ -270,7 +303,7 @@ class TestScaleTypes(unittest.TestCase):
 
         scale_value = ScaleBytes("0x0400006e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402070010a5d4e8")
 
-        obj = ScaleDecoder.get_decoder_class('Box<Call>', scale_value, metadata=self.metadata_decoder)
+        obj = RuntimeConfiguration().create_scale_object('Box<Call>', scale_value, metadata=self.metadata_decoder)
         value = obj.decode()
 
         self.assertEqual(value['call_function'], 'transfer')
@@ -281,49 +314,49 @@ class TestScaleTypes(unittest.TestCase):
     def test_parse_subtype(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
 
-        obj = ScaleDecoder.get_decoder_class('(BalanceOf, Vec<(AccountId, Data)>)')
+        obj = RuntimeConfiguration().create_scale_object('(BalanceOf, Vec<(AccountId, Data)>)')
 
         self.assertEqual(obj.type_mapping[0], "BalanceOf")
         self.assertEqual(obj.type_mapping[1], "Vec<(AccountId, Data)>")
 
-        obj = ScaleDecoder.get_decoder_class('Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>')
+        obj = RuntimeConfiguration().create_scale_object('Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>')
 
         self.assertEqual(obj.sub_type, "UncleEntryItem<BlockNumber, Hash, AccountId>")
 
     def test_dynamic_fixed_array_type_decode(self):
-        obj = ScaleDecoder.get_decoder_class('[u32; 1]', data=ScaleBytes("0x01000000"))
+        obj = RuntimeConfiguration().create_scale_object('[u32; 1]', data=ScaleBytes("0x01000000"))
         self.assertEqual([1], obj.decode())
 
-        obj = ScaleDecoder.get_decoder_class('[u32; 3]', data=ScaleBytes("0x010000000200000003000000"))
+        obj = RuntimeConfiguration().create_scale_object('[u32; 3]', data=ScaleBytes("0x010000000200000003000000"))
         self.assertEqual([1, 2, 3], obj.decode())
 
-        obj = ScaleDecoder.get_decoder_class('[u32; 0]', data=ScaleBytes(bytes()))
+        obj = RuntimeConfiguration().create_scale_object('[u32; 0]', data=ScaleBytes(bytes()))
         self.assertEqual([], obj.decode())
 
     def test_dynamic_fixed_array_type_decode_u8(self):
-        obj = ScaleDecoder.get_decoder_class('[u8; 65]', data=ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
+        obj = RuntimeConfiguration().create_scale_object('[u8; 65]', data=ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
         self.assertEqual('0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01', obj.decode())
 
     def test_dynamic_fixed_array_type_encode_u8(self):
-        obj = ScaleDecoder.get_decoder_class('[u8; 1]')
+        obj = RuntimeConfiguration().create_scale_object('[u8; 1]')
         self.assertEqual('0x01', str(obj.encode('0x01')))
 
     def test_dynamic_fixed_array_type_encode(self):
-        obj = ScaleDecoder.get_decoder_class('[u32; 1]')
+        obj = RuntimeConfiguration().create_scale_object('[u32; 1]')
         self.assertEqual('0x0100000002000000', str(obj.encode([1, 2])))
 
-        obj = ScaleDecoder.get_decoder_class('[u8; 3]')
+        obj = RuntimeConfiguration().create_scale_object('[u8; 3]')
         self.assertEqual('0x010203', str(obj.encode('0x010203')))
 
     def test_invalid_fixed_array_type_encode(self):
-        obj = ScaleDecoder.get_decoder_class('[u8; 3]')
+        obj = RuntimeConfiguration().create_scale_object('[u8; 3]')
         self.assertRaises(ValueError, obj.encode, '0x0102')
 
-        obj = ScaleDecoder.get_decoder_class('[u32; 3]')
+        obj = RuntimeConfiguration().create_scale_object('[u32; 3]')
         self.assertRaises(ValueError, obj.encode, '0x0102')
 
     def test_custom_tuple(self):
-        obj = ScaleDecoder.get_decoder_class('(u8,u8)', ScaleBytes("0x0102"))
+        obj = RuntimeConfiguration().create_scale_object('(u8,u8)', ScaleBytes("0x0102"))
         self.assertEqual((1, 2), obj.decode())
 
     def test_create_multi_sig_address(self):
@@ -340,7 +373,7 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_opaque_call(self):
 
-        opaque_call_obj = ScaleDecoder.get_decoder_class('OpaqueCall', metadata=self.metadata_decoder)
+        opaque_call_obj = RuntimeConfiguration().create_scale_object('OpaqueCall', metadata=self.metadata_decoder)
 
         call_value = {
             'call_module': 'System',
@@ -354,7 +387,7 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(str(scale_data), '0x200001140123456789')
 
-        opaque_call_obj = ScaleDecoder.get_decoder_class('OpaqueCall', data=scale_data, metadata=self.metadata_decoder)
+        opaque_call_obj = RuntimeConfiguration().create_scale_object('OpaqueCall', data=scale_data, metadata=self.metadata_decoder)
 
         value = opaque_call_obj.decode()
 
@@ -364,39 +397,39 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(value['call_args'][0]['name'], '_remark')
 
     def test_era_immortal(self):
-        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x00'))
+        obj = RuntimeConfiguration().create_scale_object('Era', ScaleBytes('0x00'))
         obj.decode()
         self.assertEqual(obj.value, '00')
         self.assertIsNone(obj.period)
         self.assertIsNone(obj.phase)
 
     def test_era_mortal(self):
-        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x4e9c'))
+        obj = RuntimeConfiguration().create_scale_object('Era', ScaleBytes('0x4e9c'))
         obj.decode()
         self.assertTupleEqual(obj.value, (32768, 20000))
         self.assertEqual(obj.period, 32768)
         self.assertEqual(obj.phase, 20000)
 
-        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0xc503'))
+        obj = RuntimeConfiguration().create_scale_object('Era', ScaleBytes('0xc503'))
         obj.decode()
         self.assertTupleEqual(obj.value, (64, 60))
         self.assertEqual(obj.period, 64)
         self.assertEqual(obj.phase, 60)
 
-        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x8502'))
+        obj = RuntimeConfiguration().create_scale_object('Era', ScaleBytes('0x8502'))
         obj.decode()
         self.assertTupleEqual(obj.value, (64, 40))
         self.assertEqual(obj.period, 64)
         self.assertEqual(obj.phase, 40)
 
     def test_era_methods(self):
-        obj = ScaleDecoder.get_decoder_class('Era')
+        obj = RuntimeConfiguration().create_scale_object('Era')
         obj.encode('00')
         self.assertTrue(obj.is_immortal())
         self.assertEqual(obj.birth(1400), 0)
         self.assertEqual(obj.death(1400), 2**64 - 1)
 
-        obj = ScaleDecoder.get_decoder_class('Era')
+        obj = RuntimeConfiguration().create_scale_object('Era')
         obj.encode((256, 120))
         self.assertFalse(obj.is_immortal())
         self.assertEqual(obj.birth(1400), 1400)
@@ -405,7 +438,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.death(1400), 1656)
 
     def test_era_invalid_encode(self):
-        obj = ScaleDecoder.get_decoder_class('Era')
+        obj = RuntimeConfiguration().create_scale_object('Era')
         self.assertRaises(ValueError, obj.encode, (1, 120))
         self.assertRaises(ValueError, obj.encode, ('64', 60))
         self.assertRaises(ValueError, obj.encode, 'x')
@@ -413,17 +446,17 @@ class TestScaleTypes(unittest.TestCase):
         self.assertRaises(ValueError, obj.encode, {'period': 2})
 
     def test_era_invalid_decode(self):
-        obj = ScaleDecoder.get_decoder_class('Era', ScaleBytes('0x0101'))
+        obj = RuntimeConfiguration().create_scale_object('Era', ScaleBytes('0x0101'))
         self.assertRaises(ValueError, obj.decode)
 
     def test_multiaddress_ss58_address_as_str(self):
-        obj = ScaleDecoder.get_decoder_class('Multiaddress')
+        obj = RuntimeConfiguration().create_scale_object('Multiaddress')
         ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
 
         public_key = ss58_decode(ss58_address)
 
         data = obj.encode(ss58_address)
-        decode_obj = ScaleDecoder.get_decoder_class('MultiAddress', data=data)
+        decode_obj = RuntimeConfiguration().create_scale_object('MultiAddress', data=data)
 
         self.assertEqual(decode_obj.decode(), f'0x{public_key}')
 
@@ -432,22 +465,22 @@ class TestScaleTypes(unittest.TestCase):
         runtime_config = RuntimeConfigurationObject(ss58_format=2)
         runtime_config.update_type_registry(load_type_registry_preset("default"))
 
-        obj = ScaleDecoder.get_decoder_class('Multiaddress', runtime_config=runtime_config)
+        obj = RuntimeConfiguration().create_scale_object('Multiaddress', runtime_config=runtime_config)
         ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
 
         data = obj.encode(ss58_address)
-        decode_obj = ScaleDecoder.get_decoder_class('MultiAddress', data=data, runtime_config=runtime_config)
+        decode_obj = RuntimeConfiguration().create_scale_object('MultiAddress', data=data, runtime_config=runtime_config)
 
         self.assertEqual(decode_obj.decode(), ss58_address)
 
     def test_multiaddress_ss58_index_as_str(self):
-        obj = ScaleDecoder.get_decoder_class('MultiAddress')
+        obj = RuntimeConfiguration().create_scale_object('MultiAddress')
         ss58_address = "F7Hs"
 
         index_id = ss58_decode_account_index(ss58_address)
 
         data = obj.encode(ss58_address)
-        decode_obj = ScaleDecoder.get_decoder_class('MultiAddress', data=data)
+        decode_obj = RuntimeConfiguration().create_scale_object('MultiAddress', data=data)
 
         self.assertEqual(decode_obj.decode(), index_id)
 
@@ -553,156 +586,142 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(ss58_encode_account_index(0), 'F7Hs')
 
     def test_bitvec_decode(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0c07'))
+        obj = RuntimeConfiguration().create_scale_object('BitVec', ScaleBytes('0x0c07'))
         obj.decode()
         self.assertEqual(obj.value, '0b111')
 
     def test_bitvec_decode_size2(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x0803'))
+        obj = RuntimeConfiguration().create_scale_object('BitVec', ScaleBytes('0x0803'))
         obj.decode()
         self.assertEqual(obj.value, '0b11')
 
     def test_bitvec_decode_size_2bytes(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec', ScaleBytes('0x28fd02'))
+        obj = RuntimeConfiguration().create_scale_object('BitVec', ScaleBytes('0x28fd02'))
         obj.decode()
         self.assertEqual(obj.value, '0b1011111101')
 
     def test_bitvec_encode_list(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode([True, True, True])
         self.assertEqual(data.to_hex(), '0x0c07')
 
     def test_bitvec_encode_list2(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode([True, False])
         self.assertEqual(data.to_hex(), '0x0802')
 
     def test_bitvec_encode_list3(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode([False, True])
         self.assertEqual(data.to_hex(), '0x0401')
 
     def test_bitvec_encode_list4(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode([True, False, False, True, True, True, True, True, False, True])
         self.assertEqual(data.to_hex(), '0x287d02')
 
     def test_bitvec_encode_bin_str(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode('0b00000111')
         self.assertEqual(data.to_hex(), '0x0c07')
 
     def test_bitvec_encode_bin_str2(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode('0b00000010')
         self.assertEqual(data.to_hex(), '0x0802')
 
     def test_bitvec_encode_bin_str3(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode('0b00000001')
         self.assertEqual(data.to_hex(), '0x0401')
 
     def test_bitvec_encode_bin_str4(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode('0b00000010_01111101')
         self.assertEqual(data.to_hex(), '0x287d02')
 
     def test_bitvec_encode_int(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode(0b00000111)
         self.assertEqual(data.to_hex(), '0x0c07')
 
     def test_bitvec_encode_int2(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode(0b00000010)
         self.assertEqual(data.to_hex(), '0x0802')
 
     def test_bitvec_encode_int3(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode(0b00000001)
         self.assertEqual(data.to_hex(), '0x0401')
 
     def test_bitvec_encode_int4(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode(0b00000010_01111101)
         self.assertEqual(data.to_hex(), '0x287d02')
 
     def test_bitvec_encode_empty_list(self):
-        obj = ScaleDecoder.get_decoder_class('BitVec')
+        obj = RuntimeConfiguration().create_scale_object('BitVec')
         data = obj.encode([])
         self.assertEqual(data.to_hex(), '0x00')
 
     def test_struct_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('StructWithoutBaseClass')
+        obj = RuntimeConfiguration().create_scale_object('StructWithoutBaseClass')
         self.assertFalse(isinstance(obj, GenericContractExecResult))
 
-        obj = ScaleDecoder.get_decoder_class('StructWithBaseClass')
+        obj = RuntimeConfiguration().create_scale_object('StructWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
-
-    def test_struct_with_nested_struct(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = ScaleDecoder.get_decoder_class('StructWithNestedStruct')
-
-        data = obj.encode({'flat': 12, 'after': 6, 'nested': {'a': 1, 'b': 2}})
-
-        self.assertEqual(data.to_hex(), '0x0c010206')
-
-        obj = ScaleDecoder.get_decoder_class('StructWithNestedStruct', data=ScaleBytes('0x0c010206'))
-        value = obj.decode()
-
-        self.assertEqual({'flat': 12, 'nested': {'a': 1, 'b': 2}, 'after': 6}, value)
 
     def test_enum_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('EnumWithoutBaseClass')
+        obj = RuntimeConfiguration().create_scale_object('EnumWithoutBaseClass')
         self.assertFalse(isinstance(obj, GenericContractExecResult))
 
-        obj = ScaleDecoder.get_decoder_class('EnumWithBaseClass')
+        obj = RuntimeConfiguration().create_scale_object('EnumWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
 
     def test_enum_with_specified_index_number(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('EnumSpecifiedIndex')
+        obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex')
 
         data = obj.encode("KSM")
         self.assertEqual("0x82", data.to_hex())
 
-        obj = ScaleDecoder.get_decoder_class('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
+        obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
 
         self.assertEqual("KAR", obj.decode())
 
     def test_set_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('SetWithoutBaseClass')
+        obj = RuntimeConfiguration().create_scale_object('SetWithoutBaseClass')
         self.assertFalse(isinstance(obj, GenericContractExecResult))
 
-        obj = ScaleDecoder.get_decoder_class('SetWithBaseClass')
+        obj = RuntimeConfiguration().create_scale_object('SetWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
 
     def test_hashmap_encode(self):
-        obj = ScaleDecoder.get_decoder_class('HashMap<Vec<u8>, u32>')
+        obj = RuntimeConfiguration().create_scale_object('HashMap<Vec<u8>, u32>')
         data = obj.encode([('1', 2), ('23', 24), ('28', 30), ('45', 80)])
         self.assertEqual(data.to_hex(), '0x10043102000000083233180000000832381e00000008343550000000')
 
     def test_hashmap_decode(self):
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             'HashMap<Vec<u8>, u32>', data=ScaleBytes("0x10043102000000083233180000000832381e00000008343550000000")
         )
         self.assertEqual([('1', 2), ('23', 24), ('28', 30), ('45', 80)], obj.decode())
 
     def test_btreeset_encode(self):
-        obj = ScaleDecoder.get_decoder_class('BTreeSet<u32>')
+        obj = RuntimeConfiguration().create_scale_object('BTreeSet<u32>')
         data = obj.encode([2, 24, 30, 80])
         self.assertEqual(data.to_hex(), "0x1002000000180000001e00000050000000")
 
     def test_btreeset_decode(self):
-        obj = ScaleDecoder.get_decoder_class(
+        obj = RuntimeConfiguration().create_scale_object(
             'BTreeSet<u32>', data=ScaleBytes("0x1002000000180000001e00000050000000")
         )
         self.assertEqual([2, 24, 30, 80], obj.decode())
@@ -716,14 +735,26 @@ class TestScaleTypes(unittest.TestCase):
         runtime_config.update_type_registry(load_type_registry_preset("default"))
 
         # Encode
-        obj = ScaleDecoder.get_decoder_class('AccountId', runtime_config=runtime_config)
+        obj = RuntimeConfiguration().create_scale_object('AccountId', runtime_config=runtime_config)
         data = obj.encode(ss58_address)
 
         # Decode
-        decode_obj = ScaleDecoder.get_decoder_class('AccountId', data=data, runtime_config=runtime_config)
+        decode_obj = RuntimeConfiguration().create_scale_object('AccountId', data=data, runtime_config=runtime_config)
         decode_obj.decode()
 
         self.assertEqual(decode_obj.value, ss58_address)
         self.assertEqual(decode_obj.ss58_address, ss58_address)
         self.assertEqual(decode_obj.public_key, public_key)
+
+    def test_generic_vote(self):
+        runtime_config = RuntimeConfigurationObject(ss58_format=2)
+
+        vote = runtime_config.create_scale_object('GenericVote')
+        data = vote.encode({'aye': True, 'conviction': 'Locked2x'})
+
+        self.assertEqual('0x82', data.to_hex())
+
+        vote.decode(ScaleBytes('0x04'))
+
+        self.assertEqual(vote.value, {'aye': False, 'conviction': 'Locked4x'})
 

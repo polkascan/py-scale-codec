@@ -62,8 +62,8 @@ class Compact(ScaleType):
 
         if self.sub_type:
 
-            byte_data = self.get_decoder_class(
-                type_string=self.sub_type, data=ScaleBytes(self.compact_bytes), runtime_config=self.runtime_config
+            byte_data = self.runtime_config.create_scale_object(
+                type_string=self.sub_type, data=ScaleBytes(self.compact_bytes)
             ).process()
 
             if type(byte_data) is int and self.compact_length <= 4:
@@ -138,17 +138,22 @@ class Option(ScaleType):
         option_byte = self.get_next_bytes(1)
 
         if self.sub_type and option_byte != b'\x00':
-            return self.process_type(self.sub_type).value
+            self.value_object = self.process_type(self.sub_type)
+            return self.value_object.value
 
         return None
 
     def process_encode(self, value):
 
         if value is not None and self.sub_type:
-            sub_type_obj = self.get_decoder_class(self.sub_type, runtime_config=self.runtime_config)
+            sub_type_obj = self.runtime_config.create_scale_object(self.sub_type)
             return ScaleBytes('0x01') + sub_type_obj.encode(value)
 
         return ScaleBytes('0x00')
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
 
 
 class Bytes(ScaleType):
@@ -159,6 +164,8 @@ class Bytes(ScaleType):
 
         length = self.process_type('Compact<u32>').value
         value = self.get_next_bytes(length)
+
+        self.value_object = value
 
         try:
             return value.decode()
@@ -186,12 +193,16 @@ class Bytes(ScaleType):
 
         return data
 
+    def serialize(self):
+        return f'0x{self.value_object.hex()}'
+
 
 class Str(Bytes):
-    pass
+    def serialize(self):
+        return self.value
 
 
-class String(Bytes):
+class String(Str):
     pass
 
 
@@ -452,46 +463,33 @@ class Struct(ScaleType):
     def process(self):
 
         result = {}
+        self.value_object = {}
 
         for key, data_type in self.type_mapping:
             if data_type is None:
                 data_type = 'Null'
+            field_obj = self.process_type(data_type, metadata=self.metadata)
 
-            if type(data_type) is dict:
-                # Nested struct
-                sub_type_mapping = [[k, v] for k, v in data_type.items()]
-                decoding_cls = type('NestedStruct', (Struct,), {'type_mapping': sub_type_mapping})
-                element_obj = decoding_cls(
-                    data=self.data, metadata=self.metadata, runtime_config=self.runtime_config
-                )
-                result[key] = element_obj.decode(check_remaining=False)
-            else:
+            self.value_object[key] = field_obj
 
-                result[key] = self.process_type(data_type, metadata=self.metadata).value
+            result[key] = field_obj.value
 
         return result
 
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
 
+        self.value_object = {}
+
         for key, data_type in self.type_mapping:
             if key not in value:
                 raise ValueError('Element "{}" of struct is missing in given value'.format(key))
 
-            if type(data_type) is dict:
-                # Nested struct
-                sub_type_mapping = [[k, v] for k, v in data_type.items()]
-                decoding_cls = type('NestedStruct', (Struct,), {'type_mapping': sub_type_mapping})
-                element_obj = decoding_cls(
-                    metadata=self.metadata, runtime_config=self.runtime_config
-                )
-            else:
-
-                element_obj = self.get_decoder_class(
-                    type_string=data_type, metadata=self.metadata, runtime_config=self.runtime_config
-                )
-
+            element_obj = self.runtime_config.create_scale_object(
+                type_string=data_type, metadata=self.metadata
+            )
             data += element_obj.encode(value[key])
+            self.value_object[key] = element_obj
 
         return data
 
@@ -506,30 +504,42 @@ class Tuple(ScaleType):
 
     def process(self):
 
+        if len(self.type_mapping) == 1:
+            return self.process_type(self.type_mapping[0], metadata=self.metadata).value
+
         result = ()
+        self.value_object = ()
 
         for member_type in self.type_mapping:
             if member_type is None:
                 member_type = 'Null'
-            result += (self.process_type(member_type, metadata=self.metadata).value,)
+
+            member_obj = self.process_type(member_type, metadata=self.metadata)
+
+            result += (member_obj.value,)
+            self.value_object += (member_obj,)
 
         return result
 
     def process_encode(self, value):
         data = ScaleBytes(bytearray())
+        self.value_object = ()
 
-        if type(value) is list or type(value) is tuple:
-            if len(value) != len(self.type_mapping):
-                raise ValueError('Element count of value ({}) doesn\'t match type_definition ({})'.format(
-                    len(value), len(self.type_mapping))
-                )
+        if type(value) not in (list,  tuple):
+            value = [value]
 
-            for idx, member_type in enumerate(self.type_mapping):
+        if len(value) != len(self.type_mapping):
+            raise ValueError('Element count of value ({}) doesn\'t match type_definition ({})'.format(
+                len(value), len(self.type_mapping))
+            )
 
-                element_obj = self.get_decoder_class(
-                    member_type, metadata=self.metadata, runtime_config=self.runtime_config
-                )
-                data += element_obj.encode(value[idx])
+        for idx, member_type in enumerate(self.type_mapping):
+
+            element_obj = self.runtime_config.create_scale_object(
+                member_type, metadata=self.metadata
+            )
+            data += element_obj.encode(value[idx])
+            self.value_object += (element_obj,)
 
         return data
 
@@ -565,7 +575,7 @@ class Set(ScaleType):
             if item in value:
                 result += set_mask
 
-        u64_obj = self.get_decoder_class(type_string=self.value_type, runtime_config=self.runtime_config)
+        u64_obj = self.runtime_config.create_scale_object(type_string=self.value_type)
 
         return u64_obj.encode(result)
 
@@ -668,6 +678,10 @@ class Era(ScaleType):
             return 2**64 - 1
         return self.birth(current) + self.period
 
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        return
+
 
 class Bool(ScaleType):
 
@@ -715,31 +729,11 @@ class ProposalPreimage(Struct):
             result[key] = self.process_type(data_type, metadata=self.metadata).value
 
         # Replace HexBytes with actual proposal
-        result['proposal'] = self.get_decoder_class('Proposal', data=ScaleBytes(result['proposal']),
-                                                    metadata=self.metadata).decode()
+        result['proposal'] = self.runtime_config.create_scale_object(
+            'Proposal', data=ScaleBytes(result['proposal']), metadata=self.metadata
+        ).decode()
 
         return result
-
-
-class ValidatorPrefs(Struct):
-    type_string = '(Compact<Balance>)'
-
-    type_mapping = (('commission', 'Compact<Balance>'),)
-
-
-class ValidatorPrefsLegacy(Struct):
-    type_string = '(Compact<u32>,Compact<Balance>)'
-
-    type_mapping = (('unstakeThreshold', 'Compact<u32>'), ('validatorPayment', 'Compact<Balance>'))
-
-
-class Linkage(Struct):
-    type_string = 'Linkage<AccountId>'
-
-    type_mapping = (
-        ('previous', 'Option<AccountId>'),
-        ('next', 'Option<AccountId>')
-    )
 
 
 class GenericAccountId(H256):
@@ -770,6 +764,10 @@ class GenericAccountId(H256):
 
         return value
 
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        return
+
 
 class GenericAccountIndex(U32):
     pass
@@ -784,43 +782,88 @@ class Vec(ScaleType):
     def process(self):
         element_count = self.process_type('Compact<u32>').value
 
+        # Check for Bytes processing
+        if self.runtime_config.get_decoder_class(self.sub_type) is U8:
+            value = self.get_next_bytes(element_count)
+
+            try:
+                return value.decode()
+            except UnicodeDecodeError:
+                return '0x{}'.format(value.hex())
+
         result = []
         for _ in range(0, element_count):
             element = self.process_type(self.sub_type, metadata=self.metadata)
             self.elements.append(element)
             result.append(element.value)
 
+        self.value_object = self.elements
+
         return result
 
     def process_encode(self, value):
 
-        if type(value) is not list:
-            raise ValueError("Provided value is not a list")
-
         # encode element count to Compact<u32>
         element_count_compact = CompactU32()
+
+        # Check for Bytes processing
+        if self.runtime_config.get_decoder_class(self.sub_type) is U8:
+            string_length_compact = CompactU32()
+
+            if type(value) is str:
+                if value[0:2] == '0x':
+                    # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
+                    value = bytes.fromhex(value[2:])
+                else:
+                    value = value.encode()
+
+            elif type(value) in (bytearray, list):
+                value = bytes(value)
+
+            if type(value) is not bytes:
+                raise ValueError(f'Cannot encode type "{type(value)}"')
+
+            self.value_object = value
+
+            data = string_length_compact.encode(len(value))
+            data += value
+
+            return data
+
+        if type(value) is not list:
+            raise ValueError("Provided value is not a list")
 
         element_count_compact.encode(len(value))
 
         data = element_count_compact.data
+        self.value_object = []
 
         for element in value:
 
-            element_obj = self.get_decoder_class(
-                type_string=self.sub_type, metadata=self.metadata, runtime_config=self.runtime_config
+            element_obj = self.runtime_config.create_scale_object(
+                type_string=self.sub_type, metadata=self.metadata
             )
             data += element_obj.encode(element)
+            self.value_object.append(element_obj)
 
         return data
+
+    def __len__(self):
+        return len(self.value_object)
 
 
 class BoundedVec(Vec):
     def __init__(self, data=None, **kwargs):
 
-        # Rebuild sub_type as last item is the upper bound of elements allowed
-        self.sub_type, self.max_elements = [x.strip() for x in self.sub_type.rsplit(',', 1)]
+        if self.sub_type and ',' in self.sub_type:
+            # Rebuild sub_type as last item is the upper bound of elements allowed
+            self.sub_type, self.max_elements = [x.strip() for x in self.sub_type.rsplit(',', 1)]
 
         super().__init__(data, **kwargs)
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
 
 
 class BitVec(ScaleType):
@@ -847,6 +890,8 @@ class BitVec(ScaleType):
 
         if type(value) is not int:
             raise ValueError("Provided value is not an int, binary str or a list of booleans")
+
+        self.value_object = value
 
         if value == 0:
             return ScaleBytes(b'\x00')
@@ -977,9 +1022,15 @@ class Enum(ScaleType):
         if self.type_mapping:
             try:
                 enum_type_mapping = self.type_mapping[self.index]
-                return self.process_type(
-                    type_string='Struct', type_mapping=[enum_type_mapping]
-                ).value
+
+                if enum_type_mapping[1] is None or enum_type_mapping[1] == 'Null':
+                    return enum_type_mapping[0]
+
+                result_obj = self.process_type(enum_type_mapping[1], metadata=self.metadata)
+
+                self.value_object = (enum_type_mapping[0], result_obj)
+
+                return {enum_type_mapping[0]: result_obj.value}
 
             except IndexError:
                 raise ValueError("Index '{}' not present in Enum type mapping".format(self.index))
@@ -997,7 +1048,7 @@ class Enum(ScaleType):
                 value = {value: None}
 
             if type(value) != dict:
-                raise ValueError("Value must be a dict when type_mapping is set, not '{}'".format(value))
+                raise ValueError("Value must be a dict or str when type_mapping is set, not '{}'".format(value))
 
             if len(value) != 1:
                 raise ValueError("Value for enum with type_mapping can only have one value")
@@ -1006,12 +1057,13 @@ class Enum(ScaleType):
                 for idx, (item_key, item_value) in enumerate(self.type_mapping):
                     if item_key == enum_key:
                         self.index = idx
-                        struct_obj = self.get_decoder_class(
+                        struct_obj = self.runtime_config.create_scale_object(
                             type_string='Struct',
-                            type_mapping=[self.type_mapping[self.index]],
-                            runtime_config=self.runtime_config
+                            type_mapping=[(item_key, item_value)]
                         )
-                        return ScaleBytes(bytearray([self.index])) + struct_obj.encode(value)
+                        struct_data = struct_obj.encode(value)
+                        self.value_object = (item_key, struct_obj)
+                        return ScaleBytes(bytearray([self.index])) + struct_data
 
                 raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
@@ -1055,7 +1107,7 @@ class Data(Enum):
         if self.index == 0:
             return {'None': None}
 
-        elif self.index >= 1 and self.index <= 33:
+        elif 1 <= self.index <= 33:
             # Determine value of Raw type (length is processed in index byte)
             data = self.get_next_bytes(self.index - 1)
 
@@ -1065,7 +1117,7 @@ class Data(Enum):
                 value = '0x{}'.format(data.hex())
             return {"Raw": value}
 
-        elif self.index >= 34 and self.index <= 37:
+        elif 34 <= self.index <= 37:
 
             enum_value = self.type_mapping[self.index - 32][0]
 
@@ -1109,13 +1161,16 @@ class Data(Enum):
                             return ScaleBytes(bytearray(data))
                     else:
 
-                        struct_obj = self.get_decoder_class(
-                            type_string=self.type_mapping[self.index][1],
-                            runtime_config=self.runtime_config
+                        struct_obj = self.runtime_config.create_scale_object(
+                            type_string=self.type_mapping[self.index][1]
                         )
                         return ScaleBytes(bytearray([self.index + 32])) + struct_obj.encode(enum_value)
 
             raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+        return
 
 
 class Null(ScaleType):
@@ -1125,10 +1180,6 @@ class Null(ScaleType):
 
     def process_encode(self, value):
         return ScaleBytes(bytearray())
-
-
-class InherentOfflineReport(Null):
-    pass
 
 
 class StorageHasher(Enum):
@@ -1157,93 +1208,6 @@ class StorageHasher(Enum):
         return self.index == 6
 
 
-class LockPeriods(U8):
-    pass
-
-
-class SessionKey(H256):
-    pass
-
-
-class PrefabWasmModule(Struct):
-    type_string = 'wasm::PrefabWasmModule'
-
-    type_mapping = (
-        ('scheduleVersion', 'Compact<u32>'),
-        ('initial', 'Compact<u32>'),
-        ('maximum', 'Compact<u32>'),
-        ('_reserved', 'Option<Null>'),
-        ('code', 'Bytes'),
-    )
-
-
-class SessionKeysSubstrate(Struct):
-
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-        ('babe', 'AccountId'),
-        ('im_online', 'AccountId'),
-    )
-
-
-class LegacyKeys(Struct):
-
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-        ('babe', 'AccountId'),
-    )
-
-
-class EdgewareKeys(Struct):
-    type_mapping = (
-        ('grandpa', 'AccountId'),
-    )
-
-
-class QueuedKeys(Struct):
-
-    type_string = '(ValidatorId, Keys)'
-
-    type_mapping = (
-        ('validator', 'ValidatorId'),
-        ('keys', 'Keys'),
-    )
-
-
-class LegacyQueuedKeys(Struct):
-
-    type_string = '(ValidatorId, LegacyKeys)'
-
-    type_mapping = (
-        ('validator', 'ValidatorId'),
-        ('keys', 'LegacyKeys'),
-    )
-
-
-class EdgewareQueuedKeys(Struct):
-
-    type_string = '(ValidatorId, EdgewareKeys)'
-
-    type_mapping = (
-        ('validator', 'ValidatorId'),
-        ('keys', 'EdgewareKeys'),
-    )
-
-
-class VecQueuedKeys(Vec):
-    type_string = 'Vec<(ValidatorId, Keys)>'
-
-    def process(self):
-        element_count = self.process_type('Compact<u32>').value
-        result = []
-        for _ in range(0, element_count):
-            element = self.process_type('QueuedKeys')
-            self.elements.append(element)
-            result.append(element.value)
-
-        return result
-
-
 class Conviction(Enum):
     CONVICTION_MASK = 0b01111111
     DEFAULT_CONVICTION = 0b00000000
@@ -1262,17 +1226,48 @@ class GenericBlock(ScaleType):
 
 
 class GenericVote(U8):
-    pass
+
+    def process(self):
+        value = super().process()
+
+        conviction = self.runtime_config.create_scale_object(
+            'Conviction',
+        )
+
+        conviction.decode(ScaleBytes(bytearray([value & Conviction.CONVICTION_MASK])))
+
+        aye = (value & 0b1000_0000) == 0b1000_0000
+
+        self.value_object = {
+            'aye': aye,
+            'conviction': conviction
+        }
+
+        return {
+            'aye': aye,
+            'conviction': conviction.value
+        }
+
+    def process_encode(self, value):
+
+        if type(value) is dict:
+            conviction = self.runtime_config.create_scale_object('Conviction')
+            conviction.encode(value['conviction'])
+
+            value = conviction.index | (0b1000_0000 if value['aye'] else 0)
+
+        if type(value) is not int:
+            raise ValueError('Incorrect format for vote')
+
+        return super().process_encode(value)
 
 
 class GenericCall(ScaleType):
 
-    type_string = "Box<Call>"
-
     def __init__(self, data, **kwargs):
         self.call_index = None
         self.call_function = None
-        self.call_args = []
+        self.call_args = {}
         self.call_module = None
         self.call_hash = None
 
@@ -1280,75 +1275,203 @@ class GenericCall(ScaleType):
 
     def process(self):
 
-        self.call_index = self.get_next_bytes(2).hex()
+        if self.metadata.portable_registry:
+            pallet_index = self.process_type('U8')
 
-        self.call_module, self.call_function = self.metadata.call_index[self.call_index]
+            self.call_module = self.metadata.get_pallet_by_index(pallet_index.value)
+            call_type_string = self.call_module['calls'].value_object.get_type_string()
 
-        call_bytes = bytes.fromhex(self.call_index)
+            call_obj = self.process_type(call_type_string)
 
-        for arg in self.call_function.args:
-            arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+            self.call_index = "{:02x}{:02x}".format(pallet_index.value, call_obj.index)
 
-            call_bytes += arg_type_obj.get_used_bytes()
+            self.call_function = call_obj.scale_info_type['def'][1].get_variant_by_index(call_obj.index)
 
-            self.call_args.append({
-                'name': arg.name,
-                'type': arg.type,
-                'value': arg_type_obj.serialize()
-            })
+            self.call_args = self.call_function['fields']
 
-        call_hash = blake2b(call_bytes, digest_size=32).digest()
+            call_hash = blake2b(self.get_used_bytes(), digest_size=32).digest()
 
-        return {
-            'call_index': f'0x{self.call_index}',
-            'call_function': self.call_function.name,
-            'call_module': self.call_module.name,
-            'call_args': self.call_args,
-            'call_hash': f'0x{call_hash.hex()}'
-        }
+            # Check args format
+            if type(call_obj[1].value_object) is not tuple:
+                call_args_values = (call_obj[1],)
+            else:
+                call_args_values = call_obj[1]
+
+            call_args = []
+
+            for idx, call_arg in enumerate(self.call_args):
+                call_args.append({
+                    'name': call_arg.value['name'],
+                    'type': self.convert_type(call_arg.value['typeName']),
+                    'value': call_args_values[idx].value
+                })
+                self.call_args[idx].value_object['value'] = call_args_values[idx]
+
+            self.value_object = {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function,
+                'call_module': self.call_module,
+                'call_args': self.call_args,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
+
+            return {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function.name,
+                'call_module': self.call_module.name,
+                'call_args': call_args,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
+
+        else:
+
+            self.call_index = self.get_next_bytes(2).hex()
+
+            self.call_module, self.call_function = self.metadata.call_index[self.call_index]
+
+            call_bytes = bytes.fromhex(self.call_index)
+
+            call_args_serialized = []
+
+            for arg in self.call_function.args:
+                arg_type_obj = self.process_type(arg.type, metadata=self.metadata)
+
+                call_bytes += arg_type_obj.get_used_bytes()
+
+                self.call_args[arg.name] = arg_type_obj
+
+                call_args_serialized.append({
+                    'name': arg.name,
+                    'type': arg.type,
+                    'value': arg_type_obj.serialize()
+                })
+
+            call_hash = blake2b(call_bytes, digest_size=32).digest()
+
+            self.value_object = {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function,
+                'call_module': self.call_module,
+                'call_args': self.call_args,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
+
+            return {
+                'call_index': f'0x{self.call_index}',
+                'call_function': self.call_function.name,
+                'call_module': self.call_module.name,
+                'call_args': call_args_serialized,
+                'call_hash': f'0x{call_hash.hex()}'
+            }
 
     def process_encode(self, value):
+
+        self.value_object = {}
 
         if type(value) is not dict:
             raise TypeError("value must be of type dict to encode a GenericCall")
 
-        # Check requirements
-        if 'call_index' in value:
-            self.call_index = value['call_index']
+        if self.metadata.portable_registry:
+            if 'call_index' in value:
+                raise NotImplementedError()
+            elif 'call_module' in value and 'call_function' in value:
+                self.call_module = self.metadata.get_metadata_pallet(value['call_module'])
+                self.value_object['call_module'] = self.call_module
 
-        elif 'call_module' in value and 'call_function' in value:
-            # Look up call module from metadata
-            for call_index, (call_module, call_function) in self.metadata.call_index.items():
+            elif not self.call_module or not self.call_function:
+                raise ValueError('No call module and function specified')
 
-                if call_module.name == value['call_module'] and call_function.name == value['call_function']:
-                    self.call_index = call_index
-                    self.call_module = call_module
-                    self.call_function = call_function
-                    break
+            if not self.call_module:
+                raise ValueError(f"Pallet '{value['call_module']}' not found")
 
-            if not self.call_index:
-                raise MetadataCallFunctionNotFound(
-                    f"Call function '{value['call_module']}.{value['call_function']}' not found in metadata"
-                )
+            data = ScaleBytes(self.call_module['index'].get_used_bytes())
 
-        elif not self.call_module or not self.call_function:
-            raise ValueError('No call module and function specified')
+            call_type_string = self.call_module['calls'].value_object.get_type_string()
 
-        data = ScaleBytes(bytearray.fromhex(self.call_index))
+            call_obj = self.runtime_config.create_scale_object(call_type_string)
 
-        # Encode call params
-        if len(self.call_function.args) > 0:
-            for arg in self.call_function.args:
-                if arg.name not in value['call_args']:
-                    raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
-                else:
-                    param_value = value['call_args'][arg.name]
+            # Retrieve used variant of call type
+            self.call_function = call_obj.scale_info_type['def'][1].get_variant_by_name(value['call_function'])
 
-                    arg_obj = self.get_decoder_class(
-                        type_string=arg.type, metadata=self.metadata, runtime_config=self.runtime_config
+            if not self.call_function:
+                raise ValueError(f"Call function '{value['call_module']}.{value['call_function']}' not found")
+
+            self.value_object['call_function'] = self.call_function
+
+            data += ScaleBytes(self.call_function['index'].get_used_bytes())
+
+            self.call_index = "{:02x}{:02x}".format(
+                self.call_module.value['index'], self.call_function.value['index']
+            )
+
+            self.call_args = self.call_function['fields']
+
+            # Encode call params
+            if len(self.call_args) > 0:
+                self.value_object['call_args'] = {}
+
+                for arg in self.call_args:
+                    if arg.value['name'] not in value['call_args']:
+                        raise ValueError('Parameter \'{}\' not specified'.format(arg.value['name']))
+                    else:
+                        param_value = value['call_args'][arg.value['name']]
+
+                        arg_obj = self.runtime_config.create_scale_object(
+                            type_string=arg.get_type_string(),
+                            metadata=self.metadata
+                        )
+                        data += arg_obj.encode(param_value)
+
+                        self.value_object['call_args'][arg.value['name']] = arg_obj
+
+            self.call_hash = blake2b(data.data, digest_size=32).digest()
+
+            return data
+
+        else:
+
+            # Check requirements
+            if 'call_index' in value:
+                self.call_index = self.value_object['call_index'] = value['call_index']
+
+            elif 'call_module' in value and 'call_function' in value:
+                # Look up call module from metadata
+                for call_index, (call_module, call_function) in self.metadata.call_index.items():
+
+                    if call_module.name == value['call_module'] and call_function.name == value['call_function']:
+                        self.call_index = self.value_object['call_index'] = call_index
+                        self.call_module = self.value_object['call_module'] = call_module
+                        self.call_function = self.value_object['call_function'] = call_function
+                        break
+
+                if not self.call_index:
+                    raise MetadataCallFunctionNotFound(
+                        f"Call function '{value['call_module']}.{value['call_function']}' not found in metadata"
                     )
-                    data += arg_obj.encode(param_value)
-        return data
+
+            elif not self.call_module or not self.call_function:
+                raise ValueError('No call module and function specified')
+
+            data = ScaleBytes(bytearray.fromhex(self.call_index))
+
+            # Encode call params
+            if len(self.call_function.args) > 0:
+                self.value_object['call_args'] = {}
+
+                for arg in self.call_function.args:
+                    if arg.name not in value['call_args']:
+                        raise ValueError('Parameter \'{}\' not specified'.format(arg.name))
+                    else:
+                        param_value = value['call_args'][arg.name]
+
+                        arg_obj = self.runtime_config.create_scale_object(
+                            type_string=arg.type, metadata=self.metadata
+                        )
+                        data += arg_obj.encode(param_value)
+
+                        self.value_object['call_args'][arg.name] = arg_obj
+
+            return data
 
 
 class GenericContractExecResult(Enum):
@@ -1383,19 +1506,18 @@ class GenericContractExecResult(Enum):
 class OpaqueCall(Bytes):
 
     def process_encode(self, value):
-        call_obj = self.get_decoder_class(
-            type_string='Call', metadata=self.metadata, runtime_config=self.runtime_config
+        call_obj = self.runtime_config.create_scale_object(
+            type_string='Call', metadata=self.metadata
         )
         return super().process_encode(str(call_obj.encode(value)))
 
     def process(self):
         value = super().process()
         try:
-            call_obj = self.get_decoder_class(
+            call_obj = self.runtime_config.create_scale_object(
                 type_string='Call',
-                data=ScaleBytes('0x{}'.format(self.raw_value)),
-                metadata=self.metadata,
-                runtime_config=self.runtime_config
+                data=ScaleBytes(value),
+                metadata=self.metadata
             )
 
             return call_obj.process()
@@ -1415,9 +1537,9 @@ class MultiAccountId(GenericAccountId):
                 account = '0x{}'.format(ss58_decode(account))
             account_ids.append(account)
 
-        account_list_cls = cls.get_decoder_class('Vec<AccountId>', runtime_config=cls.runtime_config)
+        account_list_cls = cls.runtime_config.create_scale_object('Vec<AccountId>')
         account_list_data = account_list_cls.encode(sorted(account_ids))
-        threshold_data = cls.get_decoder_class("u16").encode(threshold)
+        threshold_data = cls.runtime_config.create_scale_object("u16").encode(threshold)
 
         multi_account_id = "0x{}".format(blake2b(
             b"modlpy/utilisuba" + bytes(account_list_data.data) + bytes(threshold_data.data), digest_size=32
@@ -1436,8 +1558,9 @@ class FixedLengthArray(ScaleType):
     def process(self):
 
         if self.element_count:
-            if self.sub_type == 'u8':
-                return '0x{}'.format(self.get_next_bytes(self.element_count).hex())
+            if self.runtime_config.get_decoder_class(self.sub_type) is U8:
+                self.value_object = self.get_next_bytes(self.element_count)
+                return '0x{}'.format(self.value_object.hex())
             else:
                 result = []
                 for idx in range(self.element_count):
@@ -1452,7 +1575,7 @@ class FixedLengthArray(ScaleType):
 
         value = value or []
 
-        if self.sub_type == 'u8':
+        if self.runtime_config.get_decoder_class(self.sub_type) is U8:
             # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
             if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
                 raise ValueError('Value should start with "0x" and should be {} bytes long'.format(self.element_count))
@@ -1465,8 +1588,8 @@ class FixedLengthArray(ScaleType):
                 raise ValueError('Given value is not a list')
 
             for element_value in value:
-                element_obj = self.get_decoder_class(
-                    type_string=self.sub_type, metadata=self.metadata, runtime_config=self.runtime_config
+                element_obj = self.runtime_config.create_scale_object(
+                    type_string=self.sub_type, metadata=self.metadata
                 )
                 data += element_obj.encode(element_value)
 
@@ -1519,12 +1642,15 @@ class GenericMultiAddress(Enum):
         elif type(value) is str:
             if len(value) <= 8 and value[0:2] != '0x':
                 # Implied raw AccountIndex
-                value = {"Index": ss58_decode_account_index(value)}
+                self.account_index = ss58_decode_account_index(value)
+                value = {"Index": self.account_index}
             elif is_valid_ss58_address(value):
                 # Implied SS58 encoded AccountId
-                value = {"Id": f'0x{ss58_decode(value)}'}
+                self.account_id = ss58_decode(value)
+                value = {"Id": f'0x{self.account_id}'}
             elif len(value) == 66 and value[0:2] == '0x':
                 # Implied raw AccountId
+                self.account_id = value[2:]
                 value = {"Id": value}
             elif len(value) == 42:
                 # Implied raw Address20
@@ -1539,7 +1665,10 @@ class Map(ScaleType):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.map_key, self.map_value = [x.strip() for x in self.sub_type.split(',')]
+
+        sub_type_parts = [x.strip() for x in self.sub_type.split(',')]
+        self.map_key = sub_type_parts[0]
+        self.map_value = sub_type_parts[1]
 
     def process(self):
 
@@ -1564,13 +1693,13 @@ class Map(ScaleType):
         data = element_count_compact.data
 
         for item_key, item_value in value:
-            key_obj = self.get_decoder_class(
-                type_string=self.map_key, metadata=self.metadata, runtime_config=self.runtime_config
+            key_obj = self.runtime_config.create_scale_object(
+                type_string=self.map_key, metadata=self.metadata
             )
             data += key_obj.encode(item_key)
 
-            value_obj = self.get_decoder_class(
-                type_string=self.map_value, metadata=self.metadata, runtime_config=self.runtime_config
+            value_obj = self.runtime_config.create_scale_object(
+                type_string=self.map_value, metadata=self.metadata
             )
             data += value_obj.encode(item_value)
 
@@ -1591,3 +1720,924 @@ class BoundedBTreeMap(BTreeMap):
 
 class BTreeSet(Vec):
     pass
+
+
+class GenericMetadataAll(Enum):
+
+    def __init__(self, data, sub_type=None, **kwargs):
+        self.__call_index = {}
+        self.event_index = {}
+        self.error_index = {}
+
+        super().__init__(data, sub_type, **kwargs)
+
+    def get_call_function(self, pallet_index, call_index):
+        return self.call_index.get(f'{pallet_index}-{call_index}')
+
+    @property
+    def pallets(self):
+        metadata_obj = self.value_object[1]
+
+        if self.index >= 14:
+            return metadata_obj.value_object['pallets'].value_object
+        else:
+            return metadata_obj.value_object['modules'].value_object
+
+    @property
+    def call_index(self):
+        return self.__call_index
+
+    @property
+    def portable_registry(self):
+        if self.index >= 14:
+            return self.value_object[1].value_object['types']
+
+    def get_event(self, pallet_index, event_index):
+        pass
+
+    def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
+
+        if self.index >= 14:
+            for pallet in self[1]['pallets']:
+                if pallet.value['name'] == name:
+                    return pallet
+        else:
+            for pallet in self[1]['modules']:
+                if pallet.value['name'] == name:
+                    return pallet
+
+    def process(self):
+        value = super().process()
+
+        metadata_obj = self.value_object[1]
+
+        if self.index in (12, 13):
+            for module in metadata_obj['modules']:
+
+                # Build call index
+                if module['calls'].value is not None:
+                    for call_index, call in enumerate(module['calls']):
+                        call.lookup = "{:02x}{:02x}".format(module["index"].value, call_index)
+                        self.call_index[call.lookup] = (module, call)
+
+                # Build event index
+                if module['events'].value is not None:
+                    for event_index, event in enumerate(module['events']):
+                        event.lookup = "{:02x}{:02x}".format(module["index"].value, event_index)
+                        self.event_index[event.lookup] = (module, event)
+
+                # Create error index
+                if len(module['errors'].value_object or []) > 0:
+                    for idx, error in enumerate(module['errors']):
+                        self.error_index[f'{module["index"].value_object}-{idx}'] = error
+
+        elif self.index < 12:
+            # TODO V9 - V11 processing
+            call_module_index = 0
+            event_module_index = 0
+            error_module_index = 0
+
+            for module in metadata_obj['modules'].value_object:
+                # Build call index
+                if module['calls'].value_object is not None:
+                    for call_index, call in enumerate(module.value_object['calls'].value_object.value_object):
+                        call.lookup = "{:02x}{:02x}".format(call_module_index, call_index)
+                        self.call_index[call.lookup] = (module, call)
+                    call_module_index += 1
+
+                # Build event index
+                if module.value_object['events'].value_object is not None:
+                    for event_index, event in enumerate(module.value_object['events'].value_object.value_object):
+                        event.lookup = "{:02x}{:02x}".format(event_module_index, event_index)
+                        self.event_index[event.lookup] = (module, event)
+                    event_module_index += 1
+
+                # Create error index
+                if len(module.value_object['errors'].value_object or []) > 0:
+                    for idx, error in enumerate(module.value_object['errors'].value_object):
+                        self.error_index[f'{error_module_index}-{idx}'] = error
+                    error_module_index += 1
+
+        return value
+
+
+class GenericMetadataVersioned(Tuple):
+
+    @property
+    def call_index(self):
+        return self.value_object[1].call_index
+
+    @property
+    def event_index(self):
+        return self.value_object[1].event_index
+
+    def get_module_error(self, module_index, error_index):
+        return self.value_object[1].error_index.get(f'{module_index}-{error_index}')
+
+    def get_metadata(self):
+        return self.value_object[1]
+
+    @property
+    def portable_registry(self):
+        return self.value_object[1].portable_registry
+
+    @property
+    def pallets(self):
+        return self.value_object[1].pallets
+
+    def process(self):
+        value = super().process()
+
+        # # Create error index
+        # if self.index >= 12:
+        #     for module in self.metadata.modules:
+        #         if len(module.errors or []) > 0:
+        #             for idx, error in enumerate(module.errors):
+        #                 self.error_index[f'{module.index}-{idx}'] = error
+        # else:
+        #     error_module_index = 0
+        #     for module in self.metadata.modules:
+        #         if len(module.errors or []) > 0:
+        #             for idx, error in enumerate(module.errors):
+        #                 self.error_index[f'{error_module_index}-{idx}'] = error
+        #             error_module_index += 1
+
+        return value
+
+    def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
+        metadata = self.get_metadata()
+        return metadata.get_metadata_pallet(name)
+
+    def get_pallet_by_index(self, index: int):
+        try:
+            return self.pallets[index]
+        except IndexError:
+            raise ValueError(f'Pallet for index "{index}" not found')
+
+
+class GenericStringType(String):
+    @property
+    def name(self):
+        return None
+
+    @property
+    def type(self):
+        return self.value
+
+
+class GenericRegistryType(Struct):
+
+    @property
+    def docs(self):
+        return self.value['docs']
+
+    def process_encode(self, value):
+        if 'params' not in value:
+            value['params'] = []
+
+        if 'path' not in value:
+            value['path'] = []
+
+        if 'docs' not in value:
+            value['docs'] = []
+
+        return super().process_encode(value)
+
+
+class GenericField(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def docs(self):
+        return self.value['docs']
+
+    @property
+    def type(self):
+        return self.get_type_string()
+
+    def get_type_string(self):
+        return f"scale_info::{self.value['type']}"
+
+    def process_encode(self, value):
+        if 'name' not in value:
+            value['name'] = None
+
+        if 'typeName' not in value:
+            value['typeName'] = None
+
+        if 'docs' not in value:
+            value['docs'] = []
+
+        return super().process_encode(value)
+
+
+class GenericVariant(Struct):
+
+    @property
+    def args(self):
+        return self.value_object['fields']
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def docs(self):
+        return self.value['docs']
+
+    def process_encode(self, value):
+        if 'index' not in value:
+            value['index'] = None
+
+        if 'discriminant' not in value:
+            value['discriminant'] = None
+
+        if 'fields' not in value:
+            value['fields'] = []
+
+        if 'docs' not in value:
+            value['docs'] = []
+
+        return super().process_encode(value)
+
+
+class GenericTypeDefComposite(Struct):
+    def process_encode(self, value):
+
+        if 'fields' not in value:
+            value['fields'] = []
+
+        return super().process_encode(value)
+
+
+class GenericTypeDefVariant(Struct):
+
+    def get_variant_by_name(self, name: str) -> GenericVariant:
+        for variant in self.value_object['variants']:
+            if variant['name'].value == name:
+                return variant
+
+    def get_variant_by_index(self, index: int) -> GenericVariant:
+        for variant in self.value_object['variants']:
+            if variant['index'].value == index:
+                return variant
+
+    def process_encode(self, value):
+
+        if 'variants' not in value:
+            value['variants'] = []
+
+        return super().process_encode(value)
+
+
+class GenericFunctionArgumentMetadata(Struct):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def process(self):
+        value = super().process()
+        return value
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def type(self):
+        return self.convert_type(self.value['type'])
+
+
+class GenericFunctionMetadata(Struct):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    def get_identifier(self):
+        return self.value['name']
+
+    @property
+    def args(self):
+        return self.value_object['args'].value_object
+
+    @property
+    def docs(self):
+        return self.value['documentation']
+
+
+class ScaleInfoCallMetadata(Struct):
+
+    def get_type_string(self):
+        return f"scale_info::{self.value['ty']}"
+
+    @property
+    def calls(self):
+        if self.value_object:
+            call_enum = self.runtime_config.get_decoder_class(
+                self.get_type_string()
+            )
+            return call_enum.scale_info_type['def'][1]['variants']
+        else:
+            return []
+
+
+class ScaleInfoPalletErrorMetadata(Struct):
+    def get_type_string(self):
+        return f"scale_info::{self.value['ty']}"
+
+    @property
+    def errors(self):
+        if self.value_object:
+            error_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return error_enum.scale_info_type['def'][1]['variants']
+        else:
+            return []
+
+
+class ScaleInfoPalletEventMetadata(Struct):
+    def get_type_string(self):
+        return f"scale_info::{self.value['ty']}"
+
+    @property
+    def events(self):
+        if self.value_object:
+            event_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return event_enum.scale_info_type['def'][1]['variants']
+        else:
+            return []
+
+
+class GenericPalletMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    def get_identifier(self):
+        return self.value['name']
+
+    @property
+    def storage(self):
+        storage_functions = self.value_object['storage'].value_object
+
+        if storage_functions:
+            return storage_functions.value_object['entries'].value_object
+
+    @property
+    def calls(self):
+        return self.value_object['calls'].value_object
+
+    @property
+    def events(self):
+        events = self.value_object['events'].value_object
+
+        if events:
+            return events.value_object
+
+    @property
+    def constants(self):
+        return self.value_object['constants'].value_object
+
+    @property
+    def errors(self):
+        return self.value_object['errors'].value_object
+
+    def get_storage_function(self, name: str):
+        storage_functions = self.value_object['storage'].value_object
+
+        if storage_functions.value_object:
+            for storage_function in storage_functions['entries']:
+                if storage_function.value['name'] == name:
+                    return storage_function
+
+
+class ScaleInfoPalletMetadata(GenericPalletMetadata):
+
+    @property
+    def calls(self):
+        if self.value_object['calls'].value_object:
+            return self.value_object['calls'].value_object.calls
+        else:
+            return []
+
+    @property
+    def events(self):
+        if self.value_object['event'].value_object:
+            return self.value_object['event'].value_object.events
+        else:
+            return []
+
+    @property
+    def errors(self):
+        if self.value_object['error'].value_object:
+            return self.value_object['error'].value_object.errors
+        else:
+            return []
+
+
+class GenericStorageEntryMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def type(self):
+        return self.value['type']
+
+    def get_type_string_for_type(self, ty):
+        return self.convert_type(ty)
+
+    def get_value_type_string(self):
+        if 'Plain' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Plain'])
+        elif 'Map' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Map']['value'])
+        elif 'DoubleMap' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['DoubleMap']['value'])
+        elif 'NMap' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['NMap']['value'])
+        else:
+            raise NotImplementedError()
+
+    def get_params_type_string(self):
+        if 'Plain' in self.value['type']:
+            return []
+        elif 'Map' in self.value['type']:
+            return [self.get_type_string_for_type(self.value['type']['Map']['key'])]
+        elif 'DoubleMap' in self.value['type']:
+            return [
+                self.get_type_string_for_type(self.value['type']['DoubleMap']['key1']),
+                self.get_type_string_for_type(self.value['type']['DoubleMap']['key2'])
+            ]
+        elif 'NMap' in self.value['type']:
+            return [self.get_type_string_for_type(k) for k in self.value['type']['NMap']['keys']]
+        else:
+            raise NotImplementedError()
+
+    def get_param_hashers(self):
+        if 'Plain' in self.value['type']:
+            return ['Twox64Concat']
+        elif 'Map' in self.value['type']:
+            return [self.value['type']['Map']['hasher']]
+        elif 'DoubleMap' in self.value['type']:
+            return [
+                self.value['type']['DoubleMap']['hasher'],
+                self.value['type']['DoubleMap']['key2_hasher']
+            ]
+        elif 'NMap' in self.value['type']:
+            return self.value['type']['NMap']['hashers']
+        else:
+            raise NotImplementedError()
+
+
+class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
+
+    def get_type_string_for_type(self, ty):
+        return f'scale_info::{ty}'
+
+    def get_value_type_string(self):
+        if 'Plain' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Plain'])
+        elif 'Map' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Map']['value'])
+        else:
+            raise NotImplementedError()
+
+    def get_params_type_string(self):
+        if 'Plain' in self.value['type']:
+            return []
+        elif 'Map' in self.value['type']:
+            key_type_string = self.get_type_string_for_type(self.value['type']['Map']['key'])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            if nmap_key_scale_type.type_mapping:
+
+                param_types = []
+                for param_type in nmap_key_scale_type.type_mapping:
+                    if type(param_type) is list:
+                        param_types.append(param_type[1])
+                    else:
+                        param_types.append(param_type)
+
+                return param_types
+            else:
+                return [key_type_string]
+        else:
+            raise NotImplementedError()
+
+    def get_param_hashers(self):
+        if 'Plain' in self.value['type']:
+            return ['Twox64Concat']
+        elif 'Map' in self.value['type']:
+            return self.value['type']['Map']['hashers']
+        else:
+            raise NotImplementedError()
+
+
+class GenericEventMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def args(self):
+        return self.value_object['args']
+
+
+class GenericErrorMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def docs(self):
+        return self.value['documentation']
+
+
+class GenericModuleConstantMetadata(Struct):
+
+    @property
+    def name(self):
+        return self.value['name']
+
+    @property
+    def type(self):
+        return self.convert_type(self.value['type'])
+
+    @property
+    def docs(self):
+        return self.value['documentation']
+
+    @property
+    def constant_value(self):
+        if self.value_object.get('value'):
+            return self.value_object['value'].value_object
+
+
+class ScaleInfoModuleConstantMetadata(GenericModuleConstantMetadata):
+
+    @property
+    def type(self):
+        return f"scale_info::{self.value['type']}"
+
+
+class ScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
+
+    @property
+    def type(self):
+        return f"scale_info::{self.value['type']}"
+
+
+class TypeNotSupported(ScaleType):
+
+    def process(self):
+        raise ValueError(f"Scale type '{self.sub_type}' not support")
+
+    def process_encode(self, value):
+        raise ValueError(f"Scale type '{self.sub_type}' not support")
+
+
+class GenericExtrinsic(ScaleType):
+
+    def __init__(self, *arg, **kwargs):
+        self.signed = None
+        super().__init__(*arg, **kwargs)
+
+    @property
+    def extrinsic_hash(self):
+        if self.signed:
+            return blake2b(self.data.data, digest_size=32).digest()
+
+    def process(self):
+        self.value_object = {
+            'extrinsic_length': self.process_type('Compact<u32>'),
+        }
+
+        value = {}
+
+        version = self.process_type('u8').value
+
+        self.signed = (version & 128) == 128
+
+        if self.signed:
+            extrinsic_versions = (
+                'TypeNotSupported<ExtrinsicV0>',
+                'TypeNotSupported<ExtrinsicV1>',
+                'TypeNotSupported<ExtrinsicV2>',
+                'TypeNotSupported<ExtrinsicV3>',
+                'ExtrinsicV4'
+            )
+            extrinsic_version_idx = version & 127
+            if extrinsic_version_idx >= len(extrinsic_versions):
+                raise ValueError(f"Unsupported Extrinsic version '{extrinsic_version_idx}'")
+
+            extrinsic_version = extrinsic_versions[extrinsic_version_idx]
+
+            self.value_object.update(self.process_type(extrinsic_version, metadata=self.metadata).value_object)
+            value['extrinsic_hash'] = f'0x{self.extrinsic_hash.hex()}'
+        else:
+            self.value_object.update(self.process_type('Inherent', metadata=self.metadata).value_object)
+            value['extrinsic_hash'] = None
+
+        value.update({key: value.serialize() for (key, value) in self.value_object.items()})
+
+        return value
+
+    def process_encode(self, value):
+
+        # Backwards compatibility cases
+        if 'address' not in value and 'account_id' in value:
+            value['address'] = value['account_id']
+
+        if 'signature_version' in value:
+            multisig_cls = self.runtime_config.get_decoder_class('MultiSignature')
+            value['signature'] = {
+                multisig_cls.type_mapping[value['signature_version']][0]: value['signature']
+            }
+
+        if 'call' not in value:
+            value['call'] = {
+                'call_function': value.get('call_function'),
+                'call_module': value.get('call_module'),
+                'call_args': value.get('call_args'),
+            }
+
+        # Determine version (Fixed to V4 for now)
+        if 'address' in value:
+            data = ScaleBytes('0x84')
+            self.signed = True
+        else:
+            data = ScaleBytes('0x04')
+            self.signed = False
+
+        self.value_object = {}
+
+        if self.signed:
+            extrinsic = self.runtime_config.create_scale_object('ExtrinsicV4', metadata=self.metadata)
+        else:
+            extrinsic = self.runtime_config.create_scale_object('Inherent', metadata=self.metadata)
+
+        data += extrinsic.encode(value)
+        self.value_object.update(extrinsic.value_object)
+
+        # Wrap payload with a length Compact<u32>
+        length_obj = self.runtime_config.create_scale_object('Compact<u32>')
+        data = length_obj.encode(data.length) + data
+
+        self.value_object['extrinsic_length'] = length_obj
+
+        return data
+
+
+class Extrinsic(GenericExtrinsic):
+    pass
+
+
+class GenericEvent(Enum):
+
+    def __init__(self, *args, **kwargs):
+
+        self.event_idx = None
+        self.event_index = None
+        self.attributes = []
+        self.event = None
+        self.event_module = None
+
+        super().__init__(*args, **kwargs)
+
+    def process(self):
+
+        self.event_index = self.get_next_bytes(2).hex()
+
+        # Decode attributes
+        self.event_module = self.metadata.event_index[self.event_index][0]
+        self.event = self.metadata.event_index[self.event_index][1]
+
+        attributes_value = []
+
+        for arg_type in self.event.value['args']:
+            arg_type_obj = self.process_type(arg_type)
+
+            self.attributes.append(arg_type_obj)
+
+            attributes_value.append({
+                'type': arg_type,
+                'value': arg_type_obj.serialize()
+            })
+
+        self.value_object = {
+            'metadata_pallet': self.event_module,
+            'metadata_event': self.event,
+            'attributes': self.attributes
+        }
+
+        return {
+            'event_index': self.event_index,
+            'module_id': self.event_module.value['name'],
+            'event_id': self.event.value['name'],
+            'attributes': attributes_value,
+        }
+
+
+class GenericScaleInfoEvent(Enum):
+
+    def __init__(self, *args, **kwargs):
+
+        self.event_index = None
+        self.event = None
+        self.event_module = None
+
+        super().__init__(*args, **kwargs)
+
+    def process(self):
+
+        super().process()
+
+        self.event_index = bytes([self.index, self.value_object[1].index]).hex()
+
+        return {
+            'event_index': self.event_index,
+            'module_id': self.value_object[0],
+            'event_id': self.value_object[1][0],
+            'attributes': self.value_object[1][1].value,
+        }
+
+
+class GenericEventRecord(Struct):
+
+    @property
+    def extrinsic_idx(self):
+        return self.value['extrinsic_idx']
+
+    @property
+    def event_module(self):
+        return self.value_object['event'].event_module
+
+    @property
+    def event(self):
+        return self.value_object['event'].event
+
+    @property
+    def params(self):
+        return self.value['attributes']
+
+    def process(self):
+        value = super().process()
+
+        return {
+            'phase': self.value_object['phase'].index,
+            'extrinsic_idx': self.value_object['phase'][1].value,
+            'event': value['event'],
+            'event_index': self.value_object['event'].index,
+            'module_id': value['event']['module_id'],
+            'event_id': value['event']['event_id'],
+            'attributes': value['event']['attributes'],
+            'topics': value['topics']
+        }
+
+
+class EventRecord(Struct):
+
+    def __init__(self, *arg, **kwargs):
+
+        self.phase = None
+        self.extrinsic_idx = None
+        self.event_index = None
+        self.params = []
+        self.event = None
+        self.event_module = None
+        self.topics = []
+        self.arguments = []
+
+        super().__init__(*arg, **kwargs)
+
+    def process(self):
+
+        self.phase = self.process_type('Phase')
+
+        if self.phase.index == 0:
+            self.extrinsic_idx = self.phase.value_object[1].value
+
+        self.event_index = self.get_next_bytes(2).hex()
+
+        # Decode params
+        self.event_module = self.metadata.event_index[self.event_index][0]
+        self.event = self.metadata.event_index[self.event_index][1]
+
+        for arg_type in self.event.value['args']:
+            arg_type_obj = self.process_type(arg_type)
+
+            self.params.append({
+                'type': arg_type,
+                'value': arg_type_obj.serialize()
+            })
+
+        # Topics introduced since MetadataV5
+        if self.metadata and self.metadata.value_object[1].index >= 5:
+            self.topics = self.process_type('Vec<Hash>').value
+
+        return {
+            'phase': self.phase.index,
+            'extrinsic_idx': self.extrinsic_idx,
+            'event_index': self.event_index,
+            'module_id': self.event_module.value['name'],
+            'event_id': self.event.value['name'],
+            'params': self.params,
+            'topics': self.topics
+        }
+
+
+class GenericConsensusEngineId(FixedLengthArray):
+    sub_type = 'u8'
+    element_count = 4
+
+    def process(self):
+        return self.get_next_bytes(self.element_count).decode()
+
+
+class GenericSealV0(Struct):
+    type_string = '(u64, Signature)'
+
+    type_mapping = (('slot', 'u64'), ('signature', 'Signature'))
+
+
+class GenericConsensus(Struct):
+    type_string = '(ConsensusEngineId, Vec<u8>)'
+
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
+
+
+class GenericSeal(Struct):
+    type_string = '(ConsensusEngineId, Bytes)'
+
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
+
+
+class GenericPreRuntime(Struct):
+
+    type_mapping = (('engine', 'ConsensusEngineId'), ('data', 'HexBytes'))
+
+    def __init__(self, data, **kwargs):
+        self.authority_index = None
+        self.slot_number = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+
+        value = super().process()
+
+        if value['engine'] == 'BABE':
+            # Determine block producer
+            babe_predigest = self.runtime_config.create_scale_object(
+                type_string='RawBabePreDigest',
+                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', '')))
+            )
+
+            babe_predigest.decode()
+
+            if len(list(babe_predigest.value.values())) > 0:
+                babe_predigest_value = list(babe_predigest.value.values())[0]
+
+                value['data'] = babe_predigest_value
+                self.authority_index = babe_predigest_value['authority_index']
+                self.slot_number = babe_predigest_value['slot_number']
+
+        if value['engine'] == 'aura':
+
+            aura_predigest = self.runtime_config.create_scale_object(
+                type_string='RawAuraPreDigest',
+                data=ScaleBytes(bytearray.fromhex(value['data'].replace('0x', '')))
+            )
+            aura_predigest.decode()
+
+            value['data'] = aura_predigest.value
+            self.slot_number = aura_predigest.value['slot_number']
+
+        return value
+
+
+class LogDigest(Enum):
+
+    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'SealV0', 'Consensus', 'Seal', 'PreRuntime']
+
+    def __init__(self, data, **kwargs):
+        self.log_type = None
+        self.index_value = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.index = int(self.get_next_bytes(1).hex())
+        self.index_value = self.value_list[self.index]
+        self.log_type = self.process_type(self.value_list[self.index])
+
+        return {'type': self.value_list[self.index], 'value': self.log_type.value}

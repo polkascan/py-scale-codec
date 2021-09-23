@@ -15,10 +15,13 @@
 # limitations under the License.
 
 import re
+import warnings
 from abc import ABC, abstractmethod
-from typing import Optional
-
+from typing import Optional, TYPE_CHECKING
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
+
+if TYPE_CHECKING:
+    from scalecodec.types import GenericMetadataVersioned, GenericRegistryType
 
 
 class Singleton(type):
@@ -43,27 +46,29 @@ class RuntimeConfigurationObject:
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self, config_id=None, ss58_format=None):
+    def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False):
         self.config_id = config_id
-        self.type_registry = {}
+        self.type_registry = {'types': {}}
         self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
         self.chain_id = None
 
+        self.only_primitives_on_init = only_primitives_on_init
         self.ss58_format = ss58_format
 
     @classmethod
     def convert_type_string(cls, name):
 
-        name = re.sub(r'T::', "", name, flags=re.IGNORECASE)
+        name = re.sub(r'T::', "", name)
+        name = re.sub(r'^T::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T>', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Trait>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Trait<I>>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Config>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'<T as Config<I>>::', "", name, flags=re.IGNORECASE)
         name = re.sub(r'\n', "", name)
-        name = re.sub(r'(grandpa|session|slashing|limits|beefy_primitives|opaque)::', "", name)
+        name = re.sub(r'^(grandpa|session|slashing|limits|beefy_primitives|xcm::opaque)::', "", name)
         name = re.sub(r'VecDeque<', "Vec<", name, flags=re.IGNORECASE)
         name = re.sub(r'^Box<(.+)>$', r'\1', name, flags=re.IGNORECASE)
 
@@ -138,11 +143,24 @@ class RuntimeConfigurationObject:
 
         return decoder_class
 
+    def create_scale_object(self, type_string: str, data=None, **kwargs) -> 'ScaleType':
+        """
+
+        Returns
+        -------
+        ScaleType
+        """
+        decoder_class = self.get_decoder_class(type_string)
+
+        if decoder_class:
+            return decoder_class(data=data, **kwargs)
+
+        raise NotImplementedError('Decoder class for "{}" not found'.format(type_string))
+
     def clear_type_registry(self):
 
         if not self.__initial_state:
-            self.type_registry = {'types': {cls.type_string.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if
-                                            cls.type_string}}
+            self.type_registry = {'types': {}}
 
             # Class names that contains '<' are excluded because of a side effect that is introduced in
             # get_decoder_class: "Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as
@@ -155,7 +173,7 @@ class RuntimeConfigurationObject:
         self.__initial_state = True
 
     def update_type_registry_types(self, types_dict):
-        from scalecodec.types import Enum, Struct, Set
+        from scalecodec.types import Enum, Struct, Set, Tuple
 
         self.__initial_state = False
 
@@ -164,20 +182,35 @@ class RuntimeConfigurationObject:
             if type(decoder_class_data) == dict:
 
                 # Create dynamic decoder class
+                base_cls = None
+
+                if decoder_class_data.get('base_class'):
+                    base_cls = self.get_decoder_class(decoder_class_data['base_class'])
+                    if base_cls is None:
+                        raise ValueError(f"Specified base_class '{decoder_class_data['base_class']}' for type " +
+                                         f"'{type_string}' not found")
+
                 if decoder_class_data['type'] == 'struct':
 
-                    if decoder_class_data.get('base_class'):
-                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
-                    else:
+                    if base_cls is None:
                         base_cls = Struct
 
-                    decoder_class = type(type_string, (base_cls,), {'type_mapping': decoder_class_data['type_mapping']})
+                    decoder_class = type(type_string, (base_cls,), {
+                        'type_mapping': decoder_class_data.get('type_mapping')
+                    })
+
+                elif decoder_class_data['type'] == 'tuple':
+
+                    if base_cls is None:
+                        base_cls = Tuple
+
+                    decoder_class = type(type_string, (base_cls,), {
+                        'type_mapping': decoder_class_data.get('type_mapping')
+                    })
 
                 elif decoder_class_data['type'] == 'enum':
 
-                    if decoder_class_data.get('base_class'):
-                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
-                    else:
+                    if base_cls is None:
                         base_cls = Enum
 
                     value_list = decoder_class_data.get('value_list')
@@ -193,9 +226,7 @@ class RuntimeConfigurationObject:
 
                 elif decoder_class_data['type'] == 'set':
 
-                    if decoder_class_data.get('base_class'):
-                        base_cls = self.get_decoder_class(decoder_class_data['base_class'])
-                    else:
+                    if base_cls is None:
                         base_cls = Set
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -280,6 +311,176 @@ class RuntimeConfigurationObject:
             elif block_number > self.type_registry['runtime_upgrades'][-1][0]:
                 self.type_registry['runtime_upgrades'].append([block_number, -1])
 
+    def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: 'GenericRegistryType'):
+
+        decoder_class = None
+        base_decoder_class = None
+
+        # Check if base decoder class is defined for path
+        if 'path' in scale_info_type.value and len(scale_info_type.value['path']) > 0:
+            path_string = '::'.join(scale_info_type.value["path"])
+            base_decoder_class = self.get_decoder_class(path_string)
+
+            if base_decoder_class is None:
+                # Try generic type
+                catch_all_path = '*::' * (len(scale_info_type.value['path']) - 1) + scale_info_type.value["path"][-1]
+                base_decoder_class = self.get_decoder_class(catch_all_path)
+
+            if base_decoder_class and hasattr(base_decoder_class, 'process_scale_info_definition'):
+                # if process_scale_info_definition is implemented result is final
+                decoder_class = type(type_string, (base_decoder_class,), {})
+                decoder_class.process_scale_info_definition(scale_info_type)
+
+                # Link ScaleInfo RegistryType to decoder class
+                decoder_class.scale_info_type = scale_info_type
+
+                return decoder_class
+
+        if "primitive" in scale_info_type.value["def"]:
+            decoder_class = self.get_decoder_class(scale_info_type.value["def"]["primitive"])
+
+        elif 'array' in scale_info_type.value['def']:
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class('FixedLengthArray')
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                'sub_type': f"scale_info::{scale_info_type.value['def']['array']['type']}",
+                'element_count': scale_info_type.value['def']['array']['len']
+            })
+
+        elif 'composite' in scale_info_type.value['def']:
+
+            type_mapping = []
+
+            base_type_string = 'Tuple'
+
+            if 'fields' in scale_info_type.value['def']['composite']:
+
+                fields = scale_info_type.value['def']['composite']['fields']
+
+                if all([f.get('name') for f in fields]):
+                    base_type_string = 'Struct'
+                    type_mapping = [[field['name'], f"scale_info::{field['type']}"] for field in fields]
+
+                else:
+                    base_type_string = 'Tuple'
+                    type_mapping = [f"scale_info::{field['type']}" for field in fields]
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class(base_type_string)
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                'type_mapping': type_mapping
+            })
+
+        elif 'sequence' in scale_info_type.value['def']:
+            # Vec
+            decoder_class = type(type_string, (self.get_decoder_class('Vec'),), {
+                'sub_type': f"scale_info::{scale_info_type.value['def']['sequence']['type']}"
+            })
+
+        elif 'variant' in scale_info_type.value['def']:
+            # Enum
+            type_mapping = []
+
+            variants = scale_info_type.value['def']['variant']['variants']
+
+            if len(variants) > 0:
+                # Create placeholder list
+                variant_length = max([v['index'] for v in variants]) + 1
+                type_mapping = [(None, 'Null')] * variant_length
+
+                for variant in variants:
+
+                    if 'fields' in variant:
+                        if len(variant['fields']) == 0:
+                            enum_value = 'Null'
+                        elif len(variant['fields']) == 1:
+                            enum_value = f"scale_info::{variant['fields'][0]['type']}"
+                        else:
+                            field_str = ', '.join([f"scale_info::{f['type']}" for f in variant['fields']])
+                            enum_value = f"({field_str})"
+                    else:
+                        enum_value = 'Null'
+
+                    # Put mapping in right order in list
+                    type_mapping[variant['index']] = (variant['name'], enum_value)
+
+            if base_decoder_class is None:
+                base_decoder_class = self.get_decoder_class("Enum")
+
+            decoder_class = type(type_string, (base_decoder_class,), {
+                'type_mapping': type_mapping
+            })
+
+        elif 'tuple' in scale_info_type.value['def']:
+
+            type_mapping = [f"scale_info::{f}" for f in scale_info_type.value['def']['tuple']]
+
+            decoder_class = type(type_string, (self.get_decoder_class('Tuple'),), {
+                'type_mapping': type_mapping
+            })
+
+        elif 'compact' in scale_info_type.value['def']:
+            # Compact
+            decoder_class = type(type_string, (self.get_decoder_class('Compact'),), {
+                'sub_type': f"scale_info::{scale_info_type.value['def']['compact']['type']}"
+            })
+
+        elif 'phantom' in scale_info_type.value['def']:
+            decoder_class = type(type_string, (self.get_decoder_class('Null'),), {})
+
+        elif 'bitsequence' in scale_info_type.value['def']:
+            decoder_class = type(type_string, (self.get_decoder_class('BitVec'),), {})
+
+        else:
+            raise NotImplementedError(f"RegistryTypeDef {scale_info_type.value['def']} not implemented")
+
+        # if 'path' in scale_info_type.value:
+        #     decoder_class.type_string = '::'.join(scale_info_type.value['path'])
+
+        # Link ScaleInfo RegistryType to decoder class
+
+        decoder_class.scale_info_type = scale_info_type
+
+        return decoder_class
+
+    def update_from_scale_info_types(self, scale_info_types: list, prefix: str = ''):
+        for scale_info_type in scale_info_types:
+
+            idx = scale_info_type['id'].value
+
+            type_string = f"scale_info::{idx}"
+
+            decoder_class = self.get_decoder_class_for_scale_info_definition(
+                type_string, scale_info_type['type']
+            )
+
+            if decoder_class is None:
+                raise NotImplementedError(f"No decoding class found for scale type {idx}")
+
+            if decoder_class:
+                self.type_registry['types'][f"scale_info::{idx}"] = decoder_class
+
+                if len(scale_info_type['type'].value.get('path', [])) > 0:
+                    path_string = '::'.join(scale_info_type['type'].value['path']).lower()
+                    self.type_registry['types'][path_string] = decoder_class
+
+    def add_portable_registry(self, metadata: 'GenericMetadataVersioned'):
+
+        scale_info_types = metadata.portable_registry.value_object['types'].value_object
+
+        self.update_from_scale_info_types(scale_info_types, prefix='runtime')
+
+        # Todo process extrinsic types
+        pass
+
+    def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
+        # TODO
+        prefix = f"ink::{metadata_dict['source']['hash']}"
+        return self.update_from_scale_info_types(metadata_dict['types'], prefix=prefix)
+
 
 class ScaleBytes:
 
@@ -297,17 +498,17 @@ class ScaleBytes:
 
         self.length = len(self.data)
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length: int) -> bytearray:
         data = self.data[self.offset:self.offset + length]
         self.offset += length
         return data
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -> bytearray:
         data = self.data[self.offset:]
         self.offset = self.length
         return data
 
-    def get_remaining_length(self):
+    def get_remaining_length(self) -> int:
         return self.length - self.offset
 
     def reset(self):
@@ -340,7 +541,7 @@ class ScaleBytes:
         if type(data) == bytearray:
             return ScaleBytes(self.data + data)
 
-    def to_hex(self):
+    def to_hex(self) -> str:
         return f'0x{self.data.hex()}'
 
 
@@ -354,12 +555,9 @@ class ScaleDecoder(ABC):
 
     sub_type = None
 
-    PRIMITIVES = ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128', 'i256', 'h160',
-                  'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]', '&[u8]')
-
     runtime_config = None
 
-    def __init__(self, data, sub_type=None, runtime_config=None):
+    def __init__(self, data: ScaleBytes, sub_type: str = None, runtime_config: RuntimeConfigurationObject = None):
 
         if sub_type:
             self.sub_type = sub_type
@@ -378,10 +576,31 @@ class ScaleDecoder(ABC):
             self.runtime_config = RuntimeConfiguration()
 
         self.data = data
-        self.raw_value = ''
-        self.value = None
+
+        self.value_object = None
+        self.value_serialized = None
+
+        self.decoded = False
+
         self.data_start_offset = None
         self.data_end_offset = None
+
+    @property
+    def value(self):
+        # TODO fix
+        # if not self.decoded:
+        #     self.decode()
+        return self.value_serialized
+
+    @value.setter
+    def value(self, value):
+        self.value_serialized = value
+
+    @staticmethod
+    def is_primitive(type_string: str) -> bool:
+        return type_string in ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128',
+                               'i256', 'h160', 'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]',
+                               '&[u8]')
 
     @classmethod
     def build_type_mapping(cls):
@@ -403,46 +622,57 @@ class ScaleDecoder(ABC):
 
             cls.type_mapping = type_mapping
 
-    def get_next_bytes(self, length):
+    def get_next_bytes(self, length) -> bytearray:
         data = self.data.get_next_bytes(length)
-        self.raw_value += data.hex()
         return data
 
-    def get_next_u8(self):
+    def get_next_u8(self) -> int:
         return int.from_bytes(self.get_next_bytes(1), byteorder='little')
 
-    def get_next_bool(self):
+    def get_next_bool(self) -> bool:
         data = self.get_next_bytes(1)
         if data not in [b'\x00', b'\x01']:
             raise InvalidScaleTypeValueException('Invalid value for datatype "bool"')
         return data == b'\x01'
 
-    def get_remaining_bytes(self):
+    def get_remaining_bytes(self) -> bytearray:
         data = self.data.get_remaining_bytes()
-        self.raw_value += data.hex()
         return data
 
-    def get_used_bytes(self):
+    def get_used_bytes(self) -> bytearray:
         return self.data.data[self.data_start_offset:self.data_end_offset]
 
     @abstractmethod
     def process(self):
         raise NotImplementedError
 
-    def decode(self, check_remaining=True):
-        self.data_start_offset = self.data.offset
-        self.value = self.process()
-        self.data_end_offset = self.data.offset
+    def decode(self, data: ScaleBytes = None, check_remaining=True):
 
-        if check_remaining and self.data.offset != self.data.length:
-            raise RemainingScaleBytesNotEmptyException(
-                f'Decoding "{self.__class__.__name__}" - Current offset: {self.data.offset} / length: {self.data.length}'
-            )
+        if data is not None:
+            self.decoded = False
+            self.data = data
 
-        if self.data.offset > self.data.length:
-            raise RemainingScaleBytesNotEmptyException(
-                f'Decoding "{self.__class__.__name__}" - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
-            )
+        if not self.decoded:
+
+            self.data_start_offset = self.data.offset
+            self.value_serialized = self.process()
+            self.decoded = True
+
+            if self.value_object is None:
+                # Default for value_object if not explicitly defined
+                self.value_object = self.value_serialized
+
+            self.data_end_offset = self.data.offset
+
+            if check_remaining and self.data.offset != self.data.length:
+                raise RemainingScaleBytesNotEmptyException(
+                    f'Decoding <{self.__class__.__name__}> - Current offset: {self.data.offset} / length: {self.data.length}'
+                )
+
+            if self.data.offset > self.data.length:
+                raise RemainingScaleBytesNotEmptyException(
+                    f'Decoding <{self.__class__.__name__}> - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
+                )
 
         return self.value
 
@@ -454,10 +684,22 @@ class ScaleDecoder(ABC):
 
     def encode(self, value=None):
 
-        if value is not None:
-            self.value = value
+        if isinstance(value, self.__class__):
+            # Accept instance of current class directly
+            self.data = value.data
+            self.value_object = self.value_object
+            self.value_serialized = self.value_serialized
+            return value.data
 
-        self.data = self.process_encode(self.value)
+        if value is not None:
+            self.value_serialized = value
+            self.decoded = True
+
+        self.data = self.process_encode(self.value_serialized)
+
+        if self.value_object is None:
+            self.value_object = self.value_serialized
+
         return self.data
 
     def process_encode(self, value):
@@ -479,6 +721,8 @@ class ScaleDecoder(ABC):
         ScaleType
         """
 
+        warnings.warn("Use RuntimeConfigurationObject.create_scale_object() instead", DeprecationWarning)
+
         if not runtime_config:
             runtime_config = RuntimeConfiguration()
 
@@ -493,12 +737,12 @@ class ScaleDecoder(ABC):
 
     # TODO rename to decode_type (confusing when encoding is introduced)
     def process_type(self, type_string, **kwargs):
-        obj = self.get_decoder_class(type_string, self.data, runtime_config=self.runtime_config, **kwargs)
+        obj = self.runtime_config.create_scale_object(type_string, self.data, **kwargs)
         obj.decode(check_remaining=False)
         return obj
 
     def serialize(self):
-        return self.value
+        return self.value_serialized
 
     @classmethod
     def convert_type(cls, name):
@@ -511,6 +755,8 @@ class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
 
 class ScaleType(ScaleDecoder, ABC):
 
+    scale_info_type: 'GenericRegistryType' = None
+
     def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):
         """
 
@@ -518,12 +764,50 @@ class ScaleType(ScaleDecoder, ABC):
         ----------
         data: ScaleBytes
         sub_type: str
-        metadata: MetadataDecoder
+        metadata: VersionedMetadata
         runtime_config: RuntimeConfigurationObject
         """
         self.metadata = metadata
+
         if not data:
             data = ScaleBytes(bytearray())
         super().__init__(data, sub_type, runtime_config=runtime_config)
+
+    def __getitem__(self, item):
+        return self.value_object[item]
+
+    def __iter__(self):
+        for item in self.value_object:
+            yield item
+
+    def __eq__(self, other):
+        if isinstance(other, ScaleType):
+            return other.value_serialized == self.value_serialized
+        else:
+            return other == self.value_serialized
+
+    def __gt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized > other.value_serialized
+        else:
+            return self.value_serialized > other
+
+    def __ge__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized >= other.value_serialized
+        else:
+            return self.value_serialized >= other
+
+    def __lt__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized < other.value_serialized
+        else:
+            return self.value_serialized < other
+
+    def __le__(self, other):
+        if isinstance(other, ScaleType):
+            return self.value_serialized <= other.value_serialized
+        else:
+            return self.value_serialized <= other
 
 

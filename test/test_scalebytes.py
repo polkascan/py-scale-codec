@@ -19,7 +19,7 @@
 
 import unittest
 
-from scalecodec.base import ScaleDecoder, ScaleBytes
+from scalecodec.base import ScaleDecoder, ScaleBytes, RuntimeConfiguration
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException
 
 
@@ -30,7 +30,7 @@ class TestScaleBytes(unittest.TestCase):
         self.assertRaises(ValueError, ScaleBytes, 'test')
 
     def test_bytes_data_format(self):
-        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes(b"\x02\x09\x3d\x00"))
+        obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes(b"\x02\x09\x3d\x00"))
         obj.decode()
         self.assertEqual(obj.value, 1000000)
 
@@ -61,15 +61,16 @@ class TestScaleBytes(unittest.TestCase):
         self.assertNotEqual(ScaleBytes('0x1234'), ScaleBytes('0x555555'))
 
     def test_scale_decoder_remaining_bytes(self):
-        obj = ScaleDecoder.get_decoder_class('[u8; 3]', ScaleBytes("0x010203"))
+        obj = RuntimeConfiguration().create_scale_object('[u8; 3]', ScaleBytes("0x010203"))
         self.assertEqual(obj.get_remaining_bytes(), b"\x01\x02\x03")
 
     def test_no_more_bytes_available(self):
-        obj = ScaleDecoder.get_decoder_class('[u8; 4]', ScaleBytes("0x010203"))
-        self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode, False)
+        obj = RuntimeConfiguration().create_scale_object('[u8; 4]', ScaleBytes("0x010203"))
+        with self.assertRaises(RemainingScaleBytesNotEmptyException):
+            obj.decode(check_remaining=False)
 
     def test_str_representation(self):
-        obj = ScaleDecoder.get_decoder_class('Bytes', ScaleBytes("0x1054657374"))
+        obj = RuntimeConfiguration().create_scale_object('String', ScaleBytes("0x1054657374"))
         obj.decode()
         self.assertEqual(str(obj), "Test")
 

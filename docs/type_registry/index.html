@@ -44,18 +44,48 @@
 
 import os
 import json
+from typing import Optional
+
+import requests
+
+SUPPORTED_TYPE_REGISTRY_PRESETS = (&#39;canvas&#39;, &#39;default&#39;, &#39;development&#39;, &#39;kusama&#39;, &#39;polkadot&#39;, &#39;rococo&#39;, &#39;metadata_types&#39;,
+                                   &#39;substrate-node-template&#39;, &#39;westend&#39;, &#39;statemint&#39;, &#39;statemine&#39;, &#39;test&#39;)
+
+ONLINE_BASE_URL = &#39;https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/&#39;
 
 
-def load_type_registry_preset(name):
-    module_path = os.path.dirname(__file__)
-    path = os.path.join(module_path, &#39;{}.json&#39;.format(name))
-    try:
-        return load_type_registry_file(path)
-    except FileNotFoundError:
-        return None
+def load_type_registry_preset(name: str, use_remote_preset: bool = False) -&gt; Optional[dict]:
+    &#34;&#34;&#34;
+    Loads a type registry JSON file into a dict
+
+    Parameters
+    ----------
+    name
+    use_remote_preset: When True preset is downloaded from Github master, otherwise use files from local installed scalecodec package
+
+    Returns
+    -------
+
+    &#34;&#34;&#34;
+
+    if name not in SUPPORTED_TYPE_REGISTRY_PRESETS:
+        raise ValueError(f&#39;Unsupported type registry preset &#34;{name}&#34;&#39;)
+
+    if use_remote_preset is True:
+        result = requests.get(f&#39;{ONLINE_BASE_URL}{name}.json&#39;)
+
+        if result.status_code == 200:
+            return result.json()
+    else:
+        module_path = os.path.dirname(__file__)
+        path = os.path.join(module_path, &#39;{}.json&#39;.format(name))
+        try:
+            return load_type_registry_file(path)
+        except FileNotFoundError:
+            return None
 
 
-def load_type_registry_file(file_path):
+def load_type_registry_file(file_path: str) -&gt; dict:
 
     with open(os.path.abspath(file_path), &#39;r&#39;) as fp:
         data = fp.read()
@@ -71,7 +101,7 @@ def load_type_registry_file(file_path):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scalecodec.type_registry.load_type_registry_file"><code class="name flex">
-<span>def <span class="ident">load_type_registry_file</span></span>(<span>file_path)</span>
+<span>def <span class="ident">load_type_registry_file</span></span>(<span>file_path: str) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -79,7 +109,7 @@ def load_type_registry_file(file_path):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load_type_registry_file(file_path):
+<pre><code class="python">def load_type_registry_file(file_path: str) -&gt; dict:
 
     with open(os.path.abspath(file_path), &#39;r&#39;) as fp:
         data = fp.read()
@@ -88,21 +118,51 @@ def load_type_registry_file(file_path):
 </details>
 </dd>
 <dt id="scalecodec.type_registry.load_type_registry_preset"><code class="name flex">
-<span>def <span class="ident">load_type_registry_preset</span></span>(<span>name)</span>
+<span>def <span class="ident">load_type_registry_preset</span></span>(<span>name: str, use_remote_preset: bool = False) ‑> Union[dict, NoneType]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Loads a type registry JSON file into a dict</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>use_remote_preset</code></strong> :&ensp;<code>When True preset is downloaded from Github master, otherwise use files from local installed <a title="scalecodec" href="../index.html">scalecodec</a> package</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load_type_registry_preset(name):
-    module_path = os.path.dirname(__file__)
-    path = os.path.join(module_path, &#39;{}.json&#39;.format(name))
-    try:
-        return load_type_registry_file(path)
-    except FileNotFoundError:
-        return None</code></pre>
+<pre><code class="python">def load_type_registry_preset(name: str, use_remote_preset: bool = False) -&gt; Optional[dict]:
+    &#34;&#34;&#34;
+    Loads a type registry JSON file into a dict
+
+    Parameters
+    ----------
+    name
+    use_remote_preset: When True preset is downloaded from Github master, otherwise use files from local installed scalecodec package
+
+    Returns
+    -------
+
+    &#34;&#34;&#34;
+
+    if name not in SUPPORTED_TYPE_REGISTRY_PRESETS:
+        raise ValueError(f&#39;Unsupported type registry preset &#34;{name}&#34;&#39;)
+
+    if use_remote_preset is True:
+        result = requests.get(f&#39;{ONLINE_BASE_URL}{name}.json&#39;)
+
+        if result.status_code == 200:
+            return result.json()
+    else:
+        module_path = os.path.dirname(__file__)
+        path = os.path.join(module_path, &#39;{}.json&#39;.format(name))
+        try:
+            return load_type_registry_file(path)
+        except FileNotFoundError:
+            return None</code></pre>
 </details>
 </dd>
 </dl>

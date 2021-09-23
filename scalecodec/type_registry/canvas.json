@@ -18,35 +18,35 @@
           "type": "struct",
           "type_mapping": [
             [
-              "trieId",
+              "trie_id",
               "TrieId"
             ],
             [
-              "storageSize",
+              "storage_size",
               "u32"
             ],
             [
-              "emptyPairCount",
+              "empty_pair_count",
               "u32"
             ],
             [
-              "totalPairCount",
+              "total_pair_count",
               "u32"
             ],
             [
-              "codeHash",
+              "code_hash",
               "CodeHash"
             ],
             [
-              "rentAllowance",
+              "rent_allowance",
               "Balance"
             ],
             [
-              "deductBlock",
+              "deduct_block",
               "BlockNumber"
             ],
             [
-              "lastWrite",
+              "last_write",
               "Option<BlockNumber>"
             ]
           ]
@@ -60,35 +60,35 @@
           "type": "struct",
           "type_mapping": [
             [
-              "trieId",
+              "trie_id",
               "TrieId"
             ],
             [
-              "storageSize",
+              "storage_size",
               "u32"
             ],
             [
-              "pairCount",
+              "pair_count",
               "u32"
             ],
             [
-              "codeHash",
+              "code_hash",
               "CodeHash"
             ],
             [
-              "rentAllowance",
+              "rent_allowance",
               "Balance"
             ],
             [
-              "rentPaid",
+              "rent_paid",
               "Balance"
             ],
             [
-              "deductBlock",
+              "deduct_block",
               "BlockNumber"
             ],
             [
-              "lastWrite",
+              "last_write",
               "Option<BlockNumber>"
             ],
             [
