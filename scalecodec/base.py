@@ -431,8 +431,11 @@ class RuntimeConfigurationObject:
         elif 'phantom' in scale_info_type.value['def']:
             decoder_class = type(type_string, (self.get_decoder_class('Null'),), {})
 
+        elif 'bitsequence' in scale_info_type.value['def']:
+            decoder_class = type(type_string, (self.get_decoder_class('BitVec'),), {})
+
         else:
-            raise NotImplementedError(f"RegistryTypeDef not implemented")
+            raise NotImplementedError(f"RegistryTypeDef {scale_info_type.value['def']} not implemented")
 
         # if 'path' in scale_info_type.value:
         #     decoder_class.type_string = '::'.join(scale_info_type.value['path'])

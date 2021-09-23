@@ -1916,7 +1916,7 @@ class GenericField(Struct):
 
     @property
     def type(self):
-        return self.convert_type(self.value['typeName'])
+        return self.get_type_string()
 
     def get_type_string(self):
         return f"scale_info::{self.value['type']}"
@@ -2219,7 +2219,15 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
             nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
 
             if nmap_key_scale_type.type_mapping:
-                return nmap_key_scale_type.type_mapping
+
+                param_types = []
+                for param_type in nmap_key_scale_type.type_mapping:
+                    if type(param_type) is list:
+                        param_types.append(param_type[1])
+                    else:
+                        param_types.append(param_type)
+
+                return param_types
             else:
                 return [key_type_string]
         else:
