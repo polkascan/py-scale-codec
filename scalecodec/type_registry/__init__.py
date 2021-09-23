@@ -23,7 +23,7 @@ import requests
 SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'default', 'development', 'kusama', 'polkadot', 'rococo',
                                    'substrate-node-template', 'westend', 'statemint', 'statemine', 'test')
 
-ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/'
+ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/v0.11/scalecodec/type_registry/'
 
 
 def load_type_registry_preset(name: str, use_remote_preset: bool = False) -> Optional[dict]:
