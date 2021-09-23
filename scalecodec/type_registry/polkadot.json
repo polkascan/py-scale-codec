@@ -24,7 +24,7 @@
       "type_mapping": [
          ["weight", "Weight"],
          ["class", "DispatchClass"],
-         ["pays_fee", "Pays"]
+         ["paysFee", "Pays"]
       ]
     },
     "ProxyType": {
@@ -70,7 +70,7 @@
              ["deposit", "Balance"],
              ["closes", "Option<BlockNumber>"],
              ["tips", "Vec<OpenTipTip>"],
-             ["finders_fee", "bool"]
+             ["findersFee", "bool"]
           ]
         }
       }

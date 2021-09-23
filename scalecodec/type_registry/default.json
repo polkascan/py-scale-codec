@@ -110,7 +110,7 @@
     "PriorLock": {
       "type": "struct",
       "type_mapping": [
-         ["block_number", "BlockNumber"],
+         ["blockNumber", "BlockNumber"],
          ["balance", "Balance"]
       ]
     },
@@ -152,7 +152,7 @@
           "BlockNumber"
         ],
         [
-          "proposal_hash",
+          "proposalHash",
           "Hash"
         ],
         [
@@ -185,8 +185,8 @@
     "VotingDirectVote": {
       "type": "struct",
       "type_mapping": [
-         ["referendum_index", "ReferendumIndex"],
-         ["account_vote", "AccountVote"]
+         ["referendumIndex", "ReferendumIndex"],
+         ["accountVote", "AccountVote"]
       ]
     },
     "VotingDirect": {
@@ -386,15 +386,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "starting_block",
+          "startingBlock",
           "BlockNumber"
         ],
         [
-          "current_block",
+          "currentBlock",
           "BlockNumber"
         ],
         [
-          "highest_block",
+          "highestBlock",
           "Option<BlockNumber>"
         ]
       ]
@@ -414,7 +414,6 @@
       ]
     },
     "Moment": "u64",
-    "Compact<Moment>": "CompactMoment",
     "AccountData": {
       "type": "struct",
       "type_mapping": [
@@ -427,11 +426,11 @@
           "Balance"
         ],
         [
-          "misc_frozen",
+          "miscFrozen",
           "Balance"
         ],
         [
-          "fee_frozen",
+          "feeFrozen",
           "Balance"
         ]
       ]
@@ -454,11 +453,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "account_id",
+          "accountId",
           "AccountId"
         ],
         [
-          "validity_attestation",
+          "validityAttestation",
           "ValidityAttestation"
         ]
       ]
@@ -485,11 +484,11 @@
           "AbridgedCandidateReceipt"
         ],
         [
-          "validity_votes",
+          "validityVotes",
           "Vec<ValidityAttestation>"
         ],
         [
-          "validator_indices",
+          "validatorIndices",
           "BitVec"
         ]
       ]
@@ -504,7 +503,7 @@
           "AvailabilityBitfield"
         ],
         [
-          "submitted_tt",
+          "submittedTt",
           "BlockNumber"
         ]
       ]
@@ -515,19 +514,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "chunk_root",
+          "chunkRoot",
           "H256"
         ],
         [
-          "content_hash",
+          "contentHash",
           "H256"
         ],
         [
-          "size",
+          "dataSize",
           "u32"
         ],
         [
-          "block_chunks",
+          "blockChunks",
           "u32"
         ]
       ]
@@ -566,11 +565,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "relay_dispatch_queue_size",
+          "relayDispatchQueueSize",
           "(u32, u32)"
         ],
         [
-          "egress_channels",
+          "egressChannels",
           "Vec<MessagingStateSnapshotEgressEntry>"
         ]
       ]
@@ -589,7 +588,7 @@
     "IdentificationTuple": {
       "type": "struct",
       "type_mapping": [
-         ["validator_id", "ValidatorId"],
+         ["validatorId", "ValidatorId"],
          ["exposure", "FullIdentification"]
       ]
     },
@@ -628,7 +627,7 @@
     "NextAuthority": {
       "type": "struct",
       "type_mapping": [
-         ["authority_id", "AuthorityId"],
+         ["AuthorityId", "AuthorityId"],
          ["weight", "AuthorityWeight"]
       ]
     },
@@ -640,11 +639,11 @@
           "BeefyPayload"
         ],
         [
-          "block_number",
+          "blockNumber",
           "BlockNumber"
         ],
         [
-          "validator_set_id",
+          "validatorSetId",
           "ValidatorSetId"
         ]
       ]
@@ -679,7 +678,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "account_id",
+          "accountId",
           "AccountId"
         ],
         [
@@ -730,7 +729,7 @@
           "DispatchClass"
         ],
         [
-          "pays_fee",
+          "paysFee",
           "Pays"
         ]
       ]
@@ -749,7 +748,7 @@
       ]
     },
     "EventIndex": "u32",
-    "Extrinsic": "Extrinsic",
+    "Extrinsic": "ExtrinsicsDecoder",
     "ExtrinsicPayloadValue": {
       "type": "struct",
       "type_mapping": [
@@ -770,19 +769,19 @@
           "Compact<Balance>"
         ],
         [
-          "spec_version",
+          "specVersion",
           "u32"
         ],
         [
-          "transaction_version",
+          "transactionVersion",
           "u32"
         ],
         [
-          "genesis_hash",
+          "genesisHash",
           "Hash"
         ],
         [
-          "block_hash",
+          "blockHash",
           "Hash"
         ]
       ]
@@ -837,7 +836,7 @@
           "Data"
         ],
         [
-          "pgp_fingerprint",
+          "pgpFingerprint",
           "Option<H160>"
         ],
         [
@@ -891,11 +890,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "lease_period",
+          "leasePeriod",
           "LeasePeriodOf"
         ],
         [
-          "incoming_parachain",
+          "incomingParachain",
           "IncomingParachain"
         ]
       ]
@@ -993,7 +992,7 @@
           "AccountId"
         ],
         [
-          "update_due",
+          "updateDue",
           "BlockNumber"
         ]
       ]
@@ -1019,7 +1018,7 @@
           "AccountId"
         ],
         [
-          "unlock_at",
+          "unlockAt",
           "BlockNumber"
         ]
       ]
@@ -1070,7 +1069,7 @@
           "Balance"
         ],
         [
-          "curator_deposit",
+          "curatorDeposit",
           "Balance"
         ],
         [
@@ -1113,7 +1112,7 @@
           "Vec<OpenTipTip>"
         ],
         [
-          "finders_fee",
+          "findersFee",
           "bool"
         ]
       ]
@@ -1126,7 +1125,7 @@
           "SignedAvailabilityBitfields"
         ],
         [
-          "backed_candidates",
+          "backedCandidates",
           "Vec<BackedCandidate>"
         ],
         [
@@ -1134,7 +1133,7 @@
           "MultiDisputeStatementSet"
         ],
         [
-          "parent_Header",
+          "parentHeader",
           "Header"
         ]
       ]
@@ -1143,11 +1142,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "genesis_head",
+          "genesisHead",
           "Bytes"
         ],
         [
-          "validation_code",
+          "validationCode",
           "Bytes"
         ],
         [
@@ -1174,7 +1173,7 @@
           "Vec<QueuedParathread>"
         ],
         [
-          "next_core_offset",
+          "nextCoreOffset",
           "u32"
         ]
       ]
@@ -1197,19 +1196,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "parent_head",
+          "parentHead",
           "HeadData"
         ],
         [
-          "relay_parent_number",
+          "relayParentNumber",
           "RelayChainBlockNumber"
         ],
         [
-          "relay_parent_storage_root",
+          "relayParentStorageRoot",
           "Hash"
         ],
         [
-          "max_pov_size",
+          "maxPovSize",
           "u32"
         ]
       ]
@@ -1239,7 +1238,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "slot_number",
+          "slotNumber",
           "u64"
         ]
       ]
@@ -1269,19 +1268,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "authority_index",
+          "authorityIndex",
           "u32"
         ],
         [
-          "slot_number",
+          "slotNumber",
           "SlotNumber"
         ],
         [
-          "vrf_output",
+          "vrfOutput",
           "VrfOutput"
         ],
         [
-          "vrf_proof",
+          "vrfProof",
           "VrfProof"
         ]
       ]
@@ -1290,11 +1289,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "authority_index",
+          "authorityIndex",
           "u32"
         ],
         [
-          "slot_number",
+          "slotNumber",
           "SlotNumber"
         ]
       ]
@@ -1303,19 +1302,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "authority_index",
+          "authorityIndex",
           "u32"
         ],
         [
-          "slot_number",
+          "slotNumber",
           "SlotNumber"
         ],
         [
-          "vrf_output",
+          "vrfOutput",
           "VrfOutput"
         ],
         [
-          "vrf_proof",
+          "vrfProof",
           "VrfProof"
         ]
       ]
@@ -1350,7 +1349,7 @@
           "BlockNumber"
         ],
         [
-          "proposal_hash",
+          "proposalHash",
           "Hash"
         ],
         [
@@ -1385,7 +1384,7 @@
     "RegistrationJudgement": {
       "type": "struct",
       "type_mapping": [
-         ["registrar_index", "RegistrarIndex"],
+         ["registrarIndex", "RegistrarIndex"],
          ["judgement", "Judgement"]
       ]
     },
@@ -1415,63 +1414,63 @@
           "u32"
         ],
         [
-          "put_code_per_byte_cost",
+          "putCodePerByteCost",
           "Gas"
         ],
         [
-          "grow_mem_cost",
+          "growMemCost",
           "Gas"
         ],
         [
-          "regular_op_cost",
+          "regularOpCost",
           "Gas"
         ],
         [
-          "return_data_per_byte_cost",
+          "returnDataPerByteCost",
           "Gas"
         ],
         [
-          "event_data_per_byte_cost",
+          "eventDataPerByteCost",
           "Gas"
         ],
         [
-          "event_per_topic_cost",
+          "eventPerTopicCost",
           "Gas"
         ],
         [
-          "event_base_cost",
+          "eventBaseCost",
           "Gas"
         ],
         [
-          "sandbox_data_read_cost",
+          "sandboxDataReadCost",
           "Gas"
         ],
         [
-          "sandbox_data_write_cost",
+          "sandboxDataWriteCost",
           "Gas"
         ],
         [
-          "transfer_cost",
+          "transferCost",
           "Gas"
         ],
         [
-          "max_event_topics",
+          "maxEventTopics",
           "u32"
         ],
         [
-          "max_stack_height",
+          "maxStackHeight",
           "u32"
         ],
         [
-          "max_memory_pages",
+          "maxMemoryPages",
           "u32"
         ],
         [
-          "enable_println",
+          "enablePrintln",
           "bool"
         ],
         [
-          "max_subject_len",
+          "maxSubjectLen",
           "u32"
         ]
       ]
@@ -1484,7 +1483,7 @@
           "u32"
         ],
         [
-          "enable_println",
+          "enablePrintln",
           "bool"
         ],
         [
@@ -1492,11 +1491,11 @@
           "Limits"
         ],
         [
-          "instruction_weights",
+          "instructionWeights",
           "InstructionWeights"
         ],
         [
-          "host_fn_weights",
+          "hostFnWeights",
           "HostFnWeights"
         ]
       ]
@@ -1506,11 +1505,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "max_head_data_size",
+          "maxHeadDataSize",
           "u32"
         ],
         [
@@ -1518,11 +1517,11 @@
           "Balance"
         ],
         [
-          "code_upgrade_allowed",
+          "codeUpgradeAllowed",
           "Option<BlockNumber>"
         ],
         [
-          "dmq_length",
+          "dmqLength",
           "u32"
         ]
       ]
@@ -1542,11 +1541,11 @@
           "Balance"
         ],
         [
-          "per_block",
+          "perBlock",
           "Balance"
         ],
         [
-          "starting_block",
+          "startingBlock",
           "BlockNumber"
         ]
       ]
@@ -1883,23 +1882,23 @@
       "type": "struct",
       "type_mapping": [
         [
-          "suspend_threshold",
+          "suspendThreshold",
           "u32"
         ],
         [
-          "drop_threshold",
+          "dropThreshold",
           "u32"
         ],
         [
-          "resume_threshold",
+          "resumeThreshold",
           "u32"
         ],
         [
-          "threshold_weight",
+          "thresholdWeight",
           "Weight"
         ],
         [
-          "weight_restrict_decay",
+          "weightRestrictDecay",
           "Weight"
         ]
       ]
@@ -2092,7 +2091,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "query_id",
+          "queryId",
           "Compact<u64>"
         ],
         [
@@ -2169,7 +2168,7 @@
           "Vec<AccountId>"
         ],
         [
-          "submitted_in",
+          "submittedIn",
           "EraIndex"
         ],
         [
@@ -2198,23 +2197,23 @@
       "type": "struct",
       "type_mapping": [
         [
-          "block_number",
+          "blockNumber",
           "BlockNumber"
         ],
         [
-          "network_state",
+          "networkState",
           "OpaqueNetworkState"
         ],
         [
-          "session_index",
+          "sessionIndex",
           "SessionIndex"
         ],
         [
-          "authority_index",
+          "authorityIndex",
           "AuthIndex"
         ],
         [
-          "validators_len",
+          "validatorsLen",
           "u32"
         ]
       ]
@@ -2256,11 +2255,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "digest_interval",
+          "digestInterval",
           "u32"
         ],
         [
-          "digest_levels",
+          "digestLevels",
           "u32"
         ]
       ]
@@ -2316,7 +2315,6 @@
         ]
       ]
     },
-    "sp_runtime::generic::digest::DigestItem": "DigestItem",
     "Digest": {
       "type": "struct",
       "type_mapping": [
@@ -2333,15 +2331,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "span_index",
+          "spanIndex",
           "SpanIndex"
         ],
         [
-          "last_start",
+          "lastStart",
           "EraIndex"
         ],
         [
-          "last_nonzero_slash",
+          "lastNonzeroSlash",
           "EraIndex"
         ],
         [
@@ -2359,7 +2357,7 @@
           "Balance"
         ],
         [
-          "paid_out",
+          "paidOut",
           "Balance"
         ]
       ]
@@ -2461,19 +2459,12 @@
          ["beefy", "Beefy"]
       ]
     },
-    "Keys": {
-      "type": "struct",
-      "type_mapping": [
-         ["grandpa", "AccountId"],
-         ["babe", "AccountId"],
-         ["im_online", "AccountId"]
-      ]
-    },
+    "Keys": "SessionKeysSubstrate",
     "Header": {
       "type": "struct",
       "type_mapping": [
         [
-          "parent_hash",
+          "parentHash",
           "Hash"
         ],
         [
@@ -2481,11 +2472,11 @@
           "Compact<BlockNumber>"
         ],
         [
-          "state_root",
+          "stateRoot",
           "Hash"
         ],
         [
-          "extrinsics_root",
+          "extrinsicsRoot",
           "Hash"
         ],
         [
@@ -2527,7 +2518,7 @@
           "MessageNonce"
         ],
         [
-          "dispatch_results",
+          "dispatchResults",
           "BitVec"
         ]
       ]
@@ -2547,7 +2538,7 @@
           "Vec<UnrewardedRelayer>"
         ],
         [
-          "last_confirmed_nonce",
+          "lastConfirmedNonce",
           "MessageNonce"
         ]
       ]
@@ -2608,15 +2599,15 @@
           "Header"
         ],
         [
-          "authority_list",
+          "authorityList",
           "AuthorityList"
         ],
         [
-          "set_id",
+          "setId",
           "SetId"
         ],
         [
-          "is_halted",
+          "isHalted",
           "bool"
         ]
       ]
@@ -2626,23 +2617,23 @@
       "type": "struct",
       "type_mapping": [
         [
-          "current_authorities",
+          "currentAuthorities",
           "AuthorityList"
         ],
         [
-          "set_id",
+          "setId",
           "u64"
         ],
         [
-          "pending_standard_changes",
+          "pendingStandardChanges",
           "ForkTreePendingChange"
         ],
         [
-          "pending_forced_changes",
+          "pendingForcedChanges",
           "Vec<PendingChange>"
         ],
         [
-          "authority_set_changes",
+          "authoritySetChanges",
           "AuthoritySetChanges"
         ]
       ]
@@ -2655,7 +2646,7 @@
           "Vec<ForkTreePendingChangeNode>"
         ],
         [
-          "best_finalized_number",
+          "bestFinalizedNumber",
           "Option<BlockNumber>"
         ]
       ]
@@ -2700,7 +2691,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "median_last_finalized",
+          "medianLastFinalized",
           "BlockNumber"
         ]
       ]
@@ -2710,7 +2701,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "parent_hash",
+          "parentHash",
           "Hash"
         ],
         [
@@ -2803,7 +2794,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "delay_period",
+          "delayPeriod",
           "BlockNumber"
         ],
         [
@@ -2881,7 +2872,7 @@
           "u8"
         ],
         [
-          "signed_extensions",
+          "signedExtensions",
           "Vec<Bytes>"
         ]
       ]
@@ -2926,11 +2917,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "validators_for",
+          "validatorsFor",
           "BitVec"
         ],
         [
-          "validators_against",
+          "validatorsAgainst",
           "BitVec"
         ],
         [
@@ -2938,7 +2929,7 @@
           "BlockNumber"
         ],
         [
-          "concluded_at",
+          "concludedAt",
           "Option<BlockNumber>"
         ]
       ]
@@ -2951,7 +2942,7 @@
           "ValidationCode"
         ],
         [
-          "initial_head_data",
+          "initialHeadData",
           "HeadData"
         ]
       ]
@@ -2986,15 +2977,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "code_hash",
+          "codeHash",
           "Hash"
         ],
         [
-          "code_size",
+          "codeSize",
           "u32"
         ],
         [
-          "initial_head_data",
+          "initialHeadData",
           "HeadData"
         ]
       ]
@@ -3020,11 +3011,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "spec_version",
+          "specVersion",
           "Compact<u32>"
         ],
         [
-          "spec_name",
+          "specName",
           "Text"
         ]
       ]
@@ -3085,15 +3076,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "base_extrinsic",
+          "baseExtrinsic",
           "Weight"
         ],
         [
-          "max_extrinsic",
+          "maxExtrinsic",
           "Weight"
         ],
         [
-          "max_total",
+          "maxTotal",
           "Option<Weight>"
         ],
         [
@@ -3162,7 +3153,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "block_hash",
+          "blockHash",
           "BlockHash"
         ],
         [
@@ -3183,11 +3174,11 @@
           "Balance"
         ],
         [
-          "per_block",
+          "perBlock",
           "Balance"
         ],
         [
-          "starting_block",
+          "startingBlock",
           "BlockNumber"
         ]
       ]
@@ -3202,15 +3193,15 @@
     "CompactScoreCompact": {
       "type": "struct",
         "type_mapping": [
-          ["validator_index", "ValidatorIndexCompact"],
-          ["offchain_accuracy", "OffchainAccuracyCompact"]
+          ["validatorIndex", "ValidatorIndexCompact"],
+          ["offchainAccuracy", "OffchainAccuracyCompact"]
         ]
     },
     "CompactScore": {
       "type": "struct",
         "type_mapping": [
-          ["validator_index", "ValidatorIndex"],
-          ["offchain_accuracy", "OffchainAccuracy"]
+          ["validatorIndex", "ValidatorIndex"],
+          ["offchainAccuracy", "OffchainAccuracy"]
         ]
     },
     "CompactAssignmentsFrom258": {
@@ -3503,7 +3494,7 @@
           "SessionIndex"
         ],
         [
-          "trie_nodes",
+          "trieNodes",
           "Vec<Bytes>"
         ]
       ]
@@ -3512,11 +3503,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "session_index",
+          "sessionIndex",
           "SessionIndex"
         ],
         [
-          "parent_hash",
+          "parentHash",
           "Hash"
         ]
       ]
@@ -3525,7 +3516,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "candidate_hash",
+          "candidateHash",
           "CandidateHash"
         ],
         [
@@ -3587,7 +3578,7 @@
           "bool"
         ],
         [
-          "candidate_hash",
+          "candidateHash",
           "CandidateHash"
         ],
         [
@@ -3616,7 +3607,7 @@
           "MembershipProof"
         ],
         [
-          "signing_context",
+          "signingContext",
           "SigningContext"
         ]
       ]
@@ -3637,11 +3628,11 @@
           "ElectionCompute"
         ],
         [
-          "slot_stake",
+          "slotStake",
           "Balance"
         ],
         [
-          "elected_stashes",
+          "electedStashes",
           "Vec<AccountId>"
         ],
         [
@@ -3744,7 +3735,7 @@
     "TaskAddress": {
       "type": "struct",
       "type_mapping": [
-        ["block_number", "BlockNumber"],
+        ["blockNumber", "BlockNumber"],
         ["index", "u32"]
       ]
     },
@@ -3752,15 +3743,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "relay_chain_height",
+          "relayChainHeight",
           "RelayChainBlockNumber"
         ],
         [
-          "code_upgrade_allowed",
+          "codeUpgradeAllowed",
           "Option<RelayChainBlockNumber>"
         ]
       ]
@@ -3784,11 +3775,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "validation_data",
+          "validationData",
           "ValidationData"
         ],
         [
-          "relay_chain_state",
+          "relayChainState",
           "Vec<Bytes>"
         ]
       ]
@@ -3810,11 +3801,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "upgrade_times",
+          "upgradeTimes",
           "Vec<ReplacementTimes>"
         ],
         [
-          "last_pruned",
+          "lastPruned",
           "Option<BlockNumber>"
         ]
       ]
@@ -3925,11 +3916,11 @@
           "SessionIndex"
         ],
         [
-          "trie_nodes",
+          "trieNodes",
           "Vec<Vec<u8>>"
         ],
         [
-          "validator_count",
+          "validatorCount",
           "ValidatorCount"
         ]
       ]
@@ -3944,11 +3935,11 @@
           "AccountId"
         ],
         [
-          "vote_count",
+          "voteCount",
           "Compact<u32>"
         ],
         [
-          "candidate_count",
+          "candidateCount",
           "Compact<u32>"
         ]
       ]
@@ -4203,7 +4194,7 @@
           "(u64, u64)"
         ],
         [
-          "allowed_slots",
+          "allowedSlots",
           "AllowedSlots"
         ]
       ]
@@ -4246,11 +4237,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "target_hash",
+          "targetHash",
           "Hash"
         ],
         [
-          "target_number",
+          "targetNumber",
           "BlockNumber"
         ]
       ]
@@ -4259,11 +4250,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "target_hash",
+          "targetHash",
           "BlockHash"
         ],
         [
-          "target_number",
+          "targetNumber",
           "BlockNumber"
         ],
         [
@@ -4276,11 +4267,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "target_hash",
+          "targetHash",
           "BlockHash"
         ],
         [
-          "target_number",
+          "targetNumber",
           "BlockNumber"
         ]
       ]
@@ -4314,7 +4305,7 @@
           "GrandpaCommit"
         ],
         [
-          "votes_ancestries",
+          "votesAncestries",
           "Vec<Header>"
         ]
       ]
@@ -4324,7 +4315,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "set_id",
+          "setId",
           "SetId"
         ],
         [
@@ -4422,7 +4413,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "query_id",
+          "queryId",
           "Compact<u64>"
         ],
         [
@@ -4465,11 +4456,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "origin_type",
+          "originType",
           "XcmOriginKind"
         ],
         [
-          "require_weight_at_most",
+          "requireWeightAtMost",
           "u64"
         ],
         [
@@ -4486,11 +4477,11 @@
           "Compact<u32>"
         ],
         [
-          "max_message_size",
+          "maxMessageSize",
           "Compact<u32>"
         ],
         [
-          "max_capacity",
+          "maxCapacity",
           "Compact<u32>"
         ]
       ]
@@ -4617,7 +4608,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "query_id",
+          "queryId",
           "Compact<u64>"
         ],
         [
@@ -4646,7 +4637,7 @@
           "u64"
         ],
         [
-          "halt_on_error",
+          "haltOnError",
           "bool"
         ],
         [
@@ -6655,7 +6646,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "actual_number",
+          "actualNumber",
           "BlockNumber"
         ],
         [
@@ -6663,15 +6654,15 @@
           "SessionIndex"
         ],
         [
-          "random_seed",
+          "randomSeed",
           "H256"
         ],
         [
-          "active_parachains",
+          "activeParachains",
           "Vec<ParaId>"
         ],
         [
-          "para_blocks",
+          "paraBlocks",
           "Vec<Hash>"
         ]
       ]
@@ -6680,19 +6671,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "block_number",
+          "blockNumber",
           "BlockNumber"
         ],
         [
-          "network_state",
+          "networkState",
           "OpaqueNetworkState"
         ],
         [
-          "session_index",
+          "sessionIndex",
           "SessionIndex"
         ],
         [
-          "authority_index",
+          "authorityIndex",
           "AuthIndex"
         ]
       ]
@@ -6703,11 +6694,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "peer_id",
+          "peerId",
           "OpaquePeerId"
         ],
         [
-          "external_addresses",
+          "externalAddresses",
           "Vec<OpaqueMultiaddr>"
         ]
       ]
@@ -6763,7 +6754,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "inclusion_fee",
+          "inclusionFee",
           "Option<InclusionFee>"
         ]
       ]
@@ -6772,15 +6763,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "base_fee",
+          "baseFee",
           "Balance"
         ],
         [
-          "len_fee",
+          "lenFee",
           "Balance"
         ],
         [
-          "adjusted_weight_fee",
+          "adjustedWeightFee",
           "Balance"
         ]
       ]
@@ -6797,7 +6788,7 @@
           "DispatchClass"
         ],
         [
-          "partial_fee",
+          "partialFee",
           "Balance"
         ]
       ]
@@ -6806,35 +6797,35 @@
       "type": "struct",
       "type_mapping": [
         [
-          "trie_id",
+          "trieId",
           "TrieId"
         ],
         [
-          "storage_size",
+          "storageSize",
           "u32"
         ],
         [
-          "pair_count",
+          "pairCount",
           "u32"
         ],
         [
-          "code_hash",
+          "codeHash",
           "CodeHash"
         ],
         [
-          "rent_allowance",
+          "rentAllowance",
           "Balance"
         ],
         [
-          "rent_paid",
+          "rentPaid",
           "Balance"
         ],
         [
-          "deduct_block",
+          "deductBlock",
           "BlockNumber"
         ],
         [
-          "last_write",
+          "lastWrite",
           "Option<BlockNumber>"
         ],
         [
@@ -6861,11 +6852,11 @@
           "Balance"
         ],
         [
-          "gas_limit",
+          "gasLimit",
           "u64"
         ],
         [
-          "input_data",
+          "inputData",
           "Bytes"
         ]
       ]
@@ -6905,11 +6896,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "gas_consumed",
+          "gasConsumed",
           "u64"
         ],
         [
-          "debug_message",
+          "debugMessage",
           "Text"
         ],
         [
@@ -6922,15 +6913,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "gas_consumed",
+          "gasConsumed",
           "u64"
         ],
         [
-          "gas_required",
+          "gasRequired",
           "u64"
         ],
         [
-          "debug_message",
+          "debugMessage",
           "Text"
         ],
         [
@@ -7010,11 +7001,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "pair_count",
+          "pairCount",
           "u32"
         ],
         [
-          "trie_id",
+          "trieId",
           "TrieId"
         ]
       ]
@@ -7044,7 +7035,7 @@
           "Weight"
         ],
         [
-          "gas_left",
+          "gasLeft",
           "Weight"
         ],
         [
@@ -7052,23 +7043,23 @@
           "Weight"
         ],
         [
-          "value_transferred",
+          "valueTransferred",
           "Weight"
         ],
         [
-          "minimum_balance",
+          "minimumBalance",
           "Weight"
         ],
         [
-          "tombstone_deposit",
+          "tombstoneDeposit",
           "Weight"
         ],
         [
-          "rent_allowance",
+          "rentAllowance",
           "Weight"
         ],
         [
-          "block_number",
+          "blockNumber",
           "Weight"
         ],
         [
@@ -7076,7 +7067,7 @@
           "Weight"
         ],
         [
-          "weight_to_fee",
+          "weightToFee",
           "Weight"
         ],
         [
@@ -7088,7 +7079,7 @@
           "Weight"
         ],
         [
-          "input_per_byte",
+          "inputPerByte",
           "Weight"
         ],
         [
@@ -7096,7 +7087,7 @@
           "Weight"
         ],
         [
-          "return_per_byte",
+          "returnPerByte",
           "Weight"
         ],
         [
@@ -7104,11 +7095,11 @@
           "Weight"
         ],
         [
-          "restore_to",
+          "restoreTo",
           "Weight"
         ],
         [
-          "restore_to_per_delta",
+          "restoreToPerDelta",
           "Weight"
         ],
         [
@@ -7116,39 +7107,39 @@
           "Weight"
         ],
         [
-          "deposit_event",
+          "depositEvent",
           "Weight"
         ],
         [
-          "deposit_event_per_topic",
+          "depositEventPerTopic",
           "Weight"
         ],
         [
-          "deposit_event_per_byte",
+          "depositEventPerByte",
           "Weight"
         ],
         [
-          "set_rent_allowance",
+          "setRentAllowance",
           "Weight"
         ],
         [
-          "set_storage",
+          "setStorage",
           "Weight"
         ],
         [
-          "set_storage_per_byte",
+          "setStoragePerByte",
           "Weight"
         ],
         [
-          "clear_storage",
+          "clearStorage",
           "Weight"
         ],
         [
-          "get_storage",
+          "getStorage",
           "Weight"
         ],
         [
-          "get_storage_per_byte",
+          "getStoragePerByte",
           "Weight"
         ],
         [
@@ -7160,15 +7151,15 @@
           "Weight"
         ],
         [
-          "call_transfer_surcharge",
+          "callTransferSurcharge",
           "Weight"
         ],
         [
-          "call_per_input_byte",
+          "callPerInputByte",
           "Weight"
         ],
         [
-          "call_per_output_byte",
+          "callPerOutputByte",
           "Weight"
         ],
         [
@@ -7176,51 +7167,51 @@
           "Weight"
         ],
         [
-          "instantiate_per_input_byte",
+          "instantiatePerInputByte",
           "Weight"
         ],
         [
-          "instantiate_per_output_byte",
+          "instantiatePerOutputByte",
           "Weight"
         ],
         [
-          "instantiate_per_salt_byte",
+          "instantiatePerSaltByte",
           "Weight"
         ],
         [
-          "hash_sha2256",
+          "hashSha2256",
           "Weight"
         ],
         [
-          "hash_sha2256_per_byte",
+          "hashSha2256PerByte",
           "Weight"
         ],
         [
-          "hash_keccak256",
+          "hashKeccak256",
           "Weight"
         ],
         [
-          "hash_keccak256_per_byte",
+          "hashKeccak256PerByte",
           "Weight"
         ],
         [
-          "hash_blake2256",
+          "hashBlake2256",
           "Weight"
         ],
         [
-          "hash_blake2256_per_byte",
+          "hashBlake2256PerByte",
           "Weight"
         ],
         [
-          "hash_blake2128",
+          "hashBlake2128",
           "Weight"
         ],
         [
-          "hash_blake2128_per_byte",
+          "hashBlake2128PerByte",
           "Weight"
         ],
         [
-          "rent_params",
+          "rentParams",
           "Weight"
         ]
       ]
@@ -7237,7 +7228,7 @@
           "Balance"
         ],
         [
-          "gas_limit",
+          "gasLimit",
           "Gas"
         ],
         [
@@ -7275,11 +7266,11 @@
           "ExecReturnValue"
         ],
         [
-          "account_id",
+          "accountId",
           "AccountId"
         ],
         [
-          "rent_projection",
+          "rentProjection",
           "Option<RentProjection>"
         ]
       ]
@@ -7304,7 +7295,7 @@
           "u32"
         ],
         [
-          "r_if",
+          "rIf",
           "u32"
         ],
         [
@@ -7312,15 +7303,15 @@
           "u32"
         ],
         [
-          "br_if",
+          "brIf",
           "u32"
         ],
         [
-          "br_iable",
+          "brIable",
           "u32"
         ],
         [
-          "br_iable_per_entry",
+          "brIablePerEntry",
           "u32"
         ],
         [
@@ -7328,19 +7319,19 @@
           "u32"
         ],
         [
-          "call_indirect",
+          "callIndirect",
           "u32"
         ],
         [
-          "call_indirect_per_param",
+          "callIndirectPerParam",
           "u32"
         ],
         [
-          "local_get",
+          "localGet",
           "u32"
         ],
         [
-          "local_set",
+          "localSet",
           "u32"
         ],
         [
@@ -7348,19 +7339,19 @@
           "u32"
         ],
         [
-          "global_get",
+          "globalGet",
           "u32"
         ],
         [
-          "global_set",
+          "globalSet",
           "u32"
         ],
         [
-          "memory_current",
+          "memoryCurrent",
           "u32"
         ],
         [
-          "memory_grow",
+          "memoryGrow",
           "u32"
         ],
         [
@@ -7497,11 +7488,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "event_topics",
+          "eventTopics",
           "u32"
         ],
         [
-          "stack_height",
+          "stackHeight",
           "u32"
         ],
         [
@@ -7513,23 +7504,23 @@
           "u32"
         ],
         [
-          "memory_pages",
+          "memoryPages",
           "u32"
         ],
         [
-          "table_size",
+          "tableSize",
           "u32"
         ],
         [
-          "br_table_size",
+          "brTableSize",
           "u32"
         ],
         [
-          "subject_len",
+          "subjectLen",
           "u32"
         ],
         [
-          "code_size",
+          "codeSize",
           "u32"
         ]
       ]
@@ -7538,7 +7529,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "schedule_version",
+          "scheduleVersion",
           "Compact<u32>"
         ],
         [
@@ -7562,7 +7553,7 @@
           "Bytes"
         ],
         [
-          "original_code_len",
+          "originalCodeLen",
           "u32"
         ]
       ]
@@ -7588,59 +7579,59 @@
           "u32"
         ],
         [
-          "put_code_per_byte_cost",
+          "putCodePerByteCost",
           "Gas"
         ],
         [
-          "grow_mem_cost",
+          "growMemCost",
           "Gas"
         ],
         [
-          "regular_op_cost",
+          "regularOpCost",
           "Gas"
         ],
         [
-          "return_data_per_byte_cost",
+          "returnDataPerByteCost",
           "Gas"
         ],
         [
-          "event_data_per_byte_cost",
+          "eventDataPerByteCost",
           "Gas"
         ],
         [
-          "event_per_topic_cost",
+          "eventPerTopicCost",
           "Gas"
         ],
         [
-          "event_base_cost",
+          "eventBaseCost",
           "Gas"
         ],
         [
-          "sandbox_data_read_cost",
+          "sandboxDataReadCost",
           "Gas"
         ],
         [
-          "sandbox_data_write_cost",
+          "sandboxDataWriteCost",
           "Gas"
         ],
         [
-          "max_event_topics",
+          "maxEventTopics",
           "u32"
         ],
         [
-          "max_stack_height",
+          "maxStackHeight",
           "u32"
         ],
         [
-          "max_memory_pages",
+          "maxMemoryPages",
           "u32"
         ],
         [
-          "enable_println",
+          "enablePrintln",
           "bool"
         ],
         [
-          "max_subject_len",
+          "maxSubjectLen",
           "u32"
         ]
       ]
@@ -7719,7 +7710,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "trie_nodes",
+          "trieNodes",
           "Vec<Bytes>"
         ]
       ]
@@ -7775,7 +7766,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "maybe_id",
+          "maybeId",
           "Option<Bytes>"
         ],
         [
@@ -7787,7 +7778,7 @@
           "Call"
         ],
         [
-          "maybe_periodic",
+          "maybePeriodic",
           "Option<SchedulePeriod>"
         ],
         [
@@ -7800,7 +7791,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "maybe_id",
+          "maybeId",
           "Option<Bytes>"
         ],
         [
@@ -7812,7 +7803,7 @@
           "Call"
         ],
         [
-          "maybe_periodic",
+          "maybePeriodic",
           "Option<SchedulePeriod>"
         ]
       ]
@@ -7851,19 +7842,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "block_hash",
+          "blockHash",
           "Text"
         ],
         [
-          "parent_hash",
+          "parentHash",
           "Text"
         ],
         [
-          "tracing_targets",
+          "tracingTargets",
           "Text"
         ],
         [
-          "storage_keys",
+          "storageKeys",
           "Text"
         ],
         [
@@ -7888,7 +7879,7 @@
           "BlockTraceEventData"
         ],
         [
-          "parent_id",
+          "parentId",
           "Option<u64>"
         ]
       ]
@@ -7897,7 +7888,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "string_values",
+          "stringValues",
           "HashMap<Text, Text>"
         ]
       ]
@@ -7910,7 +7901,7 @@
           "u64"
         ],
         [
-          "parent_id",
+          "parentId",
           "Option<u64>"
         ],
         [
@@ -7946,23 +7937,23 @@
       "type": "struct",
       "type_mapping": [
         [
-          "spec_name",
+          "specName",
           "Text"
         ],
         [
-          "impl_name",
+          "implName",
           "Text"
         ],
         [
-          "authoring_version",
+          "authoringVersion",
           "u32"
         ],
         [
-          "spec_version",
+          "specVersion",
           "u32"
         ],
         [
-          "impl_version",
+          "implVersion",
           "u32"
         ],
         [
@@ -7970,7 +7961,7 @@
           "Vec<RuntimeVersionApi>"
         ],
         [
-          "transaction_version",
+          "transactionVersion",
           "u32"
         ]
       ]
@@ -7979,11 +7970,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "spec_name",
+          "specName",
           "Text"
         ],
         [
-          "spec_version",
+          "specVersion",
           "u32"
         ]
       ]
@@ -8041,11 +8032,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "bridged_header_hash",
+          "bridgedHeaderHash",
           "BlockHash"
         ],
         [
-          "storage_proof",
+          "storageProof",
           "Vec<Bytes>"
         ],
         [
@@ -8058,7 +8049,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "lane_id",
+          "laneId",
           "LaneId"
         ],
         [
@@ -8072,11 +8063,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "bridged_header_hash",
+          "bridgedHeaderHash",
           "BridgedBlockHash"
         ],
         [
-          "storage_proof",
+          "storageProof",
           "Vec<Bytes>"
         ],
         [
@@ -8084,11 +8075,11 @@
           "LaneId"
         ],
         [
-          "nonces_start",
+          "noncesStart",
           "MessageNonce"
         ],
         [
-          "nonces_end",
+          "noncesEnd",
           "MessageNonce"
         ]
       ]
@@ -8105,15 +8096,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "latest_generated_nonce",
+          "latestGeneratedNonce",
           "MessageNonce"
         ],
         [
-          "latest_received_nonce",
+          "latestReceivedNonce",
           "MessageNonce"
         ],
         [
-          "oldest_unpruned_nonce",
+          "oldestUnprunedNonce",
           "MessageNonce"
         ]
       ]
@@ -8123,7 +8114,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "spec_version",
+          "specVersion",
           "u32"
         ],
         [
@@ -8135,7 +8126,7 @@
           "CallOrigin"
         ],
         [
-          "dispatch_fee_payment",
+          "dispatchFeePayment",
           "DispatchFeePayment"
         ],
         [
@@ -8163,15 +8154,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "unrewarded_relayer_entries",
+          "unrewardedRelayer_Entries",
           "MessageNonce"
         ],
         [
-          "messages_in_oldest_entry",
+          "messagesInOldestEntry",
           "MessageNonce"
         ],
         [
-          "total_messages",
+          "totalMessages",
           "MessageNonce"
         ]
       ]
@@ -8222,19 +8213,19 @@
           "Balance"
         ],
         [
-          "last_contribution",
+          "lastContribution",
           "LastContribution"
         ],
         [
-          "first_period",
+          "firstPeriod",
           "LeasePeriod"
         ],
         [
-          "last_period",
+          "lastPeriod",
           "LeasePeriod"
         ],
         [
-          "trie_index",
+          "trieIndex",
           "TrieIndex"
         ]
       ]
@@ -8244,7 +8235,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "set_id",
+          "setId",
           "SetId"
         ],
         [
@@ -8257,7 +8248,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "round_number",
+          "roundNumber",
           "u64"
         ],
         [
@@ -8278,7 +8269,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "next_authorities",
+          "nextAuthorities",
           "AuthorityList"
         ],
         [
@@ -8286,15 +8277,15 @@
           "BlockNumber"
         ],
         [
-          "canon_height",
+          "canonHeight",
           "BlockNumber"
         ],
         [
-          "canon_hash",
+          "canonHash",
           "BlockHash"
         ],
         [
-          "delay_kind",
+          "delayKind",
           "DelayKind"
         ]
       ]
@@ -8303,7 +8294,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "scheduled_at",
+          "scheduledAt",
           "BlockNumber"
         ],
         [
@@ -8316,7 +8307,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "scheduled_at",
+          "scheduledAt",
           "BlockNumber"
         ],
         [
@@ -8330,7 +8321,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "current_weight",
+          "currentWeight",
           "u32"
         ],
         [
@@ -8343,7 +8334,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "current_weight",
+          "currentWeight",
           "u32"
         ],
         [
@@ -8356,7 +8347,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "set_id",
+          "setId",
           "u32"
         ],
         [
@@ -8377,11 +8368,11 @@
           "u32"
         ],
         [
-          "total_weight",
+          "totalWeight",
           "u32"
         ],
         [
-          "threshold_weight",
+          "thresholdWeight",
           "u32"
         ],
         [
@@ -8398,7 +8389,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "scheduled_at",
+          "scheduledAt",
           "BlockNumber"
         ],
         [
@@ -8406,7 +8397,7 @@
           "BlockNumber"
         ],
         [
-          "next_authorities",
+          "nextAuthorities",
           "AuthorityList"
         ]
       ]
@@ -8518,15 +8509,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "base_block",
+          "baseBlock",
           "Weight"
         ],
         [
-          "max_block",
+          "maxBlock",
           "Weight"
         ],
         [
-          "per_class",
+          "perClass",
           "PerDispatchClass"
         ]
       ]
@@ -8535,15 +8526,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "ss58_format",
+          "ss58Format",
           "Option<u8>"
         ],
         [
-          "token_decimals",
+          "tokenDecimals",
           "Option<u32>"
         ],
         [
-          "token_symbol",
+          "tokenSymbol",
           "Option<Text>"
         ]
       ]
@@ -8607,7 +8598,7 @@
           "DispatchClass"
         ],
         [
-          "pays_fee",
+          "paysFee",
           "bool"
         ]
       ]
@@ -8615,24 +8606,7 @@
     "DispatchResultOf": "DispatchResult",
     "Event": "GenericEvent",
     "EventId": "[u8; 2]",
-    "EventRecord": {
-      "type": "struct",
-      "base_class": "GenericEventRecord",
-      "type_mapping": [
-        [
-          "phase",
-          "Phase"
-        ],
-        [
-          "event",
-          "Event"
-        ],
-        [
-          "topics",
-          "Vec<Hash>"
-        ]
-      ]
-    },
+    "EventRecord": "EventRecord",
     "EventRecordTo76": {
       "type": "struct",
       "type_mapping": [
@@ -8654,11 +8628,11 @@
           "u64"
         ],
         [
-          "is_syncing",
+          "isSyncing",
           "bool"
         ],
         [
-          "should_have_peers",
+          "shouldHavePeers",
           "bool"
         ]
       ]
@@ -8743,11 +8717,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "coeff_integer",
+          "coeffInteger",
           "Balance"
         ],
         [
-          "coeff_frac",
+          "coeffFrac",
           "Perbill"
         ],
         [
@@ -9043,7 +9017,7 @@
           "Balance"
         ],
         [
-          "own_slash",
+          "ownSlash",
           "Balance"
         ]
       ]
@@ -9052,11 +9026,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "span_index",
+          "spanIndex",
           "SpanIndex"
         ],
         [
-          "last_start",
+          "lastStart",
           "EraIndex"
         ],
         [
@@ -9106,7 +9080,7 @@
           "Vec<UnlockChunk>"
         ],
         [
-          "last_reward",
+          "lastReward",
           "Option<EraIndex>"
         ]
       ]
@@ -9131,7 +9105,7 @@
           "Vec<UnlockChunk>"
         ],
         [
-          "claimed_rewards",
+          "claimedRewards",
           "Vec<EraIndex>"
         ]
       ]
@@ -9201,7 +9175,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "validator_payment",
+          "validatorPayment",
           "Compact<Balance>"
         ]
       ]
@@ -9210,11 +9184,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "unstake_threshold",
+          "unstakeThreshold",
           "Compact<u32>"
         ],
         [
-          "validator_payment",
+          "validatorPayment",
           "Compact<Balance>"
         ]
       ]
@@ -9243,11 +9217,11 @@
           "AccountId"
         ],
         [
-          "total_deposit",
+          "totalDeposit",
           "DepositBalance"
         ],
         [
-          "free_holding",
+          "freeHolding",
           "bool"
         ],
         [
@@ -9255,7 +9229,7 @@
           "u32"
         ],
         [
-          "instance_metadatas",
+          "instanceMetadatas",
           "u32"
         ],
         [
@@ -9263,7 +9237,7 @@
           "u32"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ]
       ]
@@ -9276,7 +9250,7 @@
           "Compact<u32>"
         ],
         [
-          "instance_metadatas",
+          "instanceMetadatas",
           "Compact<u32>"
         ],
         [
@@ -9297,7 +9271,7 @@
           "Option<AccountId>"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ],
         [
@@ -9318,7 +9292,7 @@
           "Vec<u8>"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ]
       ]
@@ -9335,7 +9309,7 @@
           "Vec<u8>"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ]
       ]
@@ -9369,11 +9343,11 @@
           "Balance"
         ],
         [
-          "per_block",
+          "perBlock",
           "Balance"
         ],
         [
-          "starting_block",
+          "startingBlock",
           "BlockNumber"
         ]
       ]
@@ -9412,7 +9386,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "gas_price",
+          "gasPrice",
           "u256"
         ],
         [
@@ -9550,7 +9524,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_individual",
+          "maxIndividual",
           "Weight"
         ]
       ]
@@ -9562,15 +9536,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "begin_used",
+          "beginUsed",
           "PageCounter"
         ],
         [
-          "end_used",
+          "endUsed",
           "PageCounter"
         ],
         [
-          "overweight_count",
+          "overweightCount",
           "OverweightIndex"
         ]
       ]
@@ -9631,7 +9605,7 @@
           "(u64, u64)"
         ],
         [
-          "allowed_slots",
+          "allowedSlots",
           "AllowedSlots"
         ]
       ]
@@ -9645,15 +9619,15 @@
           "AuthorityId"
         ],
         [
-          "slot_number",
+          "slotNumber",
           "SlotNumber"
         ],
         [
-          "first_header",
+          "firstHeader",
           "Header"
         ],
         [
-          "second_header",
+          "secondHeader",
           "Header"
         ]
       ]
@@ -9694,11 +9668,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "authority_index",
+          "authorityIndex",
           "u32"
         ],
         [
-          "slot_number",
+          "slotNumber",
           "SlotNumber"
         ],
         [
@@ -9706,11 +9680,11 @@
           "BabeBlockWeight"
         ],
         [
-          "vrf_output",
+          "vrfOutput",
           "VrfOutput"
         ],
         [
-          "vrf_proof",
+          "vrfProof",
           "VrfProof"
         ]
       ]
@@ -9719,11 +9693,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "authority_index",
+          "authorityIndex",
           "u32"
         ],
         [
-          "slot_number",
+          "slotNumber",
           "SlotNumber"
         ],
         [
@@ -9801,11 +9775,11 @@
           "TAssetBalance"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ],
         [
-          "is_sufficient",
+          "isSufficient",
           "bool"
         ]
       ]
@@ -9855,11 +9829,11 @@
           "TAssetDepositBalance"
         ],
         [
-          "min_nalance",
+          "minBalance",
           "TAssetBalance"
         ],
         [
-          "is_sufficient",
+          "isSufficient",
           "bool"
         ],
         [
@@ -9875,7 +9849,7 @@
           "u32"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ]
       ]
@@ -9900,7 +9874,7 @@
           "u8"
         ],
         [
-          "is_frozen",
+          "isFrozen",
           "bool"
         ]
       ]
@@ -9924,27 +9898,27 @@
       "type": "struct",
       "type_mapping": [
         [
-          "header_only",
+          "headerOnly",
           "bool"
         ],
         [
-          "clear_justification_requests",
+          "clearJustificationRequests",
           "bool"
         ],
         [
-          "needs_justification",
+          "needsJustification",
           "bool"
         ],
         [
-          "bad_justification",
+          "badJustification",
           "bool"
         ],
         [
-          "needs_finality_proof",
+          "needsFinalityProof",
           "bool"
         ],
         [
-          "is_new_best",
+          "isNewBest",
           "bool"
         ]
       ]
@@ -9972,7 +9946,7 @@
           "BlockNumber"
         ],
         [
-          "proposal_hash",
+          "proposalHash",
           "Hash"
         ],
         [
@@ -9993,11 +9967,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "last_active",
+          "lastActive",
           "VoteIndex"
         ],
         [
-          "last_win",
+          "lastWin",
           "VoteIndex"
         ],
         [
@@ -10023,15 +9997,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "parachain_index",
+          "parachainIndex",
           "ParaId"
         ],
         [
-          "relay_parent",
+          "relayParent",
           "Hash"
         ],
         [
-          "head_data",
+          "headData",
           "HeadData"
         ],
         [
@@ -10043,7 +10017,7 @@
           "CollatorSignature"
         ],
         [
-          "pov_block_hash",
+          "povBlockHash",
           "Hash"
         ],
         [
@@ -10056,39 +10030,39 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "max_head_data_size",
+          "maxHeadDataSize",
           "u32"
         ],
         [
-          "max_upward_queue_count",
+          "maxUpwardQueueCount",
           "u32"
         ],
         [
-          "max_upward_queue_size",
+          "maxUpwardQueueSize",
           "u32"
         ],
         [
-          "max_upward_message_size",
+          "maxUpwardMessageSize",
           "u32"
         ],
         [
-          "max_upward_message_num_per_candidate",
+          "maxUpwardMessageNumPerCandidate",
           "u32"
         ],
         [
-          "hrmp_max_message_num_per_candidate",
+          "hrmpMaxMessageNumPerCandidate",
           "u32"
         ],
         [
-          "validation_upgrade_frequency",
+          "validationUpgradeFrequency",
           "BlockNumber"
         ],
         [
-          "validation_upgrade_delay",
+          "validationUpgradeDelay",
           "BlockNumber"
         ]
       ]
@@ -10097,27 +10071,27 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_capacity",
+          "maxCapacity",
           "u32"
         ],
         [
-          "max_total_size",
+          "maxTotalSize",
           "u32"
         ],
         [
-          "max_message_size",
+          "maxMessageSize",
           "u32"
         ],
         [
-          "msg_count",
+          "msgCount",
           "u32"
         ],
         [
-          "total_size",
+          "totalSize",
           "u32"
         ],
         [
-          "mqc_head",
+          "mqcHead",
           "Option<Hash>"
         ]
       ]
@@ -10143,11 +10117,11 @@
           "CommittedCandidateReceipt"
         ],
         [
-          "validity_votes",
+          "validityVotes",
           "Vec<ValidityAttestation>"
         ],
         [
-          "validator_indices",
+          "validatorIndices",
           "BitVec"
         ]
       ]
@@ -10156,7 +10130,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "apply_at",
+          "applyAt",
           "BlockNumber"
         ],
         [
@@ -10168,7 +10142,7 @@
           "Vec<ValidatorId>"
         ],
         [
-          "session_index",
+          "sessionIndex",
           "SessionIndex"
         ]
       ]
@@ -10177,27 +10151,27 @@
       "type": "struct",
       "type_mapping": [
         [
-          "upward_messages",
+          "upwardMessages",
           "Vec<UpwardMessage>"
         ],
         [
-          "horizontal_messages",
+          "horizontalMessages",
           "Vec<OutboundHrmpMessage>"
         ],
         [
-          "new_validation_code",
+          "newValidationCode",
           "Option<ValidationCode>"
         ],
         [
-          "head_data",
+          "headData",
           "HeadData"
         ],
         [
-          "processed_downward_messages",
+          "processedDownwardMessages",
           "u32"
         ],
         [
-          "hrmp_watermark",
+          "hrmpWatermark",
           "BlockNumber"
         ]
       ]
@@ -10206,27 +10180,27 @@
       "type": "struct",
       "type_mapping": [
         [
-          "para_id",
+          "paraId",
           "ParaId"
         ],
         [
-          "relay_parent",
+          "relayParent",
           "RelayChainHash"
         ],
         [
-          "collator_id",
+          "collatorId",
           "CollatorId"
         ],
         [
-          "persisted_validation_data_hash",
+          "persistedValidationDataHash",
           "Hash"
         ],
         [
-          "pov_hash",
+          "povHash",
           "Hash"
         ],
         [
-          "erasure_root",
+          "erasureRoot",
           "Hash"
         ],
         [
@@ -10234,11 +10208,11 @@
           "CollatorSignature"
         ],
         [
-          "para_head",
+          "paraHead",
           "Hash"
         ],
         [
-          "validation_code_hash",
+          "validationCodeHash",
           "ValidationCodeHash"
         ]
       ]
@@ -10273,7 +10247,7 @@
           "CandidateDescriptor"
         ],
         [
-          "availability_votes",
+          "availabilityVotes",
           "BitVec"
         ],
         [
@@ -10281,15 +10255,15 @@
           "BitVec"
         ],
         [
-          "relay_parent_number",
+          "relayParentNumber",
           "BlockNumber"
         ],
         [
-          "backed_in_number",
+          "backedInNumber",
           "BlockNumber"
         ],
         [
-          "backing_group",
+          "backingGroup",
           "GroupIndex"
         ]
       ]
@@ -10302,7 +10276,7 @@
           "CandidateDescriptor"
         ],
         [
-          "commitments_hash",
+          "commitmentsHash",
           "Hash"
         ]
       ]
@@ -10311,15 +10285,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "max_head_data_size",
+          "maxHeadDataSize",
           "u32"
         ],
         [
-          "block_number",
+          "blockNumber",
           "BlockNumber"
         ]
       ]
@@ -10345,7 +10319,7 @@
           "CoreIndex"
         ],
         [
-          "para_id",
+          "paraId",
           "ParaId"
         ],
         [
@@ -10353,7 +10327,7 @@
           "AssignmentKind"
         ],
         [
-          "group_idx",
+          "groupIdx",
           "GroupIndex"
         ]
       ]
@@ -10378,15 +10352,15 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "max_head_data_size",
+          "maxHeadDataSize",
           "u32"
         ],
         [
-          "block_number",
+          "blockNumber",
           "BlockNumber"
         ]
       ]
@@ -10396,163 +10370,163 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "max_head_data_size",
+          "maxHeadDataSize",
           "u32"
         ],
         [
-          "max_upward_queue_count",
+          "maxUpwardQueueCount",
           "u32"
         ],
         [
-          "max_upward_queue_size",
+          "maxUpwardQueueSize",
           "u32"
         ],
         [
-          "max_upward_message_size",
+          "maxUpwardMessageSize",
           "u32"
         ],
         [
-          "max_upward_message_num_per_candidate",
+          "maxUpwardMessageNumPerCandidate",
           "u32"
         ],
         [
-          "hrmp_max_message_num_per_candidate",
+          "hrmpMaxMessageNumPerCandidate",
           "u32"
         ],
         [
-          "validation_upgrade_frequency",
+          "validationUpgradeFrequency",
           "BlockNumber"
         ],
         [
-          "validation_upgrade_delay",
+          "validationUpgradeDelay",
           "BlockNumber"
         ],
         [
-          "max_pov_size",
+          "maxPovSize",
           "u32"
         ],
         [
-          "max_downward_message_size",
+          "maxDownwardMessageSize",
           "u32"
         ],
         [
-          "preferred_dispatchable_upward_messages_step_weight",
+          "preferredDispatchableUpwardMessagesStepWeight",
           "Weight"
         ],
         [
-          "hrmp_max_parachain_outbound_channels",
+          "hrmpMaxParachainOutboundChannels",
           "u32"
         ],
         [
-          "hrmp_max_parathread_outbound_channels",
+          "hrmpMaxParathreadOutboundChannels",
           "u32"
         ],
         [
-          "hrmp_open_request_ttl",
+          "hrmpOpenRequestTtl",
           "u32"
         ],
         [
-          "hrmp_sender_deposit",
+          "hrmpSenderDeposit",
           "Balance"
         ],
         [
-          "hrmp_recipient_deposit",
+          "hrmpRecipientDeposit",
           "Balance"
         ],
         [
-          "hrmp_channel_max_capacity",
+          "hrmpChannelMaxCapacity",
           "u32"
         ],
         [
-          "hrmp_channel_max_total_size",
+          "hrmpChannelMaxTotalSize",
           "u32"
         ],
         [
-          "hrmp_max_parachain_inbound_channels",
+          "hrmpMaxParachainInboundChannels",
           "u32"
         ],
         [
-          "hrmp_max_parathread_inbound_channels",
+          "hrmpMaxParathreadInboundChannels",
           "u32"
         ],
         [
-          "hrmp_channel_max_message_size",
+          "hrmpChannelMaxMessageSize",
           "u32"
         ],
         [
-          "code_retention_period",
+          "codeRetentionPeriod",
           "BlockNumber"
         ],
         [
-          "parathread_cores",
+          "parathreadCores",
           "u32"
         ],
         [
-          "parathread_retries",
+          "parathreadRetries",
           "u32"
         ],
         [
-          "group_rotation_frequency",
+          "groupRotationFrequency",
           "BlockNumber"
         ],
         [
-          "chain_availability_period",
+          "chainAvailabilityPeriod",
           "BlockNumber"
         ],
         [
-          "thread_availability_period",
+          "threadAvailabilityPeriod",
           "BlockNumber"
         ],
         [
-          "scheduling_lookahead",
+          "schedulingLookahead",
           "u32"
         ],
         [
-          "max_validators_per_core",
+          "maxValidatorsPerCore",
           "Option<u32>"
         ],
         [
-          "max_validators",
+          "maxValidators",
           "Option<u32>"
         ],
         [
-          "dispute_period",
+          "disputePeriod",
           "SessionIndex"
         ],
         [
-          "dispute_post_conclusion_acceptance_period",
+          "disputePostConclusionAcceptancePeriod",
           "BlockNumber"
         ],
         [
-          "dispute_max_spam_slots",
+          "disputeMaxSpamSlots",
           "u32"
         ],
         [
-          "dispute_conclusion_by_time_out_period",
+          "disputeConclusionByTimeOutPeriod",
           "BlockNumber"
         ],
         [
-          "no_show_slots",
+          "noShowSlots",
           "u32"
         ],
         [
-          "n_delay_tranches",
+          "nDelayTranches",
           "u32"
         ],
         [
-          "zeroth_delay_tranche_width",
+          "zerothDelayTrancheWidth",
           "u32"
         ],
         [
-          "needed_approvals",
+          "neededApprovals",
           "u32"
         ],
         [
-          "relay_vrf_modulo_samples",
+          "relayVrfModuloSamples",
           "u32"
         ]
       ]
@@ -10561,147 +10535,147 @@
       "type": "struct",
       "type_mapping": [
         [
-          "validation_upgrade_frequency",
+          "validationUpgradeFrequency",
           "BlockNumber"
         ],
         [
-          "validation_upgrade_delay",
+          "validationUpgradeDelay",
           "BlockNumber"
         ],
         [
-          "acceptance_period",
+          "acceptancePeriod",
           "BlockNumber"
         ],
         [
-          "max_code_size",
+          "maxCodeSize",
           "u32"
         ],
         [
-          "max_head_data_size",
+          "maxHeadDataSize",
           "u32"
         ],
         [
-          "max_pov_size",
+          "maxPovSize",
           "u32"
         ],
         [
-          "parathread_cores",
+          "parathreadCores",
           "u32"
         ],
         [
-          "parathread_retries",
+          "parathreadRetries",
           "u32"
         ],
         [
-          "group_rotation_frequency",
+          "groupRotationFrequency",
           "BlockNumber"
         ],
         [
-          "chain_availability_period",
+          "chainAvailabilityPeriod",
           "BlockNumber"
         ],
         [
-          "thread_availability_period",
+          "threadAvailabilityPeriod",
           "BlockNumber"
         ],
         [
-          "scheduling_lookahead",
+          "schedulingLookahead",
           "u32"
         ],
         [
-          "max_validators_per_core",
+          "maxValidatorsPerCore",
           "Option<u32>"
         ],
         [
-          "dispute_period",
+          "disputePeriod",
           "SessionIndex"
         ],
         [
-          "no_show_slots",
+          "noShowSlots",
           "u32"
         ],
         [
-          "n_delay_tranches",
+          "nDelayTranches",
           "u32"
         ],
         [
-          "zeroth_delay_tranche_width",
+          "zerothDelayTrancheWidth",
           "u32"
         ],
         [
-          "needed_approvals",
+          "neededApprovals",
           "u32"
         ],
         [
-          "relay_vrf_modulo_samples",
+          "relayVrfModuloSamples",
           "u32"
         ],
         [
-          "max_upward_queue_count",
+          "maxUpwardQueueCount",
           "u32"
         ],
         [
-          "max_upward_queue_size",
+          "maxUpwardQueueSize",
           "u32"
         ],
         [
-          "max_downward_message_size",
+          "maxDownwardMessageSize",
           "u32"
         ],
         [
-          "preferred_dispatchable_upward_messages_step_weight",
+          "preferredDispatchableUpwardMessagesStepWeight",
           "Weight"
         ],
         [
-          "max_upward_message_size",
+          "maxUpwardMessageSize",
           "u32"
         ],
         [
-          "max_upward_message_num_per_candidate",
+          "maxUpwardMessageNumPerCandidate",
           "u32"
         ],
         [
-          "hrmp_open_request_ttl",
+          "hrmpOpenRequestTtl",
           "u32"
         ],
         [
-          "hrmp_sender_deposit",
+          "hrmpSenderDeposit",
           "Balance"
         ],
         [
-          "hrmp_recipient_deposit",
+          "hrmpRecipientDeposit",
           "Balance"
         ],
         [
-          "hrmp_channel_max_capacity",
+          "hrmpChannelMaxCapacity",
           "u32"
         ],
         [
-          "hrmp_channel_max_total_size",
+          "hrmpChannelMaxTotalSize",
           "u32"
         ],
         [
-          "hrmp_max_parachain_inbound_channels",
+          "hrmpMaxParachainInboundChannels",
           "u32"
         ],
         [
-          "hrmp_max_parathread_inbound_channels",
+          "hrmpMaxParathreadInboundChannels",
           "u32"
         ],
         [
-          "hrmp_channel_max_message_size",
+          "hrmpChannelMaxMessageSize",
           "u32"
         ],
         [
-          "hrmp_max_parachain_outbound_channels",
+          "hrmpMaxParachainOutboundChannels",
           "u32"
         ],
         [
-          "hrmp_max_parathread_outbound_channels",
+          "hrmpMaxParathreadOutboundChannels",
           "u32"
         ],
         [
-          "hrmp_max_message_num_per_candidate",
+          "hrmpMaxMessageNumPerCandidate",
           "u32"
         ]
       ]
@@ -10710,35 +10684,35 @@
       "type": "struct",
       "type_mapping": [
         [
-          "max_capacity",
+          "maxCapacity",
           "u32"
         ],
         [
-          "max_total_size",
+          "maxTotalSize",
           "u32"
         ],
         [
-          "max_message_size",
+          "maxMessageSize",
           "u32"
         ],
         [
-          "msg_count",
+          "msgCount",
           "u32"
         ],
         [
-          "total_size",
+          "totalSize",
           "u32"
         ],
         [
-          "mqc_head",
+          "mqcHead",
           "Option<Hash>"
         ],
         [
-          "sender_deposit",
+          "senderDeposit",
           "Balance"
         ],
         [
-          "recipient_deposit",
+          "recipientDeposit",
           "Balance"
         ]
       ]
@@ -10755,19 +10729,19 @@
           "SessionIndex"
         ],
         [
-          "sender_deposit",
+          "senderDeposit",
           "Balance"
         ],
         [
-          "max_message_size",
+          "maxMessageSize",
           "u32"
         ],
         [
-          "max_capacity",
+          "maxCapacity",
           "u32"
         ],
         [
-          "max_total_size",
+          "maxTotalSize",
           "u32"
         ]
       ]
@@ -10776,11 +10750,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "pub_sent_at",
+          "pubSentAt",
           "BlockNumber"
         ],
         [
-          "pub_msg",
+          "pubMsg",
           "DownwardMessage"
         ]
       ]
@@ -10789,7 +10763,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "sent_at",
+          "sentAt",
           "BlockNumber"
         ],
         [
@@ -10816,7 +10790,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "parent_head",
+          "parentHead",
           "HeadData"
         ],
         [
@@ -10824,7 +10798,7 @@
           "Balance"
         ],
         [
-          "code_upgrade_allowed",
+          "codeUpgradeAllowed",
           "Option<BlockNumber>"
         ]
       ]
@@ -10834,11 +10808,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "downward_messages",
+          "downwardMessages",
           "Vec<InboundDownwardMessage>"
         ],
         [
-          "horizontal_messages",
+          "horizontalMessages",
           "BTreeMap<ParaId, InboundHrmpMessages>"
         ]
       ]
@@ -10855,19 +10829,19 @@
       "type": "struct",
       "type_mapping": [
         [
-          "validation_data",
+          "validationData",
           "PersistedValidationData"
         ],
         [
-          "relay_chain_state",
+          "relayChainState",
           "StorageProof"
         ],
         [
-          "downward_messages",
+          "downwardMessages",
           "Vec<InboundDownwardMessage>"
         ],
         [
-          "horizontal_messages",
+          "horizontalMessages",
           "BTreeMap<ParaId, VecInboundHrmpMessage>"
         ]
       ]
@@ -10880,7 +10854,7 @@
           "AccountId"
         ],
         [
-          "genesis_head",
+          "genesisHead",
           "HeadData"
         ],
         [
@@ -10923,7 +10897,7 @@
           "ParathreadEntry"
         ],
         [
-          "core_offset",
+          "coreOffset",
           "u32"
         ]
       ]
@@ -10933,11 +10907,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "expected_at",
+          "expectedAt",
           "BlockNumber"
         ],
         [
-          "activated_at",
+          "activatedAt",
           "BlockNumber"
         ]
       ]
@@ -10971,39 +10945,39 @@
           "Vec<ValidatorId>"
         ],
         [
-          "discovery_keys",
+          "discoveryKeys",
           "Vec<AuthorityDiscoveryId>"
         ],
         [
-          "assignment_keys",
+          "assignmentKeys",
           "Vec<AssignmentId>"
         ],
         [
-          "validator_groups",
+          "validatorGroups",
           "Vec<SessionInfoValidatorGroup>"
         ],
         [
-          "n_cores",
+          "nCores",
           "u32"
         ],
         [
-          "zeroth_delay_tranche_width",
+          "zerothDelayTrancheWidth",
           "u32"
         ],
         [
-          "relay_vrf_modulo_samples",
+          "relayVrfModuloSamples",
           "u32"
         ],
         [
-          "n_delay_tranches",
+          "nDelayTranches",
           "u32"
         ],
         [
-          "no_show_slots",
+          "noShowSlots",
           "u32"
         ],
         [
-          "needed_approvals",
+          "neededApprovals",
           "u32"
         ]
       ]
@@ -11016,7 +10990,7 @@
           "BitVec"
         ],
         [
-          "validator_index",
+          "validatorIndex",
           "ParaValidatorIndex"
         ],
         [
@@ -11070,7 +11044,7 @@
       "type": "struct",
       "type_mapping": [
         [
-          "inital_issuance",
+          "initalIssuance",
           "Compact<Balance>"
         ],
         [
@@ -11154,11 +11128,11 @@
           "AccountValidity"
         ],
         [
-          "free_balance",
+          "freeBalance",
           "Balance"
         ],
         [
-          "locked_balance",
+          "lockedBalance",
           "Balance"
         ],
         [
@@ -11208,7 +11182,7 @@
           "AccountId"
         ],
         [
-          "proxy_type",
+          "proxyType",
           "ProxyType"
         ],
         [
@@ -11225,7 +11199,7 @@
           "AccountId"
         ],
         [
-          "call_hash",
+          "callHash",
           "Hash"
         ],
         [
