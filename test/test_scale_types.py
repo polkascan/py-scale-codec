@@ -674,20 +674,6 @@ class TestScaleTypes(unittest.TestCase):
         obj = RuntimeConfiguration().create_scale_object('StructWithBaseClass')
         self.assertTrue(isinstance(obj, GenericContractExecResult))
 
-    def test_struct_with_nested_struct(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = ScaleDecoder.get_decoder_class('StructWithNestedStruct')
-
-        data = obj.encode({'flat': 12, 'after': 6, 'nested': {'a': 1, 'b': 2}})
-
-        self.assertEqual(data.to_hex(), '0x0c010206')
-
-        obj = ScaleDecoder.get_decoder_class('StructWithNestedStruct', data=ScaleBytes('0x0c010206'))
-        value = obj.decode()
-
-        self.assertEqual({'flat': 12, 'nested': {'a': 1, 'b': 2}, 'after': 6}, value)
-
     def test_enum_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
@@ -700,12 +686,12 @@ class TestScaleTypes(unittest.TestCase):
     def test_enum_with_specified_index_number(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
-        obj = ScaleDecoder.get_decoder_class('EnumSpecifiedIndex')
+        obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex')
 
         data = obj.encode("KSM")
         self.assertEqual("0x82", data.to_hex())
 
-        obj = ScaleDecoder.get_decoder_class('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
+        obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
 
         self.assertEqual("KAR", obj.decode())
 

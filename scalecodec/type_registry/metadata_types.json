@@ -920,6 +920,10 @@
         [
           "extrinsic",
           "ExtrinsicMetadataV14"
+        ],
+        [
+          "runtime_type",
+          "SiLookupTypeId"
         ]
       ]
     },
@@ -1232,10 +1236,6 @@
         [
           "compact",
           "TypeDefCompact"
-        ],
-        [
-          "phantom",
-          "TypeDefPhantom"
         ],
         [
           "bitsequence",

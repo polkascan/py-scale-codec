@@ -71,16 +71,16 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual(obj.value, 64302)
 
     def test_compact(self):
-        # scale_info::101 = compact<u32>
+        # scale_info::98 = compact<u32>
         obj = self.runtime_config.create_scale_object(
-            'scale_info::101', ScaleBytes("0x02093d00")
+            'scale_info::98', ScaleBytes("0x02093d00")
         )
         obj.decode()
         self.assertEqual(obj.value, 1000000)
 
-        # scale_info::66 = compact<u128>
+        # scale_info::63 = compact<u128>
         obj = self.runtime_config.create_scale_object(
-            'scale_info::66', ScaleBytes("0x130080cd103d71bc22")
+            'scale_info::63', ScaleBytes("0x130080cd103d71bc22")
         )
         obj.decode()
         self.assertEqual(obj.value, 2503000000000000000)
@@ -125,9 +125,9 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual('CodeUpdated', obj.value)
 
     def test_named_struct(self):
-        # scale_info::58 = ['frame_support', 'weights', 'RuntimeDbWeight']
+        # scale_info::111 = ['frame_support', 'weights', 'RuntimeDbWeight']
         obj = self.runtime_config.create_scale_object(
-            'scale_info::114',
+            'scale_info::111',
             ScaleBytes("0xe110000000000000d204000000000000")
         )
         obj.decode()
@@ -147,7 +147,7 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_unnamed_struct_one_element(self):
         # ('sp_arithmetic::per_things::percent', <class 'abc.scale_info::205'>)
         obj = self.runtime_config.create_scale_object(
-            'scale_info::206',
+            'scale_info::203',
             ScaleBytes("0x04")
         )
         obj.decode()
@@ -159,7 +159,7 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_unnamed_struct_multiple_elements(self):
         # pallet_democracy::vote::PriorLock
         obj = self.runtime_config.create_scale_object(
-            'scale_info::378',
+            'scale_info::377',
             ScaleBytes("0x0c00000022000000000000000000000000000000")
         )
 
@@ -171,7 +171,7 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_tuple(self):
         obj = self.runtime_config.create_scale_object(
-            'scale_info::77',
+            'scale_info::73',
             ScaleBytes("0x0400000003000000")
         )
         obj.decode()
@@ -180,7 +180,7 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_option_none(self):
         obj = self.runtime_config.create_scale_object(
-            'scale_info::78',
+            'scale_info::74',
             ScaleBytes("0x00")
         )
         obj.decode()
@@ -205,7 +205,7 @@ class ScaleInfoTestCase(unittest.TestCase):
     def test_weak_bounded_vec(self):
         # 87 = ['frame_support', 'storage', 'weak_bounded_vec', 'WeakBoundedVec']
         obj = self.runtime_config.create_scale_object(
-            'scale_info::319',
+            'scale_info::318',
             ScaleBytes("0x0401020304050607080a00000000000000000000000000000000")
         )
         obj.decode()
@@ -216,28 +216,21 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual('0x0401020304050607080a00000000000000000000000000000000', data.to_hex())
 
     def test_bounded_vec(self):
-        # 'scale_info::91' = frame_support::storage::bounded_vec::BoundedVec
+        # 'scale_info::90' = frame_support::storage::bounded_vec::BoundedVec
         obj = self.runtime_config.create_scale_object(
-            'scale_info::458',
-            ScaleBytes("0x04d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d91ead4e484ff0e6731477381b8baaf891170121eb90f26b980b07512f2c2f02601000000")
+            'scale_info::90',
+            ScaleBytes("0x084345")
         )
 
         obj.decode()
 
-        self.assertEqual([{
-                "real": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-                'call_hash': "0x91ead4e484ff0e6731477381b8baaf891170121eb90f26b980b07512f2c2f026",
-                'height': 1
-            }], obj.value)
+        self.assertEqual('CE', obj.value)
 
-        data = obj.encode([
-            {
-                "real": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-                'call_hash': "0x91ead4e484ff0e6731477381b8baaf891170121eb90f26b980b07512f2c2f026",
-                'height': 1
-            }
-        ])
-        self.assertEqual('0x04d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d91ead4e484ff0e6731477381b8baaf891170121eb90f26b980b07512f2c2f02601000000', data.to_hex())
+        data = obj.encode([67, 69])
+        self.assertEqual('0x084345', data.to_hex())
+
+        data = obj.encode('CE')
+        self.assertEqual('0x084345', data.to_hex())
 
     def test_data(self):
         # 'scale_info::247' = pallet_identity::types::data
@@ -253,9 +246,9 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual('0x0854657374313233', data.to_hex())
 
     def test_era(self):
-        # 'scale_info::506' = sp_runtime::generic::era::era
+        # 'scale_info::516' = sp_runtime::generic::era::era
         obj = self.runtime_config.create_scale_object(
-            'scale_info::506',
+            'scale_info::516',
             ScaleBytes("0x4e9c")
         )
         obj.decode()

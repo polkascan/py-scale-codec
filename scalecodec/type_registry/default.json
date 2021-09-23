@@ -110,7 +110,7 @@
     "PriorLock": {
       "type": "struct",
       "type_mapping": [
-         ["blockNumber", "BlockNumber"],
+         ["block_number", "BlockNumber"],
          ["balance", "Balance"]
       ]
     },
@@ -2926,11 +2926,11 @@
       "type": "struct",
       "type_mapping": [
         [
-          "validatorsFor",
+          "validators_for",
           "BitVec"
         ],
         [
-          "validatorsAgainst",
+          "validators_against",
           "BitVec"
         ],
         [
@@ -2938,7 +2938,7 @@
           "BlockNumber"
         ],
         [
-          "concludedAt",
+          "concluded_at",
           "Option<BlockNumber>"
         ]
       ]
