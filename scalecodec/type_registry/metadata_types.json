@@ -1492,6 +1492,38 @@
       "type": "struct",
       "base_class": "GenericEventRecord",
       "type_mapping": []
-    }
+    },
+    "ContractExecResultTo260": {
+      "type": "enum",
+      "base_class": "GenericContractExecResult",
+      "type_mapping": [
+        [
+          "Success",
+          "ContractExecResultSuccessTo260"
+        ],
+        [
+          "Error",
+          "Null"
+        ]
+      ]
+    },
+    "ContractExecResultSuccessTo260": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "flags",
+          "u32"
+        ],
+        [
+          "data",
+          "Bytes"
+        ],
+        [
+          "gas_consumed",
+          "u64"
+        ]
+      ]
+    },
+    "ContractExecResult": "ContractExecResultTo260"
   }
 }
