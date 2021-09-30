@@ -1,12 +1,19 @@
 {
-  "runtime_id": 9002,
+  "runtime_id": 9103,
   "types": {
     "Address": "MultiAddress",
     "LookupSource": "MultiAddress",
     "AccountInfo": "AccountInfoWithTripleRefCount",
     "FullIdentification": "()",
     "Keys": "SessionKeys7B",
-    "CompactAssignments": "CompactAssignmentsFrom258"
+    "CompactAssignments": "CompactAssignmentsFrom265",
+    "RawSolution": "RawSolutionWith24",
+    "AssetInstance": "AssetInstanceV0",
+    "MultiAsset": "MultiAssetV0",
+    "MultiLocation": "MultiLocationV0",
+    "Response": "ResponseV0",
+    "Xcm": "XcmV0",
+    "XcmOrder": "XcmOrderV0"
   },
   "versioning": [
     {

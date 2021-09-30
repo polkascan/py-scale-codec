@@ -39,7 +39,14 @@
     },
     "RefCount": "u32",
     "ValidatorPrefs": "ValidatorPrefsWithBlocked",
-    "CompactAssignments":  "CompactAssignmentsWith24"
+    "CompactAssignments":  "CompactAssignmentsWith24",
+    "RawSolution": "RawSolutionWith24",
+    "AssetInstance": "AssetInstanceV0",
+    "MultiAsset": "MultiAssetV0",
+    "MultiLocation": "MultiLocationV0",
+    "Response": "ResponseV0",
+    "Xcm": "XcmV0",
+    "XcmOrder": "XcmOrderV0"
   },
   "versioning": [
     {
@@ -323,13 +330,15 @@
     {
       "runtime_range": [2023, 9009],
       "types": {
-        "CompactAssignments": "CompactAssignmentsWith16"
+        "CompactAssignments": "CompactAssignmentsWith16",
+        "RawSolution": "RawSolutionWith16"
       }
     },
     {
       "runtime_range": [9010, null],
       "types": {
-        "CompactAssignments": "CompactAssignmentsWith24"
+        "CompactAssignments": "CompactAssignmentsWith24",
+        "RawSolution": "RawSolutionWith24"
       }
     },
     {
