@@ -1024,6 +1024,7 @@ class Enum(ScaleType):
                 enum_type_mapping = self.type_mapping[self.index]
 
                 if enum_type_mapping[1] is None or enum_type_mapping[1] == 'Null':
+                    self.value_object = (enum_type_mapping[0], None)
                     return enum_type_mapping[0]
 
                 result_obj = self.process_type(enum_type_mapping[1], metadata=self.metadata)
@@ -1085,6 +1086,10 @@ class Enum(ScaleType):
         if self.value:
 
             if self.type_mapping:
+
+                if self.type_mapping[self.index][1] == 'Null':
+                    return self.value
+
                 return list(self.value.values())[0]
             else:
                 return self.value_list[self.index]
@@ -2494,9 +2499,14 @@ class GenericEventRecord(Struct):
     def process(self):
         value = super().process()
 
+        if self.value_object['phase'][0] == 'ApplyExtrinsic':
+            extrinsic_idx = self.value_object['phase'][1].value
+        else:
+            extrinsic_idx = None
+
         return {
-            'phase': self.value_object['phase'].index,
-            'extrinsic_idx': self.value_object['phase'][1].value,
+            'phase': self.value_object['phase'][0],
+            'extrinsic_idx': extrinsic_idx,
             'event': value['event'],
             'event_index': self.value_object['event'].index,
             'module_id': value['event']['module_id'],
