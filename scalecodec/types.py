@@ -1850,25 +1850,6 @@ class GenericMetadataVersioned(Tuple):
     def pallets(self):
         return self.value_object[1].pallets
 
-    def process(self):
-        value = super().process()
-
-        # # Create error index
-        # if self.index >= 12:
-        #     for module in self.metadata.modules:
-        #         if len(module.errors or []) > 0:
-        #             for idx, error in enumerate(module.errors):
-        #                 self.error_index[f'{module.index}-{idx}'] = error
-        # else:
-        #     error_module_index = 0
-        #     for module in self.metadata.modules:
-        #         if len(module.errors or []) > 0:
-        #             for idx, error in enumerate(module.errors):
-        #                 self.error_index[f'{error_module_index}-{idx}'] = error
-        #             error_module_index += 1
-
-        return value
-
     def get_metadata_pallet(self, name: str) -> 'GenericPalletMetadata':
         metadata = self.get_metadata()
         return metadata.get_metadata_pallet(name)
