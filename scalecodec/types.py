@@ -1874,10 +1874,12 @@ class GenericMetadataVersioned(Tuple):
         return metadata.get_metadata_pallet(name)
 
     def get_pallet_by_index(self, index: int):
-        try:
-            return self.pallets[index]
-        except IndexError:
-            raise ValueError(f'Pallet for index "{index}" not found')
+
+        for pallet in self.pallets:
+            if pallet.value['index'] == index:
+                return pallet
+
+        raise ValueError(f'Pallet for index "{index}" not found')
 
 
 class GenericStringType(String):
