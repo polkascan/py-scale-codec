@@ -1593,6 +1593,7 @@
       ]
     },
     "xcm::v0::Outcome": "XcmOutcome",
+    "xcm::latest::Outcome": "XcmOutcome",
     "Outcome": "XcmOutcome",
     "DoubleEncoded": {
       "type": "struct",
