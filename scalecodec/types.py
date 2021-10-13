@@ -1673,20 +1673,33 @@ class Map(ScaleType):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        sub_type_parts = [x.strip() for x in self.sub_type.split(',')]
-        self.map_key = sub_type_parts[0]
-        self.map_value = sub_type_parts[1]
+        self.map_key = None
+        self.map_value = None
+
+        if self.sub_type:
+            sub_type_parts = [x.strip() for x in self.sub_type.split(',')]
+            self.map_key = sub_type_parts[0]
+            self.map_value = sub_type_parts[1]
 
     def process(self):
 
-        element_count = self.process_type('Compact<u32>').value
+        if self.map_key and self.map_value:
 
-        result = []
-        for _ in range(0, element_count):
-            key_value = self.process_type(self.map_key, metadata=self.metadata).value
-            result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+            element_count = self.process_type('Compact<u32>').value
 
-        return result
+            result = []
+            for _ in range(0, element_count):
+                key_value = self.process_type(self.map_key, metadata=self.metadata).value
+                result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+
+            return result
+
+        elif self.type_mapping:
+            self.value_object = self.process_type(self.type_mapping[0], metadata=self.metadata)
+            return self.value_object.value
+
+        else:
+            raise ValueError('sub_type or type_mapping should be set to process a Map')
 
     def process_encode(self, value):
 
