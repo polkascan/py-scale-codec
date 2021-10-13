@@ -1296,21 +1296,23 @@ class GenericCall(ScaleType):
 
             call_hash = blake2b(self.get_used_bytes(), digest_size=32).digest()
 
-            # Check args format
-            if type(call_obj[1].value_object) is not tuple:
-                call_args_values = (call_obj[1],)
-            else:
-                call_args_values = call_obj[1]
-
             call_args = []
 
-            for idx, call_arg in enumerate(self.call_args):
-                call_args.append({
-                    'name': call_arg.value['name'],
-                    'type': self.convert_type(call_arg.value['typeName']),
-                    'value': call_args_values[idx].value
-                })
-                self.call_args[idx].value_object['value'] = call_args_values[idx]
+            if len(self.call_args) > 0:
+
+                # Check args format
+                if type(call_obj[1].value_object) is not tuple:
+                    call_args_values = (call_obj[1],)
+                else:
+                    call_args_values = call_obj[1]
+
+                for idx, call_arg in enumerate(self.call_args):
+                    call_args.append({
+                        'name': call_arg.value['name'],
+                        'type': self.convert_type(call_arg.value['typeName']),
+                        'value': call_args_values[idx].value
+                    })
+                    self.call_args[idx].value_object['value'] = call_args_values[idx]
 
             self.value_object = {
                 'call_index': f'0x{self.call_index}',
