@@ -2457,7 +2457,7 @@ class GenericScaleInfoEvent(Enum):
             'event_index': self.event_index,
             'module_id': self.value_object[0],
             'event_id': self.value_object[1][0],
-            'attributes': self.value_object[1][1].value,
+            'attributes': self.value_object[1][1].value if self.value_object[1][1] else None,
         }
 
 
