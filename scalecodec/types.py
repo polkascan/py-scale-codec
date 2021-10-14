@@ -961,7 +961,10 @@ class GenericAddress(ScaleType):
             raise ValueError('Value is in unsupported format, expected 32 bytes hex-string for AccountIds or int for AccountIndex')
 
     def serialize(self):
-        return self.value
+        if self.account_id:
+            return '0x{}'.format(self.value)
+        else:
+            return self.value
 
 
 class AccountIdAddress(GenericAddress):

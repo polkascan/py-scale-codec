@@ -4,6 +4,85 @@
     "Text": "String",
     "Hash": "H256",
     "Call": "GenericCall",
+    "SlotNumber": "u64",
+    "VrfOutput": "[u8; 32]",
+    "VrfProof": "[u8; 64]",
+    "RawBabePreDigest": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Phantom",
+          "Null"
+        ],
+        [
+          "Primary",
+          "RawBabePreDigestPrimary"
+        ],
+        [
+          "SecondaryPlain",
+          "RawBabePreDigestSecondaryPlain"
+        ],
+        [
+          "SecondaryVRF",
+          "RawBabePreDigestSecondaryVRF"
+        ]
+      ]
+    },
+    "RawBabePreDigestPrimary": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authority_index",
+          "u32"
+        ],
+        [
+          "slot_number",
+          "SlotNumber"
+        ],
+        [
+          "vrf_output",
+          "VrfOutput"
+        ],
+        [
+          "vrf_proof",
+          "VrfProof"
+        ]
+      ]
+    },
+    "RawBabePreDigestSecondaryPlain": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authority_index",
+          "u32"
+        ],
+        [
+          "slot_number",
+          "SlotNumber"
+        ]
+      ]
+    },
+    "RawBabePreDigestSecondaryVRF": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "authority_index",
+          "u32"
+        ],
+        [
+          "slot_number",
+          "SlotNumber"
+        ],
+        [
+          "vrf_output",
+          "VrfOutput"
+        ],
+        [
+          "vrf_proof",
+          "VrfProof"
+        ]
+      ]
+    },
     "DoubleMapTypeV9": {
       "type": "struct",
       "type_mapping": [
