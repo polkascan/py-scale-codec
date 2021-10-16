@@ -1301,7 +1301,7 @@ class GenericCall(ScaleType):
             if len(self.call_args) > 0:
 
                 # Check args format
-                if type(call_obj[1].value_object) is not tuple:
+                if type(call_obj[1].value) is not tuple:
                     call_args_values = (call_obj[1],)
                 else:
                     call_args_values = call_obj[1]
