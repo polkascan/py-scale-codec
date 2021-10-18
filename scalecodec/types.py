@@ -2255,6 +2255,10 @@ class GenericEventMetadata(Struct):
     def args(self):
         return self.value_object['args']
 
+    @property
+    def docs(self):
+        return self.value['documentation']
+
 
 class GenericErrorMetadata(Struct):
 
@@ -2298,7 +2302,10 @@ class ScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
 
     @property
     def type(self):
-        return f"scale_info::{self.value['type']}"
+        if self.value.get('typeName'):
+            return self.value.get('typeName')
+        else:
+            return f"scale_info::{self.value['type']}"
 
 
 class TypeNotSupported(ScaleType):
