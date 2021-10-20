@@ -1562,6 +1562,7 @@
     "pallet_identity::types::Data": "Data",
     "frame_support::storage::bounded_vec::BoundedVec": "BoundedVec",
     "frame_support::storage::weak_bounded_vec::WeakBoundedVec": "BoundedVec",
+    "*::Call": "GenericCall",
     "*::Event": {
       "type": "struct",
       "base_class": "GenericScaleInfoEvent",

@@ -1277,7 +1277,7 @@ class GenericCall(ScaleType):
             self.call_module = self.metadata.get_pallet_by_index(pallet_index.value)
             call_type_string = self.call_module['calls'].value_object.get_type_string()
 
-            call_obj = self.process_type(call_type_string)
+            call_obj = self.process_type(call_type_string, metadata=self.metadata)
 
             self.call_index = "{:02x}{:02x}".format(pallet_index.value, call_obj.index)
 
