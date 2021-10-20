@@ -1,5 +1,6 @@
 {
   "types": {
+    "()": "Null",
     "Type": "GenericStringType",
     "Text": "String",
     "Hash": "H256",
