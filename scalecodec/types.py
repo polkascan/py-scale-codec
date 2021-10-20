@@ -57,21 +57,12 @@ class Compact(ScaleType):
         return self.compact_bytes
 
     def process(self):
-
         self.process_compact_bytes()
 
-        if self.sub_type:
-
-            byte_data = self.runtime_config.create_scale_object(
-                type_string=self.sub_type, data=ScaleBytes(self.compact_bytes)
-            ).process()
-
-            if type(byte_data) is int and self.compact_length <= 4:
-                return int(byte_data / 4)
-            else:
-                return byte_data
+        if self.compact_length <= 4:
+            return int(int.from_bytes(self.compact_bytes, byteorder='little') / 4)
         else:
-            return self.compact_bytes
+            return int.from_bytes(self.compact_bytes, byteorder='little')
 
     def process_encode(self, value):
 
