@@ -46,7 +46,7 @@ class RuntimeConfigurationObject:
         return set(class_.__subclasses__()).union(
             [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
 
-    def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False):
+    def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False, implements_scale_info=False):
         self.config_id = config_id
         self.type_registry = {'types': {}}
         self.__initial_state = False
@@ -56,6 +56,7 @@ class RuntimeConfigurationObject:
 
         self.only_primitives_on_init = only_primitives_on_init
         self.ss58_format = ss58_format
+        self.implements_scale_info = implements_scale_info
 
     @classmethod
     def convert_type_string(cls, name):
@@ -94,7 +95,8 @@ class RuntimeConfigurationObject:
         if type_string.strip() == '':
             return None
 
-        type_string = self.convert_type_string(type_string)
+        if self.implements_scale_info is False:
+            type_string = self.convert_type_string(type_string)
 
         decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
 
