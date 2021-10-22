@@ -2143,8 +2143,16 @@ class GenericStorageEntryMetadata(Struct):
         return self.value['name']
 
     @property
+    def modifier(self):
+        return self.value['modifier']
+
+    @property
     def type(self):
         return self.value['type']
+
+    @property
+    def docs(self):
+        return self.value['documentation']
 
     def get_type_string_for_type(self, ty):
         return self.convert_type(ty)
