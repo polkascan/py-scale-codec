@@ -318,6 +318,10 @@
           null
         ],
         [
+          "Blake2_128Concat",
+          null
+        ],
+        [
           "Twox128",
           null
         ],
