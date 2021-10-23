@@ -44,12 +44,12 @@ class ScaleInfoTestCase(unittest.TestCase):
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
 
-        metadata_obj = cls.runtime_config.create_scale_object(
+        cls.metadata_obj = cls.runtime_config.create_scale_object(
             'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict['V14'])
         )
-        metadata_obj.decode()
+        cls.metadata_obj.decode()
 
-        cls.runtime_config.add_portable_registry(metadata_obj)
+        cls.runtime_config.add_portable_registry(cls.metadata_obj)
 
     def test_path_overrides(self):
         account_cls = self.runtime_config.get_decoder_class('scale_info::0')
@@ -286,6 +286,20 @@ class ScaleInfoTestCase(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             self.runtime_config.get_decoder_class_for_scale_info_definition('unknown::type', unknown_type)
+
+    def test_encode_call(self):
+        call = self.runtime_config.create_scale_object(
+            "Call", metadata=self.metadata_obj
+        )
+        call.encode({
+            "call_module": "Balances",
+            "call_function": "transfer",
+            "call_args": {"dest": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "value": 3},
+        })
+        self.assertEqual(
+            call.data.to_hex(),
+            '0x060000be5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f0c'
+        )
 
 
 if __name__ == '__main__':
