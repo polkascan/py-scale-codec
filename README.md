@@ -17,7 +17,33 @@ https://polkascan.github.io/py-scale-codec/
 pip install scalecodec
 ```
 
-## Examples
+## Example (MetadataV14 runtimes and higher)
+```python
+
+runtime_config = RuntimeConfigurationObject()
+# This types are all hardcoded types needed to decode metadata types
+runtime_config.update_type_registry(load_type_registry_preset(name="metadata_types"))
+
+# Decode retrieved metadata from the RPC
+metadata = runtime_config.create_scale_object(
+    'MetadataVersioned', data=ScaleBytes(response.get('result'))
+)
+metadata.decode()
+
+# Add the embedded type registry to the runtime config
+runtime_config.add_portable_registry(metadata)
+
+call = runtime_config.create_scale_object(
+    "Call", metadata=metadata
+)
+call.encode({
+    "call_module": "Balances",
+    "call_function": "transfer",
+    "call_args": {"dest": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "value": 3},
+})
+```
+
+## Examples (prior to MetadataV14)
 
 Decode a SCALE-encoded Compact\<Balance\> 
 
