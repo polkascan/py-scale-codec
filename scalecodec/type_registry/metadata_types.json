@@ -272,7 +272,7 @@
           "StorageEntryTypeV9"
         ],
         [
-          "fallback",
+          "default",
           "Bytes"
         ],
         [
