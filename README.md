@@ -17,7 +17,10 @@ https://polkascan.github.io/py-scale-codec/
 pip install scalecodec
 ```
 
-## Example (MetadataV14 runtimes and higher)
+## Examples (MetadataV14 runtimes and higher)
+
+Encode a Call
+
 ```python
 
 runtime_config = RuntimeConfigurationObject()
@@ -41,6 +44,21 @@ call.encode({
     "call_function": "transfer",
     "call_args": {"dest": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "value": 3},
 })
+```
+
+Decode the result of a `state_getStorageAt` RPC call
+
+```python
+event_data = "0x2000000000000000b0338609000000000200000001000000000080b2e60e0000000002000000020000000003be1957935299d0be2f35b8856751feab95fc7089239366b52b72ca98249b94300000020000000500be1957935299d0be2f35b8856751feab95fc7089239366b52b72ca98249b943000264d2823000000000000000000000000000200000005027a9650a6bd43f1e0b4546affb88f8c14213e1fb60512692c2b39fbfcfc56b703be1957935299d0be2f35b8856751feab95fc7089239366b52b72ca98249b943000264d2823000000000000000000000000000200000013060c4c700700000000000000000000000000000200000005047b8441d5110c178c29be709793a41d73ae8b3119a971b18fbd20945ea5d622f00313dc01000000000000000000000000000002000000000010016b0b00000000000000"
+
+system_pallet = [p for p in metadata.pallets if p['name'] == 'System'][0]
+event_storage_function = [s for s in system_pallet['storage']['entries'] if s['name'] == "Events"][0]
+
+
+event = runtime_config.create_scale_object(
+    event_storage_function.get_value_type_string(), data=ScaleBytes(event_data), metadata=metadata
+)
+print(event.decode())
 ```
 
 ## Examples (prior to MetadataV14)
@@ -124,33 +142,7 @@ extrinsic = runtime_config_kusama.create_scale_object(
 )
 extrinsic.decode(ScaleBytes(extrinsic_data))
 
-``` 
-
-## Using the type registry updater in your application
-
-To ensure the type registries are in sync with the current runtime of the blockchain, you can use 
-the updater function in your application:
-
-```python
-from scalecodec.updater import update_type_registries
-
-# Update type registries with latest version from Github   
-try:
-    update_type_registries()
-except Exception:
-    pass
 ```
-
-This will overwrite the type registry JSON files with the downloaded lastest versions from Github. In case of write 
-permission restrictions it is also possible to always use the remote version on Github with the `use_remote_preset` kwarg:
-
-```python
-# Polkadot runtime config
-runtime_config_polkadot = RuntimeConfigurationObject()
-runtime_config_polkadot.update_type_registry(load_type_registry_preset("default", use_remote_preset=True))
-runtime_config_polkadot.update_type_registry(load_type_registry_preset("polkadot", use_remote_preset=True))
-```
-
 
 ## License
 https://github.com/polkascan/py-scale-codec/blob/master/LICENSE
