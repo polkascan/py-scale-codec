@@ -80,63 +80,6 @@
       }
     },
     {
-      "runtime_range": [1, 44],
-      "types": {
-        "Heartbeat": {
-          "type": "struct",
-          "type_mapping": [
-             ["block_number", "BlockNumber"],
-             ["network_state", "OpaqueNetworkState"],
-             ["session_index", "SessionIndex"],
-             ["authority_index", "AuthIndex"]
-          ]
-        },
-        "DispatchInfo": {
-          "type": "struct",
-          "type_mapping": [
-             ["weight", "Weight"],
-             ["class", "DispatchClass"],
-             ["pays_fee", "bool"]
-          ]
-        }
-      }
-    },
-    {
-      "runtime_range": [45, null],
-      "types": {
-        "Heartbeat": {
-          "type": "struct",
-          "type_mapping": [
-             ["block_number", "BlockNumber"],
-             ["network_state", "OpaqueNetworkState"],
-             ["session_index", "SessionIndex"],
-             ["authority_index", "AuthIndex"],
-             ["validators_len", "u32"]
-          ]
-        },
-        "DispatchInfo": {
-          "type": "struct",
-          "type_mapping": [
-             ["weight", "Weight"],
-             ["class", "DispatchClass"],
-             ["pays_fee", "Pays"]
-          ]
-        }
-      }
-    },
-    {
-      "runtime_range": [1, 44],
-      "types": {
-        "Weight": "u32"
-      }
-    },
-    {
-      "runtime_range": [45, null],
-      "types": {
-        "Weight": "u64"
-      }
-    },
-    {
       "runtime_range": [0, 47],
       "types": {
         "Address": "AccountIdAddress",
