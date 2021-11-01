@@ -1578,6 +1578,7 @@
       "base_class": "GenericEventRecord",
       "type_mapping": []
     },
+    "ink_env::types::AccountId": "GenericAccountId",
     "ContractExecResultTo260": {
       "type": "enum",
       "base_class": "GenericContractExecResult",

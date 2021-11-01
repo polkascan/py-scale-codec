@@ -313,7 +313,9 @@ class RuntimeConfigurationObject:
             elif block_number > self.type_registry['runtime_upgrades'][-1][0]:
                 self.type_registry['runtime_upgrades'].append([block_number, -1])
 
-    def get_decoder_class_for_scale_info_definition(self, type_string: str, scale_info_type: 'GenericRegistryType'):
+    def get_decoder_class_for_scale_info_definition(
+            self, type_string: str, scale_info_type: 'GenericRegistryType', prefix: str
+    ):
 
         decoder_class = None
         base_decoder_class = None
@@ -331,7 +333,7 @@ class RuntimeConfigurationObject:
             if base_decoder_class and hasattr(base_decoder_class, 'process_scale_info_definition'):
                 # if process_scale_info_definition is implemented result is final
                 decoder_class = type(type_string, (base_decoder_class,), {})
-                decoder_class.process_scale_info_definition(scale_info_type)
+                decoder_class.process_scale_info_definition(scale_info_type, prefix)
 
                 # Link ScaleInfo RegistryType to decoder class
                 decoder_class.scale_info_type = scale_info_type
@@ -347,7 +349,7 @@ class RuntimeConfigurationObject:
                 base_decoder_class = self.get_decoder_class('FixedLengthArray')
 
             decoder_class = type(type_string, (base_decoder_class,), {
-                'sub_type': f"scale_info::{scale_info_type.value['def']['array']['type']}",
+                'sub_type': f"{prefix}::{scale_info_type.value['def']['array']['type']}",
                 'element_count': scale_info_type.value['def']['array']['len']
             })
 
@@ -363,11 +365,11 @@ class RuntimeConfigurationObject:
 
                 if all([f.get('name') for f in fields]):
                     base_type_string = 'Struct'
-                    type_mapping = [[field['name'], f"scale_info::{field['type']}"] for field in fields]
+                    type_mapping = [[field['name'], f"{prefix}::{field['type']}"] for field in fields]
 
                 else:
                     base_type_string = 'Tuple'
-                    type_mapping = [f"scale_info::{field['type']}" for field in fields]
+                    type_mapping = [f"{prefix}::{field['type']}" for field in fields]
 
             if base_decoder_class is None:
                 base_decoder_class = self.get_decoder_class(base_type_string)
@@ -379,7 +381,7 @@ class RuntimeConfigurationObject:
         elif 'sequence' in scale_info_type.value['def']:
             # Vec
             decoder_class = type(type_string, (self.get_decoder_class('Vec'),), {
-                'sub_type': f"scale_info::{scale_info_type.value['def']['sequence']['type']}"
+                'sub_type': f"{prefix}::{scale_info_type.value['def']['sequence']['type']}"
             })
 
         elif 'variant' in scale_info_type.value['def']:
@@ -399,9 +401,9 @@ class RuntimeConfigurationObject:
                         if len(variant['fields']) == 0:
                             enum_value = 'Null'
                         elif len(variant['fields']) == 1:
-                            enum_value = f"scale_info::{variant['fields'][0]['type']}"
+                            enum_value = f"{prefix}::{variant['fields'][0]['type']}"
                         else:
-                            field_str = ', '.join([f"scale_info::{f['type']}" for f in variant['fields']])
+                            field_str = ', '.join([f"{prefix}::{f['type']}" for f in variant['fields']])
                             enum_value = f"({field_str})"
                     else:
                         enum_value = 'Null'
@@ -418,7 +420,7 @@ class RuntimeConfigurationObject:
 
         elif 'tuple' in scale_info_type.value['def']:
 
-            type_mapping = [f"scale_info::{f}" for f in scale_info_type.value['def']['tuple']]
+            type_mapping = [f"{prefix}::{f}" for f in scale_info_type.value['def']['tuple']]
 
             decoder_class = type(type_string, (self.get_decoder_class('Tuple'),), {
                 'type_mapping': type_mapping
@@ -427,7 +429,7 @@ class RuntimeConfigurationObject:
         elif 'compact' in scale_info_type.value['def']:
             # Compact
             decoder_class = type(type_string, (self.get_decoder_class('Compact'),), {
-                'sub_type': f"scale_info::{scale_info_type.value['def']['compact']['type']}"
+                'sub_type': f"{prefix}::{scale_info_type.value['def']['compact']['type']}"
             })
 
         elif 'phantom' in scale_info_type.value['def']:
@@ -460,7 +462,7 @@ class RuntimeConfigurationObject:
             type_string = f"{prefix}::{idx}"
 
             decoder_class = self.get_decoder_class_for_scale_info_definition(
-                type_string, scale_info_type['type']
+                type_string, scale_info_type['type'], prefix
             )
 
             if decoder_class is None:

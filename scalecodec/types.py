@@ -143,8 +143,8 @@ class Option(ScaleType):
         return ScaleBytes('0x00')
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
-        cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
+        cls.sub_type = f"{prefix}::{scale_info_definition.value['params'][0]['type']}"
 
 
 class Bytes(ScaleType):
@@ -670,7 +670,7 @@ class Era(ScaleType):
         return self.birth(current) + self.period
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
         return
 
 
@@ -756,7 +756,7 @@ class GenericAccountId(H256):
         return value
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
         return
 
 
@@ -853,8 +853,8 @@ class BoundedVec(Vec):
         super().__init__(data, **kwargs)
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
-        cls.sub_type = f"scale_info::{scale_info_definition.value['params'][0]['type']}"
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
+        cls.sub_type = f"{prefix}::{scale_info_definition.value['params'][0]['type']}"
 
 
 class BitVec(ScaleType):
@@ -1165,7 +1165,7 @@ class Data(Enum):
             raise ValueError("Value '{}' not present in type_mapping of this enum".format(enum_key))
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType'):
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
         return
 
 

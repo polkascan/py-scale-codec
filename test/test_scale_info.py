@@ -285,7 +285,7 @@ class ScaleInfoTestCase(unittest.TestCase):
         }
 
         with self.assertRaises(NotImplementedError):
-            self.runtime_config.get_decoder_class_for_scale_info_definition('unknown::type', unknown_type)
+            self.runtime_config.get_decoder_class_for_scale_info_definition('unknown::type', unknown_type, 'runtime')
 
     def test_encode_call(self):
         call = self.runtime_config.create_scale_object(
