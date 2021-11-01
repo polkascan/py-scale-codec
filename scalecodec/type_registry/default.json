@@ -689,19 +689,6 @@
       ]
     },
     "CollatorId": "H256",
-    "ContractInfo": {
-      "type": "enum",
-      "type_mapping": [
-        [
-          "Alive",
-          "AliveContractInfo"
-        ],
-        [
-          "Tombstone",
-          "TombstoneContractInfo"
-        ]
-      ]
-    },
     "TrieId": "Bytes",
     "Pays": {
       "type": "enum",
@@ -6845,6 +6832,24 @@
       ]
     },
     "RawAliveContractInfo": "AliveContractInfo",
+    "RawContractInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "trie_id",
+          "TrieId"
+        ],
+        [
+          "code_hash",
+          "CodeHash"
+        ],
+        [
+          "_reserved",
+          "Option<Null>"
+        ]
+      ]
+    },
+    "ContractInfo": "RawContractInfo",
     "CodeHash": "Hash",
     "ContractCallRequest": {
       "type": "struct",
