@@ -1467,6 +1467,7 @@
         ]
       ]
     },
+    "ExtrinsicSignature": "MultiSignature",
     "ExtrinsicV4": {
       "type": "struct",
       "type_mapping": [
@@ -1476,7 +1477,7 @@
         ],
         [
           "signature",
-          "MultiSignature"
+          "ExtrinsicSignature"
         ],
         [
           "era",
