@@ -16,6 +16,7 @@
 import math
 from datetime import datetime
 from hashlib import blake2b
+from typing import Union
 
 from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode, is_valid_ss58_address
 
@@ -436,9 +437,14 @@ class H512(ScaleType):
     def process(self):
         return '0x{}'.format(self.get_next_bytes(64).hex())
 
-    def process_encode(self, value):
-        if value[0:2] != '0x' or len(value) != 130:
+    def process_encode(self, value: Union[str, bytes]):
+
+        if type(value) is bytes and len(value) != 64:
+            raise ValueError('Value should be 64 bytes long')
+
+        if type(value) is str and (value[0:2] != '0x' or len(value) != 130):
             raise ValueError('Value should start with "0x" and should be 64 bytes long')
+
         return ScaleBytes(value)
 
 
@@ -691,16 +697,8 @@ class Bool(ScaleType):
 class CompactMoment(CompactU32):
     type_string = 'Compact<Moment>'
 
-    def process(self):
-        int_value = super().process()
-
-        if int_value > 10000000000:
-            int_value = int_value / 1000
-
-        return datetime.utcfromtimestamp(int_value)
-
-    def serialize(self):
-        return self.value.isoformat()
+    def to_datetime(self):
+        return datetime.utcfromtimestamp(self.value)
 
 
 class ProposalPreimage(Struct):

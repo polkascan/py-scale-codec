@@ -29,6 +29,11 @@ from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_
 
 class TestScaleTypes(unittest.TestCase):
 
+    metadata_fixture_dict = {}
+    metadata_decoder = None
+    runtime_config_v14 = None
+    metadata_v14_obj = None
+
     @classmethod
     def setUpClass(cls):
         module_path = os.path.dirname(__file__)
@@ -41,6 +46,15 @@ class TestScaleTypes(unittest.TestCase):
             'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict['V10'])
         )
         cls.metadata_decoder.decode()
+
+        cls.runtime_config_v14 = RuntimeConfigurationObject(implements_scale_info=True)
+        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("metadata_types"))
+
+        cls.metadata_v14_obj = cls.runtime_config_v14.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(cls.metadata_fixture_dict['V14'])
+        )
+        cls.metadata_v14_obj.decode()
+        cls.runtime_config_v14.add_portable_registry(cls.metadata_v14_obj)
 
     def setUp(self) -> None:
         RuntimeConfiguration().clear_type_registry()
@@ -191,7 +205,14 @@ class TestScaleTypes(unittest.TestCase):
     def test_moment(self):
         obj = RuntimeConfiguration().create_scale_object('Compact<Moment>', ScaleBytes("0x03d68b655c"))
         obj.decode()
-        self.assertEqual(obj.value, datetime.datetime(2019, 2, 14, 15, 40, 6))
+        self.assertEqual(obj.value, 1550158806)
+
+    def test_moment_v14(self):
+        obj = self.runtime_config_v14.create_scale_object(
+            'scale_info::132', ScaleBytes("0x03d68b655c"), metadata=self.metadata_v14_obj
+        )
+        obj.decode()
+        self.assertEqual(obj.value, 1550158806)
 
     def test_balance(self):
         obj = RuntimeConfiguration().create_scale_object('Compact<Balance>', ScaleBytes("0x130080cd103d71bc22"))
