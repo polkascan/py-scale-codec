@@ -760,6 +760,13 @@ class GenericAccountId(H256):
         return
 
 
+class GenericEthereumAccountId(H160):
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
+        return
+
+
 class GenericAccountIndex(U32):
     pass
 
