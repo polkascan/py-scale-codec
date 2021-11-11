@@ -22,7 +22,7 @@ import requests
 
 SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'default', 'development', 'kusama', 'polkadot', 'rococo', 'metadata_types',
                                    'substrate-node-template', 'westend', 'statemint', 'statemine', 'karura',
-                                   'moonriver', 'test')
+                                   'moonriver', 'moonbase-alpha', 'test')
 
 ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/v1.0/scalecodec/type_registry/'
 

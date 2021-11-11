@@ -1534,7 +1534,8 @@
         ]
       ]
     },
-    "Address": "GenericMultiAddress",
+    "MultiAddress": "GenericMultiAddress",
+    "Address": "MultiAddress",
     "AccountId": "GenericAccountId",
     "Signature": "H512",
     "Index": "u32",
