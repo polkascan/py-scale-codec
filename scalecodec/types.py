@@ -2643,20 +2643,3 @@ class GenericPreRuntime(Struct):
             self.slot_number = aura_predigest.value['slot_number']
 
         return value
-
-
-class LogDigest(Enum):
-
-    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'SealV0', 'Consensus', 'Seal', 'PreRuntime']
-
-    def __init__(self, data, **kwargs):
-        self.log_type = None
-        self.index_value = None
-        super().__init__(data, **kwargs)
-
-    def process(self):
-        self.index = int(self.get_next_bytes(1).hex())
-        self.index_value = self.value_list[self.index]
-        self.log_type = self.process_type(self.value_list[self.index])
-
-        return {'type': self.value_list[self.index], 'value': self.log_type.value}
