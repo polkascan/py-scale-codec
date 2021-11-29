@@ -1470,6 +1470,7 @@
     "ExtrinsicSignature": "MultiSignature",
     "ExtrinsicV4": {
       "type": "struct",
+      "base_class": "GenericExtrinsicV4",
       "type_mapping": [
         [
           "address",

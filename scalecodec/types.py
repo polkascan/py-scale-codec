@@ -2417,6 +2417,33 @@ class Extrinsic(GenericExtrinsic):
     pass
 
 
+class GenericExtrinsicV4(Struct):
+
+    def __init__(self, *args, **kwargs):
+
+        if 'metadata' in kwargs and 'extrinsic' in kwargs['metadata'][1][1]:
+
+            # Build type mapping according to signed extensions in metadata
+            self.type_mapping = [['address', 'Address'], ['signature', 'ExtrinsicSignature']]
+
+            # Process signed extensions in metadata
+            if 'signed_extensions' in kwargs['metadata'][1][1]['extrinsic']:
+                signed_extensions = kwargs['metadata'][1][1]['extrinsic']['signed_extensions'].value
+
+                if 'CheckMortality' in signed_extensions:
+                    self.type_mapping.append(['era', 'Era'])
+
+                if 'CheckNonce' in signed_extensions:
+                    self.type_mapping.append(['nonce', 'Compact<Index>'])
+
+                if 'ChargeTransactionPayment' in signed_extensions:
+                    self.type_mapping.append(['tip', 'Compact<Balance>'])
+
+            self.type_mapping.append(['call', 'Call'])
+
+        super().__init__(*args, **kwargs)
+
+
 class GenericEvent(Enum):
 
     def __init__(self, *args, **kwargs):
