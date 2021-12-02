@@ -1895,12 +1895,14 @@ class GenericMetadataVersioned(Tuple):
                 'CheckWeight': {'extrinsic': None, 'additional_signed': None},
                 'ValidateEquivocationReport': {'extrinsic': None, 'additional_signed': None},
                 'LockStakingStatus': {'extrinsic': None, 'additional_signed': None},
-                'CheckBlockGasLimit': {'extrinsic': None, 'additional_signed': None}
+                'CheckBlockGasLimit': {'extrinsic': None, 'additional_signed': None},
+                'RestrictFunctionality': {'extrinsic': None, 'additional_signed': None},
+                'LimitParathreadCommits': {'extrinsic': None, 'additional_signed': None}
             }
             if 'extrinsic' in self.value_object[1][1]:
                 for se in self.value_object[1][1]['extrinsic']['signed_extensions'].value:
                     if se not in extension_def:
-                        raise NotImplementedError(f"Unsupported signed extension '{se}'")
+                        extension_def[se] = {'extrinsic': None, 'additional_signed': None}
                     signed_extensions[se] = extension_def[se]
 
         return signed_extensions
