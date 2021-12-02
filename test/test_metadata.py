@@ -17,7 +17,7 @@ import os
 import pickle
 import unittest
 
-from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfigurationObject
+from scalecodec.base import ScaleBytes, RuntimeConfigurationObject
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
 
@@ -44,6 +44,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.value[1]['V9']['modules']), 0)
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
+        self.assertEqual(len(metadata_obj.get_signed_extensions().items()), 0)
+
     def test_metadata_registry_v10(self):
         metadata_obj = self.runtime_config.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V10'])
@@ -54,6 +56,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj[1][1]['modules']), 0)
         self.assertGreater(len(metadata_obj.value[1]['V10']['modules']), 0)
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
+
+        self.assertEqual(len(metadata_obj.get_signed_extensions().items()), 0)
 
     def test_metadata_registry_v11(self):
         metadata_obj = self.runtime_config.create_scale_object(
@@ -66,6 +70,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.value[1]['V11']['modules']), 0)
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
+        self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
+
     def test_metadata_registry_v12(self):
         metadata_obj = self.runtime_config.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V12'])
@@ -76,6 +82,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj[1][1]['modules']), 0)
         self.assertGreater(len(metadata_obj.value[1]['V12']['modules']), 0)
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
+
+        self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
 
     def test_metadata_registry_v13(self):
 
@@ -89,6 +97,8 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.value[1]['V13']['modules']), 0)
         self.assertGreater(len(metadata_obj.call_index.items()), 0)
 
+        self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
+
     def test_metadata_registry_decode_v14(self):
         metadata_obj = self.runtime_config.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V14'])
@@ -99,6 +109,8 @@ class TestMetadataRegistry(unittest.TestCase):
 
         self.assertGreater(len(metadata_obj[1][1]['pallets']), 0)
         self.assertGreater(len(metadata_obj.value[1]['V14']['pallets']), 0)
+
+        self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
 
     # def test_pickle_test(self):
     #     metadata_obj = self.runtime_config.create_scale_object(

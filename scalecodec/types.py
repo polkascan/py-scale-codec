@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import math
+import warnings
 from datetime import datetime
 from hashlib import blake2b
 from typing import Union
@@ -1873,6 +1874,37 @@ class GenericMetadataVersioned(Tuple):
 
         raise ValueError(f'Pallet for index "{index}" not found')
 
+    def get_signed_extensions(self):
+
+        signed_extensions = {}
+
+        if self.portable_registry:
+            for se in self.value_object[1][1]['extrinsic']['signed_extensions'].value:
+                signed_extensions[se['identifier']] = {
+                    'extrinsic': f"scale_info::{se['ty']}",
+                    'additional_signed': f"scale_info::{se['additional_signed']}"
+                }
+        else:
+            extension_def = {
+                'CheckMortality': {'extrinsic': "Era", 'additional_signed': "Hash"},
+                'CheckNonce': {'extrinsic': "Compact<Index>", 'additional_signed': None},
+                'ChargeTransactionPayment': {'extrinsic': "Compact<Balance>", 'additional_signed': None},
+                'CheckSpecVersion': {'extrinsic': None, 'additional_signed': 'u32'},
+                'CheckTxVersion': {'extrinsic': None, 'additional_signed': 'u32'},
+                'CheckGenesis': {'extrinsic': None, 'additional_signed': 'Hash'},
+                'CheckWeight': {'extrinsic': None, 'additional_signed': None},
+                'ValidateEquivocationReport': {'extrinsic': None, 'additional_signed': None},
+                'LockStakingStatus': {'extrinsic': None, 'additional_signed': None},
+                'CheckBlockGasLimit': {'extrinsic': None, 'additional_signed': None}
+            }
+            if 'extrinsic' in self.value_object[1][1]:
+                for se in self.value_object[1][1]['extrinsic']['signed_extensions'].value:
+                    if se not in extension_def:
+                        raise NotImplementedError(f"Unsupported signed extension '{se}'")
+                    signed_extensions[se] = extension_def[se]
+
+        return signed_extensions
+
 
 class GenericStringType(String):
     @property
@@ -2427,17 +2459,16 @@ class GenericExtrinsicV4(Struct):
             self.type_mapping = [['address', 'Address'], ['signature', 'ExtrinsicSignature']]
 
             # Process signed extensions in metadata
-            if 'signed_extensions' in kwargs['metadata'][1][1]['extrinsic']:
-                signed_extensions = kwargs['metadata'][1][1]['extrinsic']['signed_extensions'].value
+            signed_extensions = kwargs['metadata'].get_signed_extensions()
 
-                if 'CheckMortality' in signed_extensions:
-                    self.type_mapping.append(['era', 'Era'])
+            if 'CheckMortality' in signed_extensions:
+                self.type_mapping.append(['era', signed_extensions['CheckMortality']['extrinsic']])
 
-                if 'CheckNonce' in signed_extensions:
-                    self.type_mapping.append(['nonce', 'Compact<Index>'])
+            if 'CheckNonce' in signed_extensions:
+                self.type_mapping.append(['nonce', signed_extensions['CheckNonce']['extrinsic']])
 
-                if 'ChargeTransactionPayment' in signed_extensions:
-                    self.type_mapping.append(['tip', 'Compact<Balance>'])
+            if 'ChargeTransactionPayment' in signed_extensions:
+                self.type_mapping.append(['tip', signed_extensions['ChargeTransactionPayment']['extrinsic']])
 
             self.type_mapping.append(['call', 'Call'])
 
@@ -2670,3 +2701,21 @@ class GenericPreRuntime(Struct):
             self.slot_number = aura_predigest.value['slot_number']
 
         return value
+
+
+class LogDigest(Enum):
+
+    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'SealV0', 'Consensus', 'Seal', 'PreRuntime']
+
+    def __init__(self, data, **kwargs):
+        warnings.warn("LogDigest will be removed in future releases", DeprecationWarning)
+        self.log_type = None
+        self.index_value = None
+        super().__init__(data, **kwargs)
+
+    def process(self):
+        self.index = int(self.get_next_bytes(1).hex())
+        self.index_value = self.value_list[self.index]
+        self.log_type = self.process_type(self.value_list[self.index])
+
+        return {'type': self.value_list[self.index], 'value': self.log_type.value}
