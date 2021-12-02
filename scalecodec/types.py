@@ -1887,6 +1887,7 @@ class GenericMetadataVersioned(Tuple):
         else:
             extension_def = {
                 'CheckMortality': {'extrinsic': "Era", 'additional_signed': "Hash"},
+                'CheckEra': {'extrinsic': "Era", 'additional_signed': "Hash"},
                 'CheckNonce': {'extrinsic': "Compact<Index>", 'additional_signed': None},
                 'ChargeTransactionPayment': {'extrinsic': "Compact<Balance>", 'additional_signed': None},
                 'CheckSpecVersion': {'extrinsic': None, 'additional_signed': 'u32'},
@@ -2457,22 +2458,26 @@ class GenericExtrinsicV4(Struct):
 
         if 'metadata' in kwargs and 'extrinsic' in kwargs['metadata'][1][1]:
 
-            # Build type mapping according to signed extensions in metadata
-            self.type_mapping = [['address', 'Address'], ['signature', 'ExtrinsicSignature']]
-
             # Process signed extensions in metadata
             signed_extensions = kwargs['metadata'].get_signed_extensions()
 
-            if 'CheckMortality' in signed_extensions:
-                self.type_mapping.append(['era', signed_extensions['CheckMortality']['extrinsic']])
+            if len(signed_extensions) > 0:
+                # Build type mapping according to signed extensions in metadata
+                self.type_mapping = [['address', 'Address'], ['signature', 'ExtrinsicSignature']]
 
-            if 'CheckNonce' in signed_extensions:
-                self.type_mapping.append(['nonce', signed_extensions['CheckNonce']['extrinsic']])
+                if 'CheckMortality' in signed_extensions:
+                    self.type_mapping.append(['era', signed_extensions['CheckMortality']['extrinsic']])
 
-            if 'ChargeTransactionPayment' in signed_extensions:
-                self.type_mapping.append(['tip', signed_extensions['ChargeTransactionPayment']['extrinsic']])
+                if 'CheckEra' in signed_extensions:
+                    self.type_mapping.append(['era', signed_extensions['CheckEra']['extrinsic']])
 
-            self.type_mapping.append(['call', 'Call'])
+                if 'CheckNonce' in signed_extensions:
+                    self.type_mapping.append(['nonce', signed_extensions['CheckNonce']['extrinsic']])
+
+                if 'ChargeTransactionPayment' in signed_extensions:
+                    self.type_mapping.append(['tip', signed_extensions['ChargeTransactionPayment']['extrinsic']])
+
+                self.type_mapping.append(['call', 'Call'])
 
         super().__init__(*args, **kwargs)
 
