@@ -2264,7 +2264,7 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
 
                 param_types = []
                 for param_type in nmap_key_scale_type.type_mapping:
-                    if type(param_type) is list:
+                    if type(param_type) in [list, tuple]:
                         param_types.append(param_type[1])
                     else:
                         param_types.append(param_type)
