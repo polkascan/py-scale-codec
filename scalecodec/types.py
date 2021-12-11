@@ -1898,7 +1898,8 @@ class GenericMetadataVersioned(Tuple):
                 'LockStakingStatus': {'extrinsic': None, 'additional_signed': None},
                 'CheckBlockGasLimit': {'extrinsic': None, 'additional_signed': None},
                 'RestrictFunctionality': {'extrinsic': None, 'additional_signed': None},
-                'LimitParathreadCommits': {'extrinsic': None, 'additional_signed': None}
+                'LimitParathreadCommits': {'extrinsic': None, 'additional_signed': None},
+                'ChargeAssetTxPayment': {'extrinsic': 'Option<AssetId>', 'additional_signed': None}
             }
             if 'extrinsic' in self.value_object[1][1]:
                 for se in self.value_object[1][1]['extrinsic']['signed_extensions'].value:
@@ -2476,6 +2477,9 @@ class GenericExtrinsicV4(Struct):
 
                 if 'ChargeTransactionPayment' in signed_extensions:
                     self.type_mapping.append(['tip', signed_extensions['ChargeTransactionPayment']['extrinsic']])
+
+                if 'ChargeAssetTxPayment' in signed_extensions:
+                    self.type_mapping.append(['asset_id', signed_extensions['ChargeAssetTxPayment']['extrinsic']])
 
                 self.type_mapping.append(['call', 'Call'])
 
