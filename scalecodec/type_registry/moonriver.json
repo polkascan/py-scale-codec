@@ -1,6 +1,7 @@
 {
-  "runtime_id": 800,
+  "runtime_id": 1001,
   "types": {
+    "EthereumAddress": "H160",
     "Address": "EthereumAddress",
     "EthAddress": "EthereumAddress",
     "LookupSource": "EthereumAddress",
