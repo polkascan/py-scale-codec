@@ -2254,6 +2254,10 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         else:
             raise NotImplementedError()
 
+    def get_key_type_string(self):
+        if 'Map' in self.value['type']:
+            return self.get_type_string_for_type(self.value['type']['Map']['key'])
+
     def get_params_type_string(self):
         if 'Plain' in self.value['type']:
             return []
@@ -2261,20 +2265,21 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
             key_type_string = self.get_type_string_for_type(self.value['type']['Map']['key'])
             nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
 
-            if nmap_key_scale_type.type_mapping:
-
-                param_types = []
-                for param_type in nmap_key_scale_type.type_mapping:
-                    if type(param_type) in [list, tuple]:
-                        param_types.append(param_type[1])
-                    else:
-                        param_types.append(param_type)
-
-                return param_types
+            if nmap_key_scale_type.type_mapping and nmap_key_scale_type.scale_info_type['def'][0] == 'tuple' and \
+                    len(self.get_param_hashers()) > 1:
+                # In case of tuple and multiple param hashers extract type_mapping as separate parameters
+                return nmap_key_scale_type.type_mapping
             else:
                 return [key_type_string]
         else:
             raise NotImplementedError()
+
+    def get_key_scale_info_definition(self):
+        if 'Map' in self.value['type']:
+            key_type_string = self.get_type_string_for_type(self.value['type']['Map']['key'])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            return nmap_key_scale_type.scale_info_type['def'][0]
 
     def get_param_hashers(self):
         if 'Plain' in self.value['type']:
