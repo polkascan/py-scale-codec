@@ -777,6 +777,9 @@ class ScaleType(ScaleDecoder, ABC):
         """
         self.metadata = metadata
 
+        # Container for meta information
+        self.meta_info: dict = {}
+
         if not data:
             data = ScaleBytes(bytearray())
         super().__init__(data, sub_type, runtime_config=runtime_config)
