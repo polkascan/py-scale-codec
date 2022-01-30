@@ -417,6 +417,56 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(value['call_args'][0]['value'], '0x0123456789')
         self.assertEqual(value['call_args'][0]['name'], '_remark')
 
+    def test_wrapped_opaque_decode_success(self):
+        opaque_hex = '0x1805000022db73'
+        wrapped_obj = self.runtime_config_v14.create_scale_object(
+            type_string="WrapperKeepOpaque",
+            metadata=self.metadata_v14_obj
+        )
+        wrapped_obj.type_mapping = ("Compact<u32>", "Call")
+        wrapped_obj.decode(ScaleBytes(opaque_hex))
+        self.assertEqual("Indices", wrapped_obj.value["call_module"])
+
+    def test_wrapped_opaque_decode_fail(self):
+        opaque_hex = '0x180a000022db73'
+        wrapped_obj = self.runtime_config_v14.create_scale_object(
+            type_string="WrapperKeepOpaque",
+            metadata=self.metadata_v14_obj
+        )
+        wrapped_obj.type_mapping = ("Compact<u32>", "Call")
+        wrapped_obj.decode(ScaleBytes(opaque_hex))
+        self.assertEqual(
+            "0x0a000022db73",
+            wrapped_obj.value
+        )
+
+    def test_wrapped_opaque_decode_incorrect(self):
+        opaque_hex = '0xa405000022db73'
+        wrapped_obj = self.runtime_config_v14.create_scale_object(
+            type_string="WrapperKeepOpaque",
+            metadata=self.metadata_v14_obj
+        )
+        with self.assertRaises(ValueError):
+            wrapped_obj.decode(ScaleBytes(opaque_hex))
+
+    def test_wrapped_opaque_encode(self):
+        wrapped_obj = self.runtime_config_v14.create_scale_object(
+            type_string="WrapperKeepOpaque",
+            metadata=self.metadata_v14_obj
+        )
+        wrapped_obj.type_mapping = ("Compact<u32>", "Call")
+
+        wrapped_obj.encode({
+            'call_function': 'claim',
+            'call_module': 'Indices',
+            'call_args': {'index': 1943740928}
+        })
+
+        self.assertEqual(
+            "0x1805000022db73",
+            wrapped_obj.data.to_hex()
+        )
+
     def test_era_immortal(self):
         obj = RuntimeConfiguration().create_scale_object('Era', ScaleBytes('0x00'))
         obj.decode()

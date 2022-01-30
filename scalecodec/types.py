@@ -1529,6 +1529,44 @@ class OpaqueCall(Bytes):
             return value
 
 
+class WrapperKeepOpaque(Struct):
+
+    def process_encode(self, value):
+        # Check requirements
+        if not self.type_mapping or len(self.type_mapping) != 2:
+            raise ValueError("type_mapping not set correctly for this WrapperKeepOpaque")
+
+        wrapped_obj = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[1], metadata=self.metadata
+        )
+
+        wrapped_obj.encode(value)
+
+        bytes_obj = self.runtime_config.create_scale_object("Bytes")
+        return bytes_obj.encode(wrapped_obj.get_used_bytes())
+
+    def process(self):
+        # Check requirements
+        if not self.type_mapping or len(self.type_mapping) != 2:
+            raise ValueError("type_mapping not set correctly for this WrapperKeepOpaque")
+
+        # Get bytes
+        bytes_obj = self.process_type("Bytes")
+        try:
+            # Try to decode bytes with wrapped SCALE type
+            wrapped_obj = self.runtime_config.create_scale_object(
+                type_string=self.type_mapping[1],
+                data=ScaleBytes(bytes_obj.value_object),
+                metadata=self.metadata
+            )
+
+            return wrapped_obj.process()
+        except:
+            # Decoding failed; return Opaque type
+            self.value_object = bytes_obj.value_object
+            return f'0x{bytes_obj.value_object.hex()}'
+
+
 class MultiAccountId(GenericAccountId):
 
     @classmethod
