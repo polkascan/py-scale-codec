@@ -13,12 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import unittest
 
-from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
+from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration, RuntimeConfigurationObject
 from scalecodec.types import Extrinsic
-from scalecodec.type_registry import load_type_registry_preset
+from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
 from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
 
@@ -32,6 +32,10 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.metadata_fixture_dict = load_type_registry_file(
+            os.path.join(os.path.dirname(__file__), 'fixtures', 'metadata_hex.json')
+        )
+
         RuntimeConfiguration().clear_type_registry()
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
 
@@ -40,9 +44,14 @@ class TestScaleTypeEncoding(unittest.TestCase):
         )
         cls.metadata_decoder.decode()
 
-        # TODO test with V14 metadata
-        # cls.metadata_scale_info = ScaleDecoder.get_decoder_class('MetadataVersioned', data=ScaleBytes(metadata_1045_hex))
-        # cls.metadata_scale_info.decode()
+        cls.runtime_config_v14 = RuntimeConfigurationObject(implements_scale_info=True)
+        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("metadata_types"))
+
+        cls.metadata_v14_obj = cls.runtime_config_v14.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(cls.metadata_fixture_dict['V14'])
+        )
+        cls.metadata_v14_obj.decode()
+        cls.runtime_config_v14.add_portable_registry(cls.metadata_v14_obj)
 
     def test_decode_balance_transfer_payload(self):
         unsigned_payload = "0xa8040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8"
@@ -2159,6 +2168,54 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload), "0xb4041800040400ff586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8")
+
+    def test_encode_utility_batch_single_payload_scaletype_v14(self):
+        call = self.runtime_config_v14.create_scale_object("Call", metadata=self.metadata_v14_obj)
+
+        call.encode({
+            'call_module': 'Balances',
+            'call_function': 'transfer',
+            'call_args': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
+            }
+        })
+
+        extrinsic = self.runtime_config_v14.create_scale_object("Extrinsic", metadata=self.metadata_v14_obj)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_function': 'batch',
+            'call_args': {
+                'calls': [call]
+            }
+        })
+
+        self.assertEqual("0xb404010004060000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8", str(payload))
+
+    def test_encode_utility_batch_multiple_payload_scaletype_v14(self):
+        call = self.runtime_config_v14.create_scale_object("Call", metadata=self.metadata_v14_obj)
+
+        call.encode({
+            'call_module': 'Balances',
+            'call_function': 'transfer',
+            'call_args': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
+            }
+        })
+
+        extrinsic = self.runtime_config_v14.create_scale_object("Extrinsic", metadata=self.metadata_v14_obj)
+
+        payload = extrinsic.encode({
+            'call_module': 'Utility',
+            'call_function': 'batch',
+            'call_args': {
+                'calls': [call, call]
+            }
+        })
+
+        self.assertEqual("0x590104010008060000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8060000586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409070010a5d4e8", str(payload))
 
     def test_encode_utility_cancel_as_multi_payload(self):
         extrinsic = Extrinsic(metadata=self.metadata_decoder)

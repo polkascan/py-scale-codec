@@ -169,7 +169,10 @@ class RuntimeConfigurationObject:
             # sub_type" which won't get reset because class definitions always remain globally
 
             self.type_registry['types'].update(
-                {cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder) if '<' not in cls.__name__}
+                {
+                    cls.__name__.lower(): cls for cls in self.all_subclasses(ScaleDecoder)
+                    if '<' not in cls.__name__ and '::' not in cls.__name__
+                }
             )
 
         self.__initial_state = True
@@ -692,7 +695,7 @@ class ScaleDecoder(ABC):
 
     def encode(self, value=None):
 
-        if isinstance(value, self.__class__):
+        if issubclass(self.__class__, value.__class__) :
             # Accept instance of current class directly
             self.data = value.data
             self.value_object = self.value_object
@@ -776,6 +779,9 @@ class ScaleType(ScaleDecoder, ABC):
         runtime_config: RuntimeConfigurationObject
         """
         self.metadata = metadata
+
+        # Container for meta information
+        self.meta_info: dict = {}
 
         if not data:
             data = ScaleBytes(bytearray())
