@@ -695,11 +695,11 @@ class ScaleDecoder(ABC):
 
     def encode(self, value=None):
 
-        if issubclass(self.__class__, value.__class__) :
+        if value and issubclass(self.__class__, value.__class__):
             # Accept instance of current class directly
             self.data = value.data
-            self.value_object = self.value_object
-            self.value_serialized = self.value_serialized
+            self.value_object = value.value_object
+            self.value_serialized = value.value_serialized
             return value.data
 
         if value is not None:

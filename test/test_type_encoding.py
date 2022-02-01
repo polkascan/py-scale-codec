@@ -410,6 +410,29 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj2.encode((256, 120))
         self.assertEqual(str(obj.data), str(obj2.data))
 
+    def test_encode_accept_derived_class(self):
+
+        RuntimeConfiguration().update_type_registry_types({"DerivedCall": "Call"})
+
+        call = RuntimeConfiguration().create_scale_object('Call', metadata=self.metadata_decoder)
+
+        call.encode({
+            'call_module': 'Balances',
+            'call_function': 'transfer',
+            'call_args': {
+                'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
+                'value': 1000000000000
+            }
+        })
+        DerivedCall = type("DerivedCall", (call.__class__,), {})
+        derived_call = DerivedCall(data=None, metadata=self.metadata_decoder)
+
+        derived_call.encode(call)
+
+        self.assertEqual(call.data, derived_call.data)
+        self.assertEqual(call.value_object, derived_call.value_object)
+        self.assertEqual(call.value_serialized, derived_call.value_serialized)
+
     # def test_all_subclasses_implement_encode(self):
     #     for scale_type_cls in RuntimeConfiguration.all_subclasses(ScaleType):
     #         try:
