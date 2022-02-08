@@ -1887,7 +1887,12 @@ class GenericMetadataVersioned(Tuple):
         return self.value_object[1].event_index
 
     def get_module_error(self, module_index, error_index):
-        return self.value_object[1].error_index.get(f'{module_index}-{error_index}')
+        if self.portable_registry:
+            for module in self.pallets:
+                if module['index'] == module_index and module.errors:
+                    return module.errors[error_index]
+        else:
+            return self.value_object[1].error_index.get(f'{module_index}-{error_index}')
 
     def get_metadata(self):
         return self.value_object[1]
