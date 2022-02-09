@@ -92,17 +92,24 @@ class RuntimeConfigurationObject:
 
     def get_decoder_class(self, type_string: str, spec_version_id='default'):
 
-        if type_string.strip() == '':
-            return None
+        if type(type_string) is dict:
+            # inner Struct format
+            decoder_class = type('InnerStruct', (self.get_decoder_class('Struct'),), {
+                'type_mapping': [(k, v) for k, v in type_string.items()]
+            })
+        else:
 
-        if self.implements_scale_info is False:
-            type_string = self.convert_type_string(type_string)
+            if type_string.strip() == '':
+                return None
 
-        decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
+            if self.implements_scale_info is False:
+                type_string = self.convert_type_string(type_string)
+
+            decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
 
         if not decoder_class:
 
-            # Type string containg subtype
+            # Type string containing subtype
             if type_string[-1:] == '>':
 
                 # Extract sub types
@@ -406,8 +413,13 @@ class RuntimeConfigurationObject:
                         elif len(variant['fields']) == 1:
                             enum_value = f"{prefix}::{variant['fields'][0]['type']}"
                         else:
-                            field_str = ', '.join([f"{prefix}::{f['type']}" for f in variant['fields']])
-                            enum_value = f"({field_str})"
+                            if all([f.get('name') for f in variant['fields']]):
+                                # Inner struct
+                                enum_value = {f['name']: f"{prefix}::{f['type']}" for f in variant['fields']}
+                            else:
+                                # Tuple
+                                field_str = ', '.join([f"{prefix}::{f['type']}" for f in variant['fields']])
+                                enum_value = f"({field_str})"
                     else:
                         enum_value = 'Null'
 
@@ -677,12 +689,14 @@ class ScaleDecoder(ABC):
 
             if check_remaining and self.data.offset != self.data.length:
                 raise RemainingScaleBytesNotEmptyException(
-                    f'Decoding <{self.__class__.__name__}> - Current offset: {self.data.offset} / length: {self.data.length}'
+                    f'Decoding <{self.__class__.__name__}> - '
+                    f'Current offset: {self.data.offset} / length: {self.data.length}'
                 )
 
             if self.data.offset > self.data.length:
                 raise RemainingScaleBytesNotEmptyException(
-                    f'Decoding <{self.__class__.__name__}> - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
+                    f'Decoding <{self.__class__.__name__}> - No more bytes available '
+                    f'(needed: {self.data.offset} / total: {self.data.length})'
                 )
 
         return self.value
