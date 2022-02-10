@@ -781,12 +781,12 @@ class Vec(ScaleType):
 
         # Check for Bytes processing
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            value = self.get_next_bytes(element_count)
+            self.value_object = self.get_next_bytes(element_count)
 
             try:
-                return value.decode()
+                return self.value_object.decode()
             except UnicodeDecodeError:
-                return '0x{}'.format(value.hex())
+                return '0x{}'.format(self.value_object.hex())
 
         result = []
         for _ in range(0, element_count):
