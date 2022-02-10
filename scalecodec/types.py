@@ -1482,6 +1482,7 @@ class GenericContractExecResult(Enum):
     def __init__(self, data=None, contract_result_scale_type=None, **kwargs):
         self.contract_result_scale_type = contract_result_scale_type
         self.gas_consumed = None
+        self.gas_required = None
         self.flags = None
         self.contract_result_data = None
         super().__init__(data, **kwargs)
@@ -1494,6 +1495,7 @@ class GenericContractExecResult(Enum):
     def process_contract_result(self):
         if 'success' in self.value:
             self.gas_consumed = self.value['success']['gas_consumed']
+            self.gas_required = self.value['success']['gas_required']
             self.flags = self.value['success']['flags']
             self.contract_result_data = self.value['success']['data']
 
