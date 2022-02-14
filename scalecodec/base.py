@@ -17,7 +17,7 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Union
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
 
 if TYPE_CHECKING:
@@ -495,7 +495,7 @@ class RuntimeConfigurationObject:
 
 class ScaleBytes:
 
-    def __init__(self, data):
+    def __init__(self, data: Union[str, bytes, bytearray]):
         self.offset = 0
 
         if type(data) is bytearray:
@@ -713,7 +713,7 @@ class ScaleDecoder(ABC):
 
         return self.data
 
-    def process_encode(self, value):
+    def process_encode(self, value) -> ScaleBytes:
         raise NotImplementedError("Encoding not implemented for this ScaleType")
 
     @classmethod

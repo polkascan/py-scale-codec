@@ -255,6 +255,18 @@ class CallBytes(ScaleType):
         return bytes.fromhex(value[2:])
 
 
+class RawBytes(ScaleType):
+
+    type_string = '&[u8]'
+
+    def process(self):
+        self.value_object = self.get_remaining_bytes()
+        return f'0x{self.value_object.hex()}'
+
+    def process_encode(self, value):
+        return ScaleBytes(bytes.fromhex(value[2:]))
+
+
 class U8(ScaleType):
 
     def process(self):
@@ -1982,6 +1994,9 @@ class GenericRegistryType(Struct):
             value['docs'] = []
 
         return super().process_encode(value)
+
+    def retrieve_type_decomposition(self):
+        return self.value['def']
 
 
 class GenericField(Struct):

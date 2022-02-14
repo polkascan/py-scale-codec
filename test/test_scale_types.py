@@ -829,3 +829,15 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(vote.value, {'aye': False, 'conviction': 'Locked4x'})
 
+    def test_raw_bytes(self):
+        runtime_config = RuntimeConfigurationObject(ss58_format=2)
+
+        raw_bytes_obj = runtime_config.create_scale_object('RawBytes')
+        data = '0x01020304'
+
+        raw_bytes_obj.decode(ScaleBytes(data))
+        self.assertEqual(data, raw_bytes_obj.value)
+
+        raw_bytes_obj.encode(data)
+        self.assertEqual(ScaleBytes(data), raw_bytes_obj.data)
+
