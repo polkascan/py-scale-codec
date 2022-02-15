@@ -2430,8 +2430,7 @@ class GenericExtrinsic(ScaleType):
 
     @property
     def extrinsic_hash(self):
-        if self.signed:
-            return blake2b(self.data.data, digest_size=32).digest()
+        return blake2b(self.data.data, digest_size=32).digest()
 
     def process(self):
         self.value_object = {
