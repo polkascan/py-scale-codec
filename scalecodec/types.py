@@ -1996,6 +1996,32 @@ class GenericRegistryType(Struct):
         return super().process_encode(value)
 
     def retrieve_type_decomposition(self):
+        if 'variant' in self.value['def']:
+            for variant in self.value['def']['variant']['variants']:
+                for field in variant['fields']:
+                    field_obj = self.runtime_config.create_scale_object(f"scale_info::{field['type']}")
+                    variant['value'] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif 'composite' in self.value['def']:
+            for field in self.value['def']['composite']['fields']:
+                field_obj = self.runtime_config.create_scale_object(f"scale_info::{field['type']}")
+                field['value'] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif 'array' in self.value['def']:
+            type_def = self.value['def']['array']
+            array_element_obj = self.runtime_config.create_scale_object(f"scale_info::{type_def['type']}")
+            type_def['value'] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif 'sequence' in self.value['def']:
+            type_def = self.value['def']['sequence']
+            array_element_obj = self.runtime_config.create_scale_object(f"scale_info::{type_def['type']}")
+            type_def['value'] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif 'tuple' in self.value['def']:
+            for idx, type_def in self.value['def']['tuple']:
+                element_obj = self.runtime_config.create_scale_object(f"scale_info::{type_def}")
+                self.value['def']['tuple'][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
+
         return self.value['def']
 
 
@@ -2348,6 +2374,14 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
             return self.value['type']['Map']['hashers']
         else:
             raise NotImplementedError()
+
+    def get_param_info(self) -> list:
+        param_info = []
+        for param_type_string in self.get_params_type_string():
+            scale_type = self.runtime_config.create_scale_object(param_type_string)
+            param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+
+        return param_info
 
 
 class GenericEventMetadata(Struct):
