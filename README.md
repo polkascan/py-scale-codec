@@ -19,7 +19,7 @@ pip install scalecodec
 
 ## Examples (MetadataV14 runtimes and higher)
 
-Encode a Call
+### Encode a Call
 
 ```python
 
@@ -46,24 +46,40 @@ call.encode({
 })
 ```
 
-Decode the result of a `state_getStorageAt` RPC call
+### Decode the result of a `state_getStorageAt` RPC call
 
 ```python
 event_data = "0x2000000000000000b0338609000000000200000001000000000080b2e60e0000000002000000020000000003be1957935299d0be2f35b8856751feab95fc7089239366b52b72ca98249b94300000020000000500be1957935299d0be2f35b8856751feab95fc7089239366b52b72ca98249b943000264d2823000000000000000000000000000200000005027a9650a6bd43f1e0b4546affb88f8c14213e1fb60512692c2b39fbfcfc56b703be1957935299d0be2f35b8856751feab95fc7089239366b52b72ca98249b943000264d2823000000000000000000000000000200000013060c4c700700000000000000000000000000000200000005047b8441d5110c178c29be709793a41d73ae8b3119a971b18fbd20945ea5d622f00313dc01000000000000000000000000000002000000000010016b0b00000000000000"
 
-system_pallet = [p for p in metadata.pallets if p['name'] == 'System'][0]
-event_storage_function = [s for s in system_pallet['storage']['entries'] if s['name'] == "Events"][0]
-
+system_pallet = metadata.get_metadata_pallet("System")
+event_storage_function = system_pallet.get_storage_function("Events")
 
 event = runtime_config.create_scale_object(
-    event_storage_function.get_value_type_string(), data=ScaleBytes(event_data), metadata=metadata
+    event_storage_function.get_value_type_string(), metadata=metadata
 )
-print(event.decode())
+print(event.decode(ScaleBytes(event_data)))
 ```
+
+### Retrieve type decomposition information of a `RegistryType`:
+
+```python
+pallet = metadata.get_metadata_pallet("System")
+storage_function = pallet.get_storage_function("BlockHash")
+
+param_type_string = storage_function.get_params_type_string()
+param_type_obj = runtime_config.create_scale_object(param_type_string[0])
+
+type_info = param_type_obj.scale_info_type.retrieve_type_decomposition()
+
+print(type_info) 
+# {'primitive': 'u32'}
+```
+
+
 
 ## Examples (prior to MetadataV14)
 
-Decode a SCALE-encoded Compact\<Balance\> 
+### Decode a SCALE-encoded Compact\<Balance\> 
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
@@ -73,7 +89,7 @@ obj.decode()
 print(obj.value)
 ```
 
-Encode to Compact\<Balance\> 
+### Encode to Compact\<Balance\> 
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
@@ -82,7 +98,7 @@ scale_data = obj.encode(2503000000000000000)
 print(scale_data)
 ```
 
-Encode to Vec\<Bytes\>
+### Encode to Vec\<Bytes\>
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
@@ -92,7 +108,7 @@ scale_data = obj.encode(value)
 print(scale_data)
 ```
 
-Add custom types to type registry
+### Add custom types to type registry
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
@@ -113,7 +129,7 @@ custom_types = {
 RuntimeConfiguration().update_type_registry(custom_types)
 ```
 
-Or from a custom JSON file
+### Or from a custom JSON file
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
