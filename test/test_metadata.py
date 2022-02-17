@@ -128,4 +128,46 @@ class TestMetadataRegistry(unittest.TestCase):
     #     pickle_data = pickle.dumps(metadata_obj)
 
 
+class TestMetadataTypes(unittest.TestCase):
+
+    metadata_version = 'karura_test'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.runtime_config = RuntimeConfigurationObject()
+        cls.runtime_config.update_type_registry(load_type_registry_preset("metadata_types"))
+
+        module_path = os.path.dirname(__file__)
+        cls.metadata_fixture_dict = load_type_registry_file(
+            os.path.join(module_path, 'fixtures', 'metadata_hex.json')
+        )
+
+        cls.metadata_obj = cls.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(cls.metadata_fixture_dict[cls.metadata_version])
+        )
+        cls.metadata_obj.decode()
+
+        cls.runtime_config.add_portable_registry(cls.metadata_obj)
+
+    def test_storage_function_type_decomposition_simple(self):
+        pallet = self.metadata_obj.get_metadata_pallet("System")
+        storage_function = pallet.get_storage_function("BlockHash")
+
+        param_type_string = storage_function.get_params_type_string()
+        param_type_obj = self.runtime_config.create_scale_object(param_type_string[0])
+
+        type_info = param_type_obj.scale_info_type.retrieve_type_decomposition()
+        self.assertDictEqual({'primitive': 'u32'}, type_info)
+
+    def test_storage_function_type_decomposition_complex(self):
+        pallet = self.metadata_obj.get_metadata_pallet("Tokens")
+        storage_function = pallet.get_storage_function("TotalIssuance")
+
+        param_type_string = storage_function.get_params_type_string()
+        param_type_obj = self.runtime_config.create_scale_object(param_type_string[0])
+
+        type_info = param_type_obj.scale_info_type.retrieve_type_decomposition()
+        self.assertEqual('Token', type_info['variant']['variants'][0]['name'])
+        self.assertEqual('ACA', type_info['variant']['variants'][0]['value']['variant']['variants'][0]['name'])
+
 

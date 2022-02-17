@@ -2326,6 +2326,9 @@ class GenericStorageEntryMetadata(Struct):
         else:
             raise NotImplementedError()
 
+    def get_param_info(self) -> list:
+        raise NotImplementedError()
+
 
 class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
 
