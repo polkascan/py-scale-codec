@@ -1787,8 +1787,27 @@ class BoundedBTreeMap(BTreeMap):
     pass
 
 
-class BTreeSet(Vec):
-    pass
+class BTreeSet(ScaleType):
+
+    def __init__(self, data, sub_type=None, **kwargs):
+
+        super().__init__(data, sub_type, **kwargs)
+
+        if not self.type_mapping and self.sub_type:
+            # Backwards compatibility
+            self.type_mapping = [f"Vec<{self.sub_type}>"]
+
+    def process(self):
+        # A BTreeSet is basically a wrapper around a Vec, which specific implementation is in the type_mapping
+        self.value_object = self.process_type(self.type_mapping[0])
+        return self.value_object.value
+
+    def process_encode(self, value) -> ScaleBytes:
+
+        self.value_object = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[0], metadata=self.metadata
+        )
+        return self.value_object.encode(value)
 
 
 class GenericMetadataAll(Enum):
