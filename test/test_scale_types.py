@@ -118,6 +118,16 @@ class TestScaleTypes(unittest.TestCase):
         obj.decode()
         self.assertEqual(obj.value, -1234)
 
+    def test_f64(self):
+        obj = RuntimeConfiguration().create_scale_object('f64', ScaleBytes("0x0000000000000080"))
+        obj.decode()
+        self.assertEqual(obj.value, -0.0)
+
+    def test_f32(self):
+        obj = RuntimeConfiguration().create_scale_object('f32', ScaleBytes("0x00000080"))
+        obj.decode()
+        self.assertEqual(obj.value, -0.0)
+
     def test_compact_bool_true(self):
         obj = RuntimeConfiguration().create_scale_object('bool', ScaleBytes("0x01"))
         obj.decode()
