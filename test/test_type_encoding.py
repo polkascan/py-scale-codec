@@ -61,6 +61,22 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj = RuntimeConfiguration().create_scale_object('i16')
         self.assertRaises(ValueError, obj.encode, -32769)
 
+    def test_f64(self):
+        obj = RuntimeConfiguration().create_scale_object('f64')
+        obj.encode(-0.0)
+        self.assertEqual(str(obj.data), "0x0000000000000080")
+
+    def test_f64_invalid_input(self):
+        obj = RuntimeConfiguration().create_scale_object('f64')
+        with self.assertRaises(ValueError) as cm:
+            obj.encode(-0)
+            self.assertEqual('0 is not a float', str(cm.exception))
+
+    def test_f32(self):
+        obj = RuntimeConfiguration().create_scale_object('f32')
+        obj.encode(-0.0)
+        self.assertEqual(str(obj.data), "0x00000080")
+
     def test_compact_u32_1byte(self):
         obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes("0x18"))
         obj.decode()

@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import math
+import struct
 import warnings
 from datetime import datetime
 from hashlib import blake2b
@@ -421,6 +422,30 @@ class I256(ScaleType):
             return ScaleBytes(bytearray(int(value).to_bytes(32, 'little', signed=True)))
         else:
             raise ValueError('{} out of range for i256'.format(value))
+
+
+class F32(ScaleType):
+
+    def process(self):
+        return struct.unpack('f', self.get_next_bytes(4))[0]
+
+    def process_encode(self, value):
+        if type(value) is not float:
+            raise ValueError(f'{value} is not a float')
+
+        return ScaleBytes(struct.pack('f', value))
+
+
+class F64(ScaleType):
+
+    def process(self):
+        return struct.unpack('d', self.get_next_bytes(8))[0]
+
+    def process_encode(self, value):
+        if type(value) is not float:
+            raise ValueError(f'{value} is not a float')
+
+        return ScaleBytes(struct.pack('d', value))
 
 
 class H160(ScaleType):

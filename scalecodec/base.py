@@ -145,8 +145,16 @@ class RuntimeConfigurationObject:
 
         return decoder_class
 
-    def create_scale_object(self, type_string: str, data=None, **kwargs) -> 'ScaleType':
+    def create_scale_object(self, type_string: str, data: Optional['ScaleBytes'] = None, **kwargs) -> 'ScaleType':
         """
+        Creates a new `ScaleType` object with given type_string, for example 'u32', 'Bytes' or 'scale_info::2'
+        (scale_info:: prefixed types are defined in the `PortableRegistry` object of the runtime metadata.)
+
+        Parameters
+        ----------
+        type_string: string representation of a `ScaleType`
+        data: ScaleBytes data to decode
+        kwargs
 
         Returns
         -------
