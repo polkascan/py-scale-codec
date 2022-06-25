@@ -1,0 +1,143 @@
+{
+  "runtime_id": 18,
+  "types": {
+    "AccountInfo": "AccountInfoWithProviders",
+    "Address": "AccountId",
+    "AddressInfo": "Vec<u8>",
+    "LookupSource": "AccountId",
+    "EraBenefits": {
+      "type": "struct",
+            "type_mapping": [
+              ["total_benefits", "Balance"],
+              ["total_funds", "Balance"],
+              ["used_benefits", "Balance"],
+              ["active_era", "EraIndex"]
+            ]
+    },
+    "FeeReductionBenefit": {
+      "type": "struct",
+        "type_mapping": [
+          ["funds", "Balance"],
+          ["total_fee_reduction_count", "u32"],
+          ["used_fee_reduction_quota", "Balance"],
+          ["used_fee_reduction_count", "u32"],
+          ["refreshed_at", "EraIndex"]
+        ]
+    },
+    "CsmBalance": "Balance",
+    "CsmBalanceOf": "Balance",
+    "ETHAddress": "Vec<u8>",
+    "EthereumTxHash": "H256",
+    "CSMLedger": {
+      "type": "struct",
+            "type_mapping": [
+                ["total", "Compact<Balance>"],
+                ["active", "Compact<Balance>"],
+                ["unlocking", "Vec<CSMUnlockChunk<Balance>>"]
+          ]
+    },
+    "CSMUnlockChunk": {
+      "type": "struct",
+            "type_mapping": [
+                ["value", "Compact<Balance>"],
+                ["bn", "Compact<BlockNumber>"]
+              ]
+    },
+    "FileInfo": {
+      "type": "struct",
+            "type_mapping": [
+                ["file_size", "u64"],
+                ["expired_on", "BlockNumber"],
+                ["calculated_at", "BlockNumber"],
+                ["amount", "Balance"],
+                ["prepaid", "Balance"],
+                ["reported_replica_count", "u32"],
+                ["replicas", "Vec<Replica<AccountId>>"]
+              ]
+    },
+    "MerchantLedger": {
+      "type": "struct",
+            "type_mapping": [
+                ["reward", "Balance"],
+                ["collateral", "Balance"]
+              ]
+    },
+    "Releases": {
+      "type": "enum",
+      "value_list": ["V1_0_0", "V2_0_0"]
+    },
+    "Replica": {
+      "type": "struct",
+            "type_mapping": [
+                ["who", "AccountId"],
+                ["valid_at", "BlockNumber"],
+                ["anchor", "SworkerAnchor"],
+                ["is_reported", "bool"]
+              ]
+    },
+    "Status": {
+      "type": "enum",
+      "value_list": ["Free", "Reserved"]
+    },
+    "UsedInfo": {
+      "type": "struct",
+            "type_mapping": [
+                ["used_size", "u64"],
+                ["reported_group_count", "u32"],
+                ["groups", "BTreeMap<SworkerAnchor, bool>"]
+              ]
+    },
+    "Guarantee": {
+      "type": "struct",
+            "type_mapping": [
+                ["targets", "Vec<IndividualExposure<AccountId, Balance>>"],
+                ["total", "Compact<Balance>"],
+                ["submitted_in", "EraIndex"],
+                ["suppressed", "bool"]
+              ]
+    },
+    "ValidatorPrefs": {
+      "type": "struct",
+            "type_mapping": [
+                ["guarantee_fee", "Compact<Perbill>"]
+              ]
+    },
+    "IASSig": "Vec<u8>",
+    "Identity": {
+      "type": "struct",
+            "type_mapping": [
+                ["anchor", "SworkerAnchor"],
+                ["punishment_deadline", "u64"],
+                ["group", "Option<AccountId>"]
+              ]
+    },
+    "ISVBody": "Vec<u8>",
+    "MerkleRoot": "Vec<u8>",
+    "ReportSlot": "u64",
+    "PKInfo": {
+      "type": "struct",
+            "type_mapping": [
+                ["code", "SworkerCode"],
+                ["anchor", "Option<SworkerAnchor>"]
+              ]
+    },
+    "SworkerAnchor": "Vec<u8>",
+    "SworkerCert": "Vec<u8>",
+    "SworkerCode": "Vec<u8>",
+    "SworkerPubKey": "Vec<u8>",
+    "SworkerSignature": "Vec<u8>",
+    "WorkReport": {
+      "type": "struct",
+            "type_mapping": [
+                ["report_slot", "u64"],
+                ["used", "u64"],
+                ["free", "u64"],
+                ["reported_files_size", "u64"],
+                ["reported_srd_root", "MerkleRoot"],
+                ["reported_files_root", "MerkleRoot"]
+              ]
+    }
+  },
+  "versioning": [
+  ]
+}
