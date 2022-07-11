@@ -1657,9 +1657,15 @@ class FixedLengthArray(ScaleType):
         value = value or []
 
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
-            if value[0:2] != '0x' or len(value[2:]) != self.element_count * 2:
-                raise ValueError('Value should start with "0x" and should be {} bytes long'.format(self.element_count))
+            # u8 arrays are represented as bytes or hex-bytes (e.g. [u8; 3] as 0x123456)
+            if type(value) is str and value[0:2] == '0x':
+                value = bytes.fromhex(value[2:])
+
+            if type(value) is not bytes:
+                raise ValueError('Value should a hex-string (0x..) or bytes')
+
+            if len(value) != self.element_count:
+                raise ValueError('Value should be {} bytes long'.format(self.element_count))
 
             return ScaleBytes(value)
 
