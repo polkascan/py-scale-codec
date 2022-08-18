@@ -2111,6 +2111,23 @@ class GenericVariant(Struct):
     def args(self):
         return self.value_object['fields']
 
+    def get_param_info(self) -> dict:
+        """
+        Generates a dictionary of all possible params with their decomposition information
+
+        Returns
+        -------
+        dict
+        """
+        param_info = {}
+
+        for arg in self.args:
+            param_type_obj = self.runtime_config.create_scale_object(arg.type)
+
+            param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+
+        return param_info
+
     @property
     def name(self):
         return self.value['name']
