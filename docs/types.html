@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>scalecodec.types API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -42,8 +42,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import math
+import struct
+import warnings
 from datetime import datetime
 from hashlib import blake2b
+from typing import Union
 
 from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode, is_valid_ss58_address
 
@@ -85,21 +88,12 @@ class Compact(ScaleType):
         return self.compact_bytes
 
     def process(self):
-
         self.process_compact_bytes()
 
-        if self.sub_type:
-
-            byte_data = self.runtime_config.create_scale_object(
-                type_string=self.sub_type, data=ScaleBytes(self.compact_bytes)
-            ).process()
-
-            if type(byte_data) is int and self.compact_length &lt;= 4:
-                return int(byte_data / 4)
-            else:
-                return byte_data
+        if self.compact_length &lt;= 4:
+            return int(int.from_bytes(self.compact_bytes, byteorder=&#39;little&#39;) / 4)
         else:
-            return self.compact_bytes
+            return int.from_bytes(self.compact_bytes, byteorder=&#39;little&#39;)
 
     def process_encode(self, value):
 
@@ -180,8 +174,8 @@ class Option(ScaleType):
         return ScaleBytes(&#39;0x00&#39;)
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
-        cls.sub_type = f&#34;scale_info::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+        cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
 
 
 class Bytes(ScaleType):
@@ -230,9 +224,8 @@ class Str(Bytes):
         return self.value
 
 
-class String(Bytes):
-    def serialize(self):
-        return self.value
+class String(Str):
+    pass
 
 
 class OptionBytes(ScaleType):
@@ -289,6 +282,18 @@ class CallBytes(ScaleType):
 
     def process_encode(self, value):
         return bytes.fromhex(value[2:])
+
+
+class RawBytes(ScaleType):
+
+    type_string = &#39;&amp;[u8]&#39;
+
+    def process(self):
+        self.value_object = self.get_remaining_bytes()
+        return f&#39;0x{self.value_object.hex()}&#39;
+
+    def process_encode(self, value):
+        return ScaleBytes(bytes.fromhex(value[2:]))
 
 
 class U8(ScaleType):
@@ -447,6 +452,30 @@ class I256(ScaleType):
             raise ValueError(&#39;{} out of range for i256&#39;.format(value))
 
 
+class F32(ScaleType):
+
+    def process(self):
+        return struct.unpack(&#39;f&#39;, self.get_next_bytes(4))[0]
+
+    def process_encode(self, value):
+        if type(value) is not float:
+            raise ValueError(f&#39;{value} is not a float&#39;)
+
+        return ScaleBytes(struct.pack(&#39;f&#39;, value))
+
+
+class F64(ScaleType):
+
+    def process(self):
+        return struct.unpack(&#39;d&#39;, self.get_next_bytes(8))[0]
+
+    def process_encode(self, value):
+        if type(value) is not float:
+            raise ValueError(f&#39;{value} is not a float&#39;)
+
+        return ScaleBytes(struct.pack(&#39;d&#39;, value))
+
+
 class H160(ScaleType):
 
     def process(self):
@@ -474,9 +503,14 @@ class H512(ScaleType):
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(64).hex())
 
-    def process_encode(self, value):
-        if value[0:2] != &#39;0x&#39; or len(value) != 130:
+    def process_encode(self, value: Union[str, bytes]):
+
+        if type(value) is bytes and len(value) != 64:
+            raise ValueError(&#39;Value should be 64 bytes long&#39;)
+
+        if type(value) is str and (value[0:2] != &#39;0x&#39; or len(value) != 130):
             raise ValueError(&#39;Value should start with &#34;0x&#34; and should be 64 bytes long&#39;)
+
         return ScaleBytes(value)
 
 
@@ -708,7 +742,7 @@ class Era(ScaleType):
         return self.birth(current) + self.period
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return
 
 
@@ -729,16 +763,8 @@ class Bool(ScaleType):
 class CompactMoment(CompactU32):
     type_string = &#39;Compact&lt;Moment&gt;&#39;
 
-    def process(self):
-        int_value = super().process()
-
-        if int_value &gt; 10000000000:
-            int_value = int_value / 1000
-
-        return datetime.utcfromtimestamp(int_value)
-
-    def serialize(self):
-        return self.value.isoformat()
+    def to_datetime(self):
+        return datetime.utcfromtimestamp(self.value)
 
 
 class ProposalPreimage(Struct):
@@ -794,7 +820,14 @@ class GenericAccountId(H256):
         return value
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+        return
+
+
+class GenericEthereumAccountId(H160):
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return
 
 
@@ -813,12 +846,12 @@ class Vec(ScaleType):
 
         # Check for Bytes processing
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            value = self.get_next_bytes(element_count)
+            self.value_object = self.get_next_bytes(element_count)
 
             try:
-                return value.decode()
+                return self.value_object.decode()
             except UnicodeDecodeError:
-                return &#39;0x{}&#39;.format(value.hex())
+                return &#39;0x{}&#39;.format(self.value_object.hex())
 
         result = []
         for _ in range(0, element_count):
@@ -891,8 +924,8 @@ class BoundedVec(Vec):
         super().__init__(data, **kwargs)
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
-        cls.sub_type = f&#34;scale_info::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+        cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
 
 
 class BitVec(ScaleType):
@@ -1053,6 +1086,7 @@ class Enum(ScaleType):
                 enum_type_mapping = self.type_mapping[self.index]
 
                 if enum_type_mapping[1] is None or enum_type_mapping[1] == &#39;Null&#39;:
+                    self.value_object = (enum_type_mapping[0], None)
                     return enum_type_mapping[0]
 
                 result_obj = self.process_type(enum_type_mapping[1], metadata=self.metadata)
@@ -1097,7 +1131,13 @@ class Enum(ScaleType):
                 raise ValueError(&#34;Value &#39;{}&#39; not present in type_mapping of this enum&#34;.format(enum_key))
 
         else:
-            for idx, item in enumerate(self.value_list):
+
+            if type(self.value_list) is dict:
+                value_list = self.value_list.items()
+            else:
+                value_list = enumerate(self.value_list)
+
+            for idx, item in value_list:
                 if item == value:
                     self.index = idx
                     return ScaleBytes(bytearray([self.index]))
@@ -1108,6 +1148,10 @@ class Enum(ScaleType):
         if self.value:
 
             if self.type_mapping:
+
+                if self.type_mapping[self.index][1] == &#39;Null&#39;:
+                    return self.value
+
                 return list(self.value.values())[0]
             else:
                 return self.value_list[self.index]
@@ -1192,7 +1236,7 @@ class Data(Enum):
             raise ValueError(&#34;Value &#39;{}&#39; not present in type_mapping of this enum&#34;.format(enum_key))
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return
 
 
@@ -1304,7 +1348,7 @@ class GenericCall(ScaleType):
             self.call_module = self.metadata.get_pallet_by_index(pallet_index.value)
             call_type_string = self.call_module[&#39;calls&#39;].value_object.get_type_string()
 
-            call_obj = self.process_type(call_type_string)
+            call_obj = self.process_type(call_type_string, metadata=self.metadata)
 
             self.call_index = &#34;{:02x}{:02x}&#34;.format(pallet_index.value, call_obj.index)
 
@@ -1314,21 +1358,23 @@ class GenericCall(ScaleType):
 
             call_hash = blake2b(self.get_used_bytes(), digest_size=32).digest()
 
-            # Check args format
-            if type(call_obj[1].value_object) is not tuple:
-                call_args_values = (call_obj[1],)
-            else:
-                call_args_values = call_obj[1]
-
             call_args = []
 
-            for idx, call_arg in enumerate(self.call_args):
-                call_args.append({
-                    &#39;name&#39;: call_arg.value[&#39;name&#39;],
-                    &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
-                    &#39;value&#39;: call_args_values[idx].value
-                })
-                self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
+            if len(self.call_args) &gt; 0:
+
+                # Check args format
+                if type(call_obj[1].value) is not tuple:
+                    call_args_values = (call_obj[1],)
+                else:
+                    call_args_values = call_obj[1]
+
+                for idx, call_arg in enumerate(self.call_args):
+                    call_args.append({
+                        &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                        &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                        &#39;value&#39;: call_args_values[idx].value
+                    })
+                    self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
 
             self.value_object = {
                 &#39;call_index&#39;: f&#39;0x{self.call_index}&#39;,
@@ -1433,6 +1479,10 @@ class GenericCall(ScaleType):
             if len(self.call_args) &gt; 0:
                 self.value_object[&#39;call_args&#39;] = {}
 
+                # convert alternative list format of call_args
+                if type(value[&#39;call_args&#39;]) is list:
+                    value[&#39;call_args&#39;] = {ca[&#39;name&#39;]: ca[&#39;value&#39;] for ca in value[&#39;call_args&#39;]}
+
                 for arg in self.call_args:
                     if arg.value[&#39;name&#39;] not in value[&#39;call_args&#39;]:
                         raise ValueError(&#39;Parameter \&#39;{}\&#39; not specified&#39;.format(arg.value[&#39;name&#39;]))
@@ -1501,6 +1551,7 @@ class GenericContractExecResult(Enum):
     def __init__(self, data=None, contract_result_scale_type=None, **kwargs):
         self.contract_result_scale_type = contract_result_scale_type
         self.gas_consumed = None
+        self.gas_required = None
         self.flags = None
         self.contract_result_data = None
         super().__init__(data, **kwargs)
@@ -1513,6 +1564,7 @@ class GenericContractExecResult(Enum):
     def process_contract_result(self):
         if &#39;success&#39; in self.value:
             self.gas_consumed = self.value[&#39;success&#39;][&#39;gas_consumed&#39;]
+            self.gas_required = self.value[&#39;success&#39;][&#39;gas_required&#39;]
             self.flags = self.value[&#39;success&#39;][&#39;flags&#39;]
             self.contract_result_data = self.value[&#39;success&#39;][&#39;data&#39;]
 
@@ -1539,13 +1591,51 @@ class OpaqueCall(Bytes):
         try:
             call_obj = self.runtime_config.create_scale_object(
                 type_string=&#39;Call&#39;,
-                data=ScaleBytes(&#39;0x{}&#39;.format(self.raw_value)),
+                data=ScaleBytes(value),
                 metadata=self.metadata
             )
 
             return call_obj.process()
         except:
             return value
+
+
+class WrapperKeepOpaque(Struct):
+
+    def process_encode(self, value):
+        # Check requirements
+        if not self.type_mapping or len(self.type_mapping) != 2:
+            raise ValueError(&#34;type_mapping not set correctly for this WrapperKeepOpaque&#34;)
+
+        wrapped_obj = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[1], metadata=self.metadata
+        )
+
+        wrapped_obj.encode(value)
+
+        bytes_obj = self.runtime_config.create_scale_object(&#34;Bytes&#34;)
+        return bytes_obj.encode(wrapped_obj.get_used_bytes())
+
+    def process(self):
+        # Check requirements
+        if not self.type_mapping or len(self.type_mapping) != 2:
+            raise ValueError(&#34;type_mapping not set correctly for this WrapperKeepOpaque&#34;)
+
+        # Get bytes
+        bytes_obj = self.process_type(&#34;Bytes&#34;)
+        try:
+            # Try to decode bytes with wrapped SCALE type
+            wrapped_obj = self.runtime_config.create_scale_object(
+                type_string=self.type_mapping[1],
+                data=ScaleBytes(bytes_obj.value_object),
+                metadata=self.metadata
+            )
+
+            return wrapped_obj.process()
+        except:
+            # Decoding failed; return Opaque type
+            self.value_object = bytes_obj.value_object
+            return f&#39;0x{bytes_obj.value_object.hex()}&#39;
 
 
 class MultiAccountId(GenericAccountId):
@@ -1599,9 +1689,15 @@ class FixedLengthArray(ScaleType):
         value = value or []
 
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
-            if value[0:2] != &#39;0x&#39; or len(value[2:]) != self.element_count * 2:
-                raise ValueError(&#39;Value should start with &#34;0x&#34; and should be {} bytes long&#39;.format(self.element_count))
+            # u8 arrays are represented as bytes or hex-bytes (e.g. [u8; 3] as 0x123456)
+            if type(value) is str and value[0:2] == &#39;0x&#39;:
+                value = bytes.fromhex(value[2:])
+
+            if type(value) is not bytes:
+                raise ValueError(&#39;Value should a hex-string (0x..) or bytes&#39;)
+
+            if len(value) != self.element_count:
+                raise ValueError(&#39;Value should be {} bytes long&#39;.format(self.element_count))
 
             return ScaleBytes(value)
 
@@ -1689,20 +1785,33 @@ class Map(ScaleType):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        sub_type_parts = [x.strip() for x in self.sub_type.split(&#39;,&#39;)]
-        self.map_key = sub_type_parts[0]
-        self.map_value = sub_type_parts[1]
+        self.map_key = None
+        self.map_value = None
+
+        if self.sub_type:
+            sub_type_parts = [x.strip() for x in self.sub_type.split(&#39;,&#39;)]
+            self.map_key = sub_type_parts[0]
+            self.map_value = sub_type_parts[1]
 
     def process(self):
 
-        element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+        if self.map_key and self.map_value:
 
-        result = []
-        for _ in range(0, element_count):
-            key_value = self.process_type(self.map_key, metadata=self.metadata).value
-            result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+            element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
 
-        return result
+            result = []
+            for _ in range(0, element_count):
+                key_value = self.process_type(self.map_key, metadata=self.metadata).value
+                result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+
+            return result
+
+        elif self.type_mapping:
+            self.value_object = self.process_type(self.type_mapping[0], metadata=self.metadata)
+            return self.value_object.value
+
+        else:
+            raise ValueError(&#39;sub_type or type_mapping should be set to process a Map&#39;)
 
     def process_encode(self, value):
 
@@ -1741,8 +1850,27 @@ class BoundedBTreeMap(BTreeMap):
     pass
 
 
-class BTreeSet(Vec):
-    pass
+class BTreeSet(ScaleType):
+
+    def __init__(self, data, sub_type=None, **kwargs):
+
+        super().__init__(data, sub_type, **kwargs)
+
+        if not self.type_mapping and self.sub_type:
+            # Backwards compatibility
+            self.type_mapping = [f&#34;Vec&lt;{self.sub_type}&gt;&#34;]
+
+    def process(self):
+        # A BTreeSet is basically a wrapper around a Vec, which specific implementation is in the type_mapping
+        self.value_object = self.process_type(self.type_mapping[0])
+        return self.value_object.value
+
+    def process_encode(self, value) -&gt; ScaleBytes:
+
+        self.value_object = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[0], metadata=self.metadata
+        )
+        return self.value_object.encode(value)
 
 
 class GenericMetadataAll(Enum):
@@ -1855,7 +1983,12 @@ class GenericMetadataVersioned(Tuple):
         return self.value_object[1].event_index
 
     def get_module_error(self, module_index, error_index):
-        return self.value_object[1].error_index.get(f&#39;{module_index}-{error_index}&#39;)
+        if self.portable_registry:
+            for module in self.pallets:
+                if module[&#39;index&#39;] == module_index and module.errors:
+                    return module.errors[error_index]
+        else:
+            return self.value_object[1].error_index.get(f&#39;{module_index}-{error_index}&#39;)
 
     def get_metadata(self):
         return self.value_object[1]
@@ -1868,34 +2001,62 @@ class GenericMetadataVersioned(Tuple):
     def pallets(self):
         return self.value_object[1].pallets
 
-    def process(self):
-        value = super().process()
-
-        # # Create error index
-        # if self.index &gt;= 12:
-        #     for module in self.metadata.modules:
-        #         if len(module.errors or []) &gt; 0:
-        #             for idx, error in enumerate(module.errors):
-        #                 self.error_index[f&#39;{module.index}-{idx}&#39;] = error
-        # else:
-        #     error_module_index = 0
-        #     for module in self.metadata.modules:
-        #         if len(module.errors or []) &gt; 0:
-        #             for idx, error in enumerate(module.errors):
-        #                 self.error_index[f&#39;{error_module_index}-{idx}&#39;] = error
-        #             error_module_index += 1
-
-        return value
-
     def get_metadata_pallet(self, name: str) -&gt; &#39;GenericPalletMetadata&#39;:
         metadata = self.get_metadata()
         return metadata.get_metadata_pallet(name)
 
     def get_pallet_by_index(self, index: int):
-        try:
-            return self.pallets[index]
-        except IndexError:
-            raise ValueError(f&#39;Pallet for index &#34;{index}&#34; not found&#39;)
+
+        for pallet in self.pallets:
+            if pallet.value[&#39;index&#39;] == index:
+                return pallet
+
+        raise ValueError(f&#39;Pallet for index &#34;{index}&#34; not found&#39;)
+
+    def get_signed_extensions(self):
+
+        signed_extensions = {}
+
+        if self.portable_registry:
+            for se in self.value_object[1][1][&#39;extrinsic&#39;][&#39;signed_extensions&#39;].value:
+                signed_extensions[se[&#39;identifier&#39;]] = {
+                    &#39;extrinsic&#39;: f&#34;scale_info::{se[&#39;ty&#39;]}&#34;,
+                    &#39;additional_signed&#39;: f&#34;scale_info::{se[&#39;additional_signed&#39;]}&#34;
+                }
+        else:
+            extension_def = {
+                &#39;CheckMortality&#39;: {&#39;extrinsic&#39;: &#34;Era&#34;, &#39;additional_signed&#39;: &#34;Hash&#34;},
+                &#39;CheckEra&#39;: {&#39;extrinsic&#39;: &#34;Era&#34;, &#39;additional_signed&#39;: &#34;Hash&#34;},
+                &#39;CheckNonce&#39;: {&#39;extrinsic&#39;: &#34;Compact&lt;Index&gt;&#34;, &#39;additional_signed&#39;: None},
+                &#39;ChargeTransactionPayment&#39;: {&#39;extrinsic&#39;: &#34;Compact&lt;Balance&gt;&#34;, &#39;additional_signed&#39;: None},
+                &#39;CheckSpecVersion&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;u32&#39;},
+                &#39;CheckTxVersion&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;u32&#39;},
+                &#39;CheckGenesis&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;Hash&#39;},
+                &#39;CheckWeight&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;ValidateEquivocationReport&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;LockStakingStatus&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;CheckBlockGasLimit&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;RestrictFunctionality&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;LimitParathreadCommits&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;ChargeAssetTxPayment&#39;: {&#39;extrinsic&#39;: &#39;Option&lt;AssetId&gt;&#39;, &#39;additional_signed&#39;: None}
+            }
+            if &#39;extrinsic&#39; in self.value_object[1][1]:
+                for se in self.value_object[1][1][&#39;extrinsic&#39;][&#39;signed_extensions&#39;].value:
+                    if se not in extension_def:
+                        extension_def[se] = {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None}
+                    signed_extensions[se] = extension_def[se]
+
+        return signed_extensions
+
+
+class GenericStringType(String):
+    @property
+    def name(self):
+        return None
+
+    @property
+    def type(self):
+        return self.value
 
 
 class GenericRegistryType(Struct):
@@ -1916,8 +2077,49 @@ class GenericRegistryType(Struct):
 
         return super().process_encode(value)
 
+    def retrieve_type_decomposition(self):
+        if &#39;variant&#39; in self.value[&#39;def&#39;]:
+            for variant in self.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]:
+                for field in variant[&#39;fields&#39;]:
+                    field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
+                    variant[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;composite&#39; in self.value[&#39;def&#39;]:
+            for field in self.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]:
+                field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
+                field[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;array&#39; in self.value[&#39;def&#39;]:
+            type_def = self.value[&#39;def&#39;][&#39;array&#39;]
+            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
+            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;sequence&#39; in self.value[&#39;def&#39;]:
+            type_def = self.value[&#39;def&#39;][&#39;sequence&#39;]
+            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
+            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;tuple&#39; in self.value[&#39;def&#39;]:
+            for idx, type_def in self.value[&#39;def&#39;][&#39;tuple&#39;]:
+                element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def}&#34;)
+                self.value[&#39;def&#39;][&#39;tuple&#39;][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
+
+        return self.value[&#39;def&#39;]
+
 
 class GenericField(Struct):
+
+    @property
+    def name(self):
+        return self.value[&#39;name&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;docs&#39;]
+
+    @property
+    def type(self):
+        return self.get_type_string()
 
     def get_type_string(self):
         return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;
@@ -1938,8 +2140,33 @@ class GenericField(Struct):
 class GenericVariant(Struct):
 
     @property
+    def args(self):
+        return self.value_object[&#39;fields&#39;]
+
+    def get_param_info(self) -&gt; dict:
+        &#34;&#34;&#34;
+        Generates a dictionary of all possible params with their decomposition information
+
+        Returns
+        -------
+        dict
+        &#34;&#34;&#34;
+        param_info = {}
+
+        for arg in self.args:
+            param_type_obj = self.runtime_config.create_scale_object(arg.type)
+
+            param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+
+        return param_info
+
+    @property
     def name(self):
         return self.value[&#39;name&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;docs&#39;]
 
     def process_encode(self, value):
         if &#39;index&#39; not in value:
@@ -2030,6 +2257,42 @@ class ScaleInfoCallMetadata(Struct):
     def get_type_string(self):
         return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;
 
+    @property
+    def calls(self):
+        if self.value_object:
+            call_enum = self.runtime_config.get_decoder_class(
+                self.get_type_string()
+            )
+            return call_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+        else:
+            return []
+
+
+class ScaleInfoPalletErrorMetadata(Struct):
+    def get_type_string(self):
+        return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;
+
+    @property
+    def errors(self):
+        if self.value_object:
+            error_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return error_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+        else:
+            return []
+
+
+class ScaleInfoPalletEventMetadata(Struct):
+    def get_type_string(self):
+        return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;
+
+    @property
+    def events(self):
+        if self.value_object:
+            event_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return event_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+        else:
+            return []
+
 
 class GenericPalletMetadata(Struct):
 
@@ -2053,18 +2316,10 @@ class GenericPalletMetadata(Struct):
 
     @property
     def events(self):
+        events = self.value_object[&#39;events&#39;].value_object
 
-        if &#39;event&#39; in self.value_object:
-            if self.value_object[&#39;event&#39;].value_object:
-                return self.value_object[&#39;event&#39;].value_object.value[&#39;ty&#39;]
-        elif &#39;events&#39; in self.value_object:
-
-            events = self.value_object[&#39;events&#39;].value_object
-
-            if events:
-                return events.value_object
-        else:
-            raise ValueError(&#39;Events not present in pallet&#39;)
+        if events:
+            return events.value_object
 
     @property
     def constants(self):
@@ -2072,15 +2327,7 @@ class GenericPalletMetadata(Struct):
 
     @property
     def errors(self):
-        if &#39;error&#39; in self.value_object:
-            if self.value_object[&#39;error&#39;].value_object:
-                return self.value_object[&#39;error&#39;].value_object.value[&#39;ty&#39;]
-
-        elif &#39;errors&#39; in self.value_object:
-            return self.value_object[&#39;errors&#39;].value_object
-
-        else:
-            raise ValueError(&#39;Events not present in pallet&#39;)
+        return self.value_object[&#39;errors&#39;].value_object
 
     def get_storage_function(self, name: str):
         storage_functions = self.value_object[&#39;storage&#39;].value_object
@@ -2091,6 +2338,30 @@ class GenericPalletMetadata(Struct):
                     return storage_function
 
 
+class ScaleInfoPalletMetadata(GenericPalletMetadata):
+
+    @property
+    def calls(self):
+        if self.value_object[&#39;calls&#39;].value_object:
+            return self.value_object[&#39;calls&#39;].value_object.calls
+        else:
+            return []
+
+    @property
+    def events(self):
+        if self.value_object[&#39;event&#39;].value_object:
+            return self.value_object[&#39;event&#39;].value_object.events
+        else:
+            return []
+
+    @property
+    def errors(self):
+        if self.value_object[&#39;error&#39;].value_object:
+            return self.value_object[&#39;error&#39;].value_object.errors
+        else:
+            return []
+
+
 class GenericStorageEntryMetadata(Struct):
 
     @property
@@ -2098,8 +2369,16 @@ class GenericStorageEntryMetadata(Struct):
         return self.value[&#39;name&#39;]
 
     @property
+    def modifier(self):
+        return self.value[&#39;modifier&#39;]
+
+    @property
     def type(self):
         return self.value[&#39;type&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;documentation&#39;]
 
     def get_type_string_for_type(self, ty):
         return self.convert_type(ty)
@@ -2139,18 +2418,72 @@ class GenericStorageEntryMetadata(Struct):
         elif &#39;DoubleMap&#39; in self.value[&#39;type&#39;]:
             return [
                 self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;hasher&#39;],
-                self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;key2Hasher&#39;]
+                self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;key2_hasher&#39;]
             ]
         elif &#39;NMap&#39; in self.value[&#39;type&#39;]:
             return self.value[&#39;type&#39;][&#39;NMap&#39;][&#39;hashers&#39;]
         else:
             raise NotImplementedError()
 
+    def get_param_info(self) -&gt; list:
+        raise NotImplementedError()
+
 
 class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
 
     def get_type_string_for_type(self, ty):
         return f&#39;scale_info::{ty}&#39;
+
+    def get_value_type_string(self):
+        if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+            return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Plain&#39;])
+        elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+            return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;value&#39;])
+        else:
+            raise NotImplementedError()
+
+    def get_key_type_string(self):
+        if &#39;Map&#39; in self.value[&#39;type&#39;]:
+            return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+
+    def get_params_type_string(self):
+        if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+            return []
+        elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+            key_type_string = self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            if nmap_key_scale_type.type_mapping and nmap_key_scale_type.scale_info_type[&#39;def&#39;][0] == &#39;tuple&#39; and \
+                    len(self.get_param_hashers()) &gt; 1:
+                # In case of tuple and multiple param hashers extract type_mapping as separate parameters
+                return nmap_key_scale_type.type_mapping
+            else:
+                return [key_type_string]
+        else:
+            raise NotImplementedError()
+
+    def get_key_scale_info_definition(self):
+        if &#39;Map&#39; in self.value[&#39;type&#39;]:
+            key_type_string = self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            return nmap_key_scale_type.scale_info_type[&#39;def&#39;][0]
+
+    def get_param_hashers(self):
+        if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+            return [&#39;Twox64Concat&#39;]
+        elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+            return self.value[&#39;type&#39;][&#39;Map&#39;][&#39;hashers&#39;]
+        else:
+            raise NotImplementedError()
+
+    def get_param_info(self) -&gt; list:
+        param_info = []
+        for param_type_string in self.get_params_type_string():
+            scale_type = self.runtime_config.create_scale_object(param_type_string)
+            param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+
+        return param_info
 
 
 class GenericEventMetadata(Struct):
@@ -2161,7 +2494,11 @@ class GenericEventMetadata(Struct):
 
     @property
     def args(self):
-        return self.value[&#39;args&#39;]
+        return self.value_object[&#39;args&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;documentation&#39;]
 
 
 class GenericErrorMetadata(Struct):
@@ -2206,7 +2543,10 @@ class ScaleInfoFunctionArgumentMetadata(GenericFunctionArgumentMetadata):
 
     @property
     def type(self):
-        return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;
+        if self.value.get(&#39;typeName&#39;):
+            return self.value.get(&#39;typeName&#39;)
+        else:
+            return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;
 
 
 class TypeNotSupported(ScaleType):
@@ -2226,8 +2566,7 @@ class GenericExtrinsic(ScaleType):
 
     @property
     def extrinsic_hash(self):
-        if self.signed:
-            return blake2b(self.data.data, digest_size=32).digest()
+        return blake2b(self.data.data, digest_size=32).digest()
 
     def process(self):
         self.value_object = {
@@ -2314,6 +2653,39 @@ class Extrinsic(GenericExtrinsic):
     pass
 
 
+class GenericExtrinsicV4(Struct):
+
+    def __init__(self, *args, **kwargs):
+
+        if &#39;metadata&#39; in kwargs and &#39;extrinsic&#39; in kwargs[&#39;metadata&#39;][1][1]:
+
+            # Process signed extensions in metadata
+            signed_extensions = kwargs[&#39;metadata&#39;].get_signed_extensions()
+
+            if len(signed_extensions) &gt; 0:
+                # Build type mapping according to signed extensions in metadata
+                self.type_mapping = [[&#39;address&#39;, &#39;Address&#39;], [&#39;signature&#39;, &#39;ExtrinsicSignature&#39;]]
+
+                if &#39;CheckMortality&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;era&#39;, signed_extensions[&#39;CheckMortality&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;CheckEra&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;era&#39;, signed_extensions[&#39;CheckEra&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;CheckNonce&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;nonce&#39;, signed_extensions[&#39;CheckNonce&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;ChargeTransactionPayment&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;tip&#39;, signed_extensions[&#39;ChargeTransactionPayment&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;ChargeAssetTxPayment&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;asset_id&#39;, signed_extensions[&#39;ChargeAssetTxPayment&#39;][&#39;extrinsic&#39;]])
+
+                self.type_mapping.append([&#39;call&#39;, &#39;Call&#39;])
+
+        super().__init__(*args, **kwargs)
+
+
 class GenericEvent(Enum):
 
     def __init__(self, *args, **kwargs):
@@ -2380,7 +2752,7 @@ class GenericScaleInfoEvent(Enum):
             &#39;event_index&#39;: self.event_index,
             &#39;module_id&#39;: self.value_object[0],
             &#39;event_id&#39;: self.value_object[1][0],
-            &#39;attributes&#39;: self.value_object[1][1].value,
+            &#39;attributes&#39;: self.value_object[1][1].value if self.value_object[1][1] else None,
         }
 
 
@@ -2405,9 +2777,14 @@ class GenericEventRecord(Struct):
     def process(self):
         value = super().process()
 
+        if self.value_object[&#39;phase&#39;][0] == &#39;ApplyExtrinsic&#39;:
+            extrinsic_idx = self.value_object[&#39;phase&#39;][1].value
+        else:
+            extrinsic_idx = None
+
         return {
-            &#39;phase&#39;: self.value_object[&#39;phase&#39;].index,
-            &#39;extrinsic_idx&#39;: self.value_object[&#39;phase&#39;][1].value,
+            &#39;phase&#39;: self.value_object[&#39;phase&#39;][0],
+            &#39;extrinsic_idx&#39;: extrinsic_idx,
             &#39;event&#39;: value[&#39;event&#39;],
             &#39;event_index&#39;: self.value_object[&#39;event&#39;].index,
             &#39;module_id&#39;: value[&#39;event&#39;][&#39;module_id&#39;],
@@ -2520,8 +2897,8 @@ class GenericPreRuntime(Struct):
                 babe_predigest_value = list(babe_predigest.value.values())[0]
 
                 value[&#39;data&#39;] = babe_predigest_value
-                self.authority_index = babe_predigest_value[&#39;authorityIndex&#39;]
-                self.slot_number = babe_predigest_value[&#39;slotNumber&#39;]
+                self.authority_index = babe_predigest_value[&#39;authority_index&#39;]
+                self.slot_number = babe_predigest_value[&#39;slot_number&#39;]
 
         if value[&#39;engine&#39;] == &#39;aura&#39;:
 
@@ -2532,7 +2909,7 @@ class GenericPreRuntime(Struct):
             aura_predigest.decode()
 
             value[&#39;data&#39;] = aura_predigest.value
-            self.slot_number = aura_predigest.value[&#39;slotNumber&#39;]
+            self.slot_number = aura_predigest.value[&#39;slot_number&#39;]
 
         return value
 
@@ -2542,6 +2919,7 @@ class LogDigest(Enum):
     value_list = [&#39;Other&#39;, &#39;AuthoritiesChange&#39;, &#39;ChangesTrieRoot&#39;, &#39;SealV0&#39;, &#39;Consensus&#39;, &#39;Seal&#39;, &#39;PreRuntime&#39;]
 
     def __init__(self, data, **kwargs):
+        warnings.warn(&#34;LogDigest will be removed in future releases&#34;, DeprecationWarning)
         self.log_type = None
         self.index_value = None
         super().__init__(data, **kwargs)
@@ -2737,7 +3115,7 @@ inheritance.</p>
 </dd>
 <dt id="scalecodec.types.BTreeSet"><code class="flex name class">
 <span>class <span class="ident">BTreeSet</span></span>
-<span>(</span><span>data=None, **kwargs)</span>
+<span>(</span><span>data, sub_type=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -2757,12 +3135,30 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BTreeSet(Vec):
-    pass</code></pre>
+<pre><code class="python">class BTreeSet(ScaleType):
+
+    def __init__(self, data, sub_type=None, **kwargs):
+
+        super().__init__(data, sub_type, **kwargs)
+
+        if not self.type_mapping and self.sub_type:
+            # Backwards compatibility
+            self.type_mapping = [f&#34;Vec&lt;{self.sub_type}&gt;&#34;]
+
+    def process(self):
+        # A BTreeSet is basically a wrapper around a Vec, which specific implementation is in the type_mapping
+        self.value_object = self.process_type(self.type_mapping[0])
+        return self.value_object.value
+
+    def process_encode(self, value) -&gt; ScaleBytes:
+
+        self.value_object = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[0], metadata=self.metadata
+        )
+        return self.value_object.encode(value)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scalecodec.types.Vec" href="#scalecodec.types.Vec">Vec</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -2774,11 +3170,46 @@ inheritance.</p>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.BTreeSet.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    # A BTreeSet is basically a wrapper around a Vec, which specific implementation is in the type_mapping
+    self.value_object = self.process_type(self.type_mapping[0])
+    return self.value_object.value</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.BTreeSet.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value) ‑> <a title="scalecodec.base.ScaleBytes" href="base.html#scalecodec.base.ScaleBytes">ScaleBytes</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value) -&gt; ScaleBytes:
+
+    self.value_object = self.runtime_config.create_scale_object(
+        type_string=self.type_mapping[0], metadata=self.metadata
+    )
+    return self.value_object.encode(value)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.types.Vec" href="#scalecodec.types.Vec">Vec</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.types.Vec.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3093,8 +3524,8 @@ inheritance.</p>
         super().__init__(data, **kwargs)
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
-        cls.sub_type = f&#34;scale_info::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+        cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3113,7 +3544,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.BoundedVec.process_scale_info_definition"><code class="name flex">
-<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>)</span>
+<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3122,8 +3553,8 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
-    cls.sub_type = f&#34;scale_info::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
+def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+    cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -3208,7 +3639,6 @@ inheritance.</p>
 <ul class="hlist">
 <li><a title="scalecodec.types.OpaqueCall" href="#scalecodec.types.OpaqueCall">OpaqueCall</a></li>
 <li><a title="scalecodec.types.Str" href="#scalecodec.types.Str">Str</a></li>
-<li><a title="scalecodec.types.String" href="#scalecodec.types.String">String</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3435,21 +3865,12 @@ inheritance.</p>
         return self.compact_bytes
 
     def process(self):
-
         self.process_compact_bytes()
 
-        if self.sub_type:
-
-            byte_data = self.runtime_config.create_scale_object(
-                type_string=self.sub_type, data=ScaleBytes(self.compact_bytes)
-            ).process()
-
-            if type(byte_data) is int and self.compact_length &lt;= 4:
-                return int(byte_data / 4)
-            else:
-                return byte_data
+        if self.compact_length &lt;= 4:
+            return int(int.from_bytes(self.compact_bytes, byteorder=&#39;little&#39;) / 4)
         else:
-            return self.compact_bytes
+            return int.from_bytes(self.compact_bytes, byteorder=&#39;little&#39;)
 
     def process_encode(self, value):
 
@@ -3503,21 +3924,12 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def process(self):
-
     self.process_compact_bytes()
 
-    if self.sub_type:
-
-        byte_data = self.runtime_config.create_scale_object(
-            type_string=self.sub_type, data=ScaleBytes(self.compact_bytes)
-        ).process()
-
-        if type(byte_data) is int and self.compact_length &lt;= 4:
-            return int(byte_data / 4)
-        else:
-            return byte_data
+    if self.compact_length &lt;= 4:
+        return int(int.from_bytes(self.compact_bytes, byteorder=&#39;little&#39;) / 4)
     else:
-        return self.compact_bytes</code></pre>
+        return int.from_bytes(self.compact_bytes, byteorder=&#39;little&#39;)</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.Compact.process_compact_bytes"><code class="name flex">
@@ -3622,16 +4034,8 @@ inheritance.</p>
 <pre><code class="python">class CompactMoment(CompactU32):
     type_string = &#39;Compact&lt;Moment&gt;&#39;
 
-    def process(self):
-        int_value = super().process()
-
-        if int_value &gt; 10000000000:
-            int_value = int_value / 1000
-
-        return datetime.utcfromtimestamp(int_value)
-
-    def serialize(self):
-        return self.value.isoformat()</code></pre>
+    def to_datetime(self):
+        return datetime.utcfromtimestamp(self.value)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3654,8 +4058,8 @@ inheritance.</p>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="scalecodec.types.CompactMoment.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self)</span>
+<dt id="scalecodec.types.CompactMoment.to_datetime"><code class="name flex">
+<span>def <span class="ident">to_datetime</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3663,26 +4067,8 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self):
-    int_value = super().process()
-
-    if int_value &gt; 10000000000:
-        int_value = int_value / 1000
-
-    return datetime.utcfromtimestamp(int_value)</code></pre>
-</details>
-</dd>
-<dt id="scalecodec.types.CompactMoment.serialize"><code class="name flex">
-<span>def <span class="ident">serialize</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def serialize(self):
-    return self.value.isoformat()</code></pre>
+<pre><code class="python">def to_datetime(self):
+    return datetime.utcfromtimestamp(self.value)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3995,7 +4381,7 @@ inheritance.</p>
             raise ValueError(&#34;Value &#39;{}&#39; not present in type_mapping of this enum&#34;.format(enum_key))
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4019,7 +4405,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Data.process_scale_info_definition"><code class="name flex">
-<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>)</span>
+<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -4028,7 +4414,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
     return</code></pre>
 </details>
 </dd>
@@ -4180,6 +4566,7 @@ inheritance.</p>
                 enum_type_mapping = self.type_mapping[self.index]
 
                 if enum_type_mapping[1] is None or enum_type_mapping[1] == &#39;Null&#39;:
+                    self.value_object = (enum_type_mapping[0], None)
                     return enum_type_mapping[0]
 
                 result_obj = self.process_type(enum_type_mapping[1], metadata=self.metadata)
@@ -4224,7 +4611,13 @@ inheritance.</p>
                 raise ValueError(&#34;Value &#39;{}&#39; not present in type_mapping of this enum&#34;.format(enum_key))
 
         else:
-            for idx, item in enumerate(self.value_list):
+
+            if type(self.value_list) is dict:
+                value_list = self.value_list.items()
+            else:
+                value_list = enumerate(self.value_list)
+
+            for idx, item in value_list:
                 if item == value:
                     self.index = idx
                     return ScaleBytes(bytearray([self.index]))
@@ -4235,6 +4628,10 @@ inheritance.</p>
         if self.value:
 
             if self.type_mapping:
+
+                if self.type_mapping[self.index][1] == &#39;Null&#39;:
+                    return self.value
+
                 return list(self.value.values())[0]
             else:
                 return self.value_list[self.index]</code></pre>
@@ -4287,6 +4684,10 @@ inheritance.</p>
     if self.value:
 
         if self.type_mapping:
+
+            if self.type_mapping[self.index][1] == &#39;Null&#39;:
+                return self.value
+
             return list(self.value.values())[0]
         else:
             return self.value_list[self.index]</code></pre>
@@ -4309,6 +4710,7 @@ inheritance.</p>
             enum_type_mapping = self.type_mapping[self.index]
 
             if enum_type_mapping[1] is None or enum_type_mapping[1] == &#39;Null&#39;:
+                self.value_object = (enum_type_mapping[0], None)
                 return enum_type_mapping[0]
 
             result_obj = self.process_type(enum_type_mapping[1], metadata=self.metadata)
@@ -4363,7 +4765,13 @@ inheritance.</p>
             raise ValueError(&#34;Value &#39;{}&#39; not present in type_mapping of this enum&#34;.format(enum_key))
 
     else:
-        for idx, item in enumerate(self.value_list):
+
+        if type(self.value_list) is dict:
+            value_list = self.value_list.items()
+        else:
+            value_list = enumerate(self.value_list)
+
+        for idx, item in value_list:
             if item == value:
                 self.index = idx
                 return ScaleBytes(bytearray([self.index]))
@@ -4505,7 +4913,7 @@ in which it is valid.</p>
         return self.birth(current) + self.period
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4524,7 +4932,7 @@ in which it is valid.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Era.process_scale_info_definition"><code class="name flex">
-<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>)</span>
+<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -4533,7 +4941,7 @@ in which it is valid.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
     return</code></pre>
 </details>
 </dd>
@@ -4854,6 +5262,180 @@ inheritance.</p>
 </li>
 </ul>
 </dd>
+<dt id="scalecodec.types.F32"><code class="flex name class">
+<span>class <span class="ident">F32</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, runtime_config=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class F32(ScaleType):
+
+    def process(self):
+        return struct.unpack(&#39;f&#39;, self.get_next_bytes(4))[0]
+
+    def process_encode(self, value):
+        if type(value) is not float:
+            raise ValueError(f&#39;{value} is not a float&#39;)
+
+        return ScaleBytes(struct.pack(&#39;f&#39;, value))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.F32.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.F32.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    return struct.unpack(&#39;f&#39;, self.get_next_bytes(4))[0]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.F32.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value):
+    if type(value) is not float:
+        raise ValueError(f&#39;{value} is not a float&#39;)
+
+    return ScaleBytes(struct.pack(&#39;f&#39;, value))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.F64"><code class="flex name class">
+<span>class <span class="ident">F64</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, runtime_config=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class F64(ScaleType):
+
+    def process(self):
+        return struct.unpack(&#39;d&#39;, self.get_next_bytes(8))[0]
+
+    def process_encode(self, value):
+        if type(value) is not float:
+            raise ValueError(f&#39;{value} is not a float&#39;)
+
+        return ScaleBytes(struct.pack(&#39;d&#39;, value))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.F64.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.F64.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    return struct.unpack(&#39;d&#39;, self.get_next_bytes(8))[0]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.F64.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value):
+    if type(value) is not float:
+        raise ValueError(f&#39;{value} is not a float&#39;)
+
+    return ScaleBytes(struct.pack(&#39;d&#39;, value))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="scalecodec.types.FixedLengthArray"><code class="flex name class">
 <span>class <span class="ident">FixedLengthArray</span></span>
 <span>(</span><span>data=None, sub_type=None, metadata=None, runtime_config=None)</span>
@@ -4901,9 +5483,15 @@ inheritance.</p>
         value = value or []
 
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
-            if value[0:2] != &#39;0x&#39; or len(value[2:]) != self.element_count * 2:
-                raise ValueError(&#39;Value should start with &#34;0x&#34; and should be {} bytes long&#39;.format(self.element_count))
+            # u8 arrays are represented as bytes or hex-bytes (e.g. [u8; 3] as 0x123456)
+            if type(value) is str and value[0:2] == &#39;0x&#39;:
+                value = bytes.fromhex(value[2:])
+
+            if type(value) is not bytes:
+                raise ValueError(&#39;Value should a hex-string (0x..) or bytes&#39;)
+
+            if len(value) != self.element_count:
+                raise ValueError(&#39;Value should be {} bytes long&#39;.format(self.element_count))
 
             return ScaleBytes(value)
 
@@ -4983,9 +5571,15 @@ inheritance.</p>
     value = value or []
 
     if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-        # u8 arrays are represented as hex-bytes (e.g. [u8; 3] as 0x123456)
-        if value[0:2] != &#39;0x&#39; or len(value[2:]) != self.element_count * 2:
-            raise ValueError(&#39;Value should start with &#34;0x&#34; and should be {} bytes long&#39;.format(self.element_count))
+        # u8 arrays are represented as bytes or hex-bytes (e.g. [u8; 3] as 0x123456)
+        if type(value) is str and value[0:2] == &#39;0x&#39;:
+            value = bytes.fromhex(value[2:])
+
+        if type(value) is not bytes:
+            raise ValueError(&#39;Value should a hex-string (0x..) or bytes&#39;)
+
+        if len(value) != self.element_count:
+            raise ValueError(&#39;Value should be {} bytes long&#39;.format(self.element_count))
 
         return ScaleBytes(value)
 
@@ -5064,7 +5658,7 @@ inheritance.</p>
         return value
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5088,7 +5682,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.GenericAccountId.process_scale_info_definition"><code class="name flex">
-<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>)</span>
+<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5097,7 +5691,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
+def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
     return</code></pre>
 </details>
 </dd>
@@ -5531,7 +6125,7 @@ inheritance.</p>
             self.call_module = self.metadata.get_pallet_by_index(pallet_index.value)
             call_type_string = self.call_module[&#39;calls&#39;].value_object.get_type_string()
 
-            call_obj = self.process_type(call_type_string)
+            call_obj = self.process_type(call_type_string, metadata=self.metadata)
 
             self.call_index = &#34;{:02x}{:02x}&#34;.format(pallet_index.value, call_obj.index)
 
@@ -5541,21 +6135,23 @@ inheritance.</p>
 
             call_hash = blake2b(self.get_used_bytes(), digest_size=32).digest()
 
-            # Check args format
-            if type(call_obj[1].value_object) is not tuple:
-                call_args_values = (call_obj[1],)
-            else:
-                call_args_values = call_obj[1]
-
             call_args = []
 
-            for idx, call_arg in enumerate(self.call_args):
-                call_args.append({
-                    &#39;name&#39;: call_arg.value[&#39;name&#39;],
-                    &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
-                    &#39;value&#39;: call_args_values[idx].value
-                })
-                self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
+            if len(self.call_args) &gt; 0:
+
+                # Check args format
+                if type(call_obj[1].value) is not tuple:
+                    call_args_values = (call_obj[1],)
+                else:
+                    call_args_values = call_obj[1]
+
+                for idx, call_arg in enumerate(self.call_args):
+                    call_args.append({
+                        &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                        &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                        &#39;value&#39;: call_args_values[idx].value
+                    })
+                    self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
 
             self.value_object = {
                 &#39;call_index&#39;: f&#39;0x{self.call_index}&#39;,
@@ -5660,6 +6256,10 @@ inheritance.</p>
             if len(self.call_args) &gt; 0:
                 self.value_object[&#39;call_args&#39;] = {}
 
+                # convert alternative list format of call_args
+                if type(value[&#39;call_args&#39;]) is list:
+                    value[&#39;call_args&#39;] = {ca[&#39;name&#39;]: ca[&#39;value&#39;] for ca in value[&#39;call_args&#39;]}
+
                 for arg in self.call_args:
                     if arg.value[&#39;name&#39;] not in value[&#39;call_args&#39;]:
                         raise ValueError(&#39;Parameter \&#39;{}\&#39; not specified&#39;.format(arg.value[&#39;name&#39;]))
@@ -5755,7 +6355,7 @@ inheritance.</p>
         self.call_module = self.metadata.get_pallet_by_index(pallet_index.value)
         call_type_string = self.call_module[&#39;calls&#39;].value_object.get_type_string()
 
-        call_obj = self.process_type(call_type_string)
+        call_obj = self.process_type(call_type_string, metadata=self.metadata)
 
         self.call_index = &#34;{:02x}{:02x}&#34;.format(pallet_index.value, call_obj.index)
 
@@ -5765,21 +6365,23 @@ inheritance.</p>
 
         call_hash = blake2b(self.get_used_bytes(), digest_size=32).digest()
 
-        # Check args format
-        if type(call_obj[1].value_object) is not tuple:
-            call_args_values = (call_obj[1],)
-        else:
-            call_args_values = call_obj[1]
-
         call_args = []
 
-        for idx, call_arg in enumerate(self.call_args):
-            call_args.append({
-                &#39;name&#39;: call_arg.value[&#39;name&#39;],
-                &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
-                &#39;value&#39;: call_args_values[idx].value
-            })
-            self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
+        if len(self.call_args) &gt; 0:
+
+            # Check args format
+            if type(call_obj[1].value) is not tuple:
+                call_args_values = (call_obj[1],)
+            else:
+                call_args_values = call_obj[1]
+
+            for idx, call_arg in enumerate(self.call_args):
+                call_args.append({
+                    &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                    &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                    &#39;value&#39;: call_args_values[idx].value
+                })
+                self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
 
         self.value_object = {
             &#39;call_index&#39;: f&#39;0x{self.call_index}&#39;,
@@ -5893,6 +6495,10 @@ inheritance.</p>
         # Encode call params
         if len(self.call_args) &gt; 0:
             self.value_object[&#39;call_args&#39;] = {}
+
+            # convert alternative list format of call_args
+            if type(value[&#39;call_args&#39;]) is list:
+                value[&#39;call_args&#39;] = {ca[&#39;name&#39;]: ca[&#39;value&#39;] for ca in value[&#39;call_args&#39;]}
 
             for arg in self.call_args:
                 if arg.value[&#39;name&#39;] not in value[&#39;call_args&#39;]:
@@ -6128,6 +6734,7 @@ inheritance.</p>
     def __init__(self, data=None, contract_result_scale_type=None, **kwargs):
         self.contract_result_scale_type = contract_result_scale_type
         self.gas_consumed = None
+        self.gas_required = None
         self.flags = None
         self.contract_result_data = None
         super().__init__(data, **kwargs)
@@ -6140,6 +6747,7 @@ inheritance.</p>
     def process_contract_result(self):
         if &#39;success&#39; in self.value:
             self.gas_consumed = self.value[&#39;success&#39;][&#39;gas_consumed&#39;]
+            self.gas_required = self.value[&#39;success&#39;][&#39;gas_required&#39;]
             self.flags = self.value[&#39;success&#39;][&#39;flags&#39;]
             self.contract_result_data = self.value[&#39;success&#39;][&#39;data&#39;]
 
@@ -6195,6 +6803,7 @@ inheritance.</p>
 <pre><code class="python">def process_contract_result(self):
     if &#39;success&#39; in self.value:
         self.gas_consumed = self.value[&#39;success&#39;][&#39;gas_consumed&#39;]
+        self.gas_required = self.value[&#39;success&#39;][&#39;gas_required&#39;]
         self.flags = self.value[&#39;success&#39;][&#39;flags&#39;]
         self.contract_result_data = self.value[&#39;success&#39;][&#39;data&#39;]</code></pre>
 </details>
@@ -6306,6 +6915,74 @@ def name(self):
 <li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.GenericEthereumAccountId"><code class="flex name class">
+<span>class <span class="ident">GenericEthereumAccountId</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, runtime_config=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericEthereumAccountId(H160):
+
+    @classmethod
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+        return</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.H160" href="#scalecodec.types.H160">H160</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericEthereumAccountId.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.GenericEthereumAccountId.process_scale_info_definition"><code class="name flex">
+<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+    return</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.H160" href="#scalecodec.types.H160">H160</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.H160.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6476,7 +7153,11 @@ inheritance.</p>
 
     @property
     def args(self):
-        return self.value[&#39;args&#39;]</code></pre>
+        return self.value_object[&#39;args&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;documentation&#39;]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6503,7 +7184,19 @@ inheritance.</p>
 </summary>
 <pre><code class="python">@property
 def args(self):
-    return self.value[&#39;args&#39;]</code></pre>
+    return self.value_object[&#39;args&#39;]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericEventMetadata.docs"><code class="name">var <span class="ident">docs</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def docs(self):
+    return self.value[&#39;documentation&#39;]</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericEventMetadata.name"><code class="name">var <span class="ident">name</span></code></dt>
@@ -6571,9 +7264,14 @@ inheritance.</p>
     def process(self):
         value = super().process()
 
+        if self.value_object[&#39;phase&#39;][0] == &#39;ApplyExtrinsic&#39;:
+            extrinsic_idx = self.value_object[&#39;phase&#39;][1].value
+        else:
+            extrinsic_idx = None
+
         return {
-            &#39;phase&#39;: self.value_object[&#39;phase&#39;].index,
-            &#39;extrinsic_idx&#39;: self.value_object[&#39;phase&#39;][1].value,
+            &#39;phase&#39;: self.value_object[&#39;phase&#39;][0],
+            &#39;extrinsic_idx&#39;: extrinsic_idx,
             &#39;event&#39;: value[&#39;event&#39;],
             &#39;event_index&#39;: self.value_object[&#39;event&#39;].index,
             &#39;module_id&#39;: value[&#39;event&#39;][&#39;module_id&#39;],
@@ -6661,9 +7359,14 @@ def params(self):
 <pre><code class="python">def process(self):
     value = super().process()
 
+    if self.value_object[&#39;phase&#39;][0] == &#39;ApplyExtrinsic&#39;:
+        extrinsic_idx = self.value_object[&#39;phase&#39;][1].value
+    else:
+        extrinsic_idx = None
+
     return {
-        &#39;phase&#39;: self.value_object[&#39;phase&#39;].index,
-        &#39;extrinsic_idx&#39;: self.value_object[&#39;phase&#39;][1].value,
+        &#39;phase&#39;: self.value_object[&#39;phase&#39;][0],
+        &#39;extrinsic_idx&#39;: extrinsic_idx,
         &#39;event&#39;: value[&#39;event&#39;],
         &#39;event_index&#39;: self.value_object[&#39;event&#39;].index,
         &#39;module_id&#39;: value[&#39;event&#39;][&#39;module_id&#39;],
@@ -6713,8 +7416,7 @@ inheritance.</p>
 
     @property
     def extrinsic_hash(self):
-        if self.signed:
-            return blake2b(self.data.data, digest_size=32).digest()
+        return blake2b(self.data.data, digest_size=32).digest()
 
     def process(self):
         self.value_object = {
@@ -6824,8 +7526,7 @@ inheritance.</p>
 </summary>
 <pre><code class="python">@property
 def extrinsic_hash(self):
-    if self.signed:
-        return blake2b(self.data.data, digest_size=32).digest()</code></pre>
+    return blake2b(self.data.data, digest_size=32).digest()</code></pre>
 </details>
 </dd>
 </dl>
@@ -6941,6 +7642,83 @@ def extrinsic_hash(self):
 </li>
 </ul>
 </dd>
+<dt id="scalecodec.types.GenericExtrinsicV4"><code class="flex name class">
+<span>class <span class="ident">GenericExtrinsicV4</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericExtrinsicV4(Struct):
+
+    def __init__(self, *args, **kwargs):
+
+        if &#39;metadata&#39; in kwargs and &#39;extrinsic&#39; in kwargs[&#39;metadata&#39;][1][1]:
+
+            # Process signed extensions in metadata
+            signed_extensions = kwargs[&#39;metadata&#39;].get_signed_extensions()
+
+            if len(signed_extensions) &gt; 0:
+                # Build type mapping according to signed extensions in metadata
+                self.type_mapping = [[&#39;address&#39;, &#39;Address&#39;], [&#39;signature&#39;, &#39;ExtrinsicSignature&#39;]]
+
+                if &#39;CheckMortality&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;era&#39;, signed_extensions[&#39;CheckMortality&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;CheckEra&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;era&#39;, signed_extensions[&#39;CheckEra&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;CheckNonce&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;nonce&#39;, signed_extensions[&#39;CheckNonce&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;ChargeTransactionPayment&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;tip&#39;, signed_extensions[&#39;ChargeTransactionPayment&#39;][&#39;extrinsic&#39;]])
+
+                if &#39;ChargeAssetTxPayment&#39; in signed_extensions:
+                    self.type_mapping.append([&#39;asset_id&#39;, signed_extensions[&#39;ChargeAssetTxPayment&#39;][&#39;extrinsic&#39;]])
+
+                self.type_mapping.append([&#39;call&#39;, &#39;Call&#39;])
+
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericExtrinsicV4.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="scalecodec.types.GenericField"><code class="flex name class">
 <span>class <span class="ident">GenericField</span></span>
 <span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
@@ -6964,6 +7742,18 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GenericField(Struct):
+
+    @property
+    def name(self):
+        return self.value[&#39;name&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;docs&#39;]
+
+    @property
+    def type(self):
+        return self.get_type_string()
 
     def get_type_string(self):
         return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;
@@ -6992,6 +7782,45 @@ inheritance.</p>
 <dt id="scalecodec.types.GenericField.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericField.docs"><code class="name">var <span class="ident">docs</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def docs(self):
+    return self.value[&#39;docs&#39;]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericField.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def name(self):
+    return self.value[&#39;name&#39;]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericField.type"><code class="name">var <span class="ident">type</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def type(self):
+    return self.get_type_string()</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -7606,7 +8435,12 @@ inheritance.</p>
         return self.value_object[1].event_index
 
     def get_module_error(self, module_index, error_index):
-        return self.value_object[1].error_index.get(f&#39;{module_index}-{error_index}&#39;)
+        if self.portable_registry:
+            for module in self.pallets:
+                if module[&#39;index&#39;] == module_index and module.errors:
+                    return module.errors[error_index]
+        else:
+            return self.value_object[1].error_index.get(f&#39;{module_index}-{error_index}&#39;)
 
     def get_metadata(self):
         return self.value_object[1]
@@ -7619,34 +8453,52 @@ inheritance.</p>
     def pallets(self):
         return self.value_object[1].pallets
 
-    def process(self):
-        value = super().process()
-
-        # # Create error index
-        # if self.index &gt;= 12:
-        #     for module in self.metadata.modules:
-        #         if len(module.errors or []) &gt; 0:
-        #             for idx, error in enumerate(module.errors):
-        #                 self.error_index[f&#39;{module.index}-{idx}&#39;] = error
-        # else:
-        #     error_module_index = 0
-        #     for module in self.metadata.modules:
-        #         if len(module.errors or []) &gt; 0:
-        #             for idx, error in enumerate(module.errors):
-        #                 self.error_index[f&#39;{error_module_index}-{idx}&#39;] = error
-        #             error_module_index += 1
-
-        return value
-
     def get_metadata_pallet(self, name: str) -&gt; &#39;GenericPalletMetadata&#39;:
         metadata = self.get_metadata()
         return metadata.get_metadata_pallet(name)
 
     def get_pallet_by_index(self, index: int):
-        try:
-            return self.pallets[index]
-        except IndexError:
-            raise ValueError(f&#39;Pallet for index &#34;{index}&#34; not found&#39;)</code></pre>
+
+        for pallet in self.pallets:
+            if pallet.value[&#39;index&#39;] == index:
+                return pallet
+
+        raise ValueError(f&#39;Pallet for index &#34;{index}&#34; not found&#39;)
+
+    def get_signed_extensions(self):
+
+        signed_extensions = {}
+
+        if self.portable_registry:
+            for se in self.value_object[1][1][&#39;extrinsic&#39;][&#39;signed_extensions&#39;].value:
+                signed_extensions[se[&#39;identifier&#39;]] = {
+                    &#39;extrinsic&#39;: f&#34;scale_info::{se[&#39;ty&#39;]}&#34;,
+                    &#39;additional_signed&#39;: f&#34;scale_info::{se[&#39;additional_signed&#39;]}&#34;
+                }
+        else:
+            extension_def = {
+                &#39;CheckMortality&#39;: {&#39;extrinsic&#39;: &#34;Era&#34;, &#39;additional_signed&#39;: &#34;Hash&#34;},
+                &#39;CheckEra&#39;: {&#39;extrinsic&#39;: &#34;Era&#34;, &#39;additional_signed&#39;: &#34;Hash&#34;},
+                &#39;CheckNonce&#39;: {&#39;extrinsic&#39;: &#34;Compact&lt;Index&gt;&#34;, &#39;additional_signed&#39;: None},
+                &#39;ChargeTransactionPayment&#39;: {&#39;extrinsic&#39;: &#34;Compact&lt;Balance&gt;&#34;, &#39;additional_signed&#39;: None},
+                &#39;CheckSpecVersion&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;u32&#39;},
+                &#39;CheckTxVersion&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;u32&#39;},
+                &#39;CheckGenesis&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;Hash&#39;},
+                &#39;CheckWeight&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;ValidateEquivocationReport&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;LockStakingStatus&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;CheckBlockGasLimit&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;RestrictFunctionality&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;LimitParathreadCommits&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+                &#39;ChargeAssetTxPayment&#39;: {&#39;extrinsic&#39;: &#39;Option&lt;AssetId&gt;&#39;, &#39;additional_signed&#39;: None}
+            }
+            if &#39;extrinsic&#39; in self.value_object[1][1]:
+                for se in self.value_object[1][1][&#39;extrinsic&#39;][&#39;signed_extensions&#39;].value:
+                    if se not in extension_def:
+                        extension_def[se] = {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None}
+                    signed_extensions[se] = extension_def[se]
+
+        return signed_extensions</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7752,7 +8604,12 @@ def portable_registry(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_module_error(self, module_index, error_index):
-    return self.value_object[1].error_index.get(f&#39;{module_index}-{error_index}&#39;)</code></pre>
+    if self.portable_registry:
+        for module in self.pallets:
+            if module[&#39;index&#39;] == module_index and module.errors:
+                return module.errors[error_index]
+    else:
+        return self.value_object[1].error_index.get(f&#39;{module_index}-{error_index}&#39;)</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericMetadataVersioned.get_pallet_by_index"><code class="name flex">
@@ -7765,14 +8622,16 @@ def portable_registry(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_pallet_by_index(self, index: int):
-    try:
-        return self.pallets[index]
-    except IndexError:
-        raise ValueError(f&#39;Pallet for index &#34;{index}&#34; not found&#39;)</code></pre>
+
+    for pallet in self.pallets:
+        if pallet.value[&#39;index&#39;] == index:
+            return pallet
+
+    raise ValueError(f&#39;Pallet for index &#34;{index}&#34; not found&#39;)</code></pre>
 </details>
 </dd>
-<dt id="scalecodec.types.GenericMetadataVersioned.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self)</span>
+<dt id="scalecodec.types.GenericMetadataVersioned.get_signed_extensions"><code class="name flex">
+<span>def <span class="ident">get_signed_extensions</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -7780,24 +8639,40 @@ def portable_registry(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self):
-    value = super().process()
+<pre><code class="python">def get_signed_extensions(self):
 
-    # # Create error index
-    # if self.index &gt;= 12:
-    #     for module in self.metadata.modules:
-    #         if len(module.errors or []) &gt; 0:
-    #             for idx, error in enumerate(module.errors):
-    #                 self.error_index[f&#39;{module.index}-{idx}&#39;] = error
-    # else:
-    #     error_module_index = 0
-    #     for module in self.metadata.modules:
-    #         if len(module.errors or []) &gt; 0:
-    #             for idx, error in enumerate(module.errors):
-    #                 self.error_index[f&#39;{error_module_index}-{idx}&#39;] = error
-    #             error_module_index += 1
+    signed_extensions = {}
 
-    return value</code></pre>
+    if self.portable_registry:
+        for se in self.value_object[1][1][&#39;extrinsic&#39;][&#39;signed_extensions&#39;].value:
+            signed_extensions[se[&#39;identifier&#39;]] = {
+                &#39;extrinsic&#39;: f&#34;scale_info::{se[&#39;ty&#39;]}&#34;,
+                &#39;additional_signed&#39;: f&#34;scale_info::{se[&#39;additional_signed&#39;]}&#34;
+            }
+    else:
+        extension_def = {
+            &#39;CheckMortality&#39;: {&#39;extrinsic&#39;: &#34;Era&#34;, &#39;additional_signed&#39;: &#34;Hash&#34;},
+            &#39;CheckEra&#39;: {&#39;extrinsic&#39;: &#34;Era&#34;, &#39;additional_signed&#39;: &#34;Hash&#34;},
+            &#39;CheckNonce&#39;: {&#39;extrinsic&#39;: &#34;Compact&lt;Index&gt;&#34;, &#39;additional_signed&#39;: None},
+            &#39;ChargeTransactionPayment&#39;: {&#39;extrinsic&#39;: &#34;Compact&lt;Balance&gt;&#34;, &#39;additional_signed&#39;: None},
+            &#39;CheckSpecVersion&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;u32&#39;},
+            &#39;CheckTxVersion&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;u32&#39;},
+            &#39;CheckGenesis&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: &#39;Hash&#39;},
+            &#39;CheckWeight&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+            &#39;ValidateEquivocationReport&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+            &#39;LockStakingStatus&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+            &#39;CheckBlockGasLimit&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+            &#39;RestrictFunctionality&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+            &#39;LimitParathreadCommits&#39;: {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None},
+            &#39;ChargeAssetTxPayment&#39;: {&#39;extrinsic&#39;: &#39;Option&lt;AssetId&gt;&#39;, &#39;additional_signed&#39;: None}
+        }
+        if &#39;extrinsic&#39; in self.value_object[1][1]:
+            for se in self.value_object[1][1][&#39;extrinsic&#39;][&#39;signed_extensions&#39;].value:
+                if se not in extension_def:
+                    extension_def[se] = {&#39;extrinsic&#39;: None, &#39;additional_signed&#39;: None}
+                signed_extensions[se] = extension_def[se]
+
+    return signed_extensions</code></pre>
 </details>
 </dd>
 </dl>
@@ -8158,18 +9033,10 @@ inheritance.</p>
 
     @property
     def events(self):
+        events = self.value_object[&#39;events&#39;].value_object
 
-        if &#39;event&#39; in self.value_object:
-            if self.value_object[&#39;event&#39;].value_object:
-                return self.value_object[&#39;event&#39;].value_object.value[&#39;ty&#39;]
-        elif &#39;events&#39; in self.value_object:
-
-            events = self.value_object[&#39;events&#39;].value_object
-
-            if events:
-                return events.value_object
-        else:
-            raise ValueError(&#39;Events not present in pallet&#39;)
+        if events:
+            return events.value_object
 
     @property
     def constants(self):
@@ -8177,15 +9044,7 @@ inheritance.</p>
 
     @property
     def errors(self):
-        if &#39;error&#39; in self.value_object:
-            if self.value_object[&#39;error&#39;].value_object:
-                return self.value_object[&#39;error&#39;].value_object.value[&#39;ty&#39;]
-
-        elif &#39;errors&#39; in self.value_object:
-            return self.value_object[&#39;errors&#39;].value_object
-
-        else:
-            raise ValueError(&#39;Events not present in pallet&#39;)
+        return self.value_object[&#39;errors&#39;].value_object
 
     def get_storage_function(self, name: str):
         storage_functions = self.value_object[&#39;storage&#39;].value_object
@@ -8201,6 +9060,10 @@ inheritance.</p>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.ScaleInfoPalletMetadata" href="#scalecodec.types.ScaleInfoPalletMetadata">ScaleInfoPalletMetadata</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8244,15 +9107,7 @@ def constants(self):
 </summary>
 <pre><code class="python">@property
 def errors(self):
-    if &#39;error&#39; in self.value_object:
-        if self.value_object[&#39;error&#39;].value_object:
-            return self.value_object[&#39;error&#39;].value_object.value[&#39;ty&#39;]
-
-    elif &#39;errors&#39; in self.value_object:
-        return self.value_object[&#39;errors&#39;].value_object
-
-    else:
-        raise ValueError(&#39;Events not present in pallet&#39;)</code></pre>
+    return self.value_object[&#39;errors&#39;].value_object</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericPalletMetadata.events"><code class="name">var <span class="ident">events</span></code></dt>
@@ -8264,18 +9119,10 @@ def errors(self):
 </summary>
 <pre><code class="python">@property
 def events(self):
+    events = self.value_object[&#39;events&#39;].value_object
 
-    if &#39;event&#39; in self.value_object:
-        if self.value_object[&#39;event&#39;].value_object:
-            return self.value_object[&#39;event&#39;].value_object.value[&#39;ty&#39;]
-    elif &#39;events&#39; in self.value_object:
-
-        events = self.value_object[&#39;events&#39;].value_object
-
-        if events:
-            return events.value_object
-    else:
-        raise ValueError(&#39;Events not present in pallet&#39;)</code></pre>
+    if events:
+        return events.value_object</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericPalletMetadata.name"><code class="name">var <span class="ident">name</span></code></dt>
@@ -8397,8 +9244,8 @@ inheritance.</p>
                 babe_predigest_value = list(babe_predigest.value.values())[0]
 
                 value[&#39;data&#39;] = babe_predigest_value
-                self.authority_index = babe_predigest_value[&#39;authorityIndex&#39;]
-                self.slot_number = babe_predigest_value[&#39;slotNumber&#39;]
+                self.authority_index = babe_predigest_value[&#39;authority_index&#39;]
+                self.slot_number = babe_predigest_value[&#39;slot_number&#39;]
 
         if value[&#39;engine&#39;] == &#39;aura&#39;:
 
@@ -8409,7 +9256,7 @@ inheritance.</p>
             aura_predigest.decode()
 
             value[&#39;data&#39;] = aura_predigest.value
-            self.slot_number = aura_predigest.value[&#39;slotNumber&#39;]
+            self.slot_number = aura_predigest.value[&#39;slot_number&#39;]
 
         return value</code></pre>
 </details>
@@ -8459,8 +9306,8 @@ inheritance.</p>
             babe_predigest_value = list(babe_predigest.value.values())[0]
 
             value[&#39;data&#39;] = babe_predigest_value
-            self.authority_index = babe_predigest_value[&#39;authorityIndex&#39;]
-            self.slot_number = babe_predigest_value[&#39;slotNumber&#39;]
+            self.authority_index = babe_predigest_value[&#39;authority_index&#39;]
+            self.slot_number = babe_predigest_value[&#39;slot_number&#39;]
 
     if value[&#39;engine&#39;] == &#39;aura&#39;:
 
@@ -8471,7 +9318,7 @@ inheritance.</p>
         aura_predigest.decode()
 
         value[&#39;data&#39;] = aura_predigest.value
-        self.slot_number = aura_predigest.value[&#39;slotNumber&#39;]
+        self.slot_number = aura_predigest.value[&#39;slot_number&#39;]
 
     return value</code></pre>
 </details>
@@ -8524,7 +9371,36 @@ inheritance.</p>
         if &#39;docs&#39; not in value:
             value[&#39;docs&#39;] = []
 
-        return super().process_encode(value)</code></pre>
+        return super().process_encode(value)
+
+    def retrieve_type_decomposition(self):
+        if &#39;variant&#39; in self.value[&#39;def&#39;]:
+            for variant in self.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]:
+                for field in variant[&#39;fields&#39;]:
+                    field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
+                    variant[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;composite&#39; in self.value[&#39;def&#39;]:
+            for field in self.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]:
+                field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
+                field[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;array&#39; in self.value[&#39;def&#39;]:
+            type_def = self.value[&#39;def&#39;][&#39;array&#39;]
+            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
+            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;sequence&#39; in self.value[&#39;def&#39;]:
+            type_def = self.value[&#39;def&#39;][&#39;sequence&#39;]
+            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
+            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+        elif &#39;tuple&#39; in self.value[&#39;def&#39;]:
+            for idx, type_def in self.value[&#39;def&#39;][&#39;tuple&#39;]:
+                element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def}&#34;)
+                self.value[&#39;def&#39;][&#39;tuple&#39;][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
+
+        return self.value[&#39;def&#39;]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8579,6 +9455,45 @@ def docs(self):
     return super().process_encode(value)</code></pre>
 </details>
 </dd>
+<dt id="scalecodec.types.GenericRegistryType.retrieve_type_decomposition"><code class="name flex">
+<span>def <span class="ident">retrieve_type_decomposition</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def retrieve_type_decomposition(self):
+    if &#39;variant&#39; in self.value[&#39;def&#39;]:
+        for variant in self.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]:
+            for field in variant[&#39;fields&#39;]:
+                field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
+                variant[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+    elif &#39;composite&#39; in self.value[&#39;def&#39;]:
+        for field in self.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]:
+            field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
+            field[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
+
+    elif &#39;array&#39; in self.value[&#39;def&#39;]:
+        type_def = self.value[&#39;def&#39;][&#39;array&#39;]
+        array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
+        type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+    elif &#39;sequence&#39; in self.value[&#39;def&#39;]:
+        type_def = self.value[&#39;def&#39;][&#39;sequence&#39;]
+        array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
+        type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
+
+    elif &#39;tuple&#39; in self.value[&#39;def&#39;]:
+        for idx, type_def in self.value[&#39;def&#39;][&#39;tuple&#39;]:
+            element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def}&#34;)
+            self.value[&#39;def&#39;][&#39;tuple&#39;][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
+
+    return self.value[&#39;def&#39;]</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -8631,7 +9546,7 @@ inheritance.</p>
             &#39;event_index&#39;: self.event_index,
             &#39;module_id&#39;: self.value_object[0],
             &#39;event_id&#39;: self.value_object[1][0],
-            &#39;attributes&#39;: self.value_object[1][1].value,
+            &#39;attributes&#39;: self.value_object[1][1].value if self.value_object[1][1] else None,
         }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8669,7 +9584,7 @@ inheritance.</p>
         &#39;event_index&#39;: self.event_index,
         &#39;module_id&#39;: self.value_object[0],
         &#39;event_id&#39;: self.value_object[1][0],
-        &#39;attributes&#39;: self.value_object[1][1].value,
+        &#39;attributes&#39;: self.value_object[1][1].value if self.value_object[1][1] else None,
     }</code></pre>
 </details>
 </dd>
@@ -8828,8 +9743,16 @@ inheritance.</p>
         return self.value[&#39;name&#39;]
 
     @property
+    def modifier(self):
+        return self.value[&#39;modifier&#39;]
+
+    @property
     def type(self):
         return self.value[&#39;type&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;documentation&#39;]
 
     def get_type_string_for_type(self, ty):
         return self.convert_type(ty)
@@ -8869,12 +9792,15 @@ inheritance.</p>
         elif &#39;DoubleMap&#39; in self.value[&#39;type&#39;]:
             return [
                 self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;hasher&#39;],
-                self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;key2Hasher&#39;]
+                self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;key2_hasher&#39;]
             ]
         elif &#39;NMap&#39; in self.value[&#39;type&#39;]:
             return self.value[&#39;type&#39;][&#39;NMap&#39;][&#39;hashers&#39;]
         else:
-            raise NotImplementedError()</code></pre>
+            raise NotImplementedError()
+
+    def get_param_info(self) -&gt; list:
+        raise NotImplementedError()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8896,6 +9822,30 @@ inheritance.</p>
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="scalecodec.types.GenericStorageEntryMetadata.docs"><code class="name">var <span class="ident">docs</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def docs(self):
+    return self.value[&#39;documentation&#39;]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericStorageEntryMetadata.modifier"><code class="name">var <span class="ident">modifier</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def modifier(self):
+    return self.value[&#39;modifier&#39;]</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.types.GenericStorageEntryMetadata.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -8940,12 +9890,25 @@ def type(self):
     elif &#39;DoubleMap&#39; in self.value[&#39;type&#39;]:
         return [
             self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;hasher&#39;],
-            self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;key2Hasher&#39;]
+            self.value[&#39;type&#39;][&#39;DoubleMap&#39;][&#39;key2_hasher&#39;]
         ]
     elif &#39;NMap&#39; in self.value[&#39;type&#39;]:
         return self.value[&#39;type&#39;][&#39;NMap&#39;][&#39;hashers&#39;]
     else:
         raise NotImplementedError()</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericStorageEntryMetadata.get_param_info"><code class="name flex">
+<span>def <span class="ident">get_param_info</span></span>(<span>self) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_param_info(self) -&gt; list:
+    raise NotImplementedError()</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericStorageEntryMetadata.get_params_type_string"><code class="name flex">
@@ -9014,6 +9977,89 @@ def type(self):
 <li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.GenericStringType"><code class="flex name class">
+<span>class <span class="ident">GenericStringType</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, runtime_config=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericStringType(String):
+    @property
+    def name(self):
+        return None
+
+    @property
+    def type(self):
+        return self.value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.String" href="#scalecodec.types.String">String</a></li>
+<li><a title="scalecodec.types.Str" href="#scalecodec.types.Str">Str</a></li>
+<li><a title="scalecodec.types.Bytes" href="#scalecodec.types.Bytes">Bytes</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericStringType.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericStringType.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def name(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericStringType.type"><code class="name">var <span class="ident">type</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def type(self):
+    return self.value</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.String" href="#scalecodec.types.String">String</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.String.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -9230,8 +10276,33 @@ inheritance.</p>
 <pre><code class="python">class GenericVariant(Struct):
 
     @property
+    def args(self):
+        return self.value_object[&#39;fields&#39;]
+
+    def get_param_info(self) -&gt; dict:
+        &#34;&#34;&#34;
+        Generates a dictionary of all possible params with their decomposition information
+
+        Returns
+        -------
+        dict
+        &#34;&#34;&#34;
+        param_info = {}
+
+        for arg in self.args:
+            param_type_obj = self.runtime_config.create_scale_object(arg.type)
+
+            param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+
+        return param_info
+
+    @property
     def name(self):
         return self.value[&#39;name&#39;]
+
+    @property
+    def docs(self):
+        return self.value[&#39;docs&#39;]
 
     def process_encode(self, value):
         if &#39;index&#39; not in value:
@@ -9264,6 +10335,30 @@ inheritance.</p>
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="scalecodec.types.GenericVariant.args"><code class="name">var <span class="ident">args</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def args(self):
+    return self.value_object[&#39;fields&#39;]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericVariant.docs"><code class="name">var <span class="ident">docs</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def docs(self):
+    return self.value[&#39;docs&#39;]</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.types.GenericVariant.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -9279,6 +10374,38 @@ def name(self):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="scalecodec.types.GenericVariant.get_param_info"><code class="name flex">
+<span>def <span class="ident">get_param_info</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates a dictionary of all possible params with their decomposition information</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_param_info(self) -&gt; dict:
+    &#34;&#34;&#34;
+    Generates a dictionary of all possible params with their decomposition information
+
+    Returns
+    -------
+    dict
+    &#34;&#34;&#34;
+    param_info = {}
+
+    for arg in self.args:
+        param_type_obj = self.runtime_config.create_scale_object(arg.type)
+
+        param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+
+    return param_info</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.types.GenericVariant.process_encode"><code class="name flex">
 <span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
 </code></dt>
@@ -9490,6 +10617,10 @@ inheritance.</p>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.GenericEthereumAccountId" href="#scalecodec.types.GenericEthereumAccountId">GenericEthereumAccountId</a></li>
+</ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="scalecodec.types.H160.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
@@ -9653,9 +10784,14 @@ inheritance.</p>
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(64).hex())
 
-    def process_encode(self, value):
-        if value[0:2] != &#39;0x&#39; or len(value) != 130:
+    def process_encode(self, value: Union[str, bytes]):
+
+        if type(value) is bytes and len(value) != 64:
+            raise ValueError(&#39;Value should be 64 bytes long&#39;)
+
+        if type(value) is str and (value[0:2] != &#39;0x&#39; or len(value) != 130):
             raise ValueError(&#39;Value should start with &#34;0x&#34; and should be 64 bytes long&#39;)
+
         return ScaleBytes(value)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9687,7 +10823,7 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scalecodec.types.H512.process_encode"><code class="name flex">
-<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+<span>def <span class="ident">process_encode</span></span>(<span>self, value: Union[str, bytes])</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -9695,9 +10831,14 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process_encode(self, value):
-    if value[0:2] != &#39;0x&#39; or len(value) != 130:
+<pre><code class="python">def process_encode(self, value: Union[str, bytes]):
+
+    if type(value) is bytes and len(value) != 64:
+        raise ValueError(&#39;Value should be 64 bytes long&#39;)
+
+    if type(value) is str and (value[0:2] != &#39;0x&#39; or len(value) != 130):
         raise ValueError(&#39;Value should start with &#34;0x&#34; and should be 64 bytes long&#39;)
+
     return ScaleBytes(value)</code></pre>
 </details>
 </dd>
@@ -10429,6 +11570,7 @@ inheritance.</p>
     value_list = [&#39;Other&#39;, &#39;AuthoritiesChange&#39;, &#39;ChangesTrieRoot&#39;, &#39;SealV0&#39;, &#39;Consensus&#39;, &#39;Seal&#39;, &#39;PreRuntime&#39;]
 
     def __init__(self, data, **kwargs):
+        warnings.warn(&#34;LogDigest will be removed in future releases&#34;, DeprecationWarning)
         self.log_type = None
         self.index_value = None
         super().__init__(data, **kwargs)
@@ -10514,20 +11656,33 @@ inheritance.</p>
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        sub_type_parts = [x.strip() for x in self.sub_type.split(&#39;,&#39;)]
-        self.map_key = sub_type_parts[0]
-        self.map_value = sub_type_parts[1]
+        self.map_key = None
+        self.map_value = None
+
+        if self.sub_type:
+            sub_type_parts = [x.strip() for x in self.sub_type.split(&#39;,&#39;)]
+            self.map_key = sub_type_parts[0]
+            self.map_value = sub_type_parts[1]
 
     def process(self):
 
-        element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+        if self.map_key and self.map_value:
 
-        result = []
-        for _ in range(0, element_count):
-            key_value = self.process_type(self.map_key, metadata=self.metadata).value
-            result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+            element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
 
-        return result
+            result = []
+            for _ in range(0, element_count):
+                key_value = self.process_type(self.map_key, metadata=self.metadata).value
+                result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+
+            return result
+
+        elif self.type_mapping:
+            self.value_object = self.process_type(self.type_mapping[0], metadata=self.metadata)
+            return self.value_object.value
+
+        else:
+            raise ValueError(&#39;sub_type or type_mapping should be set to process a Map&#39;)
 
     def process_encode(self, value):
 
@@ -10584,14 +11739,23 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def process(self):
 
-    element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
+    if self.map_key and self.map_value:
 
-    result = []
-    for _ in range(0, element_count):
-        key_value = self.process_type(self.map_key, metadata=self.metadata).value
-        result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+        element_count = self.process_type(&#39;Compact&lt;u32&gt;&#39;).value
 
-    return result</code></pre>
+        result = []
+        for _ in range(0, element_count):
+            key_value = self.process_type(self.map_key, metadata=self.metadata).value
+            result.append((key_value, self.process_type(self.map_value, metadata=self.metadata).value))
+
+        return result
+
+    elif self.type_mapping:
+        self.value_object = self.process_type(self.type_mapping[0], metadata=self.metadata)
+        return self.value_object.value
+
+    else:
+        raise ValueError(&#39;sub_type or type_mapping should be set to process a Map&#39;)</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.Map.process_encode"><code class="name flex">
@@ -10861,7 +12025,7 @@ inheritance.</p>
         try:
             call_obj = self.runtime_config.create_scale_object(
                 type_string=&#39;Call&#39;,
-                data=ScaleBytes(&#39;0x{}&#39;.format(self.raw_value)),
+                data=ScaleBytes(value),
                 metadata=self.metadata
             )
 
@@ -10899,7 +12063,7 @@ inheritance.</p>
     try:
         call_obj = self.runtime_config.create_scale_object(
             type_string=&#39;Call&#39;,
-            data=ScaleBytes(&#39;0x{}&#39;.format(self.raw_value)),
+            data=ScaleBytes(value),
             metadata=self.metadata
         )
 
@@ -10976,8 +12140,8 @@ inheritance.</p>
         return ScaleBytes(&#39;0x00&#39;)
 
     @classmethod
-    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
-        cls.sub_type = f&#34;scale_info::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
+    def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+        cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -10995,7 +12159,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Option.process_scale_info_definition"><code class="name flex">
-<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>)</span>
+<span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -11004,8 +12168,8 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;):
-    cls.sub_type = f&#34;scale_info::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
+def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
+    cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -11318,6 +12482,95 @@ inheritance.</p>
 </li>
 </ul>
 </dd>
+<dt id="scalecodec.types.RawBytes"><code class="flex name class">
+<span>class <span class="ident">RawBytes</span></span>
+<span>(</span><span>data=None, sub_type=None, metadata=None, runtime_config=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RawBytes(ScaleType):
+
+    type_string = &#39;&amp;[u8]&#39;
+
+    def process(self):
+        self.value_object = self.get_remaining_bytes()
+        return f&#39;0x{self.value_object.hex()}&#39;
+
+    def process_encode(self, value):
+        return ScaleBytes(bytes.fromhex(value[2:]))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.RawBytes.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scalecodec.types.RawBytes.type_string"><code class="name">var <span class="ident">type_string</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.RawBytes.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    self.value_object = self.get_remaining_bytes()
+    return f&#39;0x{self.value_object.hex()}&#39;</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.RawBytes.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value):
+    return ScaleBytes(bytes.fromhex(value[2:]))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="scalecodec.types.ScaleInfoCallMetadata"><code class="flex name class">
 <span>class <span class="ident">ScaleInfoCallMetadata</span></span>
 <span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
@@ -11343,7 +12596,17 @@ inheritance.</p>
 <pre><code class="python">class ScaleInfoCallMetadata(Struct):
 
     def get_type_string(self):
-        return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;</code></pre>
+        return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;
+
+    @property
+    def calls(self):
+        if self.value_object:
+            call_enum = self.runtime_config.get_decoder_class(
+                self.get_type_string()
+            )
+            return call_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+        else:
+            return []</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -11357,6 +12620,27 @@ inheritance.</p>
 <dt id="scalecodec.types.ScaleInfoCallMetadata.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoCallMetadata.calls"><code class="name">var <span class="ident">calls</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def calls(self):
+    if self.value_object:
+        call_enum = self.runtime_config.get_decoder_class(
+            self.get_type_string()
+        )
+        return call_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+    else:
+        return []</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -11410,7 +12694,10 @@ inheritance.</p>
 
     @property
     def type(self):
-        return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;</code></pre>
+        if self.value.get(&#39;typeName&#39;):
+            return self.value.get(&#39;typeName&#39;)
+        else:
+            return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -11438,7 +12725,10 @@ inheritance.</p>
 </summary>
 <pre><code class="python">@property
 def type(self):
-    return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;</code></pre>
+    if self.value.get(&#39;typeName&#39;):
+        return self.value.get(&#39;typeName&#39;)
+    else:
+        return f&#34;scale_info::{self.value[&#39;type&#39;]}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -11518,6 +12808,307 @@ def type(self):
 </li>
 </ul>
 </dd>
+<dt id="scalecodec.types.ScaleInfoPalletErrorMetadata"><code class="flex name class">
+<span>class <span class="ident">ScaleInfoPalletErrorMetadata</span></span>
+<span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScaleInfoPalletErrorMetadata(Struct):
+    def get_type_string(self):
+        return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;
+
+    @property
+    def errors(self):
+        if self.value_object:
+            error_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return error_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+        else:
+            return []</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletErrorMetadata.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletErrorMetadata.errors"><code class="name">var <span class="ident">errors</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def errors(self):
+    if self.value_object:
+        error_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+        return error_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+    else:
+        return []</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletErrorMetadata.get_type_string"><code class="name flex">
+<span>def <span class="ident">get_type_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_type_string(self):
+    return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.ScaleInfoPalletEventMetadata"><code class="flex name class">
+<span>class <span class="ident">ScaleInfoPalletEventMetadata</span></span>
+<span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScaleInfoPalletEventMetadata(Struct):
+    def get_type_string(self):
+        return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;
+
+    @property
+    def events(self):
+        if self.value_object:
+            event_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+            return event_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+        else:
+            return []</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletEventMetadata.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletEventMetadata.events"><code class="name">var <span class="ident">events</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def events(self):
+    if self.value_object:
+        event_enum = self.runtime_config.get_decoder_class(self.get_type_string())
+        return event_enum.scale_info_type[&#39;def&#39;][1][&#39;variants&#39;]
+    else:
+        return []</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletEventMetadata.get_type_string"><code class="name flex">
+<span>def <span class="ident">get_type_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_type_string(self):
+    return f&#34;scale_info::{self.value[&#39;ty&#39;]}&#34;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.ScaleInfoPalletMetadata"><code class="flex name class">
+<span>class <span class="ident">ScaleInfoPalletMetadata</span></span>
+<span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScaleInfoPalletMetadata(GenericPalletMetadata):
+
+    @property
+    def calls(self):
+        if self.value_object[&#39;calls&#39;].value_object:
+            return self.value_object[&#39;calls&#39;].value_object.calls
+        else:
+            return []
+
+    @property
+    def events(self):
+        if self.value_object[&#39;event&#39;].value_object:
+            return self.value_object[&#39;event&#39;].value_object.events
+        else:
+            return []
+
+    @property
+    def errors(self):
+        if self.value_object[&#39;error&#39;].value_object:
+            return self.value_object[&#39;error&#39;].value_object.errors
+        else:
+            return []</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.GenericPalletMetadata" href="#scalecodec.types.GenericPalletMetadata">GenericPalletMetadata</a></li>
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletMetadata.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.ScaleInfoPalletMetadata.calls"><code class="name">var <span class="ident">calls</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def calls(self):
+    if self.value_object[&#39;calls&#39;].value_object:
+        return self.value_object[&#39;calls&#39;].value_object.calls
+    else:
+        return []</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoPalletMetadata.errors"><code class="name">var <span class="ident">errors</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def errors(self):
+    if self.value_object[&#39;error&#39;].value_object:
+        return self.value_object[&#39;error&#39;].value_object.errors
+    else:
+        return []</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoPalletMetadata.events"><code class="name">var <span class="ident">events</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def events(self):
+    if self.value_object[&#39;event&#39;].value_object:
+        return self.value_object[&#39;event&#39;].value_object.events
+    else:
+        return []</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.GenericPalletMetadata" href="#scalecodec.types.GenericPalletMetadata">GenericPalletMetadata</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.GenericPalletMetadata.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="scalecodec.types.ScaleInfoStorageEntryMetadata"><code class="flex name class">
 <span>class <span class="ident">ScaleInfoStorageEntryMetadata</span></span>
 <span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
@@ -11543,7 +13134,58 @@ inheritance.</p>
 <pre><code class="python">class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
 
     def get_type_string_for_type(self, ty):
-        return f&#39;scale_info::{ty}&#39;</code></pre>
+        return f&#39;scale_info::{ty}&#39;
+
+    def get_value_type_string(self):
+        if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+            return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Plain&#39;])
+        elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+            return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;value&#39;])
+        else:
+            raise NotImplementedError()
+
+    def get_key_type_string(self):
+        if &#39;Map&#39; in self.value[&#39;type&#39;]:
+            return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+
+    def get_params_type_string(self):
+        if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+            return []
+        elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+            key_type_string = self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            if nmap_key_scale_type.type_mapping and nmap_key_scale_type.scale_info_type[&#39;def&#39;][0] == &#39;tuple&#39; and \
+                    len(self.get_param_hashers()) &gt; 1:
+                # In case of tuple and multiple param hashers extract type_mapping as separate parameters
+                return nmap_key_scale_type.type_mapping
+            else:
+                return [key_type_string]
+        else:
+            raise NotImplementedError()
+
+    def get_key_scale_info_definition(self):
+        if &#39;Map&#39; in self.value[&#39;type&#39;]:
+            key_type_string = self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+            nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+            return nmap_key_scale_type.scale_info_type[&#39;def&#39;][0]
+
+    def get_param_hashers(self):
+        if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+            return [&#39;Twox64Concat&#39;]
+        elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+            return self.value[&#39;type&#39;][&#39;Map&#39;][&#39;hashers&#39;]
+        else:
+            raise NotImplementedError()
+
+    def get_param_info(self) -&gt; list:
+        param_info = []
+        for param_type_string in self.get_params_type_string():
+            scale_type = self.runtime_config.create_scale_object(param_type_string)
+            param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+
+        return param_info</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -11562,6 +13204,99 @@ inheritance.</p>
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_key_scale_info_definition"><code class="name flex">
+<span>def <span class="ident">get_key_scale_info_definition</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_key_scale_info_definition(self):
+    if &#39;Map&#39; in self.value[&#39;type&#39;]:
+        key_type_string = self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+        nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+        return nmap_key_scale_type.scale_info_type[&#39;def&#39;][0]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_key_type_string"><code class="name flex">
+<span>def <span class="ident">get_key_type_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_key_type_string(self):
+    if &#39;Map&#39; in self.value[&#39;type&#39;]:
+        return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_param_hashers"><code class="name flex">
+<span>def <span class="ident">get_param_hashers</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_param_hashers(self):
+    if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+        return [&#39;Twox64Concat&#39;]
+    elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+        return self.value[&#39;type&#39;][&#39;Map&#39;][&#39;hashers&#39;]
+    else:
+        raise NotImplementedError()</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_param_info"><code class="name flex">
+<span>def <span class="ident">get_param_info</span></span>(<span>self) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_param_info(self) -&gt; list:
+    param_info = []
+    for param_type_string in self.get_params_type_string():
+        scale_type = self.runtime_config.create_scale_object(param_type_string)
+        param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+
+    return param_info</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_params_type_string"><code class="name flex">
+<span>def <span class="ident">get_params_type_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_params_type_string(self):
+    if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+        return []
+    elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+        key_type_string = self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;key&#39;])
+        nmap_key_scale_type = self.runtime_config.get_decoder_class(key_type_string)
+
+        if nmap_key_scale_type.type_mapping and nmap_key_scale_type.scale_info_type[&#39;def&#39;][0] == &#39;tuple&#39; and \
+                len(self.get_param_hashers()) &gt; 1:
+            # In case of tuple and multiple param hashers extract type_mapping as separate parameters
+            return nmap_key_scale_type.type_mapping
+        else:
+            return [key_type_string]
+    else:
+        raise NotImplementedError()</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_type_string_for_type"><code class="name flex">
 <span>def <span class="ident">get_type_string_for_type</span></span>(<span>self, ty)</span>
 </code></dt>
@@ -11573,6 +13308,24 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def get_type_string_for_type(self, ty):
     return f&#39;scale_info::{ty}&#39;</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.ScaleInfoStorageEntryMetadata.get_value_type_string"><code class="name flex">
+<span>def <span class="ident">get_value_type_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_value_type_string(self):
+    if &#39;Plain&#39; in self.value[&#39;type&#39;]:
+        return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Plain&#39;])
+    elif &#39;Map&#39; in self.value[&#39;type&#39;]:
+        return self.get_type_string_for_type(self.value[&#39;type&#39;][&#39;Map&#39;][&#39;value&#39;])
+    else:
+        raise NotImplementedError()</code></pre>
 </details>
 </dd>
 </dl>
@@ -11919,6 +13672,10 @@ inheritance.</p>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.String" href="#scalecodec.types.String">String</a></li>
+</ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="scalecodec.types.Str.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
@@ -11973,16 +13730,20 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class String(Bytes):
-    def serialize(self):
-        return self.value</code></pre>
+<pre><code class="python">class String(Str):
+    pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.types.Str" href="#scalecodec.types.Str">Str</a></li>
 <li><a title="scalecodec.types.Bytes" href="#scalecodec.types.Bytes">Bytes</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.GenericStringType" href="#scalecodec.types.GenericStringType">GenericStringType</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11991,27 +13752,11 @@ inheritance.</p>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="scalecodec.types.String.serialize"><code class="name flex">
-<span>def <span class="ident">serialize</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def serialize(self):
-    return self.value</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.types.Bytes" href="#scalecodec.types.Bytes">Bytes</a></b></code>:
+<li><code><b><a title="scalecodec.types.Str" href="#scalecodec.types.Str">Str</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.types.Bytes.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.types.Str.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -12093,6 +13838,7 @@ inheritance.</p>
 <li><a title="scalecodec.types.GenericErrorMetadata" href="#scalecodec.types.GenericErrorMetadata">GenericErrorMetadata</a></li>
 <li><a title="scalecodec.types.GenericEventMetadata" href="#scalecodec.types.GenericEventMetadata">GenericEventMetadata</a></li>
 <li><a title="scalecodec.types.GenericEventRecord" href="#scalecodec.types.GenericEventRecord">GenericEventRecord</a></li>
+<li><a title="scalecodec.types.GenericExtrinsicV4" href="#scalecodec.types.GenericExtrinsicV4">GenericExtrinsicV4</a></li>
 <li><a title="scalecodec.types.GenericField" href="#scalecodec.types.GenericField">GenericField</a></li>
 <li><a title="scalecodec.types.GenericFunctionArgumentMetadata" href="#scalecodec.types.GenericFunctionArgumentMetadata">GenericFunctionArgumentMetadata</a></li>
 <li><a title="scalecodec.types.GenericFunctionMetadata" href="#scalecodec.types.GenericFunctionMetadata">GenericFunctionMetadata</a></li>
@@ -12108,6 +13854,9 @@ inheritance.</p>
 <li><a title="scalecodec.types.GenericVariant" href="#scalecodec.types.GenericVariant">GenericVariant</a></li>
 <li><a title="scalecodec.types.ProposalPreimage" href="#scalecodec.types.ProposalPreimage">ProposalPreimage</a></li>
 <li><a title="scalecodec.types.ScaleInfoCallMetadata" href="#scalecodec.types.ScaleInfoCallMetadata">ScaleInfoCallMetadata</a></li>
+<li><a title="scalecodec.types.ScaleInfoPalletErrorMetadata" href="#scalecodec.types.ScaleInfoPalletErrorMetadata">ScaleInfoPalletErrorMetadata</a></li>
+<li><a title="scalecodec.types.ScaleInfoPalletEventMetadata" href="#scalecodec.types.ScaleInfoPalletEventMetadata">ScaleInfoPalletEventMetadata</a></li>
+<li><a title="scalecodec.types.WrapperKeepOpaque" href="#scalecodec.types.WrapperKeepOpaque">WrapperKeepOpaque</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -12998,12 +14747,12 @@ inheritance.</p>
 
         # Check for Bytes processing
         if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-            value = self.get_next_bytes(element_count)
+            self.value_object = self.get_next_bytes(element_count)
 
             try:
-                return value.decode()
+                return self.value_object.decode()
             except UnicodeDecodeError:
-                return &#39;0x{}&#39;.format(value.hex())
+                return &#39;0x{}&#39;.format(self.value_object.hex())
 
         result = []
         for _ in range(0, element_count):
@@ -13073,7 +14822,6 @@ inheritance.</p>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scalecodec.types.BTreeSet" href="#scalecodec.types.BTreeSet">BTreeSet</a></li>
 <li><a title="scalecodec.types.BoundedVec" href="#scalecodec.types.BoundedVec">BoundedVec</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -13099,12 +14847,12 @@ inheritance.</p>
 
     # Check for Bytes processing
     if self.runtime_config.get_decoder_class(self.sub_type) is U8:
-        value = self.get_next_bytes(element_count)
+        self.value_object = self.get_next_bytes(element_count)
 
         try:
-            return value.decode()
+            return self.value_object.decode()
         except UnicodeDecodeError:
-            return &#39;0x{}&#39;.format(value.hex())
+            return &#39;0x{}&#39;.format(self.value_object.hex())
 
     result = []
     for _ in range(0, element_count):
@@ -13184,6 +14932,146 @@ inheritance.</p>
 </li>
 </ul>
 </dd>
+<dt id="scalecodec.types.WrapperKeepOpaque"><code class="flex name class">
+<span>class <span class="ident">WrapperKeepOpaque</span></span>
+<span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class WrapperKeepOpaque(Struct):
+
+    def process_encode(self, value):
+        # Check requirements
+        if not self.type_mapping or len(self.type_mapping) != 2:
+            raise ValueError(&#34;type_mapping not set correctly for this WrapperKeepOpaque&#34;)
+
+        wrapped_obj = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[1], metadata=self.metadata
+        )
+
+        wrapped_obj.encode(value)
+
+        bytes_obj = self.runtime_config.create_scale_object(&#34;Bytes&#34;)
+        return bytes_obj.encode(wrapped_obj.get_used_bytes())
+
+    def process(self):
+        # Check requirements
+        if not self.type_mapping or len(self.type_mapping) != 2:
+            raise ValueError(&#34;type_mapping not set correctly for this WrapperKeepOpaque&#34;)
+
+        # Get bytes
+        bytes_obj = self.process_type(&#34;Bytes&#34;)
+        try:
+            # Try to decode bytes with wrapped SCALE type
+            wrapped_obj = self.runtime_config.create_scale_object(
+                type_string=self.type_mapping[1],
+                data=ScaleBytes(bytes_obj.value_object),
+                metadata=self.metadata
+            )
+
+            return wrapped_obj.process()
+        except:
+            # Decoding failed; return Opaque type
+            self.value_object = bytes_obj.value_object
+            return f&#39;0x{bytes_obj.value_object.hex()}&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.WrapperKeepOpaque.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.WrapperKeepOpaque.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    # Check requirements
+    if not self.type_mapping or len(self.type_mapping) != 2:
+        raise ValueError(&#34;type_mapping not set correctly for this WrapperKeepOpaque&#34;)
+
+    # Get bytes
+    bytes_obj = self.process_type(&#34;Bytes&#34;)
+    try:
+        # Try to decode bytes with wrapped SCALE type
+        wrapped_obj = self.runtime_config.create_scale_object(
+            type_string=self.type_mapping[1],
+            data=ScaleBytes(bytes_obj.value_object),
+            metadata=self.metadata
+        )
+
+        return wrapped_obj.process()
+    except:
+        # Decoding failed; return Opaque type
+        self.value_object = bytes_obj.value_object
+        return f&#39;0x{bytes_obj.value_object.hex()}&#39;</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.WrapperKeepOpaque.process_encode"><code class="name flex">
+<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_encode(self, value):
+    # Check requirements
+    if not self.type_mapping or len(self.type_mapping) != 2:
+        raise ValueError(&#34;type_mapping not set correctly for this WrapperKeepOpaque&#34;)
+
+    wrapped_obj = self.runtime_config.create_scale_object(
+        type_string=self.type_mapping[1], metadata=self.metadata
+    )
+
+    wrapped_obj.encode(value)
+
+    bytes_obj = self.runtime_config.create_scale_object(&#34;Bytes&#34;)
+    return bytes_obj.encode(wrapped_obj.get_used_bytes())</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -13217,6 +15105,8 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.BTreeSet" href="#scalecodec.types.BTreeSet">BTreeSet</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.BTreeSet.process" href="#scalecodec.types.BTreeSet.process">process</a></code></li>
+<li><code><a title="scalecodec.types.BTreeSet.process_encode" href="#scalecodec.types.BTreeSet.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.BTreeSet.scale_info_type" href="#scalecodec.types.BTreeSet.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
@@ -13279,9 +15169,8 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.CompactMoment" href="#scalecodec.types.CompactMoment">CompactMoment</a></code></h4>
 <ul class="">
-<li><code><a title="scalecodec.types.CompactMoment.process" href="#scalecodec.types.CompactMoment.process">process</a></code></li>
 <li><code><a title="scalecodec.types.CompactMoment.scale_info_type" href="#scalecodec.types.CompactMoment.scale_info_type">scale_info_type</a></code></li>
-<li><code><a title="scalecodec.types.CompactMoment.serialize" href="#scalecodec.types.CompactMoment.serialize">serialize</a></code></li>
+<li><code><a title="scalecodec.types.CompactMoment.to_datetime" href="#scalecodec.types.CompactMoment.to_datetime">to_datetime</a></code></li>
 <li><code><a title="scalecodec.types.CompactMoment.type_string" href="#scalecodec.types.CompactMoment.type_string">type_string</a></code></li>
 </ul>
 </li>
@@ -13347,6 +15236,22 @@ inheritance.</p>
 <h4><code><a title="scalecodec.types.Extrinsic" href="#scalecodec.types.Extrinsic">Extrinsic</a></code></h4>
 <ul class="">
 <li><code><a title="scalecodec.types.Extrinsic.scale_info_type" href="#scalecodec.types.Extrinsic.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.F32" href="#scalecodec.types.F32">F32</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.F32.process" href="#scalecodec.types.F32.process">process</a></code></li>
+<li><code><a title="scalecodec.types.F32.process_encode" href="#scalecodec.types.F32.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.types.F32.scale_info_type" href="#scalecodec.types.F32.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.F64" href="#scalecodec.types.F64">F64</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.F64.process" href="#scalecodec.types.F64.process">process</a></code></li>
+<li><code><a title="scalecodec.types.F64.process_encode" href="#scalecodec.types.F64.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.types.F64.scale_info_type" href="#scalecodec.types.F64.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
 <li>
@@ -13434,6 +15339,13 @@ inheritance.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="scalecodec.types.GenericEthereumAccountId" href="#scalecodec.types.GenericEthereumAccountId">GenericEthereumAccountId</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.GenericEthereumAccountId.process_scale_info_definition" href="#scalecodec.types.GenericEthereumAccountId.process_scale_info_definition">process_scale_info_definition</a></code></li>
+<li><code><a title="scalecodec.types.GenericEthereumAccountId.scale_info_type" href="#scalecodec.types.GenericEthereumAccountId.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="scalecodec.types.GenericEvent" href="#scalecodec.types.GenericEvent">GenericEvent</a></code></h4>
 <ul class="">
 <li><code><a title="scalecodec.types.GenericEvent.process" href="#scalecodec.types.GenericEvent.process">process</a></code></li>
@@ -13444,6 +15356,7 @@ inheritance.</p>
 <h4><code><a title="scalecodec.types.GenericEventMetadata" href="#scalecodec.types.GenericEventMetadata">GenericEventMetadata</a></code></h4>
 <ul class="">
 <li><code><a title="scalecodec.types.GenericEventMetadata.args" href="#scalecodec.types.GenericEventMetadata.args">args</a></code></li>
+<li><code><a title="scalecodec.types.GenericEventMetadata.docs" href="#scalecodec.types.GenericEventMetadata.docs">docs</a></code></li>
 <li><code><a title="scalecodec.types.GenericEventMetadata.name" href="#scalecodec.types.GenericEventMetadata.name">name</a></code></li>
 <li><code><a title="scalecodec.types.GenericEventMetadata.scale_info_type" href="#scalecodec.types.GenericEventMetadata.scale_info_type">scale_info_type</a></code></li>
 </ul>
@@ -13469,11 +15382,20 @@ inheritance.</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="scalecodec.types.GenericField" href="#scalecodec.types.GenericField">GenericField</a></code></h4>
+<h4><code><a title="scalecodec.types.GenericExtrinsicV4" href="#scalecodec.types.GenericExtrinsicV4">GenericExtrinsicV4</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.GenericExtrinsicV4.scale_info_type" href="#scalecodec.types.GenericExtrinsicV4.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.GenericField" href="#scalecodec.types.GenericField">GenericField</a></code></h4>
+<ul class="two-column">
+<li><code><a title="scalecodec.types.GenericField.docs" href="#scalecodec.types.GenericField.docs">docs</a></code></li>
 <li><code><a title="scalecodec.types.GenericField.get_type_string" href="#scalecodec.types.GenericField.get_type_string">get_type_string</a></code></li>
+<li><code><a title="scalecodec.types.GenericField.name" href="#scalecodec.types.GenericField.name">name</a></code></li>
 <li><code><a title="scalecodec.types.GenericField.process_encode" href="#scalecodec.types.GenericField.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericField.scale_info_type" href="#scalecodec.types.GenericField.scale_info_type">scale_info_type</a></code></li>
+<li><code><a title="scalecodec.types.GenericField.type" href="#scalecodec.types.GenericField.type">type</a></code></li>
 </ul>
 </li>
 <li>
@@ -13510,16 +15432,16 @@ inheritance.</p>
 </li>
 <li>
 <h4><code><a title="scalecodec.types.GenericMetadataVersioned" href="#scalecodec.types.GenericMetadataVersioned">GenericMetadataVersioned</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.call_index" href="#scalecodec.types.GenericMetadataVersioned.call_index">call_index</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.event_index" href="#scalecodec.types.GenericMetadataVersioned.event_index">event_index</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.get_metadata" href="#scalecodec.types.GenericMetadataVersioned.get_metadata">get_metadata</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.get_metadata_pallet" href="#scalecodec.types.GenericMetadataVersioned.get_metadata_pallet">get_metadata_pallet</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.get_module_error" href="#scalecodec.types.GenericMetadataVersioned.get_module_error">get_module_error</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.get_pallet_by_index" href="#scalecodec.types.GenericMetadataVersioned.get_pallet_by_index">get_pallet_by_index</a></code></li>
+<li><code><a title="scalecodec.types.GenericMetadataVersioned.get_signed_extensions" href="#scalecodec.types.GenericMetadataVersioned.get_signed_extensions">get_signed_extensions</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.pallets" href="#scalecodec.types.GenericMetadataVersioned.pallets">pallets</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.portable_registry" href="#scalecodec.types.GenericMetadataVersioned.portable_registry">portable_registry</a></code></li>
-<li><code><a title="scalecodec.types.GenericMetadataVersioned.process" href="#scalecodec.types.GenericMetadataVersioned.process">process</a></code></li>
 <li><code><a title="scalecodec.types.GenericMetadataVersioned.scale_info_type" href="#scalecodec.types.GenericMetadataVersioned.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
@@ -13569,6 +15491,7 @@ inheritance.</p>
 <ul class="">
 <li><code><a title="scalecodec.types.GenericRegistryType.docs" href="#scalecodec.types.GenericRegistryType.docs">docs</a></code></li>
 <li><code><a title="scalecodec.types.GenericRegistryType.process_encode" href="#scalecodec.types.GenericRegistryType.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.types.GenericRegistryType.retrieve_type_decomposition" href="#scalecodec.types.GenericRegistryType.retrieve_type_decomposition">retrieve_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericRegistryType.scale_info_type" href="#scalecodec.types.GenericRegistryType.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
@@ -13598,13 +15521,24 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.GenericStorageEntryMetadata" href="#scalecodec.types.GenericStorageEntryMetadata">GenericStorageEntryMetadata</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.GenericStorageEntryMetadata.docs" href="#scalecodec.types.GenericStorageEntryMetadata.docs">docs</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.get_param_hashers" href="#scalecodec.types.GenericStorageEntryMetadata.get_param_hashers">get_param_hashers</a></code></li>
+<li><code><a title="scalecodec.types.GenericStorageEntryMetadata.get_param_info" href="#scalecodec.types.GenericStorageEntryMetadata.get_param_info">get_param_info</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.get_params_type_string" href="#scalecodec.types.GenericStorageEntryMetadata.get_params_type_string">get_params_type_string</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.get_type_string_for_type" href="#scalecodec.types.GenericStorageEntryMetadata.get_type_string_for_type">get_type_string_for_type</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.get_value_type_string" href="#scalecodec.types.GenericStorageEntryMetadata.get_value_type_string">get_value_type_string</a></code></li>
+<li><code><a title="scalecodec.types.GenericStorageEntryMetadata.modifier" href="#scalecodec.types.GenericStorageEntryMetadata.modifier">modifier</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.name" href="#scalecodec.types.GenericStorageEntryMetadata.name">name</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.scale_info_type" href="#scalecodec.types.GenericStorageEntryMetadata.scale_info_type">scale_info_type</a></code></li>
 <li><code><a title="scalecodec.types.GenericStorageEntryMetadata.type" href="#scalecodec.types.GenericStorageEntryMetadata.type">type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.GenericStringType" href="#scalecodec.types.GenericStringType">GenericStringType</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.GenericStringType.name" href="#scalecodec.types.GenericStringType.name">name</a></code></li>
+<li><code><a title="scalecodec.types.GenericStringType.scale_info_type" href="#scalecodec.types.GenericStringType.scale_info_type">scale_info_type</a></code></li>
+<li><code><a title="scalecodec.types.GenericStringType.type" href="#scalecodec.types.GenericStringType.type">type</a></code></li>
 </ul>
 </li>
 <li>
@@ -13625,7 +15559,10 @@ inheritance.</p>
 </li>
 <li>
 <h4><code><a title="scalecodec.types.GenericVariant" href="#scalecodec.types.GenericVariant">GenericVariant</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="scalecodec.types.GenericVariant.args" href="#scalecodec.types.GenericVariant.args">args</a></code></li>
+<li><code><a title="scalecodec.types.GenericVariant.docs" href="#scalecodec.types.GenericVariant.docs">docs</a></code></li>
+<li><code><a title="scalecodec.types.GenericVariant.get_param_info" href="#scalecodec.types.GenericVariant.get_param_info">get_param_info</a></code></li>
 <li><code><a title="scalecodec.types.GenericVariant.name" href="#scalecodec.types.GenericVariant.name">name</a></code></li>
 <li><code><a title="scalecodec.types.GenericVariant.process_encode" href="#scalecodec.types.GenericVariant.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericVariant.scale_info_type" href="#scalecodec.types.GenericVariant.scale_info_type">scale_info_type</a></code></li>
@@ -13798,8 +15735,18 @@ inheritance.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="scalecodec.types.RawBytes" href="#scalecodec.types.RawBytes">RawBytes</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.RawBytes.process" href="#scalecodec.types.RawBytes.process">process</a></code></li>
+<li><code><a title="scalecodec.types.RawBytes.process_encode" href="#scalecodec.types.RawBytes.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.types.RawBytes.scale_info_type" href="#scalecodec.types.RawBytes.scale_info_type">scale_info_type</a></code></li>
+<li><code><a title="scalecodec.types.RawBytes.type_string" href="#scalecodec.types.RawBytes.type_string">type_string</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="scalecodec.types.ScaleInfoCallMetadata" href="#scalecodec.types.ScaleInfoCallMetadata">ScaleInfoCallMetadata</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.ScaleInfoCallMetadata.calls" href="#scalecodec.types.ScaleInfoCallMetadata.calls">calls</a></code></li>
 <li><code><a title="scalecodec.types.ScaleInfoCallMetadata.get_type_string" href="#scalecodec.types.ScaleInfoCallMetadata.get_type_string">get_type_string</a></code></li>
 <li><code><a title="scalecodec.types.ScaleInfoCallMetadata.scale_info_type" href="#scalecodec.types.ScaleInfoCallMetadata.scale_info_type">scale_info_type</a></code></li>
 </ul>
@@ -13819,9 +15766,40 @@ inheritance.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="scalecodec.types.ScaleInfoPalletErrorMetadata" href="#scalecodec.types.ScaleInfoPalletErrorMetadata">ScaleInfoPalletErrorMetadata</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.ScaleInfoPalletErrorMetadata.errors" href="#scalecodec.types.ScaleInfoPalletErrorMetadata.errors">errors</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletErrorMetadata.get_type_string" href="#scalecodec.types.ScaleInfoPalletErrorMetadata.get_type_string">get_type_string</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletErrorMetadata.scale_info_type" href="#scalecodec.types.ScaleInfoPalletErrorMetadata.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.ScaleInfoPalletEventMetadata" href="#scalecodec.types.ScaleInfoPalletEventMetadata">ScaleInfoPalletEventMetadata</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.ScaleInfoPalletEventMetadata.events" href="#scalecodec.types.ScaleInfoPalletEventMetadata.events">events</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletEventMetadata.get_type_string" href="#scalecodec.types.ScaleInfoPalletEventMetadata.get_type_string">get_type_string</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletEventMetadata.scale_info_type" href="#scalecodec.types.ScaleInfoPalletEventMetadata.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.ScaleInfoPalletMetadata" href="#scalecodec.types.ScaleInfoPalletMetadata">ScaleInfoPalletMetadata</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.ScaleInfoPalletMetadata.calls" href="#scalecodec.types.ScaleInfoPalletMetadata.calls">calls</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletMetadata.errors" href="#scalecodec.types.ScaleInfoPalletMetadata.errors">errors</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletMetadata.events" href="#scalecodec.types.ScaleInfoPalletMetadata.events">events</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoPalletMetadata.scale_info_type" href="#scalecodec.types.ScaleInfoPalletMetadata.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata" href="#scalecodec.types.ScaleInfoStorageEntryMetadata">ScaleInfoStorageEntryMetadata</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_key_scale_info_definition" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_key_scale_info_definition">get_key_scale_info_definition</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_key_type_string" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_key_type_string">get_key_type_string</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_param_hashers" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_param_hashers">get_param_hashers</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_param_info" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_param_info">get_param_info</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_params_type_string" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_params_type_string">get_params_type_string</a></code></li>
 <li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_type_string_for_type" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_type_string_for_type">get_type_string_for_type</a></code></li>
+<li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.get_value_type_string" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.get_value_type_string">get_value_type_string</a></code></li>
 <li><code><a title="scalecodec.types.ScaleInfoStorageEntryMetadata.scale_info_type" href="#scalecodec.types.ScaleInfoStorageEntryMetadata.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
@@ -13860,7 +15838,6 @@ inheritance.</p>
 <h4><code><a title="scalecodec.types.String" href="#scalecodec.types.String">String</a></code></h4>
 <ul class="">
 <li><code><a title="scalecodec.types.String.scale_info_type" href="#scalecodec.types.String.scale_info_type">scale_info_type</a></code></li>
-<li><code><a title="scalecodec.types.String.serialize" href="#scalecodec.types.String.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li>
@@ -13943,13 +15920,21 @@ inheritance.</p>
 <li><code><a title="scalecodec.types.Vec.scale_info_type" href="#scalecodec.types.Vec.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
+<li>
+<h4><code><a title="scalecodec.types.WrapperKeepOpaque" href="#scalecodec.types.WrapperKeepOpaque">WrapperKeepOpaque</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.WrapperKeepOpaque.process" href="#scalecodec.types.WrapperKeepOpaque.process">process</a></code></li>
+<li><code><a title="scalecodec.types.WrapperKeepOpaque.process_encode" href="#scalecodec.types.WrapperKeepOpaque.process_encode">process_encode</a></code></li>
+<li><code><a title="scalecodec.types.WrapperKeepOpaque.scale_info_type" href="#scalecodec.types.WrapperKeepOpaque.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
