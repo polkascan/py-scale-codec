@@ -909,6 +909,7 @@
     "DepositNonce": "u64",
     "ResourceId": "[u8; 32]",
     "ChainId": "u8",
-    "Keys": "SessionKeys1"
+    "Keys": "SessionKeys1",
+    "runtime_common::check_nonce::CheckNonce": "Compact<u32>"
   }
 }
