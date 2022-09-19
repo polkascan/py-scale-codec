@@ -1608,6 +1608,11 @@ class WrapperKeepOpaque(Struct):
 
 class MultiAccountId(GenericAccountId):
 
+    def __init__(self, data=None, **kwargs):
+        self.signatories = []
+        self.threshold = None
+        super().__init__(data, **kwargs)
+
     @classmethod
     def create_from_account_list(cls, accounts, threshold):
         from scalecodec.utils.ss58 import ss58_decode
@@ -1628,6 +1633,8 @@ class MultiAccountId(GenericAccountId):
 
         multi_account_obj = cls(runtime_config=cls.runtime_config)
         multi_account_obj.encode(multi_account_id)
+        multi_account_obj.signatories = sorted(account_ids)
+        multi_account_obj.threshold = threshold
 
         return multi_account_obj
 
