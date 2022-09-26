@@ -8,6 +8,15 @@
     "SlotNumber": "u64",
     "VrfOutput": "[u8; 32]",
     "VrfProof": "[u8; 64]",
+    "RawAuraPreDigest": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "slot_number",
+          "u64"
+        ]
+      ]
+    },
     "RawBabePreDigest": {
       "type": "enum",
       "type_mapping": [
