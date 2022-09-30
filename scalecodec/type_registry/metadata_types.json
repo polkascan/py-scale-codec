@@ -1581,7 +1581,13 @@
     "frame_support::storage::weak_bounded_vec::WeakBoundedVec": "BoundedVec",
     "frame_support::traits::misc::WrapperKeepOpaque": "WrapperKeepOpaque",
     "*::Call": "GenericCall",
+    "*::RuntimeCall": "GenericCall",
     "*::Event": {
+      "type": "struct",
+      "base_class": "GenericScaleInfoEvent",
+      "type_mapping": []
+    },
+    "*::RuntimeEvent": {
       "type": "struct",
       "base_class": "GenericScaleInfoEvent",
       "type_mapping": []
