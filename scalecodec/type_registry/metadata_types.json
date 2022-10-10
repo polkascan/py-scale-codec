@@ -1598,6 +1598,7 @@
       "type_mapping": []
     },
     "ink_env::types::AccountId": "GenericAccountId",
+    "ink_primitives::types::AccountId": "GenericAccountId",
     "ContractExecResultTo260": {
       "type": "enum",
       "base_class": "GenericContractExecResult",
