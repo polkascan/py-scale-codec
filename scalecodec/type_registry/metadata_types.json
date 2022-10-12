@@ -1582,12 +1582,18 @@
     "frame_support::traits::misc::WrapperKeepOpaque": "WrapperKeepOpaque",
     "*::Call": "GenericCall",
     "*::RuntimeCall": "GenericCall",
+    "*::runtime::Call": "GenericCall",
     "*::Event": {
       "type": "struct",
       "base_class": "GenericScaleInfoEvent",
       "type_mapping": []
     },
     "*::RuntimeEvent": {
+      "type": "struct",
+      "base_class": "GenericScaleInfoEvent",
+      "type_mapping": []
+    },
+    "*::runtime::Event": {
       "type": "struct",
       "base_class": "GenericScaleInfoEvent",
       "type_mapping": []

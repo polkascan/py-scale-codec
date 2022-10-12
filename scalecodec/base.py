@@ -337,9 +337,15 @@ class RuntimeConfigurationObject:
             base_decoder_class = self.get_decoder_class(path_string)
 
             if base_decoder_class is None:
-                # Try generic type
-                catch_all_path = '*::' * (len(scale_info_type.value['path']) - 1) + scale_info_type.value["path"][-1]
+
+                # Try wildcard type
+                catch_all_path = '*::' + '::'.join(scale_info_type.value["path"][1:])
                 base_decoder_class = self.get_decoder_class(catch_all_path)
+
+                if base_decoder_class is None:
+                    # Try catch-all type
+                    catch_all_path = '*::' * (len(scale_info_type.value['path']) - 1) + scale_info_type.value["path"][-1]
+                    base_decoder_class = self.get_decoder_class(catch_all_path)
 
             if base_decoder_class and hasattr(base_decoder_class, 'process_scale_info_definition'):
                 # if process_scale_info_definition is implemented result is final
