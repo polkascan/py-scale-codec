@@ -1,5 +1,8 @@
 {
   "types": {
+    "polymesh_runtime_develop::runtime::Event": "*::Event",
+    "polymesh_runtime_testnet::runtime::Event": "*::Event",
+    "polymesh_runtime_mainnet::runtime::Event": "*::Event",
     "AccountInfo": "AccountInfoWithDualRefCount",
     "Address": "IndicesLookupSource",
     "LookupSource": "IndicesLookupSource",
