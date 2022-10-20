@@ -1538,7 +1538,21 @@
         ]
       ]
     },
-    "Weight": "u64",
+    "WeightV1": "u64",
+    "WeightV2": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "ref_time",
+          "Compact<u64>"
+        ],
+        [
+          "proof_size",
+          "Compact<u64>"
+        ]
+      ]
+    },
+    "Weight": "WeightV1",
     "WeightMultiplier": "Fixed64",
     "XcmResponse": {
       "type": "enum",
