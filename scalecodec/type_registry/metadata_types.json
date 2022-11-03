@@ -1575,7 +1575,7 @@
     "sp_core::crypto::AccountId32": "GenericAccountId",
     "sp_runtime::multiaddress::MultiAddress": "GenericMultiAddress",
     "sp_runtime::generic::era::Era": "Era",
-    "pallet_democracy::vote::Vote": "GenericVote",
+    "*::vote::Vote": "GenericVote",
     "pallet_identity::types::Data": "Data",
     "frame_support::storage::bounded_vec::BoundedVec": "BoundedVec",
     "frame_support::storage::weak_bounded_vec::WeakBoundedVec": "BoundedVec",
