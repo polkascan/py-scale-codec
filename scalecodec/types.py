@@ -20,9 +20,10 @@ from datetime import datetime
 from hashlib import blake2b
 from typing import Union
 
+from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
 from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode, is_valid_ss58_address
 
-from scalecodec.base import ScaleType, ScaleBytes
+from scalecodec.base import ScaleType, ScaleBytes, ScalePrimitive
 from scalecodec.exceptions import InvalidScaleTypeValueException, MetadataCallFunctionNotFound
 from scalecodec.utils.math import trailing_zeros, next_power_of_two
 
@@ -90,6 +91,11 @@ class Compact(ScaleType):
             else:
                 raise ValueError('{} out of range'.format(value))
 
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return scale_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)
+
 
 class CompactU32(Compact):
     """
@@ -148,6 +154,12 @@ class Option(ScaleType):
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
         cls.sub_type = f"{prefix}::{scale_info_definition.value['params'][0]['type']}"
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return None, sub_type_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)
+
 
 
 class Bytes(ScaleType):
@@ -268,7 +280,7 @@ class RawBytes(ScaleType):
         return ScaleBytes(bytes.fromhex(value[2:]))
 
 
-class U8(ScaleType):
+class U8(ScalePrimitive):
 
     def process(self):
         return self.get_next_u8()
@@ -281,7 +293,7 @@ class U8(ScaleType):
             raise ValueError('{} out of range for u8'.format(value))
 
 
-class U16(ScaleType):
+class U16(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little')
@@ -294,7 +306,7 @@ class U16(ScaleType):
             raise ValueError('{} out of range for u16'.format(value))
 
 
-class U32(ScaleType):
+class U32(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
@@ -307,7 +319,7 @@ class U32(ScaleType):
             raise ValueError('{} out of range for u32'.format(value))
 
 
-class U64(ScaleType):
+class U64(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder='little'))
@@ -320,7 +332,7 @@ class U64(ScaleType):
             raise ValueError('{} out of range for u64'.format(value))
 
 
-class U128(ScaleType):
+class U128(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder='little'))
@@ -333,7 +345,7 @@ class U128(ScaleType):
             raise ValueError('{} out of range for u128'.format(value))
 
 
-class U256(ScaleType):
+class U256(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(32), byteorder='little'))
@@ -346,7 +358,7 @@ class U256(ScaleType):
             raise ValueError('{} out of range for u256'.format(value))
 
 
-class I8(ScaleType):
+class I8(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(1), byteorder='little', signed=True)
@@ -359,7 +371,7 @@ class I8(ScaleType):
             raise ValueError('{} out of range for i8'.format(value))
 
 
-class I16(ScaleType):
+class I16(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little', signed=True)
@@ -372,7 +384,7 @@ class I16(ScaleType):
             raise ValueError('{} out of range for i16'.format(value))
 
 
-class I32(ScaleType):
+class I32(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little', signed=True)
@@ -385,7 +397,7 @@ class I32(ScaleType):
             raise ValueError('{} out of range for i32'.format(value))
 
 
-class I64(ScaleType):
+class I64(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(8), byteorder='little', signed=True)
@@ -398,7 +410,7 @@ class I64(ScaleType):
             raise ValueError('{} out of range for i64'.format(value))
 
 
-class I128(ScaleType):
+class I128(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(16), byteorder='little', signed=True)
@@ -411,7 +423,7 @@ class I128(ScaleType):
             raise ValueError('{} out of range for i128'.format(value))
 
 
-class I256(ScaleType):
+class I256(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(32), byteorder='little', signed=True)
@@ -424,7 +436,7 @@ class I256(ScaleType):
             raise ValueError('{} out of range for i256'.format(value))
 
 
-class F32(ScaleType):
+class F32(ScalePrimitive):
 
     def process(self):
         return struct.unpack('f', self.get_next_bytes(4))[0]
@@ -436,7 +448,7 @@ class F32(ScaleType):
         return ScaleBytes(struct.pack('f', value))
 
 
-class F64(ScaleType):
+class F64(ScalePrimitive):
 
     def process(self):
         return struct.unpack('d', self.get_next_bytes(8))[0]
@@ -448,7 +460,7 @@ class F64(ScaleType):
         return ScaleBytes(struct.pack('d', value))
 
 
-class H160(ScaleType):
+class H160(ScalePrimitive):
 
     def process(self):
         return '0x{}'.format(self.get_next_bytes(20).hex())
@@ -459,7 +471,7 @@ class H160(ScaleType):
         return ScaleBytes(value)
 
 
-class H256(ScaleType):
+class H256(ScalePrimitive):
 
     def process(self):
         return '0x{}'.format(self.get_next_bytes(32).hex())
@@ -470,7 +482,7 @@ class H256(ScaleType):
         return ScaleBytes(value)
 
 
-class H512(ScaleType):
+class H512(ScalePrimitive):
 
     def process(self):
         return '0x{}'.format(self.get_next_bytes(64).hex())
@@ -511,10 +523,14 @@ class Struct(ScaleType):
 
         return result
 
-    def process_encode(self, value):
+    def process_encode(self, value: Union[dict, tuple]) -> ScaleBytes:
         data = ScaleBytes(bytearray())
 
         self.value_object = {}
+
+        if type(value) is tuple:
+            # Convert tuple to dict
+            value = {key: value[idx] for idx, (key, _) in enumerate(self.type_mapping)}
 
         for key, data_type in self.type_mapping:
             if key not in value:
@@ -527,6 +543,20 @@ class Struct(ScaleType):
             self.value_object[key] = element_obj
 
         return data
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+
+        if _recursion_level > TYPE_DECOMP_MAX_RECURSIVE:
+            return cls.__name__
+
+        result = {}
+        for key, data_type in cls.type_mapping:
+            if data_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(data_type)
+                data_type = scale_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)
+            result[key] = data_type
+        return result
 
 
 class Tuple(ScaleType):
@@ -577,6 +607,21 @@ class Tuple(ScaleType):
             self.value_object += (element_obj,)
 
         return data
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        result = ()
+
+        for member_type in cls.type_mapping:
+            if member_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(member_type)
+                member_type = scale_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)
+
+                if len(cls.type_mapping) == 1:
+                    return member_type
+
+            result += (member_type,)
+        return result
 
 
 class Set(ScaleType):
@@ -718,7 +763,7 @@ class Era(ScaleType):
         return
 
 
-class Bool(ScaleType):
+class Bool(ScalePrimitive):
 
     def process(self):
         return self.get_next_bool()
@@ -794,6 +839,10 @@ class GenericAccountId(H256):
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
         return
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        return 'AccountId'
 
 
 class GenericEthereumAccountId(H160):
@@ -884,6 +933,17 @@ class Vec(ScaleType):
 
     def __len__(self):
         return len(self.value_object)
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        sub_type_decomp = sub_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)
+
+        if sub_type_decomp == 'u8':
+            # Translate Vec<u8> to Bytes
+            return 'Bytes'
+        else:
+            return [sub_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)]
 
 
 class BoundedVec(Vec):
@@ -1000,6 +1060,9 @@ class GenericAddress(ScaleType):
         else:
             return self.value
 
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        return cls.__name__.lower()
 
 class AccountIdAddress(GenericAddress):
 
@@ -1127,6 +1190,30 @@ class Enum(ScaleType):
                 return list(self.value.values())[0]
             else:
                 return self.value_list[self.index]
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+
+        if _recursion_level > TYPE_DECOMP_MAX_RECURSIVE:
+            return cls.__name__
+
+        if cls.type_mapping:
+
+            # Check if type_mapping can be converted to simple value_list
+            if all([t == 'Null' for n, t in cls.type_mapping]):
+                return tuple([n for n, t in cls.type_mapping if n is not None])
+
+            result = {}
+            for key, data_type in cls.type_mapping:
+                if data_type == 'Null':
+                    data_type = None
+                if data_type is not None:
+                    scale_obj = cls.runtime_config.create_scale_object(data_type)
+                    data_type = scale_obj.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)
+                result[key] = data_type
+            return result
+        else:
+            return tuple(cls.value_list)
 
 
 class Data(Enum):
@@ -1300,6 +1387,13 @@ class GenericVote(U8):
 
         return super().process_encode(value)
 
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        return {
+            'aye': 'bool',
+            'conviction': cls.runtime_config.create_scale_object('Conviction').retrieve_type_decomposition()
+        }
+
 
 class GenericCall(ScaleType):
 
@@ -1335,18 +1429,24 @@ class GenericCall(ScaleType):
             if len(self.call_args) > 0:
 
                 # Check args format
-                if type(call_obj[1].value) is not tuple:
-                    call_args_values = (call_obj[1],)
-                else:
-                    call_args_values = call_obj[1]
+                if type(call_obj[1].value) is dict:
 
-                for idx, call_arg in enumerate(self.call_args):
-                    call_args.append({
-                        'name': call_arg.value['name'],
-                        'type': self.convert_type(call_arg.value['typeName']),
-                        'value': call_args_values[idx].value
-                    })
-                    self.call_args[idx].value_object['value'] = call_args_values[idx]
+                    for idx, call_arg in enumerate(self.call_args):
+                        call_args.append({
+                            'name': call_arg.value['name'],
+                            'type': self.convert_type(call_arg.value['typeName']),
+                            'value': call_obj[1].value[call_arg.value['name']]
+                        })
+                        self.call_args[idx].value_object['value'] = call_obj[1][call_arg.value['name']]
+                else:
+                    # Backwards compatibility
+                    for idx, call_arg in enumerate(self.call_args):
+                        call_args.append({
+                            'name': call_arg.value['name'],
+                            'type': self.convert_type(call_arg.value['typeName']),
+                            'value': call_obj[1][idx].value
+                        })
+                        self.call_args[idx].value_object['value'] = call_obj[1][idx]
 
             self.value_object = {
                 'call_index': f'0x{self.call_index}',
@@ -1451,6 +1551,10 @@ class GenericCall(ScaleType):
             if len(self.call_args) > 0:
                 self.value_object['call_args'] = {}
 
+                # convert alternative list format of call_args
+                if type(value['call_args']) is list:
+                    value['call_args'] = {ca['name']: ca['value'] for ca in value['call_args']}
+
                 for arg in self.call_args:
                     if arg.value['name'] not in value['call_args']:
                         raise ValueError('Parameter \'{}\' not specified'.format(arg.value['name']))
@@ -1513,6 +1617,10 @@ class GenericCall(ScaleType):
                         self.value_object['call_args'][arg.name] = arg_obj
 
             return data
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        return 'Call'
 
 
 class GenericContractExecResult(Enum):
@@ -1605,6 +1713,14 @@ class WrapperKeepOpaque(Struct):
             self.value_object = bytes_obj.value_object
             return f'0x{bytes_obj.value_object.hex()}'
 
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        # Return decomposition of wrapped type
+        wrapped_obj = cls.runtime_config.create_scale_object(
+            type_string=cls.type_mapping[1]
+        )
+        return wrapped_obj.retrieve_type_decomposition(_recursion_level=_recursion_level+1)
+
 
 class MultiAccountId(GenericAccountId):
 
@@ -1668,6 +1784,9 @@ class FixedLengthArray(ScaleType):
             if type(value) is str and value[0:2] == '0x':
                 value = bytes.fromhex(value[2:])
 
+            if type(value) is list:
+                value = bytes(value)
+
             if type(value) is not bytes:
                 raise ValueError('Value should a hex-string (0x..) or bytes')
 
@@ -1688,6 +1807,11 @@ class FixedLengthArray(ScaleType):
                 data += element_obj.encode(element_value)
 
             return data
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
+        return f'[{sub_cls.retrieve_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]'
 
 
 class GenericMultiAddress(Enum):
@@ -2052,35 +2176,6 @@ class GenericRegistryType(Struct):
 
         return super().process_encode(value)
 
-    def retrieve_type_decomposition(self):
-        if 'variant' in self.value['def']:
-            for variant in self.value['def']['variant']['variants']:
-                for field in variant['fields']:
-                    field_obj = self.runtime_config.create_scale_object(f"scale_info::{field['type']}")
-                    variant['value'] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif 'composite' in self.value['def']:
-            for field in self.value['def']['composite']['fields']:
-                field_obj = self.runtime_config.create_scale_object(f"scale_info::{field['type']}")
-                field['value'] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif 'array' in self.value['def']:
-            type_def = self.value['def']['array']
-            array_element_obj = self.runtime_config.create_scale_object(f"scale_info::{type_def['type']}")
-            type_def['value'] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif 'sequence' in self.value['def']:
-            type_def = self.value['def']['sequence']
-            array_element_obj = self.runtime_config.create_scale_object(f"scale_info::{type_def['type']}")
-            type_def['value'] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif 'tuple' in self.value['def']:
-            for idx, type_def in self.value['def']['tuple']:
-                element_obj = self.runtime_config.create_scale_object(f"scale_info::{type_def}")
-                self.value['def']['tuple'][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
-
-        return self.value['def']
-
 
 class GenericField(Struct):
 
@@ -2131,7 +2226,7 @@ class GenericVariant(Struct):
         for arg in self.args:
             param_type_obj = self.runtime_config.create_scale_object(arg.type)
 
-            param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+            param_info[arg.name] = param_type_obj.retrieve_type_decomposition()
 
         return param_info
 
@@ -2453,10 +2548,17 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
             raise NotImplementedError()
 
     def get_param_info(self) -> list:
+        """
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        """
         param_info = []
         for param_type_string in self.get_params_type_string():
             scale_type = self.runtime_config.create_scale_object(param_type_string)
-            param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+            param_info.append(scale_type.retrieve_type_decomposition())
 
         return param_info
 

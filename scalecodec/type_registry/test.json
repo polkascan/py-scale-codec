@@ -138,6 +138,26 @@
             "LKSM": 131,
             "CASH": 140
         }
+    },
+    "EnumWithNestedStruct": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Flat",
+          "u8"
+        ],
+        [
+          "Nested",
+          {
+            "a": "u8",
+            "b": "u8"
+          }
+        ],
+        [
+          "After",
+          "u8"
+        ]
+      ]
     }
   }
 }

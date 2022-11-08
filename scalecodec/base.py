@@ -90,7 +90,15 @@ class RuntimeConfigurationObject:
 
         return name
 
-    def get_decoder_class(self, type_string: str, spec_version_id='default'):
+    def get_decoder_class(self, type_string: Union[str, dict]):
+
+        if type(type_string) is dict:
+            # Inner struct
+            decoder_class = type('InnerStruct', (self.get_decoder_class('Struct'),), {
+                'type_mapping': tuple(type_string.items())
+            })
+            decoder_class.runtime_config = self
+            return decoder_class
 
         if type_string.strip() == '':
             return None
@@ -229,7 +237,7 @@ class RuntimeConfigurationObject:
                     value_list = decoder_class_data.get('value_list')
 
                     if type(value_list) is dict:
-                        # Transform value_list with explictly specified index numbers
+                        # Transform value_list with explicitly specified index numbers
                         value_list = {i: v for v, i in value_list.items()}
 
                     decoder_class = type(type_string, (base_cls,), {
@@ -417,11 +425,15 @@ class RuntimeConfigurationObject:
                     if 'fields' in variant:
                         if len(variant['fields']) == 0:
                             enum_value = 'Null'
-                        elif len(variant['fields']) == 1:
-                            enum_value = f"{prefix}::{variant['fields'][0]['type']}"
+                        elif all([f.get('name') for f in variant['fields']]):
+                            # Enum with named fields
+                            enum_value = {f.get('name'): f"{prefix}::{f['type']}" for f in variant['fields']}
                         else:
-                            field_str = ', '.join([f"{prefix}::{f['type']}" for f in variant['fields']])
-                            enum_value = f"({field_str})"
+                            if len(variant['fields']) == 1:
+                                enum_value = f"{prefix}::{variant['fields'][0]['type']}"
+                            else:
+                                field_str = ', '.join([f"{prefix}::{f['type']}" for f in variant['fields']])
+                                enum_value = f"({field_str})"
                     else:
                         enum_value = 'Null'
 
@@ -752,8 +764,7 @@ class ScaleDecoder(ABC):
             runtime_config = RuntimeConfiguration()
 
         decoder_class = runtime_config.get_decoder_class(
-            type_string,
-            spec_version_id=kwargs.get('spec_version_id', 'default')
+            type_string
         )
         if decoder_class:
             return decoder_class(data=data, runtime_config=runtime_config, **kwargs)
@@ -837,5 +848,17 @@ class ScaleType(ScaleDecoder, ABC):
             return self.value_serialized <= other.value_serialized
         else:
             return self.value_serialized <= other
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+        return cls.__name__
+
+
+class ScalePrimitive(ScaleType, ABC):
+
+    @classmethod
+    def retrieve_type_decomposition(cls, _recursion_level=0):
+        return cls.__name__.lower()
+
 
 

@@ -369,8 +369,10 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual('0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01', obj.decode())
 
     def test_dynamic_fixed_array_type_encode_u8(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 1]')
-        self.assertEqual('0x01', str(obj.encode('0x01')))
+        obj = RuntimeConfiguration().create_scale_object('[u8; 2]')
+        self.assertEqual('0x0102', str(obj.encode('0x0102')))
+        self.assertEqual('0x0102', str(obj.encode(b'\x01\x02')))
+        self.assertEqual('0x0102', str(obj.encode([1, 2])))
 
     def test_dynamic_fixed_array_type_encode(self):
         obj = RuntimeConfiguration().create_scale_object('[u32; 1]')
@@ -775,6 +777,19 @@ class TestScaleTypes(unittest.TestCase):
         obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
 
         self.assertEqual("KAR", obj.decode())
+
+    def test_enum_with_named_fields(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = RuntimeConfiguration().create_scale_object('EnumWithNestedStruct')
+
+        data = obj.encode({"Nested": {"a": 3, "b": 8}})
+
+        self.assertEqual("0x010308", data.to_hex())
+
+        value = obj.decode(data)
+
+        self.assertEqual({"Nested": {"a": 3, "b": 8}}, value)
 
     def test_set_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
