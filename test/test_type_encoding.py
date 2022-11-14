@@ -19,7 +19,7 @@ import unittest
 from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
-from scalecodec.types import CompactU32
+from scalecodec.types import CompactU32, Struct
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
 
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict["kusama_test"])
@@ -45,7 +45,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def tearDown(self) -> None:
         RuntimeConfiguration().clear_type_registry()
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
     def test_u16(self):
         obj = RuntimeConfiguration().create_scale_object('u16')
@@ -235,6 +235,17 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj_check = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145', data)
 
         self.assertEqual(obj_check.decode(), value)
+
+    def test_struct_encode_tuple(self):
+
+        TestStruct = type('TestStruct', (Struct,), {
+            'type_mapping': (('aye', 'u32'), ('nay', 'u32'))
+        })
+
+        obj = TestStruct()
+
+        data = obj.encode((4, 2))
+        self.assertEqual(ScaleBytes("0x0400000002000000"), data)
 
     # def test_struct_raw_encode(self):
     #     RuntimeConfiguration().update_type_registry_types({

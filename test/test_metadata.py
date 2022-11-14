@@ -26,7 +26,7 @@ class TestMetadataRegistry(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.runtime_config = RuntimeConfigurationObject()
-        cls.runtime_config.update_type_registry(load_type_registry_preset("metadata_types"))
+        cls.runtime_config.update_type_registry(load_type_registry_preset("core"))
 
         module_path = os.path.dirname(__file__)
         cls.metadata_fixture_dict = load_type_registry_file(
@@ -135,7 +135,7 @@ class TestMetadataTypes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.runtime_config = RuntimeConfigurationObject()
-        cls.runtime_config.update_type_registry(load_type_registry_preset("metadata_types"))
+        cls.runtime_config.update_type_registry(load_type_registry_preset("core"))
 
         module_path = os.path.dirname(__file__)
         cls.metadata_fixture_dict = load_type_registry_file(
@@ -156,8 +156,8 @@ class TestMetadataTypes(unittest.TestCase):
         param_type_string = storage_function.get_params_type_string()
         param_type_obj = self.runtime_config.create_scale_object(param_type_string[0])
 
-        type_info = param_type_obj.scale_info_type.retrieve_type_decomposition()
-        self.assertDictEqual({'primitive': 'u32'}, type_info)
+        type_info = param_type_obj.generate_type_decomposition()
+        self.assertEqual('u32', type_info)
 
     def test_storage_function_type_decomposition_complex(self):
         pallet = self.metadata_obj.get_metadata_pallet("Tokens")
@@ -166,8 +166,8 @@ class TestMetadataTypes(unittest.TestCase):
         param_type_string = storage_function.get_params_type_string()
         param_type_obj = self.runtime_config.create_scale_object(param_type_string[0])
 
-        type_info = param_type_obj.scale_info_type.retrieve_type_decomposition()
-        self.assertEqual('Token', type_info['variant']['variants'][0]['name'])
-        self.assertEqual('ACA', type_info['variant']['variants'][0]['value']['variant']['variants'][0]['name'])
+        type_info = param_type_obj.generate_type_decomposition()
+        self.assertIn('Token', type_info)
+        self.assertEqual('ACA', type_info['Token'][0])
 
 

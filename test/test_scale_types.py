@@ -40,7 +40,7 @@ class TestScaleTypes(unittest.TestCase):
         cls.metadata_fixture_dict = load_type_registry_file(
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict['V10'])
@@ -48,7 +48,7 @@ class TestScaleTypes(unittest.TestCase):
         cls.metadata_decoder.decode()
 
         cls.runtime_config_v14 = RuntimeConfigurationObject(implements_scale_info=True)
-        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("metadata_types"))
+        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_v14_obj = cls.runtime_config_v14.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(cls.metadata_fixture_dict['V14'])
@@ -58,7 +58,7 @@ class TestScaleTypes(unittest.TestCase):
 
     def setUp(self) -> None:
         RuntimeConfiguration().clear_type_registry()
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
@@ -257,7 +257,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertRaises(NotImplementedError, RuntimeConfiguration().create_scale_object, 'UnknownType123', ScaleBytes("0x0c00"))
 
     def test_unknown_dynamic_type(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
         # Create set type with u32
         self.assertRaises(NotImplementedError, RuntimeConfiguration().update_type_registry, {
@@ -274,7 +274,7 @@ class TestScaleTypes(unittest.TestCase):
         })
 
     def test_dynamic_set(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
         obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x0100000000000000"))
         obj.decode()
@@ -292,7 +292,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, ["Transfer", "Reserve", "Tip"])
 
     def test_set_value_type_u32(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
         # Create set type with u32
         RuntimeConfiguration().update_type_registry({
@@ -330,7 +330,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, ["Value2", "Value3", "Value5"])
 
     def test_box_call(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
         scale_value = ScaleBytes("0x0400006e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402070010a5d4e8")
 
@@ -343,7 +343,7 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(value['call_args'][1]['value'], 1000000000000)
 
     def test_parse_subtype(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
         obj = RuntimeConfiguration().create_scale_object('(BalanceOf, Vec<(AccountId, Data)>)')
 
@@ -369,8 +369,10 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual('0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01', obj.decode())
 
     def test_dynamic_fixed_array_type_encode_u8(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 1]')
-        self.assertEqual('0x01', str(obj.encode('0x01')))
+        obj = RuntimeConfiguration().create_scale_object('[u8; 2]')
+        self.assertEqual('0x0102', str(obj.encode('0x0102')))
+        self.assertEqual('0x0102', str(obj.encode(b'\x01\x02')))
+        self.assertEqual('0x0102', str(obj.encode([1, 2])))
 
     def test_dynamic_fixed_array_type_encode(self):
         obj = RuntimeConfiguration().create_scale_object('[u32; 1]')
@@ -544,7 +546,7 @@ class TestScaleTypes(unittest.TestCase):
     def test_multiaddress_ss58_address_as_str_runtime_config(self):
 
         runtime_config = RuntimeConfigurationObject(ss58_format=2)
-        runtime_config.update_type_registry(load_type_registry_preset("default"))
+        runtime_config.update_type_registry(load_type_registry_preset("legacy"))
 
         obj = RuntimeConfiguration().create_scale_object('Multiaddress', runtime_config=runtime_config)
         ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
@@ -776,6 +778,19 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual("KAR", obj.decode())
 
+    def test_enum_with_named_fields(self):
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
+
+        obj = RuntimeConfiguration().create_scale_object('EnumWithNestedStruct')
+
+        data = obj.encode({"Nested": {"a": 3, "b": 8}})
+
+        self.assertEqual("0x010308", data.to_hex())
+
+        value = obj.decode(data)
+
+        self.assertEqual({"Nested": {"a": 3, "b": 8}}, value)
+
     def test_set_with_base_class(self):
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
 
@@ -813,7 +828,7 @@ class TestScaleTypes(unittest.TestCase):
         public_key = '0x' + ss58_decode(ss58_address)
 
         runtime_config = RuntimeConfigurationObject(ss58_format=2)
-        runtime_config.update_type_registry(load_type_registry_preset("default"))
+        runtime_config.update_type_registry(load_type_registry_preset("legacy"))
 
         # Encode
         obj = RuntimeConfiguration().create_scale_object('AccountId', runtime_config=runtime_config)

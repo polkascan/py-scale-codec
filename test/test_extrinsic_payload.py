@@ -26,7 +26,7 @@ from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
 class TestScaleTypeEncoding(unittest.TestCase):
 
     def setUp(self) -> None:
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
@@ -37,7 +37,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         )
 
         RuntimeConfiguration().clear_type_registry()
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', data=ScaleBytes(metadata_1045_hex)
@@ -45,7 +45,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         cls.metadata_decoder.decode()
 
         cls.runtime_config_v14 = RuntimeConfigurationObject(implements_scale_info=True)
-        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("metadata_types"))
+        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_v14_obj = cls.runtime_config_v14.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(cls.metadata_fixture_dict['V14'])
@@ -1101,7 +1101,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload),
-                         "0x290104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090554657374")
+                         "0x290104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a8"
+                         "0ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090554657374")
 
     def test_encode_identity_set_subs_ss58_payload(self):
         extrinsic = Extrinsic(metadata=self.metadata_decoder)
@@ -1118,7 +1119,8 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         self.assertEqual(str(payload),
-                         "0x290104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090554657374")
+                         "0x290104190208586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a8"
+                         "0ac00225c40900586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c4090554657374")
 
     def test_encode_imonline_heartbeat_payload(self):
         extrinsic = Extrinsic(metadata=self.metadata_decoder)
@@ -1127,9 +1129,12 @@ class TestScaleTypeEncoding(unittest.TestCase):
             'call_module': 'ImOnline',
             'call_function': 'heartbeat',
             'call_args': {
-                'heartbeat': {"block_number": 500000, "network_state": {"peer_id": "0x012345", "external_addresses": []},
-                              "session_index": 1, "authority_index": 3},
-                '_signature': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+                'heartbeat': {
+                    "block_number": 500000, "network_state": {"peer_id": "0x012345", "external_addresses": []},
+                    "session_index": 1, "authority_index": 3
+                },
+                '_signature': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+                              '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
             }
         })
 
