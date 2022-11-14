@@ -850,14 +850,14 @@ class ScaleType(ScaleDecoder, ABC):
             return self.value_serialized <= other
 
     @classmethod
-    def retrieve_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
         return cls.__name__
 
 
 class ScalePrimitive(ScaleType, ABC):
 
     @classmethod
-    def retrieve_type_decomposition(cls, _recursion_level=0):
+    def generate_type_decomposition(cls, _recursion_level=0):
         return cls.__name__.lower()
 
 

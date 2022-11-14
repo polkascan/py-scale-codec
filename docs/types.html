@@ -48,9 +48,10 @@ from datetime import datetime
 from hashlib import blake2b
 from typing import Union
 
+from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
 from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode, is_valid_ss58_address
 
-from scalecodec.base import ScaleType, ScaleBytes
+from scalecodec.base import ScaleType, ScaleBytes, ScalePrimitive
 from scalecodec.exceptions import InvalidScaleTypeValueException, MetadataCallFunctionNotFound
 from scalecodec.utils.math import trailing_zeros, next_power_of_two
 
@@ -118,6 +119,11 @@ class Compact(ScaleType):
             else:
                 raise ValueError(&#39;{} out of range&#39;.format(value))
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
 
 class CompactU32(Compact):
     &#34;&#34;&#34;
@@ -176,6 +182,12 @@ class Option(ScaleType):
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
 
 
 class Bytes(ScaleType):
@@ -296,7 +308,7 @@ class RawBytes(ScaleType):
         return ScaleBytes(bytes.fromhex(value[2:]))
 
 
-class U8(ScaleType):
+class U8(ScalePrimitive):
 
     def process(self):
         return self.get_next_u8()
@@ -309,7 +321,7 @@ class U8(ScaleType):
             raise ValueError(&#39;{} out of range for u8&#39;.format(value))
 
 
-class U16(ScaleType):
+class U16(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder=&#39;little&#39;)
@@ -322,7 +334,7 @@ class U16(ScaleType):
             raise ValueError(&#39;{} out of range for u16&#39;.format(value))
 
 
-class U32(ScaleType):
+class U32(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder=&#39;little&#39;)
@@ -335,7 +347,7 @@ class U32(ScaleType):
             raise ValueError(&#39;{} out of range for u32&#39;.format(value))
 
 
-class U64(ScaleType):
+class U64(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder=&#39;little&#39;))
@@ -348,7 +360,7 @@ class U64(ScaleType):
             raise ValueError(&#39;{} out of range for u64&#39;.format(value))
 
 
-class U128(ScaleType):
+class U128(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder=&#39;little&#39;))
@@ -361,7 +373,7 @@ class U128(ScaleType):
             raise ValueError(&#39;{} out of range for u128&#39;.format(value))
 
 
-class U256(ScaleType):
+class U256(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(32), byteorder=&#39;little&#39;))
@@ -374,7 +386,7 @@ class U256(ScaleType):
             raise ValueError(&#39;{} out of range for u256&#39;.format(value))
 
 
-class I8(ScaleType):
+class I8(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;, signed=True)
@@ -387,7 +399,7 @@ class I8(ScaleType):
             raise ValueError(&#39;{} out of range for i8&#39;.format(value))
 
 
-class I16(ScaleType):
+class I16(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder=&#39;little&#39;, signed=True)
@@ -400,7 +412,7 @@ class I16(ScaleType):
             raise ValueError(&#39;{} out of range for i16&#39;.format(value))
 
 
-class I32(ScaleType):
+class I32(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder=&#39;little&#39;, signed=True)
@@ -413,7 +425,7 @@ class I32(ScaleType):
             raise ValueError(&#39;{} out of range for i32&#39;.format(value))
 
 
-class I64(ScaleType):
+class I64(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(8), byteorder=&#39;little&#39;, signed=True)
@@ -426,7 +438,7 @@ class I64(ScaleType):
             raise ValueError(&#39;{} out of range for i64&#39;.format(value))
 
 
-class I128(ScaleType):
+class I128(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(16), byteorder=&#39;little&#39;, signed=True)
@@ -439,7 +451,7 @@ class I128(ScaleType):
             raise ValueError(&#39;{} out of range for i128&#39;.format(value))
 
 
-class I256(ScaleType):
+class I256(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(32), byteorder=&#39;little&#39;, signed=True)
@@ -452,7 +464,7 @@ class I256(ScaleType):
             raise ValueError(&#39;{} out of range for i256&#39;.format(value))
 
 
-class F32(ScaleType):
+class F32(ScalePrimitive):
 
     def process(self):
         return struct.unpack(&#39;f&#39;, self.get_next_bytes(4))[0]
@@ -464,7 +476,7 @@ class F32(ScaleType):
         return ScaleBytes(struct.pack(&#39;f&#39;, value))
 
 
-class F64(ScaleType):
+class F64(ScalePrimitive):
 
     def process(self):
         return struct.unpack(&#39;d&#39;, self.get_next_bytes(8))[0]
@@ -476,7 +488,7 @@ class F64(ScaleType):
         return ScaleBytes(struct.pack(&#39;d&#39;, value))
 
 
-class H160(ScaleType):
+class H160(ScalePrimitive):
 
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(20).hex())
@@ -487,7 +499,7 @@ class H160(ScaleType):
         return ScaleBytes(value)
 
 
-class H256(ScaleType):
+class H256(ScalePrimitive):
 
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(32).hex())
@@ -498,7 +510,7 @@ class H256(ScaleType):
         return ScaleBytes(value)
 
 
-class H512(ScaleType):
+class H512(ScalePrimitive):
 
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(64).hex())
@@ -539,10 +551,14 @@ class Struct(ScaleType):
 
         return result
 
-    def process_encode(self, value):
+    def process_encode(self, value: Union[dict, tuple]) -&gt; ScaleBytes:
         data = ScaleBytes(bytearray())
 
         self.value_object = {}
+
+        if type(value) is tuple:
+            # Convert tuple to dict
+            value = {key: value[idx] for idx, (key, _) in enumerate(self.type_mapping)}
 
         for key, data_type in self.type_mapping:
             if key not in value:
@@ -555,6 +571,20 @@ class Struct(ScaleType):
             self.value_object[key] = element_obj
 
         return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+            return cls.__name__
+
+        result = {}
+        for key, data_type in cls.type_mapping:
+            if data_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(data_type)
+                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+            result[key] = data_type
+        return result
 
 
 class Tuple(ScaleType):
@@ -605,6 +635,21 @@ class Tuple(ScaleType):
             self.value_object += (element_obj,)
 
         return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        result = ()
+
+        for member_type in cls.type_mapping:
+            if member_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(member_type)
+                member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
+                if len(cls.type_mapping) == 1:
+                    return member_type
+
+            result += (member_type,)
+        return result
 
 
 class Set(ScaleType):
@@ -746,7 +791,7 @@ class Era(ScaleType):
         return
 
 
-class Bool(ScaleType):
+class Bool(ScalePrimitive):
 
     def process(self):
         return self.get_next_bool()
@@ -822,6 +867,10 @@ class GenericAccountId(H256):
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
         return
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;AccountId&#39;
 
 
 class GenericEthereumAccountId(H160):
@@ -912,6 +961,17 @@ class Vec(ScaleType):
 
     def __len__(self):
         return len(self.value_object)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
+        if sub_type_decomp == &#39;u8&#39;:
+            # Translate Vec&lt;u8&gt; to Bytes
+            return &#39;Bytes&#39;
+        else:
+            return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]
 
 
 class BoundedVec(Vec):
@@ -1028,6 +1088,9 @@ class GenericAddress(ScaleType):
         else:
             return self.value
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return cls.__name__.lower()
 
 class AccountIdAddress(GenericAddress):
 
@@ -1155,6 +1218,30 @@ class Enum(ScaleType):
                 return list(self.value.values())[0]
             else:
                 return self.value_list[self.index]
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+            return cls.__name__
+
+        if cls.type_mapping:
+
+            # Check if type_mapping can be converted to simple value_list
+            if all([t == &#39;Null&#39; for n, t in cls.type_mapping]):
+                return tuple([n for n, t in cls.type_mapping if n is not None])
+
+            result = {}
+            for key, data_type in cls.type_mapping:
+                if data_type == &#39;Null&#39;:
+                    data_type = None
+                if data_type is not None:
+                    scale_obj = cls.runtime_config.create_scale_object(data_type)
+                    data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                result[key] = data_type
+            return result
+        else:
+            return tuple(cls.value_list)
 
 
 class Data(Enum):
@@ -1328,6 +1415,13 @@ class GenericVote(U8):
 
         return super().process_encode(value)
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return {
+            &#39;aye&#39;: &#39;bool&#39;,
+            &#39;conviction&#39;: cls.runtime_config.create_scale_object(&#39;Conviction&#39;).generate_type_decomposition()
+        }
+
 
 class GenericCall(ScaleType):
 
@@ -1363,18 +1457,24 @@ class GenericCall(ScaleType):
             if len(self.call_args) &gt; 0:
 
                 # Check args format
-                if type(call_obj[1].value) is not tuple:
-                    call_args_values = (call_obj[1],)
-                else:
-                    call_args_values = call_obj[1]
+                if type(call_obj[1].value) is dict:
 
-                for idx, call_arg in enumerate(self.call_args):
-                    call_args.append({
-                        &#39;name&#39;: call_arg.value[&#39;name&#39;],
-                        &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
-                        &#39;value&#39;: call_args_values[idx].value
-                    })
-                    self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
+                    for idx, call_arg in enumerate(self.call_args):
+                        call_args.append({
+                            &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                            &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                            &#39;value&#39;: call_obj[1].value[call_arg.value[&#39;name&#39;]]
+                        })
+                        self.call_args[idx].value_object[&#39;value&#39;] = call_obj[1][call_arg.value[&#39;name&#39;]]
+                else:
+                    # Backwards compatibility
+                    for idx, call_arg in enumerate(self.call_args):
+                        call_args.append({
+                            &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                            &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                            &#39;value&#39;: call_obj[1][idx].value
+                        })
+                        self.call_args[idx].value_object[&#39;value&#39;] = call_obj[1][idx]
 
             self.value_object = {
                 &#39;call_index&#39;: f&#39;0x{self.call_index}&#39;,
@@ -1546,6 +1646,10 @@ class GenericCall(ScaleType):
 
             return data
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;Call&#39;
+
 
 class GenericContractExecResult(Enum):
     def __init__(self, data=None, contract_result_scale_type=None, **kwargs):
@@ -1637,8 +1741,21 @@ class WrapperKeepOpaque(Struct):
             self.value_object = bytes_obj.value_object
             return f&#39;0x{bytes_obj.value_object.hex()}&#39;
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        # Return decomposition of wrapped type
+        wrapped_obj = cls.runtime_config.create_scale_object(
+            type_string=cls.type_mapping[1]
+        )
+        return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
 
 class MultiAccountId(GenericAccountId):
+
+    def __init__(self, data=None, **kwargs):
+        self.signatories = []
+        self.threshold = None
+        super().__init__(data, **kwargs)
 
     @classmethod
     def create_from_account_list(cls, accounts, threshold):
@@ -1660,6 +1777,8 @@ class MultiAccountId(GenericAccountId):
 
         multi_account_obj = cls(runtime_config=cls.runtime_config)
         multi_account_obj.encode(multi_account_id)
+        multi_account_obj.signatories = sorted(account_ids)
+        multi_account_obj.threshold = threshold
 
         return multi_account_obj
 
@@ -1693,6 +1812,9 @@ class FixedLengthArray(ScaleType):
             if type(value) is str and value[0:2] == &#39;0x&#39;:
                 value = bytes.fromhex(value[2:])
 
+            if type(value) is list:
+                value = bytes(value)
+
             if type(value) is not bytes:
                 raise ValueError(&#39;Value should a hex-string (0x..) or bytes&#39;)
 
@@ -1713,6 +1835,11 @@ class FixedLengthArray(ScaleType):
                 data += element_obj.encode(element_value)
 
             return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
+        return f&#39;[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]&#39;
 
 
 class GenericMultiAddress(Enum):
@@ -2077,35 +2204,6 @@ class GenericRegistryType(Struct):
 
         return super().process_encode(value)
 
-    def retrieve_type_decomposition(self):
-        if &#39;variant&#39; in self.value[&#39;def&#39;]:
-            for variant in self.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]:
-                for field in variant[&#39;fields&#39;]:
-                    field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
-                    variant[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;composite&#39; in self.value[&#39;def&#39;]:
-            for field in self.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]:
-                field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
-                field[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;array&#39; in self.value[&#39;def&#39;]:
-            type_def = self.value[&#39;def&#39;][&#39;array&#39;]
-            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
-            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;sequence&#39; in self.value[&#39;def&#39;]:
-            type_def = self.value[&#39;def&#39;][&#39;sequence&#39;]
-            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
-            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;tuple&#39; in self.value[&#39;def&#39;]:
-            for idx, type_def in self.value[&#39;def&#39;][&#39;tuple&#39;]:
-                element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def}&#34;)
-                self.value[&#39;def&#39;][&#39;tuple&#39;][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
-
-        return self.value[&#39;def&#39;]
-
 
 class GenericField(Struct):
 
@@ -2156,7 +2254,7 @@ class GenericVariant(Struct):
         for arg in self.args:
             param_type_obj = self.runtime_config.create_scale_object(arg.type)
 
-            param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+            param_info[arg.name] = param_type_obj.generate_type_decomposition()
 
         return param_info
 
@@ -2478,10 +2576,17 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
             raise NotImplementedError()
 
     def get_param_info(self) -&gt; list:
+        &#34;&#34;&#34;
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        &#34;&#34;&#34;
         param_info = []
         for param_type_string in self.get_params_type_string():
             scale_type = self.runtime_config.create_scale_object(param_type_string)
-            param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+            param_info.append(scale_type.generate_type_decomposition())
 
         return param_info
 
@@ -3374,7 +3479,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Bool(ScaleType):
+<pre><code class="python">class Bool(ScalePrimitive):
 
     def process(self):
         return self.get_next_bool()
@@ -3389,6 +3494,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -3436,9 +3542,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3893,7 +3999,12 @@ inheritance.</p>
                         ((bytes_length - 4) &lt;&lt; 2 | 0b11).to_bytes(1, &#39;little&#39;) + value.to_bytes(bytes_length,
                                                                                                 &#39;little&#39;)))
             else:
-                raise ValueError(&#39;{} out of range&#39;.format(value))</code></pre>
+                raise ValueError(&#39;{} out of range&#39;.format(value))
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3910,6 +4021,24 @@ inheritance.</p>
 <dt id="scalecodec.types.Compact.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.Compact.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+    return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -4634,7 +4763,31 @@ inheritance.</p>
 
                 return list(self.value.values())[0]
             else:
-                return self.value_list[self.index]</code></pre>
+                return self.value_list[self.index]
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+            return cls.__name__
+
+        if cls.type_mapping:
+
+            # Check if type_mapping can be converted to simple value_list
+            if all([t == &#39;Null&#39; for n, t in cls.type_mapping]):
+                return tuple([n for n, t in cls.type_mapping if n is not None])
+
+            result = {}
+            for key, data_type in cls.type_mapping:
+                if data_type == &#39;Null&#39;:
+                    data_type = None
+                if data_type is not None:
+                    scale_obj = cls.runtime_config.create_scale_object(data_type)
+                    data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                result[key] = data_type
+            return result
+        else:
+            return tuple(cls.value_list)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4667,6 +4820,43 @@ inheritance.</p>
 <dt id="scalecodec.types.Enum.value_list"><code class="name">var <span class="ident">value_list</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.Enum.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+    if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+        return cls.__name__
+
+    if cls.type_mapping:
+
+        # Check if type_mapping can be converted to simple value_list
+        if all([t == &#39;Null&#39; for n, t in cls.type_mapping]):
+            return tuple([n for n, t in cls.type_mapping if n is not None])
+
+        result = {}
+        for key, data_type in cls.type_mapping:
+            if data_type == &#39;Null&#39;:
+                data_type = None
+            if data_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(data_type)
+                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+            result[key] = data_type
+        return result
+    else:
+        return tuple(cls.value_list)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -5284,7 +5474,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class F32(ScaleType):
+<pre><code class="python">class F32(ScalePrimitive):
 
     def process(self):
         return struct.unpack(&#39;f&#39;, self.get_next_bytes(4))[0]
@@ -5297,6 +5487,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -5342,9 +5533,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5371,7 +5562,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class F64(ScaleType):
+<pre><code class="python">class F64(ScalePrimitive):
 
     def process(self):
         return struct.unpack(&#39;d&#39;, self.get_next_bytes(8))[0]
@@ -5384,6 +5575,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -5429,9 +5621,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5487,6 +5679,9 @@ inheritance.</p>
             if type(value) is str and value[0:2] == &#39;0x&#39;:
                 value = bytes.fromhex(value[2:])
 
+            if type(value) is list:
+                value = bytes(value)
+
             if type(value) is not bytes:
                 raise ValueError(&#39;Value should a hex-string (0x..) or bytes&#39;)
 
@@ -5506,7 +5701,12 @@ inheritance.</p>
                 )
                 data += element_obj.encode(element_value)
 
-            return data</code></pre>
+            return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
+        return f&#39;[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5527,6 +5727,24 @@ inheritance.</p>
 <dt id="scalecodec.types.FixedLengthArray.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.FixedLengthArray.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
+    return f&#39;[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]&#39;</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -5574,6 +5792,9 @@ inheritance.</p>
         # u8 arrays are represented as bytes or hex-bytes (e.g. [u8; 3] as 0x123456)
         if type(value) is str and value[0:2] == &#39;0x&#39;:
             value = bytes.fromhex(value[2:])
+
+        if type(value) is list:
+            value = bytes(value)
 
         if type(value) is not bytes:
             raise ValueError(&#39;Value should a hex-string (0x..) or bytes&#39;)
@@ -5659,11 +5880,16 @@ inheritance.</p>
 
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
-        return</code></pre>
+        return
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;AccountId&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scalecodec.types.H256" href="#scalecodec.types.H256">H256</a></li>
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -5681,6 +5907,20 @@ inheritance.</p>
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="scalecodec.types.GenericAccountId.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    return &#39;AccountId&#39;</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.types.GenericAccountId.process_scale_info_definition"><code class="name flex">
 <span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
@@ -5787,6 +6027,7 @@ inheritance.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scalecodec.types.U32" href="#scalecodec.types.U32">U32</a></li>
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -5888,7 +6129,11 @@ inheritance.</p>
         if self.account_id:
             return &#39;0x{}&#39;.format(self.value)
         else:
-            return self.value</code></pre>
+            return self.value
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return cls.__name__.lower()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5906,6 +6151,23 @@ inheritance.</p>
 <dt id="scalecodec.types.GenericAddress.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.GenericAddress.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    return cls.__name__.lower()</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -6140,18 +6402,24 @@ inheritance.</p>
             if len(self.call_args) &gt; 0:
 
                 # Check args format
-                if type(call_obj[1].value) is not tuple:
-                    call_args_values = (call_obj[1],)
-                else:
-                    call_args_values = call_obj[1]
+                if type(call_obj[1].value) is dict:
 
-                for idx, call_arg in enumerate(self.call_args):
-                    call_args.append({
-                        &#39;name&#39;: call_arg.value[&#39;name&#39;],
-                        &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
-                        &#39;value&#39;: call_args_values[idx].value
-                    })
-                    self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
+                    for idx, call_arg in enumerate(self.call_args):
+                        call_args.append({
+                            &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                            &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                            &#39;value&#39;: call_obj[1].value[call_arg.value[&#39;name&#39;]]
+                        })
+                        self.call_args[idx].value_object[&#39;value&#39;] = call_obj[1][call_arg.value[&#39;name&#39;]]
+                else:
+                    # Backwards compatibility
+                    for idx, call_arg in enumerate(self.call_args):
+                        call_args.append({
+                            &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                            &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                            &#39;value&#39;: call_obj[1][idx].value
+                        })
+                        self.call_args[idx].value_object[&#39;value&#39;] = call_obj[1][idx]
 
             self.value_object = {
                 &#39;call_index&#39;: f&#39;0x{self.call_index}&#39;,
@@ -6321,7 +6589,11 @@ inheritance.</p>
 
                         self.value_object[&#39;call_args&#39;][arg.name] = arg_obj
 
-            return data</code></pre>
+            return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;Call&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6334,6 +6606,23 @@ inheritance.</p>
 <dt id="scalecodec.types.GenericCall.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.GenericCall.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    return &#39;Call&#39;</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -6370,18 +6659,24 @@ inheritance.</p>
         if len(self.call_args) &gt; 0:
 
             # Check args format
-            if type(call_obj[1].value) is not tuple:
-                call_args_values = (call_obj[1],)
-            else:
-                call_args_values = call_obj[1]
+            if type(call_obj[1].value) is dict:
 
-            for idx, call_arg in enumerate(self.call_args):
-                call_args.append({
-                    &#39;name&#39;: call_arg.value[&#39;name&#39;],
-                    &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
-                    &#39;value&#39;: call_args_values[idx].value
-                })
-                self.call_args[idx].value_object[&#39;value&#39;] = call_args_values[idx]
+                for idx, call_arg in enumerate(self.call_args):
+                    call_args.append({
+                        &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                        &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                        &#39;value&#39;: call_obj[1].value[call_arg.value[&#39;name&#39;]]
+                    })
+                    self.call_args[idx].value_object[&#39;value&#39;] = call_obj[1][call_arg.value[&#39;name&#39;]]
+            else:
+                # Backwards compatibility
+                for idx, call_arg in enumerate(self.call_args):
+                    call_args.append({
+                        &#39;name&#39;: call_arg.value[&#39;name&#39;],
+                        &#39;type&#39;: self.convert_type(call_arg.value[&#39;typeName&#39;]),
+                        &#39;value&#39;: call_obj[1][idx].value
+                    })
+                    self.call_args[idx].value_object[&#39;value&#39;] = call_obj[1][idx]
 
         self.value_object = {
             &#39;call_index&#39;: f&#39;0x{self.call_index}&#39;,
@@ -6950,6 +7245,7 @@ inheritance.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scalecodec.types.H160" href="#scalecodec.types.H160">H160</a></li>
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -9371,36 +9667,7 @@ inheritance.</p>
         if &#39;docs&#39; not in value:
             value[&#39;docs&#39;] = []
 
-        return super().process_encode(value)
-
-    def retrieve_type_decomposition(self):
-        if &#39;variant&#39; in self.value[&#39;def&#39;]:
-            for variant in self.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]:
-                for field in variant[&#39;fields&#39;]:
-                    field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
-                    variant[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;composite&#39; in self.value[&#39;def&#39;]:
-            for field in self.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]:
-                field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
-                field[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;array&#39; in self.value[&#39;def&#39;]:
-            type_def = self.value[&#39;def&#39;][&#39;array&#39;]
-            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
-            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;sequence&#39; in self.value[&#39;def&#39;]:
-            type_def = self.value[&#39;def&#39;][&#39;sequence&#39;]
-            array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
-            type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-        elif &#39;tuple&#39; in self.value[&#39;def&#39;]:
-            for idx, type_def in self.value[&#39;def&#39;][&#39;tuple&#39;]:
-                element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def}&#34;)
-                self.value[&#39;def&#39;][&#39;tuple&#39;][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
-
-        return self.value[&#39;def&#39;]</code></pre>
+        return super().process_encode(value)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -9453,45 +9720,6 @@ def docs(self):
         value[&#39;docs&#39;] = []
 
     return super().process_encode(value)</code></pre>
-</details>
-</dd>
-<dt id="scalecodec.types.GenericRegistryType.retrieve_type_decomposition"><code class="name flex">
-<span>def <span class="ident">retrieve_type_decomposition</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def retrieve_type_decomposition(self):
-    if &#39;variant&#39; in self.value[&#39;def&#39;]:
-        for variant in self.value[&#39;def&#39;][&#39;variant&#39;][&#39;variants&#39;]:
-            for field in variant[&#39;fields&#39;]:
-                field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
-                variant[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-    elif &#39;composite&#39; in self.value[&#39;def&#39;]:
-        for field in self.value[&#39;def&#39;][&#39;composite&#39;][&#39;fields&#39;]:
-            field_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{field[&#39;type&#39;]}&#34;)
-            field[&#39;value&#39;] = field_obj.scale_info_type.retrieve_type_decomposition()
-
-    elif &#39;array&#39; in self.value[&#39;def&#39;]:
-        type_def = self.value[&#39;def&#39;][&#39;array&#39;]
-        array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
-        type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-    elif &#39;sequence&#39; in self.value[&#39;def&#39;]:
-        type_def = self.value[&#39;def&#39;][&#39;sequence&#39;]
-        array_element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def[&#39;type&#39;]}&#34;)
-        type_def[&#39;value&#39;] = array_element_obj.scale_info_type.retrieve_type_decomposition()
-
-    elif &#39;tuple&#39; in self.value[&#39;def&#39;]:
-        for idx, type_def in self.value[&#39;def&#39;][&#39;tuple&#39;]:
-            element_obj = self.runtime_config.create_scale_object(f&#34;scale_info::{type_def}&#34;)
-            self.value[&#39;def&#39;][&#39;tuple&#39;][idx] = element_obj.scale_info_type.retrieve_type_decomposition()
-
-    return self.value[&#39;def&#39;]</code></pre>
 </details>
 </dd>
 </dl>
@@ -10292,7 +10520,7 @@ inheritance.</p>
         for arg in self.args:
             param_type_obj = self.runtime_config.create_scale_object(arg.type)
 
-            param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+            param_info[arg.name] = param_type_obj.generate_type_decomposition()
 
         return param_info
 
@@ -10401,7 +10629,7 @@ def name(self):
     for arg in self.args:
         param_type_obj = self.runtime_config.create_scale_object(arg.type)
 
-        param_info[arg.name] = param_type_obj.scale_info_type.retrieve_type_decomposition()
+        param_info[arg.name] = param_type_obj.generate_type_decomposition()
 
     return param_info</code></pre>
 </details>
@@ -10497,11 +10725,19 @@ inheritance.</p>
         if type(value) is not int:
             raise ValueError(&#39;Incorrect format for vote&#39;)
 
-        return super().process_encode(value)</code></pre>
+        return super().process_encode(value)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return {
+            &#39;aye&#39;: &#39;bool&#39;,
+            &#39;conviction&#39;: cls.runtime_config.create_scale_object(&#39;Conviction&#39;).generate_type_decomposition()
+        }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scalecodec.types.U8" href="#scalecodec.types.U8">U8</a></li>
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -10511,6 +10747,26 @@ inheritance.</p>
 <dt id="scalecodec.types.GenericVote.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.GenericVote.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    return {
+        &#39;aye&#39;: &#39;bool&#39;,
+        &#39;conviction&#39;: cls.runtime_config.create_scale_object(&#39;Conviction&#39;).generate_type_decomposition()
+    }</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -10601,7 +10857,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class H160(ScaleType):
+<pre><code class="python">class H160(ScalePrimitive):
 
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(20).hex())
@@ -10613,6 +10869,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -10661,9 +10918,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -10690,7 +10947,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class H256(ScaleType):
+<pre><code class="python">class H256(ScalePrimitive):
 
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(32).hex())
@@ -10702,6 +10959,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -10750,9 +11008,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -10779,7 +11037,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class H512(ScaleType):
+<pre><code class="python">class H512(ScalePrimitive):
 
     def process(self):
         return &#39;0x{}&#39;.format(self.get_next_bytes(64).hex())
@@ -10796,6 +11054,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -10845,9 +11104,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11031,7 +11290,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class I128(ScaleType):
+<pre><code class="python">class I128(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(16), byteorder=&#39;little&#39;, signed=True)
@@ -11045,6 +11304,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11091,9 +11351,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11120,7 +11380,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class I16(ScaleType):
+<pre><code class="python">class I16(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder=&#39;little&#39;, signed=True)
@@ -11134,6 +11394,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11180,9 +11441,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11209,7 +11470,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class I256(ScaleType):
+<pre><code class="python">class I256(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(32), byteorder=&#39;little&#39;, signed=True)
@@ -11223,6 +11484,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11269,9 +11531,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11298,7 +11560,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class I32(ScaleType):
+<pre><code class="python">class I32(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder=&#39;little&#39;, signed=True)
@@ -11312,6 +11574,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11358,9 +11621,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11387,7 +11650,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class I64(ScaleType):
+<pre><code class="python">class I64(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(8), byteorder=&#39;little&#39;, signed=True)
@@ -11401,6 +11664,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11447,9 +11711,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11476,7 +11740,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class I8(ScaleType):
+<pre><code class="python">class I8(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(1), byteorder=&#39;little&#39;, signed=True)
@@ -11490,6 +11754,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11536,9 +11801,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -11826,6 +12091,11 @@ inheritance.</p>
 </summary>
 <pre><code class="python">class MultiAccountId(GenericAccountId):
 
+    def __init__(self, data=None, **kwargs):
+        self.signatories = []
+        self.threshold = None
+        super().__init__(data, **kwargs)
+
     @classmethod
     def create_from_account_list(cls, accounts, threshold):
         from scalecodec.utils.ss58 import ss58_decode
@@ -11846,6 +12116,8 @@ inheritance.</p>
 
         multi_account_obj = cls(runtime_config=cls.runtime_config)
         multi_account_obj.encode(multi_account_id)
+        multi_account_obj.signatories = sorted(account_ids)
+        multi_account_obj.threshold = threshold
 
         return multi_account_obj</code></pre>
 </details>
@@ -11853,6 +12125,7 @@ inheritance.</p>
 <ul class="hlist">
 <li><a title="scalecodec.types.GenericAccountId" href="#scalecodec.types.GenericAccountId">GenericAccountId</a></li>
 <li><a title="scalecodec.types.H256" href="#scalecodec.types.H256">H256</a></li>
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -11895,6 +12168,8 @@ def create_from_account_list(cls, accounts, threshold):
 
     multi_account_obj = cls(runtime_config=cls.runtime_config)
     multi_account_obj.encode(multi_account_id)
+    multi_account_obj.signatories = sorted(account_ids)
+    multi_account_obj.threshold = threshold
 
     return multi_account_obj</code></pre>
 </details>
@@ -12141,7 +12416,12 @@ inheritance.</p>
 
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: &#39;GenericRegistryType&#39;, prefix: str):
-        cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;</code></pre>
+        cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -12158,6 +12438,21 @@ inheritance.</p>
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="scalecodec.types.Option.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+    return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.types.Option.process_scale_info_definition"><code class="name flex">
 <span>def <span class="ident">process_scale_info_definition</span></span>(<span>scale_info_definition: <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a>, prefix: str)</span>
 </code></dt>
@@ -13180,10 +13475,17 @@ inheritance.</p>
             raise NotImplementedError()
 
     def get_param_info(self) -&gt; list:
+        &#34;&#34;&#34;
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        &#34;&#34;&#34;
         param_info = []
         for param_type_string in self.get_params_type_string():
             scale_type = self.runtime_config.create_scale_object(param_type_string)
-            param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+            param_info.append(scale_type.generate_type_decomposition())
 
         return param_info</code></pre>
 </details>
@@ -13257,16 +13559,28 @@ inheritance.</p>
 <span>def <span class="ident">get_param_info</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return a type decomposition how to format parameters for current storage function</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_param_info(self) -&gt; list:
+    &#34;&#34;&#34;
+    Return a type decomposition how to format parameters for current storage function
+
+    Returns
+    -------
+    list
+    &#34;&#34;&#34;
     param_info = []
     for param_type_string in self.get_params_type_string():
         scale_type = self.runtime_config.create_scale_object(param_type_string)
-        param_info.append(scale_type.scale_info_type.retrieve_type_decomposition())
+        param_info.append(scale_type.generate_type_decomposition())
 
     return param_info</code></pre>
 </details>
@@ -13808,10 +14122,14 @@ inheritance.</p>
 
         return result
 
-    def process_encode(self, value):
+    def process_encode(self, value: Union[dict, tuple]) -&gt; ScaleBytes:
         data = ScaleBytes(bytearray())
 
         self.value_object = {}
+
+        if type(value) is tuple:
+            # Convert tuple to dict
+            value = {key: value[idx] for idx, (key, _) in enumerate(self.type_mapping)}
 
         for key, data_type in self.type_mapping:
             if key not in value:
@@ -13823,7 +14141,21 @@ inheritance.</p>
             data += element_obj.encode(value[key])
             self.value_object[key] = element_obj
 
-        return data</code></pre>
+        return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+            return cls.__name__
+
+        result = {}
+        for key, data_type in cls.type_mapping:
+            if data_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(data_type)
+                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+            result[key] = data_type
+        return result</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -13865,6 +14197,33 @@ inheritance.</p>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.Struct.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+    if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+        return cls.__name__
+
+    result = {}
+    for key, data_type in cls.type_mapping:
+        if data_type is not None:
+            scale_obj = cls.runtime_config.create_scale_object(data_type)
+            data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        result[key] = data_type
+    return result</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="scalecodec.types.Struct.process"><code class="name flex">
@@ -13894,7 +14253,7 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scalecodec.types.Struct.process_encode"><code class="name flex">
-<span>def <span class="ident">process_encode</span></span>(<span>self, value)</span>
+<span>def <span class="ident">process_encode</span></span>(<span>self, value: Union[dict, tuple]) ‑> <a title="scalecodec.base.ScaleBytes" href="base.html#scalecodec.base.ScaleBytes">ScaleBytes</a></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -13902,10 +14261,14 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process_encode(self, value):
+<pre><code class="python">def process_encode(self, value: Union[dict, tuple]) -&gt; ScaleBytes:
     data = ScaleBytes(bytearray())
 
     self.value_object = {}
+
+    if type(value) is tuple:
+        # Convert tuple to dict
+        value = {key: value[idx] for idx, (key, _) in enumerate(self.type_mapping)}
 
     for key, data_type in self.type_mapping:
         if key not in value:
@@ -13999,7 +14362,22 @@ inheritance.</p>
             data += element_obj.encode(value[idx])
             self.value_object += (element_obj,)
 
-        return data</code></pre>
+        return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        result = ()
+
+        for member_type in cls.type_mapping:
+            if member_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(member_type)
+                member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
+                if len(cls.type_mapping) == 1:
+                    return member_type
+
+            result += (member_type,)
+        return result</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -14016,6 +14394,34 @@ inheritance.</p>
 <dt id="scalecodec.types.Tuple.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.Tuple.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    result = ()
+
+    for member_type in cls.type_mapping:
+        if member_type is not None:
+            scale_obj = cls.runtime_config.create_scale_object(member_type)
+            member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
+            if len(cls.type_mapping) == 1:
+                return member_type
+
+        result += (member_type,)
+    return result</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -14194,7 +14600,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class U128(ScaleType):
+<pre><code class="python">class U128(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder=&#39;little&#39;))
@@ -14208,6 +14614,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -14254,9 +14661,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14283,7 +14690,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class U16(ScaleType):
+<pre><code class="python">class U16(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder=&#39;little&#39;)
@@ -14297,6 +14704,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -14343,9 +14751,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14372,7 +14780,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class U256(ScaleType):
+<pre><code class="python">class U256(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(32), byteorder=&#39;little&#39;))
@@ -14386,6 +14794,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -14432,9 +14841,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14461,7 +14870,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class U32(ScaleType):
+<pre><code class="python">class U32(ScalePrimitive):
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder=&#39;little&#39;)
@@ -14475,6 +14884,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -14525,9 +14935,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14554,7 +14964,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class U64(ScaleType):
+<pre><code class="python">class U64(ScalePrimitive):
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder=&#39;little&#39;))
@@ -14568,6 +14978,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -14614,9 +15025,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14643,7 +15054,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class U8(ScaleType):
+<pre><code class="python">class U8(ScalePrimitive):
 
     def process(self):
         return self.get_next_u8()
@@ -14657,6 +15068,7 @@ inheritance.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></li>
 <li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
 <li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
 <li>abc.ABC</li>
@@ -14707,9 +15119,9 @@ inheritance.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></b></code>:
+<li><code><b><a title="scalecodec.base.ScalePrimitive" href="base.html#scalecodec.base.ScalePrimitive">ScalePrimitive</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scalecodec.base.ScaleType.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+<li><code><a title="scalecodec.base.ScalePrimitive.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14812,7 +15224,18 @@ inheritance.</p>
         return data
 
     def __len__(self):
-        return len(self.value_object)</code></pre>
+        return len(self.value_object)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
+        if sub_type_decomp == &#39;u8&#39;:
+            # Translate Vec&lt;u8&gt; to Bytes
+            return &#39;Bytes&#39;
+        else:
+            return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -14829,6 +15252,30 @@ inheritance.</p>
 <dt id="scalecodec.types.Vec.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.Vec.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+    sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+
+    if sub_type_decomp == &#39;u8&#39;:
+        # Translate Vec&lt;u8&gt; to Bytes
+        return &#39;Bytes&#39;
+    else:
+        return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -14989,7 +15436,15 @@ inheritance.</p>
         except:
             # Decoding failed; return Opaque type
             self.value_object = bytes_obj.value_object
-            return f&#39;0x{bytes_obj.value_object.hex()}&#39;</code></pre>
+            return f&#39;0x{bytes_obj.value_object.hex()}&#39;
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        # Return decomposition of wrapped type
+        wrapped_obj = cls.runtime_config.create_scale_object(
+            type_string=cls.type_mapping[1]
+        )
+        return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -15003,6 +15458,27 @@ inheritance.</p>
 <dt id="scalecodec.types.WrapperKeepOpaque.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.WrapperKeepOpaque.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    # Return decomposition of wrapped type
+    wrapped_obj = cls.runtime_config.create_scale_object(
+        type_string=cls.type_mapping[1]
+    )
+    return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -15160,6 +15636,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.Compact" href="#scalecodec.types.Compact">Compact</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.Compact.generate_type_decomposition" href="#scalecodec.types.Compact.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Compact.process" href="#scalecodec.types.Compact.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Compact.process_compact_bytes" href="#scalecodec.types.Compact.process_compact_bytes">process_compact_bytes</a></code></li>
 <li><code><a title="scalecodec.types.Compact.process_encode" href="#scalecodec.types.Compact.process_encode">process_encode</a></code></li>
@@ -15204,7 +15681,8 @@ inheritance.</p>
 </li>
 <li>
 <h4><code><a title="scalecodec.types.Enum" href="#scalecodec.types.Enum">Enum</a></code></h4>
-<ul class="two-column">
+<ul class="">
+<li><code><a title="scalecodec.types.Enum.generate_type_decomposition" href="#scalecodec.types.Enum.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Enum.get_enum_value" href="#scalecodec.types.Enum.get_enum_value">get_enum_value</a></code></li>
 <li><code><a title="scalecodec.types.Enum.process" href="#scalecodec.types.Enum.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Enum.process_encode" href="#scalecodec.types.Enum.process_encode">process_encode</a></code></li>
@@ -15258,6 +15736,7 @@ inheritance.</p>
 <h4><code><a title="scalecodec.types.FixedLengthArray" href="#scalecodec.types.FixedLengthArray">FixedLengthArray</a></code></h4>
 <ul class="">
 <li><code><a title="scalecodec.types.FixedLengthArray.element_count" href="#scalecodec.types.FixedLengthArray.element_count">element_count</a></code></li>
+<li><code><a title="scalecodec.types.FixedLengthArray.generate_type_decomposition" href="#scalecodec.types.FixedLengthArray.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.FixedLengthArray.process" href="#scalecodec.types.FixedLengthArray.process">process</a></code></li>
 <li><code><a title="scalecodec.types.FixedLengthArray.process_encode" href="#scalecodec.types.FixedLengthArray.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.FixedLengthArray.scale_info_type" href="#scalecodec.types.FixedLengthArray.scale_info_type">scale_info_type</a></code></li>
@@ -15266,6 +15745,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.GenericAccountId" href="#scalecodec.types.GenericAccountId">GenericAccountId</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.GenericAccountId.generate_type_decomposition" href="#scalecodec.types.GenericAccountId.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericAccountId.process" href="#scalecodec.types.GenericAccountId.process">process</a></code></li>
 <li><code><a title="scalecodec.types.GenericAccountId.process_encode" href="#scalecodec.types.GenericAccountId.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericAccountId.process_scale_info_definition" href="#scalecodec.types.GenericAccountId.process_scale_info_definition">process_scale_info_definition</a></code></li>
@@ -15282,6 +15762,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.GenericAddress" href="#scalecodec.types.GenericAddress">GenericAddress</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.GenericAddress.generate_type_decomposition" href="#scalecodec.types.GenericAddress.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericAddress.process" href="#scalecodec.types.GenericAddress.process">process</a></code></li>
 <li><code><a title="scalecodec.types.GenericAddress.process_encode" href="#scalecodec.types.GenericAddress.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericAddress.scale_info_type" href="#scalecodec.types.GenericAddress.scale_info_type">scale_info_type</a></code></li>
@@ -15299,6 +15780,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.GenericCall" href="#scalecodec.types.GenericCall">GenericCall</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.GenericCall.generate_type_decomposition" href="#scalecodec.types.GenericCall.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericCall.process" href="#scalecodec.types.GenericCall.process">process</a></code></li>
 <li><code><a title="scalecodec.types.GenericCall.process_encode" href="#scalecodec.types.GenericCall.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericCall.scale_info_type" href="#scalecodec.types.GenericCall.scale_info_type">scale_info_type</a></code></li>
@@ -15491,7 +15973,6 @@ inheritance.</p>
 <ul class="">
 <li><code><a title="scalecodec.types.GenericRegistryType.docs" href="#scalecodec.types.GenericRegistryType.docs">docs</a></code></li>
 <li><code><a title="scalecodec.types.GenericRegistryType.process_encode" href="#scalecodec.types.GenericRegistryType.process_encode">process_encode</a></code></li>
-<li><code><a title="scalecodec.types.GenericRegistryType.retrieve_type_decomposition" href="#scalecodec.types.GenericRegistryType.retrieve_type_decomposition">retrieve_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericRegistryType.scale_info_type" href="#scalecodec.types.GenericRegistryType.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
@@ -15571,6 +16052,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.GenericVote" href="#scalecodec.types.GenericVote">GenericVote</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.GenericVote.generate_type_decomposition" href="#scalecodec.types.GenericVote.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericVote.process" href="#scalecodec.types.GenericVote.process">process</a></code></li>
 <li><code><a title="scalecodec.types.GenericVote.process_encode" href="#scalecodec.types.GenericVote.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericVote.scale_info_type" href="#scalecodec.types.GenericVote.scale_info_type">scale_info_type</a></code></li>
@@ -15704,6 +16186,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.Option" href="#scalecodec.types.Option">Option</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.Option.generate_type_decomposition" href="#scalecodec.types.Option.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Option.process" href="#scalecodec.types.Option.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Option.process_encode" href="#scalecodec.types.Option.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.Option.process_scale_info_definition" href="#scalecodec.types.Option.process_scale_info_definition">process_scale_info_definition</a></code></li>
@@ -15843,6 +16326,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.Struct.generate_type_decomposition" href="#scalecodec.types.Struct.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Struct.process" href="#scalecodec.types.Struct.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Struct.process_encode" href="#scalecodec.types.Struct.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.Struct.scale_info_type" href="#scalecodec.types.Struct.scale_info_type">scale_info_type</a></code></li>
@@ -15851,6 +16335,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.Tuple" href="#scalecodec.types.Tuple">Tuple</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.Tuple.generate_type_decomposition" href="#scalecodec.types.Tuple.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Tuple.process" href="#scalecodec.types.Tuple.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Tuple.process_encode" href="#scalecodec.types.Tuple.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.Tuple.scale_info_type" href="#scalecodec.types.Tuple.scale_info_type">scale_info_type</a></code></li>
@@ -15915,6 +16400,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.Vec" href="#scalecodec.types.Vec">Vec</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.Vec.generate_type_decomposition" href="#scalecodec.types.Vec.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Vec.process" href="#scalecodec.types.Vec.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Vec.process_encode" href="#scalecodec.types.Vec.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.Vec.scale_info_type" href="#scalecodec.types.Vec.scale_info_type">scale_info_type</a></code></li>
@@ -15923,6 +16409,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scalecodec.types.WrapperKeepOpaque" href="#scalecodec.types.WrapperKeepOpaque">WrapperKeepOpaque</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.WrapperKeepOpaque.generate_type_decomposition" href="#scalecodec.types.WrapperKeepOpaque.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.WrapperKeepOpaque.process" href="#scalecodec.types.WrapperKeepOpaque.process">process</a></code></li>
 <li><code><a title="scalecodec.types.WrapperKeepOpaque.process_encode" href="#scalecodec.types.WrapperKeepOpaque.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.WrapperKeepOpaque.scale_info_type" href="#scalecodec.types.WrapperKeepOpaque.scale_info_type">scale_info_type</a></code></li>

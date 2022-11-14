@@ -37,7 +37,7 @@ class ScaleInfoTestCase(unittest.TestCase):
         # scale_info_defaults = load_type_registry_file(os.path.join(module_path, 'fixtures', 'scale_info_defaults.json'))
 
         cls.runtime_config = RuntimeConfigurationObject(ss58_format=42)
-        cls.runtime_config.update_type_registry(load_type_registry_preset("metadata_types"))
+        cls.runtime_config.update_type_registry(load_type_registry_preset("core"))
         # cls.runtime_config.update_type_registry(scale_info_defaults)
 
         cls.metadata_fixture_dict = load_type_registry_file(

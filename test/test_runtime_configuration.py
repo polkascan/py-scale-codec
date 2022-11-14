@@ -30,8 +30,8 @@ class TestScaleDecoderClasses(unittest.TestCase):
     def setUpClass(cls):
         cls.runtime_config = RuntimeConfigurationObject()
         cls.runtime_config.clear_type_registry()
-        cls.runtime_config.update_type_registry(load_type_registry_preset("metadata_types"))
-        cls.runtime_config.update_type_registry(load_type_registry_preset("default"))
+        cls.runtime_config.update_type_registry(load_type_registry_preset("core"))
+        cls.runtime_config.update_type_registry(load_type_registry_preset("legacy"))
 
     def test_valid_decoding_classes(self):
         for type_string in self.runtime_config.type_registry['types'].keys():
@@ -101,7 +101,7 @@ class TestRuntimeIdCache(unittest.TestCase):
 
     def test_runtime_id_cache_lookup(self):
         runtime_config = RuntimeConfigurationObject()
-        runtime_config.update_type_registry(load_type_registry_preset("default"))
+        runtime_config.update_type_registry(load_type_registry_preset("legacy"))
         runtime_config.update_type_registry(load_type_registry_preset("kusama"))
 
         self.assertEqual(1023, runtime_config.get_runtime_id_from_upgrades(54248))
@@ -109,7 +109,7 @@ class TestRuntimeIdCache(unittest.TestCase):
 
     def test_set_head(self):
         runtime_config = RuntimeConfigurationObject()
-        runtime_config.update_type_registry(load_type_registry_preset("default"))
+        runtime_config.update_type_registry(load_type_registry_preset("legacy"))
         runtime_config.update_type_registry(load_type_registry_preset("kusama"))
 
         self.assertIsNone(runtime_config.get_runtime_id_from_upgrades(99999999998))

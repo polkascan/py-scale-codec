@@ -32,7 +32,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
 
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict["kusama_test"])
@@ -45,7 +45,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def tearDown(self) -> None:
         RuntimeConfiguration().clear_type_registry()
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 
     def test_u16(self):
         obj = RuntimeConfiguration().create_scale_object('u16')

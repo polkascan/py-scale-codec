@@ -26,7 +26,7 @@ from test.fixtures import metadata_1045_hex, metadata_substrate_node_template
 class TestScaleTypeEncoding(unittest.TestCase):
 
     def setUp(self) -> None:
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("default"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
         RuntimeConfiguration().update_type_registry(load_type_registry_preset("kusama"))
         RuntimeConfiguration().set_active_spec_version_id(1045)
 
@@ -37,7 +37,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         )
 
         RuntimeConfiguration().clear_type_registry()
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("metadata_types"))
+        RuntimeConfiguration().update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_decoder = RuntimeConfiguration().create_scale_object(
             'MetadataVersioned', data=ScaleBytes(metadata_1045_hex)
@@ -45,7 +45,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         cls.metadata_decoder.decode()
 
         cls.runtime_config_v14 = RuntimeConfigurationObject(implements_scale_info=True)
-        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("metadata_types"))
+        cls.runtime_config_v14.update_type_registry(load_type_registry_preset("core"))
 
         cls.metadata_v14_obj = cls.runtime_config_v14.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(cls.metadata_fixture_dict['V14'])
