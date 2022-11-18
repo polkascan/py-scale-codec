@@ -998,6 +998,10 @@ class BitVec(ScaleType):
 
         return data + value.to_bytes(length=byte_length, byteorder='little')
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return 'BitVec'
+
 
 class GenericAddress(ScaleType):
 
@@ -1063,6 +1067,7 @@ class GenericAddress(ScaleType):
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
         return cls.__name__.lower()
+
 
 class AccountIdAddress(GenericAddress):
 
