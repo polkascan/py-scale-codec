@@ -1,22 +1,23 @@
+# Python SCALE Codec
+
 [![Build Status](https://img.shields.io/github/workflow/status/polkascan/py-scale-codec/Run%20unit%20tests)](https://github.com/polkascan/py-scale-codec/actions?query=workflow%3A%22Run+unit+tests%22)
 [![Latest Version](https://img.shields.io/pypi/v/scalecodec.svg)](https://pypi.org/project/scalecodec/) 
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/scalecodec.svg)](https://pypi.org/project/scalecodec/)
 [![License](https://img.shields.io/pypi/l/scalecodec.svg)](https://github.com/polkascan/py-scale-codec/blob/master/LICENSE)
 
-Python SCALE Codec Library
 
-# Description
-[Substrate](https://github.com/paritytech/substrate) uses a lightweight and efficient [encoding and decoding program](https://docs.substrate.io/reference/scale-codec/) to optimize how data is sent and received over the network. The program used to serialize and deserialize data is called the SCALE codec, with SCALE being an acronym for **s**imple **c**oncatenated **a**ggregate **l**ittle-**e**ndian.
+## Description
+[Substrate](https://github.com/paritytech/substrate) uses a lightweight and efficient [encoding and decoding program](https://docs.substrate.io/reference/scale-codec/) to optimize how data is sent and received over the network. The program used to serialize and deserialize data is called the SCALE codec, with SCALE being an acronym for **S**imple **C**oncatenated **A**ggregate **L**ittle-**E**ndian.
 
-# Installation
+## Installation
 ```bash
 pip install scalecodec
 ```
 
-# API reference documentation
+## API reference documentation
 https://polkascan.github.io/py-scale-codec/
 
-# Examples of different types
+## Examples of different types
 
 | Type                                                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Example SCALE decoding value                                                | SCALE encoded value                                                             |
 | ---------------------------------------------------------------------------- |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|---------------------------------------------------------------------------------|
@@ -40,9 +41,9 @@ https://polkascan.github.io/py-scale-codec/
 | `Struct` Example: `struct Motion { pub votes: Vec<AccountId>, pub id: u32 }` | For structures, the values are named, but that is irrelevant for the encoding (names are ignored - only order matters). All containers store elements consecutively. The order of the elements is not fixed, depends on the container, and cannot be relied on at decoding. This implicitly means that decoding some byte-array into a specified structure that enforces an order and then re-encoding it could result in a different byte array than the original that was decoded. | `{"votes": ["5GDyPHLVHcQYPTWfygtPYeo gQjyZy7J9fsi4brPhgEFq4pcv"], "id": 4}` | `0x04b80269ec500e458a630846b99105c397ee57 4125823d6f4388e9c7572e115c0504000000` |
 
 
-# Code Examples
+## Code Examples
 
-## Encode a Call
+### Encode a Call
 
 ```python
 
@@ -127,9 +128,9 @@ print(type_info)
 In the above examples are simple value `Enums` representation as a `tuple` of possible values and complex `Enums` as 
 a `dict`.
 
-# Examples (prior to MetadataV14)
+## Examples (prior to MetadataV14)
 
-## Decode a SCALE-encoded Compact\<Balance\> 
+### Decode a SCALE-encoded Compact\<Balance\> 
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
@@ -139,7 +140,7 @@ obj.decode()
 print(obj.value)
 ```
 
-## Encode to Compact\<Balance\> 
+### Encode to Compact\<Balance\> 
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
@@ -148,7 +149,7 @@ scale_data = obj.encode(2503000000000000000)
 print(scale_data)
 ```
 
-## Encode to Vec\<Bytes\>
+### Encode to Vec\<Bytes\>
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
@@ -158,7 +159,7 @@ scale_data = obj.encode(value)
 print(scale_data)
 ```
 
-## Add custom types to type registry
+### Add custom types to type registry
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
@@ -179,14 +180,14 @@ custom_types = {
 RuntimeConfiguration().update_type_registry(custom_types)
 ```
 
-## Or from a custom JSON file
+### Or from a custom JSON file
 
 ```python
 RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
 RuntimeConfiguration().update_type_registry(load_type_registry_file("/path/to/type_registry.json"))
 ```
 
-## Multiple runtime configurations
+### Multiple runtime configurations
 By default a singleton is used to maintain the configuration, for multiple instances: 
 
 ```python
