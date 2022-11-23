@@ -41,8 +41,8 @@
       "type": "struct",
       "type_mapping": [
          ["nonce", "U256"],
-         ["gasPrice", "U256"],
-         ["gasLimit", "U256"],
+         ["gas_price", "U256"],
+         ["gas_limit", "U256"],
          ["action", "EthTransactionAction"],
          ["value", "U256"],
          ["input", "Bytes"],

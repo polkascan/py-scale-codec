@@ -48,7 +48,7 @@ class RuntimeConfigurationObject:
 
     def __init__(self, config_id=None, ss58_format=None, only_primitives_on_init=False, implements_scale_info=False):
         self.config_id = config_id
-        self.type_registry = {'types': {}}
+        self.type_registry = {'types': {}, 'runtime_api': {}}
         self.__initial_state = False
         self.clear_type_registry()
         self.active_spec_version_id = None
@@ -178,7 +178,7 @@ class RuntimeConfigurationObject:
     def clear_type_registry(self):
 
         if not self.__initial_state:
-            self.type_registry = {'types': {}}
+            self.type_registry = {'types': {}, 'runtime_api': {}}
 
             # Class names that contains '<' are excluded because of a side effect that is introduced in
             # get_decoder_class: "Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as
@@ -273,6 +273,7 @@ class RuntimeConfigurationObject:
         self.chain_id = type_registry.get('chain_id')
 
         self.type_registry['versioning'] = type_registry.get('versioning')
+        self.type_registry['runtime_api'].update(type_registry.get('runtime_api', {}))
         self.type_registry['runtime_upgrades'] = type_registry.get('runtime_upgrades')
 
         # Update types

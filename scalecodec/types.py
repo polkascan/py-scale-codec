@@ -2568,6 +2568,24 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         return param_info
 
 
+class GenericRuntimeCallDefinition(Struct):
+
+    def get_param_info(self) -> list:
+        """
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        """
+        param_info = []
+        for param in self.value['params']:
+            scale_type = self.runtime_config.create_scale_object(param['type'])
+            param_info.append(scale_type.generate_type_decomposition())
+
+        return param_info
+
+
 class GenericEventMetadata(Struct):
 
     @property
@@ -2729,6 +2747,10 @@ class GenericExtrinsic(ScaleType):
         self.value_object['extrinsic_length'] = length_obj
 
         return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return 'Extrinsic'
 
 
 class Extrinsic(GenericExtrinsic):
