@@ -93,6 +93,9 @@ class Compact(ScaleType):
 
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
+        if cls.sub_type is None:
+            return cls.__name__
+
         scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
         return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
 
@@ -157,6 +160,10 @@ class Option(ScaleType):
 
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if cls.sub_type is None:
+            raise ValueError("'sub_type' is not set")
+
         sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
         return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
 
@@ -547,8 +554,8 @@ class Struct(ScaleType):
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
 
-        if _recursion_level > TYPE_DECOMP_MAX_RECURSIVE:
-            return cls.__name__
+        if _recursion_level > TYPE_DECOMP_MAX_RECURSIVE or cls.type_mapping is None:
+            raise ValueError("'type_mapping' is not set")
 
         result = {}
         for key, data_type in cls.type_mapping:
@@ -611,16 +618,16 @@ class Tuple(ScaleType):
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
         result = ()
+        if cls.type_mapping:
+            for member_type in cls.type_mapping:
+                if member_type is not None:
+                    scale_obj = cls.runtime_config.create_scale_object(member_type)
+                    member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
 
-        for member_type in cls.type_mapping:
-            if member_type is not None:
-                scale_obj = cls.runtime_config.create_scale_object(member_type)
-                member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    if len(cls.type_mapping) == 1:
+                        return member_type
 
-                if len(cls.type_mapping) == 1:
-                    return member_type
-
-            result += (member_type,)
+                result += (member_type,)
         return result
 
 
@@ -658,6 +665,10 @@ class Set(ScaleType):
         u64_obj = self.runtime_config.create_scale_object(type_string=self.value_type)
 
         return u64_obj.encode(result)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return tuple(cls.value_list)
 
 
 class Era(ScaleType):
@@ -936,6 +947,10 @@ class Vec(ScaleType):
 
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if cls.sub_type is None:
+            raise ValueError("'sub_type' is not set")
+
         sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
         sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
 
@@ -1720,6 +1735,10 @@ class WrapperKeepOpaque(Struct):
 
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
+
+        if cls.type_mapping is None:
+            raise ValueError("'type_mapping' is not set")
+
         # Return decomposition of wrapped type
         wrapped_obj = cls.runtime_config.create_scale_object(
             type_string=cls.type_mapping[1]
@@ -1815,6 +1834,9 @@ class FixedLengthArray(ScaleType):
 
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
+        if cls.sub_type is None:
+            raise ValueError("'sub_type' is not set")
+
         sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
         return f'[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]'
 
@@ -2568,6 +2590,24 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         return param_info
 
 
+class GenericRuntimeCallDefinition(Struct):
+
+    def get_param_info(self) -> list:
+        """
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        """
+        param_info = []
+        for param in self.value['params']:
+            scale_type = self.runtime_config.create_scale_object(param['type'])
+            param_info.append(scale_type.generate_type_decomposition())
+
+        return param_info
+
+
 class GenericEventMetadata(Struct):
 
     @property
@@ -2729,6 +2769,10 @@ class GenericExtrinsic(ScaleType):
         self.value_object['extrinsic_length'] = length_obj
 
         return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return 'Extrinsic'
 
 
 class Extrinsic(GenericExtrinsic):

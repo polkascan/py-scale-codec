@@ -1026,6 +1026,10 @@ class BitVec(ScaleType):
 
         return data + value.to_bytes(length=byte_length, byteorder=&#39;little&#39;)
 
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;BitVec&#39;
+
 
 class GenericAddress(ScaleType):
 
@@ -1091,6 +1095,7 @@ class GenericAddress(ScaleType):
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0):
         return cls.__name__.lower()
+
 
 class AccountIdAddress(GenericAddress):
 
@@ -2591,6 +2596,24 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         return param_info
 
 
+class GenericRuntimeCallDefinition(Struct):
+
+    def get_param_info(self) -&gt; list:
+        &#34;&#34;&#34;
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        &#34;&#34;&#34;
+        param_info = []
+        for param in self.value[&#39;params&#39;]:
+            scale_type = self.runtime_config.create_scale_object(param[&#39;type&#39;])
+            param_info.append(scale_type.generate_type_decomposition())
+
+        return param_info
+
+
 class GenericEventMetadata(Struct):
 
     @property
@@ -2752,6 +2775,10 @@ class GenericExtrinsic(ScaleType):
         self.value_object[&#39;extrinsic_length&#39;] = length_obj
 
         return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;Extrinsic&#39;
 
 
 class Extrinsic(GenericExtrinsic):
@@ -3377,7 +3404,11 @@ and a normal Bytes would be that the length prefix indicates the number of bits 
 
         byte_length = math.ceil(value.bit_length() / 8)
 
-        return data + value.to_bytes(length=byte_length, byteorder=&#39;little&#39;)</code></pre>
+        return data + value.to_bytes(length=byte_length, byteorder=&#39;little&#39;)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;BitVec&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3390,6 +3421,23 @@ and a normal Bytes would be that the length prefix indicates the number of bits 
 <dt id="scalecodec.types.BitVec.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.BitVec.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    return &#39;BitVec&#39;</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -7792,7 +7840,11 @@ inheritance.</p>
 
         self.value_object[&#39;extrinsic_length&#39;] = length_obj
 
-        return data</code></pre>
+        return data
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0):
+        return &#39;Extrinsic&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7809,6 +7861,23 @@ inheritance.</p>
 <dt id="scalecodec.types.GenericExtrinsic.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.GenericExtrinsic.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0):
+    return &#39;Extrinsic&#39;</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
@@ -9720,6 +9789,101 @@ def docs(self):
         value[&#39;docs&#39;] = []
 
     return super().process_encode(value)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.GenericRuntimeCallDefinition"><code class="flex name class">
+<span>class <span class="ident">GenericRuntimeCallDefinition</span></span>
+<span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericRuntimeCallDefinition(Struct):
+
+    def get_param_info(self) -&gt; list:
+        &#34;&#34;&#34;
+        Return a type decomposition how to format parameters for current storage function
+
+        Returns
+        -------
+        list
+        &#34;&#34;&#34;
+        param_info = []
+        for param in self.value[&#39;params&#39;]:
+            scale_type = self.runtime_config.create_scale_object(param[&#39;type&#39;])
+            param_info.append(scale_type.generate_type_decomposition())
+
+        return param_info</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericRuntimeCallDefinition.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="scalecodec.types.GenericRuntimeCallDefinition.get_param_info"><code class="name flex">
+<span>def <span class="ident">get_param_info</span></span>(<span>self) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a type decomposition how to format parameters for current storage function</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_param_info(self) -&gt; list:
+    &#34;&#34;&#34;
+    Return a type decomposition how to format parameters for current storage function
+
+    Returns
+    -------
+    list
+    &#34;&#34;&#34;
+    param_info = []
+    for param in self.value[&#39;params&#39;]:
+        scale_type = self.runtime_config.create_scale_object(param[&#39;type&#39;])
+        param_info.append(scale_type.generate_type_decomposition())
+
+    return param_info</code></pre>
 </details>
 </dd>
 </dl>
@@ -14178,6 +14342,7 @@ inheritance.</p>
 <li><a title="scalecodec.types.GenericPalletMetadata" href="#scalecodec.types.GenericPalletMetadata">GenericPalletMetadata</a></li>
 <li><a title="scalecodec.types.GenericPreRuntime" href="#scalecodec.types.GenericPreRuntime">GenericPreRuntime</a></li>
 <li><a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></li>
+<li><a title="scalecodec.types.GenericRuntimeCallDefinition" href="#scalecodec.types.GenericRuntimeCallDefinition">GenericRuntimeCallDefinition</a></li>
 <li><a title="scalecodec.types.GenericSeal" href="#scalecodec.types.GenericSeal">GenericSeal</a></li>
 <li><a title="scalecodec.types.GenericSealV0" href="#scalecodec.types.GenericSealV0">GenericSealV0</a></li>
 <li><a title="scalecodec.types.GenericStorageEntryMetadata" href="#scalecodec.types.GenericStorageEntryMetadata">GenericStorageEntryMetadata</a></li>
@@ -15589,6 +15754,7 @@ def generate_type_decomposition(cls, _recursion_level: int = 0):
 <li>
 <h4><code><a title="scalecodec.types.BitVec" href="#scalecodec.types.BitVec">BitVec</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.BitVec.generate_type_decomposition" href="#scalecodec.types.BitVec.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.BitVec.process" href="#scalecodec.types.BitVec.process">process</a></code></li>
 <li><code><a title="scalecodec.types.BitVec.process_encode" href="#scalecodec.types.BitVec.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.BitVec.scale_info_type" href="#scalecodec.types.BitVec.scale_info_type">scale_info_type</a></code></li>
@@ -15858,6 +16024,7 @@ def generate_type_decomposition(cls, _recursion_level: int = 0):
 <h4><code><a title="scalecodec.types.GenericExtrinsic" href="#scalecodec.types.GenericExtrinsic">GenericExtrinsic</a></code></h4>
 <ul class="">
 <li><code><a title="scalecodec.types.GenericExtrinsic.extrinsic_hash" href="#scalecodec.types.GenericExtrinsic.extrinsic_hash">extrinsic_hash</a></code></li>
+<li><code><a title="scalecodec.types.GenericExtrinsic.generate_type_decomposition" href="#scalecodec.types.GenericExtrinsic.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.GenericExtrinsic.process" href="#scalecodec.types.GenericExtrinsic.process">process</a></code></li>
 <li><code><a title="scalecodec.types.GenericExtrinsic.process_encode" href="#scalecodec.types.GenericExtrinsic.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericExtrinsic.scale_info_type" href="#scalecodec.types.GenericExtrinsic.scale_info_type">scale_info_type</a></code></li>
@@ -15974,6 +16141,13 @@ def generate_type_decomposition(cls, _recursion_level: int = 0):
 <li><code><a title="scalecodec.types.GenericRegistryType.docs" href="#scalecodec.types.GenericRegistryType.docs">docs</a></code></li>
 <li><code><a title="scalecodec.types.GenericRegistryType.process_encode" href="#scalecodec.types.GenericRegistryType.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericRegistryType.scale_info_type" href="#scalecodec.types.GenericRegistryType.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.GenericRuntimeCallDefinition" href="#scalecodec.types.GenericRuntimeCallDefinition">GenericRuntimeCallDefinition</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.GenericRuntimeCallDefinition.get_param_info" href="#scalecodec.types.GenericRuntimeCallDefinition.get_param_info">get_param_info</a></code></li>
+<li><code><a title="scalecodec.types.GenericRuntimeCallDefinition.scale_info_type" href="#scalecodec.types.GenericRuntimeCallDefinition.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
 <li>

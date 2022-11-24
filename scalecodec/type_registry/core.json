@@ -5,6 +5,7 @@
     "Text": "String",
     "Hash": "H256",
     "Call": "GenericCall",
+    "BlockNumber": "U32",
     "SlotNumber": "u64",
     "VrfOutput": "[u8; 32]",
     "VrfProof": "[u8; 64]",
@@ -1638,6 +1639,1366 @@
         ]
       ]
     },
-    "ContractExecResult": "ContractExecResultTo260"
+    "ContractExecResult": "ContractExecResultTo260",
+    "RuntimeCallDefinition": {
+      "type": "struct",
+      "base_class": "GenericRuntimeCallDefinition",
+      "type_mapping": [
+        [
+          "api",
+          "String"
+        ],
+        [
+          "method",
+          "String"
+        ],
+        [
+          "description",
+          "String"
+        ],
+        [
+          "params",
+          "Vec<RuntimeCallDefinitionParam>"
+        ],
+        [
+          "type",
+          "String"
+        ]
+      ]
+    },
+    "RuntimeCallDefinitionParam": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "String"
+        ],
+        [
+          "type",
+          "String"
+        ]
+      ]
+    }
+  },
+  "runtime_api": {
+    "AccountNonceApi": {
+      "methods": {
+        "account_nonce": {
+          "description": "The API to query account nonce (aka transaction index)",
+          "params": [
+            {
+              "name": "account_id",
+              "type": "AccountId"
+            }
+          ],
+          "type": "Index"
+        }
+      }
+    },
+    "AuthorityDiscoveryApi": {
+      "methods": {
+        "authorities": {
+          "description": "Retrieve authority identifiers of the current and next authority set.",
+          "params": [],
+          "type": "Vec<AuthorityId>"
+        }
+      },
+      "types": {
+        "AuthorityId": "AccountId"
+      }
+    },
+    "BlockBuilder": {
+      "methods": {
+        "apply_extrinsic": {
+          "description": "Apply the given extrinsic.",
+          "params": [
+            {
+              "name": "extrinsic",
+              "type": "Extrinsic"
+            }
+          ],
+          "type": "ApplyExtrinsicResult"
+        },
+        "finalise_block": {
+          "description": "Finalize the current block.",
+          "params": [],
+          "type": "Header"
+        }
+      },
+      "types": {
+        "ApplyExtrinsicResult": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Ok",
+              "Result"
+            ],
+            [
+              "Error",
+              "TransactionValidityError"
+            ]
+          ]
+        },
+        "TransactionValidityError": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Invalid",
+              "InvalidTransaction"
+            ],
+            [
+              "Unknown",
+              "UnknownTransaction"
+            ]
+          ]
+        },
+        "UnknownTransaction": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "CannotLookup",
+              "Null"
+            ],
+            [
+              "NoUnsignedValidator",
+              "Null"
+            ],
+            [
+              "Custom",
+              "u8"
+            ]
+          ]
+        },
+        "InvalidTransaction": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Call",
+              "Null"
+            ],
+            [
+              "Payment",
+              "Null"
+            ],
+            [
+              "Future",
+              "Null"
+            ],
+            [
+              "Stale",
+              "Null"
+            ],
+            [
+              "BadProof",
+              "Null"
+            ],
+            [
+              "AncientBirthBlock",
+              "Null"
+            ],
+            [
+              "ExhaustsResources",
+              "Null"
+            ],
+            [
+              "Custom",
+              "u8"
+            ],
+            [
+              "BadMandatory",
+              "Null"
+            ],
+            [
+              "MandatoryDispatch",
+              "Null"
+            ],
+            [
+              "BadSigner",
+              "Null"
+            ]
+          ]
+        },
+        "Header": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "parent_hash",
+              "Hash"
+            ],
+            [
+              "number",
+              "Compact<BlockNumber>"
+            ],
+            [
+              "state_root",
+              "Hash"
+            ],
+            [
+              "extrinsics_root",
+              "Hash"
+            ],
+            [
+              "digest",
+              "sp_runtime::generic::digest::digest"
+            ]
+          ]
+        }
+      }
+    },
+    "ContractsApi": {
+      "methods": {
+        "call": {
+          "description": "Perform a call from a specified account to a given contract.",
+          "params": [
+            {
+              "name": "origin",
+              "type": "AccountId"
+            },
+            {
+              "name": "dest",
+              "type": "AccountId"
+            },
+            {
+              "name": "value",
+              "type": "Balance"
+            },
+            {
+              "name": "gasLimit",
+              "type": "u64"
+            },
+            {
+              "name": "storageDepositLimit",
+              "type": "Option<Balance>"
+            },
+            {
+              "name": "inputData",
+              "type": "Vec<u8>"
+            }
+          ],
+          "type": "ContractExecResult"
+        },
+        "get_storage": {
+          "description": "Query a given storage key in a given contract.",
+          "params": [
+            {
+              "name": "address",
+              "type": "AccountId"
+            },
+            {
+              "name": "key",
+              "type": "Bytes"
+            }
+          ],
+          "type": "Option<Bytes>"
+        },
+        "upload_code": {
+          "description": "Upload new code without instantiating a contract from it.",
+          "params": [
+            {
+              "name": "origin",
+              "type": "AccountId"
+            },
+            {
+              "name": "code",
+              "type": "Bytes"
+            },
+            {
+              "name": "storage_deposit_limit",
+              "type": "Option<Balance>"
+            }
+          ],
+          "type": "CodeUploadResult"
+        },
+        "instantiate": {
+          "description": "Instantiate a new contract.",
+          "params": [
+            {
+              "name": "origin",
+              "type": "AccountId"
+            },
+            {
+              "name": "value",
+              "type": "Balance"
+            },
+            {
+              "name": "gas_limit",
+              "type": "u64"
+            },
+            {
+              "name": "storage_deposit_limit",
+              "type": "Option<Balance>"
+            },
+            {
+              "name": "code",
+              "type": "CodeSource"
+            },
+            {
+              "name": "data",
+              "type": "Bytes"
+            },
+            {
+              "name": "salt",
+              "type": "Bytes"
+            }
+          ],
+          "type": "ContractInstantiateResult"
+        }
+      },
+      "types": {
+        "CodeUploadResult": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Ok",
+              "CodeUploadResultValue"
+            ],
+            [
+              "Error",
+              "sp_runtime::dispatcherror"
+            ]
+          ]
+        },
+        "CodeHash": "Hash",
+        "CodeUploadResultValue": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "code_hash",
+              "CodeHash"
+            ],
+            [
+              "deposit",
+              "Balance"
+            ]
+          ]
+        },
+        "CodeSource": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Upload",
+              "Bytes"
+            ],
+            [
+              "Existing",
+              "Hash"
+            ]
+          ]
+        },
+        "ContractInstantiateResult": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "gas_consumed",
+              "u64"
+            ],
+            [
+              "gas_required",
+              "u64"
+            ],
+            [
+              "storage_deposit",
+              "StorageDeposit"
+            ],
+            [
+              "debug_message",
+              "Text"
+            ],
+            [
+              "result",
+              "InstantiateReturnValue"
+            ]
+          ]
+        },
+        "StorageDeposit": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Refund",
+              "Balance"
+            ],
+            [
+              "Charge",
+              "Balance"
+            ]
+          ]
+        },
+        "InstantiateReturnValue": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Ok",
+              "InstantiateReturnValueOk"
+            ],
+            [
+              "Error",
+              "sp_runtime::dispatcherror"
+            ]
+          ]
+        },
+        "InstantiateReturnValueOk": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "result",
+              "ExecReturnValue"
+            ],
+            [
+              "account_id",
+              "AccountId"
+            ]
+          ]
+        },
+        "ExecReturnValue": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "flags",
+              "ContractReturnFlags"
+            ],
+            [
+              "data",
+              "Bytes"
+            ]
+          ]
+        },
+        "ContractReturnFlags": {
+          "type": "set",
+          "value_list": {
+            "Display": 1
+          }
+        }
+      }
+    },
+    "ConvertTransactionRuntimeApi": {
+      "methods": {
+        "convert_transaction": {
+          "description": "Converts an Ethereum-style transaction to Extrinsic",
+          "params": [
+            {
+              "name": "transaction",
+              "type": "TransactionV2"
+            }
+          ],
+          "type": "Extrinsic"
+        },
+        "initialise_block": {
+          "description": "Initialize a block with the given header.",
+          "params": [
+            {
+              "name": "header",
+              "type": "Header"
+            }
+          ],
+          "type": "Null"
+        }
+      },
+      "types": {
+        "TransactionV2": {
+          "type": "enum",
+          "type_mapping": [
+            ["Legacy", "LegacyTransaction"],
+            ["EIP2930", "EIP2930Transaction"],
+            ["EIP1559", "EIP1559Transaction"]
+          ]
+        },
+        "LegacyTransaction": {
+          "type": "struct",
+          "type_mapping": [
+             ["nonce", "U256"],
+             ["gas_price", "U256"],
+             ["gas_limit", "U256"],
+             ["action", "EthTransactionAction"],
+             ["value", "U256"],
+             ["input", "Bytes"],
+             ["signature", "EthTransactionSignature"]
+          ]
+        },
+        "EthAddress": "H160",
+        "EthAccessListItem": {
+          "type": "struct",
+          "type_mapping": [
+            ["address", "EthAddress"],
+            ["slots", "Vec<H256>"]
+          ]
+        },
+        "EthAccessList": "Vec<EthAccessListItem>",
+        "EIP2930Transaction": {
+          "type": "struct",
+          "type_mapping": [
+             ["chain_id", "u64"],
+             ["nonce", "U256"],
+             ["gas_price", "U256"],
+             ["gas_limit", "U256"],
+             ["action", "EthTransactionAction"],
+             ["value", "U256"],
+             ["input", "Bytes"],
+             ["access_list", "EthAccessList"],
+             ["odd_y_parity", "bool"],
+             ["r", "H256"],
+             ["s", "H256"]
+          ]
+        },
+        "EIP1559Transaction": {
+          "type": "struct",
+          "type_mapping": [
+             ["chain_id", "u64"],
+             ["nonce", "U256"],
+             ["max_priority_fee_per_gas", "U256"],
+             ["max_fee_per_gas", "U256"],
+             ["gas_limit", "U256"],
+             ["action", "EthTransactionAction"],
+             ["value", "U256"],
+             ["input", "Bytes"],
+             ["access_list", "EthAccessList"],
+             ["odd_y_parity", "bool"],
+             ["r", "H256"],
+             ["s", "H256"]
+          ]
+        },
+        "EthTransactionAction": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Call",
+              "H160"
+            ],
+            [
+              "Create",
+              "Null"
+            ]
+          ]
+        },
+        "EthTransactionSignature": {
+          "type": "struct",
+          "type_mapping": [
+             ["v", "u64"],
+             ["r", "H256"],
+             ["s", "H256"]
+          ]
+        },
+        "Header": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "parent_hash",
+              "Hash"
+            ],
+            [
+              "number",
+              "Compact<BlockNumber>"
+            ],
+            [
+              "state_root",
+              "Hash"
+            ],
+            [
+              "extrinsics_root",
+              "Hash"
+            ],
+            [
+              "digest",
+              "sp_runtime::generic::digest::digest"
+            ]
+          ]
+        }
+      }
+    },
+    "Core": {
+      "methods": {
+        "version": {
+          "description": "Returns the version of the runtime.",
+          "params": [],
+          "type": "RuntimeVersion"
+        },
+        "initialise_block": {
+          "description": "Initialize a block with the given header.",
+          "params": [
+            {
+              "name": "header",
+              "type": "Header"
+            }
+          ],
+          "type": "Null"
+        }
+      },
+      "types": {
+        "RuntimeVersion": {
+          "type": "struct",
+          "type_mapping": [
+            ["spec_name", "Text"],
+            ["impl_name", "Text"],
+            ["authoring_version", "u32"],
+            ["spec_version", "u32"],
+            ["impl_version", "u32"],
+            ["apis", "Vec<RuntimeVersionApi>"],
+            ["transaction_version", "u32"],
+            ["state_version", "u8"]
+          ]
+        },
+        "ApiId": "[u8; 8]",
+        "RuntimeVersionApi": "(ApiId, u32)",
+        "Header": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "parent_hash",
+              "Hash"
+            ],
+            [
+              "number",
+              "Compact<BlockNumber>"
+            ],
+            [
+              "state_root",
+              "Hash"
+            ],
+            [
+              "extrinsics_root",
+              "Hash"
+            ],
+            [
+              "digest",
+              "sp_runtime::generic::digest::digest"
+            ]
+          ]
+        }
+      }
+    },
+    "EthereumRuntimeRPCApi": {
+      "methods": {
+        "account_basic": {
+          "description": "Returns pallet_evm::Accounts by address.",
+          "params": [
+            {
+              "name": "address",
+              "type": "H160"
+            }
+          ],
+          "type": "EvmAccount"
+        },
+        "account_code_at": {
+          "description": "For a given account address, returns pallet_evm::AccountCodes.",
+          "params": [
+            {
+              "name": "address",
+              "type": "H160"
+            }
+          ],
+          "type": "Bytes"
+        },
+        "author": {
+          "description": "Returns the converted FindAuthor::find_author authority id.",
+          "params": [],
+          "type": "H160"
+        },
+        "call": {
+          "description": "Returns a frame_ethereum::call response. If `estimate` is true,",
+          "params": [
+            {
+              "name": "from",
+              "type": "H160"
+            },
+            {
+              "name": "to",
+              "type": "H160"
+            },
+            {
+              "name": "data",
+              "type": "Bytes"
+            },
+            {
+              "name": "value",
+              "type": "u256"
+            },
+            {
+              "name": "gas_limit",
+              "type": "u256"
+            },
+            {
+              "name": "max_fee_per_gas",
+              "type": "Option<u256>"
+            },
+            {
+              "name": "max_priority_per_gas",
+              "type": "Option<u256>"
+            },
+            {
+              "name": "nonce",
+              "type": "Option<u256>"
+            },
+            {
+              "name": "estimate",
+              "type": "bool"
+            },
+            {
+              "name": "access_list",
+              "type": "Option<Vec<(H160, Vec<H256>)>>"
+            }
+          ],
+          "type": "EvmCallResult"
+        },
+        "chain_id": {
+          "description": "Returns runtime defined pallet_evm::ChainId.",
+          "params": [],
+          "type": "u64"
+        },
+        "create": {
+          "description": "Returns a frame_ethereum::call response.",
+          "params": [
+            {
+              "name": "from",
+              "type": "H160"
+            },
+            {
+              "name": "data",
+              "type": "Bytes"
+            },
+            {
+              "name": "value",
+              "type": "u256"
+            },
+            {
+              "name": "gas_limit",
+              "type": "u256"
+            },
+            {
+              "name": "max_fee_per_gas",
+              "type": "Option<u256>"
+            },
+            {
+              "name": "max_priority_per_gas",
+              "type": "Option<u256>"
+            },
+            {
+              "name": "nonce",
+              "type": "Option<u256>"
+            },
+            {
+              "name": "estimate",
+              "type": "bool"
+            },
+            {
+              "name": "access_list",
+              "type": "Option<Vec<(H160, Vec<H256>)>>"
+            }
+          ],
+          "type": "EvmCreateResult"
+        },
+        "current_all": {
+          "description": "Return all the current data for a block in a single runtime call.",
+          "params": [],
+          "type": "(Option<BlockV2>, Option<Vec<EthReceiptV3>>, Option<Vec<EthTransactionStatus>>)"
+        },
+        "current_block": {
+          "description": "Return the current block.",
+          "params": [],
+          "type": "BlockV2"
+        },
+        "current_receipts": {
+          "description": "Return the current receipt.",
+          "params": [],
+          "type": "Option<Vec<EthReceiptV3>>"
+        },
+        "current_transaction_statuses": {
+          "description": "Return the current transaction status.",
+          "params": [],
+          "type": "Option<Vec<EthTransactionStatus>>"
+        },
+        "elasticity": {
+          "description": "Return the elasticity multiplier.",
+          "params": [],
+          "type": "Option<Permill>"
+        },
+        "extrinsic_filter": {
+          "description": "Receives a `Vec<OpaqueExtrinsic>` and filters all the ethereum transactions.",
+          "params": [
+            {
+              "name": "xts",
+              "type": "Vec<Extrinsic>"
+            }
+          ],
+          "type": "Vec<TransactionV2>"
+        },
+        "gas_price": {
+          "description": "Returns FixedGasPrice::min_gas_price",
+          "params": [],
+          "type": "u256"
+        },
+        "storage_at": {
+          "description": "For a given account address and index, returns pallet_evm::AccountStorages.",
+          "params": [
+            {
+              "name": "address",
+              "type": "H160"
+            },
+            {
+              "name": "index",
+              "type": "u256"
+            }
+          ],
+          "type": "H256"
+        }
+      },
+      "types": {
+        "EvmAccount": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "nonce",
+              "u256"
+            ],
+            [
+              "balance",
+              "u256"
+            ]
+          ]
+        },
+        "EthReceiptV3": {
+          "type": "struct",
+          "type_mapping": [
+             ["transaction_hash", "Option<H256>"],
+             ["transaction_index", "Option<U256>"],
+             ["block_hash", "Option<H256>"],
+             ["from", "Option<EthAddress>"],
+             ["to", "Option<EthAddress>"],
+             ["block_number", "Option<U256>"],
+             ["cumulative_gas_used", "U256"],
+             ["gas_used", "Option<U256>"],
+             ["contract_address", "Option<EthAddress>"],
+             ["logs", "Vec<EthLog>"],
+             ["root", "Option<H256>"],
+             ["logs_bloom", "EthBloom"],
+             ["status_code", "Option<U64>"]
+          ]
+        },
+        "EthLog": {
+           "type": "struct",
+          "type_mapping": [
+             ["address", "EthAddress"],
+             ["topics", "Vec<H256>"],
+             ["data", "Bytes"],
+             ["block_hash", "Option<H256>"],
+             ["block_number", "Option<U256>"],
+             ["transaction_hash", "Option<H256>"],
+             ["transaction_index", "Option<U256>"],
+             ["log_index", "Option<U256>"],
+             ["transaction_log_index", "Option<U256>"],
+             ["removed", "bool"]
+          ]
+        },
+        "EthTransactionStatus": {
+          "type": "struct",
+          "type_mapping": [
+             ["transaction_hash", "H256"],
+             ["transaction_index", "U32"],
+             ["from", "EthAddress"],
+             ["to", "Option<EthAddress>"],
+             ["contract_address", "Option<EthAddress>"],
+             ["logs", "Vec<EthLog>"],
+             ["logs_bloom", "EthBloom"]
+          ]
+        },
+        "EvmCreateResult": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Ok",
+              "EvmCreateInfo"
+            ],
+            [
+              "Error",
+              "sp_runtime::dispatcherror"
+            ]
+          ]
+        },
+        "EvmCreateInfo": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "exit_reason",
+              "ExitReason"
+            ],
+            [
+              "value",
+              "H160"
+            ],
+            [
+              "used_gas",
+              "U256"
+            ],
+            [
+              "logs",
+              "Vec<EvmLog>"
+            ]
+          ]
+        },
+        "EvmCallResult": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Ok",
+              "EvmCallInfo"
+            ],
+            [
+              "Error",
+              "sp_runtime::dispatcherror"
+            ]
+          ]
+        },
+        "EvmCallInfo": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "exit_reason",
+              "ExitReason"
+            ],
+            [
+              "value",
+              "Bytes"
+            ],
+            [
+              "used_gas",
+              "U256"
+            ],
+            [
+              "logs",
+              "Vec<EvmLog>"
+            ]
+          ]
+        },
+        "EvmLog": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "address",
+              "H160"
+            ],
+            [
+              "topics",
+              "Vec<H256>"
+            ],
+            [
+              "data",
+              "Bytes"
+            ]
+          ]
+        },
+        "ExitReason": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Succeed",
+              "ExitSucceed"
+            ],
+            [
+              "Error",
+              "ExitError"
+            ],
+            [
+              "Revert",
+              "ExitRevert"
+            ],
+            [
+              "Fatal",
+              "ExitFatal"
+            ]
+          ]
+        },
+        "ExitSucceed": {
+          "type": "enum",
+          "value_list": [
+            "Stopped",
+            "Returned",
+            "Suicided"
+          ]
+        },
+        "ExitError": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "StackUnderflow",
+              "Null"
+            ],
+            [
+              "StackOverflow",
+              "Null"
+            ],
+            [
+              "InvalidJump",
+              "Null"
+            ],
+            [
+              "InvalidRange",
+              "Null"
+            ],
+            [
+              "DesignatedInvalid",
+              "Null"
+            ],
+            [
+              "CallTooDeep",
+              "Null"
+            ],
+            [
+              "CreateCollision",
+              "Null"
+            ],
+            [
+              "CreateContractLimit",
+              "Null"
+            ],
+            [
+              "OutOfOffset",
+              "Null"
+            ],
+            [
+              "OutOfGas",
+              "Null"
+            ],
+            [
+              "OutOfFund",
+              "Null"
+            ],
+            [
+              "PCUnderflow",
+              "Null"
+            ],
+            [
+              "CreateEmpty",
+              "Null"
+            ],
+            [
+              "Other",
+              "Text"
+            ]
+          ]
+        },
+        "ExitRevert": {
+          "type": "enum",
+          "value_list": [
+            "Reverted"
+          ]
+        },
+        "ExitFatal": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "NotSupported",
+              "Null"
+            ],
+            [
+              "UnhandledInterrupt",
+              "Null"
+            ],
+            [
+              "CallErrorAsFatal",
+              "ExitError"
+            ],
+            [
+              "Other",
+              "Text"
+            ]
+          ]
+        },
+        "BlockV2": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "header",
+              "EthHeader"
+            ],
+            [
+              "transactions",
+              "Vec<TransactionV2>"
+            ],
+            [
+              "ommers",
+              "Vec<EthHeader>"
+            ]
+          ]
+        },
+        "EthHeader": {
+          "type": "struct",
+          "type_mapping": [
+             ["parent_hash", "H256"],
+             ["ommers_hash", "H256"],
+             ["beneficiary", "EthAddress"],
+             ["state_root", "H256"],
+             ["transactions_root", "H256"],
+             ["receipts_root", "H256"],
+             ["logs_bloom", "EthBloom"],
+             ["difficulty", "U256"],
+             ["number", "U256"],
+             ["gas_limit", "U256"],
+             ["gas_used", "U256"],
+             ["timestamp", "u64"],
+             ["extra_data", "Bytes"],
+             ["mix_mash", "H256"],
+             ["nonce", "H64"]
+          ]
+        },
+        "EthBloom": "H2048",
+        "H2048": "[u8; 256]",
+        "H64": "[u8; 8]",
+        "Permill": "u32",
+        "TransactionV2": {
+          "type": "enum",
+          "type_mapping": [
+            ["Legacy", "LegacyTransaction"],
+            ["EIP2930", "EIP2930Transaction"],
+            ["EIP1559", "EIP1559Transaction"]
+          ]
+        },
+        "LegacyTransaction": {
+          "type": "struct",
+          "type_mapping": [
+             ["nonce", "U256"],
+             ["gas_price", "U256"],
+             ["gas_limit", "U256"],
+             ["action", "EthTransactionAction"],
+             ["value", "U256"],
+             ["input", "Bytes"],
+             ["signature", "EthTransactionSignature"]
+          ]
+        },
+        "EthTransactionAction": {
+          "type": "enum",
+          "type_mapping": [
+            [
+              "Call",
+              "H160"
+            ],
+            [
+              "Create",
+              "Null"
+            ]
+          ]
+        },
+        "EthTransactionSignature": {
+          "type": "struct",
+          "type_mapping": [
+             ["v", "u64"],
+             ["r", "H256"],
+             ["s", "H256"]
+          ]
+        },
+        "EthAccessListItem": {
+          "type": "struct",
+          "type_mapping": [
+            ["address", "EthAddress"],
+            ["slots", "Vec<H256>"]
+          ]
+        },
+        "EthAccessList": "Vec<EthAccessListItem>",
+        "EIP2930Transaction": {
+          "type": "struct",
+          "type_mapping": [
+             ["chain_id", "u64"],
+             ["nonce", "U256"],
+             ["gas_price", "U256"],
+             ["gas_limit", "U256"],
+             ["action", "EthTransactionAction"],
+             ["value", "U256"],
+             ["input", "Bytes"],
+             ["access_list", "EthAccessList"],
+             ["odd_y_parity", "bool"],
+             ["r", "H256"],
+             ["s", "H256"]
+          ]
+        },
+        "EIP1559Transaction": {
+          "type": "struct",
+          "type_mapping": [
+             ["chain_id", "u64"],
+             ["nonce", "U256"],
+             ["max_priority_fee_per_gas", "U256"],
+             ["max_fee_per_gas", "U256"],
+             ["gas_limit", "U256"],
+             ["action", "EthTransactionAction"],
+             ["value", "U256"],
+             ["input", "Bytes"],
+             ["access_list", "EthAccessList"],
+             ["odd_y_parity", "bool"],
+             ["r", "H256"],
+             ["s", "H256"]
+          ]
+        }
+      }
+    },
+    "Metadata": {
+      "methods": {
+        "metadata": {
+          "description": "Returns the metadata of a runtime",
+          "params": [],
+          "type": "Bytes"
+        }
+      },
+      "types": {}
+    },
+    "NominationPoolsApi": {
+      "methods": {
+        "pending_rewards": {
+          "description": "Returns the pending rewards for the given member.",
+          "params": [
+            {
+              "name": "member",
+              "type": "AccountId"
+            }
+          ],
+          "type": "Balance"
+        }
+      },
+      "types": {}
+    },
+    "SessionKeys": {
+      "methods": {
+        "decode_session_keys": {
+          "description": "Decode the given public session keys.",
+          "params": [
+            {
+              "name": "encoded",
+              "type": "Bytes"
+            }
+          ],
+          "type": "Option<Vec<(Bytes, KeyTypeId)>>"
+        },
+        "generate_session_keys": {
+          "description": "Generate a set of session keys with optionally using the given seed.",
+          "params": [
+            {
+              "name": "seed",
+              "type": "Option<Bytes>"
+            }
+          ],
+          "type": "Bytes"
+        }
+      },
+      "types": {
+        "KeyTypeId": "u32"
+      }
+    },
+    "TransactionPaymentApi": {
+      "methods": {
+        "query_fee_details": {
+          "description": "The transaction fee details",
+          "params": [
+            {
+              "name": "uxt",
+              "type": "Extrinsic"
+            },
+            {
+              "name": "len",
+              "type": "u32"
+            }
+          ],
+          "type": "FeeDetails"
+        },
+        "query_info": {
+          "description": "The transaction info",
+          "params": [
+            {
+              "name": "uxt",
+              "type": "Extrinsic"
+            },
+            {
+              "name": "len",
+              "type": "u32"
+            }
+          ],
+          "type": "RuntimeDispatchInfo"
+        }
+      },
+      "types": {
+        "FeeDetails": {
+          "type": "struct",
+          "type_mapping": [
+            ["inclusion_fee", "Option<InclusionFee>"],
+            ["tip", "Balance"]
+          ]
+        },
+        "InclusionFee": {
+          "type": "struct",
+          "type_mapping": [
+            ["base_fee", "Balance"],
+            ["len_fee", "Balance"],
+            ["adjusted_weight_fee", "Balance"]
+          ]
+        },
+        "DispatchClass": {
+          "type": "enum",
+          "value_list": [
+            "Normal",
+            "Operational",
+            "Mandatory"
+          ]
+        },
+        "RuntimeDispatchInfo": {
+          "type": "struct",
+          "type_mapping": [
+            ["weight", "Weight"],
+            ["class", "DispatchClass"],
+            ["partialFee", "Balance"]
+          ]
+        }
+      }
+    },
+    "TransactionPaymentCallApi": {
+      "methods": {
+        "query_call_fee_details": {
+          "description": "The call fee details",
+          "params": [
+            {
+              "name": "call",
+              "type": "Call"
+            },
+            {
+              "name": "len",
+              "type": "u32"
+            }
+          ],
+          "type": "FeeDetails"
+        },
+        "query_call_info": {
+          "description": "The call info",
+          "params": [
+            {
+              "name": "call",
+              "type": "Call"
+            },
+            {
+              "name": "len",
+              "type": "u32"
+            }
+          ],
+          "type": "RuntimeDispatchInfo"
+        }
+      },
+      "types": {
+        "FeeDetails": {
+          "type": "struct",
+          "type_mapping": [
+            ["inclusion_fee", "Option<InclusionFee>"],
+            ["tip", "Balance"]
+          ]
+        },
+        "InclusionFee": {
+          "type": "struct",
+          "type_mapping": [
+            ["base_fee", "Balance"],
+            ["len_fee", "Balance"],
+            ["adjusted_weight_fee", "Balance"]
+          ]
+        },
+        "RuntimeDispatchInfo": {
+          "type": "struct",
+          "type_mapping": [
+            ["weight", "Weight"],
+            ["class", "DispatchClass"],
+            ["partialFee", "Balance"]
+          ]
+        }
+      }
+    }
   }
 }

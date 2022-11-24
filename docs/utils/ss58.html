@@ -262,7 +262,33 @@ def is_valid_ss58_address(value: str, valid_ss58_format: Optional[int] = None) -
     except ValueError:
         return False
 
-    return True</code></pre>
+    return True
+
+
+def get_ss58_format(ss58_address: str) -&gt; int:
+    &#34;&#34;&#34;
+    Returns the SS58 format for given SS58 address
+
+    Parameters
+    ----------
+    ss58_address
+
+    Returns
+    -------
+    int
+    &#34;&#34;&#34;
+    address_decoded = base58.b58decode(ss58_address)
+
+    if address_decoded[0] &amp; 0b0100_0000:
+        ss58_format = ((address_decoded[0] &amp; 0b0011_1111) &lt;&lt; 2) | (address_decoded[1] &gt;&gt; 6) | \
+                      ((address_decoded[1] &amp; 0b0011_1111) &lt;&lt; 8)
+    else:
+        ss58_format = address_decoded[0]
+
+    if ss58_format in [46, 47]:
+        raise ValueError(f&#34;{ss58_format} is a reserved SS58 format&#34;)
+
+    return ss58_format</code></pre>
 </details>
 </section>
 <section>
@@ -272,6 +298,51 @@ def is_valid_ss58_address(value: str, valid_ss58_format: Optional[int] = None) -
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="scalecodec.utils.ss58.get_ss58_format"><code class="name flex">
+<span>def <span class="ident">get_ss58_format</span></span>(<span>ss58_address: str) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the SS58 format for given SS58 address</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ss58_address</code></strong></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_ss58_format(ss58_address: str) -&gt; int:
+    &#34;&#34;&#34;
+    Returns the SS58 format for given SS58 address
+
+    Parameters
+    ----------
+    ss58_address
+
+    Returns
+    -------
+    int
+    &#34;&#34;&#34;
+    address_decoded = base58.b58decode(ss58_address)
+
+    if address_decoded[0] &amp; 0b0100_0000:
+        ss58_format = ((address_decoded[0] &amp; 0b0011_1111) &lt;&lt; 2) | (address_decoded[1] &gt;&gt; 6) | \
+                      ((address_decoded[1] &amp; 0b0011_1111) &lt;&lt; 8)
+    else:
+        ss58_format = address_decoded[0]
+
+    if ss58_format in [46, 47]:
+        raise ValueError(f&#34;{ss58_format} is a reserved SS58 format&#34;)
+
+    return ss58_format</code></pre>
+</details>
+</dd>
 <dt id="scalecodec.utils.ss58.is_valid_ss58_address"><code class="name flex">
 <span>def <span class="ident">is_valid_ss58_address</span></span>(<span>value: str, valid_ss58_format: Optional[int] = None) ‑> bool</span>
 </code></dt>
@@ -592,6 +663,7 @@ Parameters</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="scalecodec.utils.ss58.get_ss58_format" href="#scalecodec.utils.ss58.get_ss58_format">get_ss58_format</a></code></li>
 <li><code><a title="scalecodec.utils.ss58.is_valid_ss58_address" href="#scalecodec.utils.ss58.is_valid_ss58_address">is_valid_ss58_address</a></code></li>
 <li><code><a title="scalecodec.utils.ss58.ss58_decode" href="#scalecodec.utils.ss58.ss58_decode">ss58_decode</a></code></li>
 <li><code><a title="scalecodec.utils.ss58.ss58_decode_account_index" href="#scalecodec.utils.ss58.ss58_decode_account_index">ss58_decode_account_index</a></code></li>
