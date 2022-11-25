@@ -46,6 +46,8 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from typing import Optional, TYPE_CHECKING, Union
+
+from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
 
 if TYPE_CHECKING:
@@ -879,14 +881,14 @@ class ScaleType(ScaleDecoder, ABC):
             return self.value_serialized &lt;= other
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__
 
 
 class ScalePrimitive(ScaleType, ABC):
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level=0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()</code></pre>
 </details>
 </section>
@@ -2813,7 +2815,7 @@ inheritance.</p>
 <pre><code class="python">class ScalePrimitive(ScaleType, ABC):
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level=0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2853,7 +2855,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.base.ScalePrimitive.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2862,7 +2864,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level=0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return cls.__name__.lower()</code></pre>
 </details>
 </dd>
@@ -2959,7 +2961,7 @@ inheritance.</p>
             return self.value_serialized &lt;= other
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3004,7 +3006,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.base.ScaleType.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3013,7 +3015,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return cls.__name__</code></pre>
 </details>
 </dd>

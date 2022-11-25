@@ -18,6 +18,8 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from typing import Optional, TYPE_CHECKING, Union
+
+from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
 
 if TYPE_CHECKING:
@@ -851,14 +853,14 @@ class ScaleType(ScaleDecoder, ABC):
             return self.value_serialized <= other
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__
 
 
 class ScalePrimitive(ScaleType, ABC):
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level=0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()
 
 
