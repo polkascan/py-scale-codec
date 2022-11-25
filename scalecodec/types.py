@@ -92,12 +92,12 @@ class Compact(ScaleType):
                 raise ValueError('{} out of range'.format(value))
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         if cls.sub_type is None:
             return cls.__name__
 
         scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)
 
 
 class CompactU32(Compact):
@@ -159,14 +159,15 @@ class Option(ScaleType):
         cls.sub_type = f"{prefix}::{scale_info_definition.value['params'][0]['type']}"
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
         if cls.sub_type is None:
             raise ValueError("'sub_type' is not set")
 
         sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
-
+        return None, sub_type_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
 
 class Bytes(ScaleType):
@@ -552,16 +553,21 @@ class Struct(ScaleType):
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-        if _recursion_level > TYPE_DECOMP_MAX_RECURSIVE or cls.type_mapping is None:
+        if cls.type_mapping is None:
             raise ValueError("'type_mapping' is not set")
+
+        if _recursion_level > max_recursion:
+            return cls.__name__
 
         result = {}
         for key, data_type in cls.type_mapping:
             if data_type is not None:
                 scale_obj = cls.runtime_config.create_scale_object(data_type)
-                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                data_type = scale_obj.generate_type_decomposition(
+                    _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                )
             result[key] = data_type
         return result
 
@@ -616,13 +622,15 @@ class Tuple(ScaleType):
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         result = ()
         if cls.type_mapping:
             for member_type in cls.type_mapping:
                 if member_type is not None:
                     scale_obj = cls.runtime_config.create_scale_object(member_type)
-                    member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    member_type = scale_obj.generate_type_decomposition(
+                        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                    )
 
                     if len(cls.type_mapping) == 1:
                         return member_type
@@ -667,7 +675,7 @@ class Set(ScaleType):
         return u64_obj.encode(result)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return tuple(cls.value_list)
 
 
@@ -852,7 +860,7 @@ class GenericAccountId(H256):
         return
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return 'AccountId'
 
 
@@ -946,19 +954,23 @@ class Vec(ScaleType):
         return len(self.value_object)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
         if cls.sub_type is None:
             raise ValueError("'sub_type' is not set")
 
         sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        sub_type_decomp = sub_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
         if sub_type_decomp == 'u8':
             # Translate Vec<u8> to Bytes
             return 'Bytes'
         else:
-            return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]
+            return [
+                sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)
+            ]
 
 
 class BoundedVec(Vec):
@@ -1014,7 +1026,7 @@ class BitVec(ScaleType):
         return data + value.to_bytes(length=byte_length, byteorder='little')
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return 'BitVec'
 
 
@@ -1080,7 +1092,7 @@ class GenericAddress(ScaleType):
             return self.value
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()
 
 
@@ -1212,9 +1224,9 @@ class Enum(ScaleType):
                 return self.value_list[self.index]
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-        if _recursion_level > TYPE_DECOMP_MAX_RECURSIVE:
+        if _recursion_level > max_recursion:
             return cls.__name__
 
         if cls.type_mapping:
@@ -1229,7 +1241,9 @@ class Enum(ScaleType):
                     data_type = None
                 if data_type is not None:
                     scale_obj = cls.runtime_config.create_scale_object(data_type)
-                    data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    data_type = scale_obj.generate_type_decomposition(
+                        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                    )
                 result[key] = data_type
             return result
         else:
@@ -1408,7 +1422,7 @@ class GenericVote(U8):
         return super().process_encode(value)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return {
             'aye': 'bool',
             'conviction': cls.runtime_config.create_scale_object('Conviction').generate_type_decomposition()
@@ -1639,7 +1653,7 @@ class GenericCall(ScaleType):
             return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return 'Call'
 
 
@@ -1734,7 +1748,7 @@ class WrapperKeepOpaque(Struct):
             return f'0x{bytes_obj.value_object.hex()}'
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
         if cls.type_mapping is None:
             raise ValueError("'type_mapping' is not set")
@@ -1743,7 +1757,9 @@ class WrapperKeepOpaque(Struct):
         wrapped_obj = cls.runtime_config.create_scale_object(
             type_string=cls.type_mapping[1]
         )
-        return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        return wrapped_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
 
 class MultiAccountId(GenericAccountId):
@@ -1833,12 +1849,15 @@ class FixedLengthArray(ScaleType):
             return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         if cls.sub_type is None:
             raise ValueError("'sub_type' is not set")
 
         sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
-        return f'[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]'
+        sub_cls_decomp = sub_cls.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
+        return f'[{sub_cls_decomp}; {cls.element_count}]'
 
 
 class GenericMultiAddress(Enum):
@@ -2771,7 +2790,7 @@ class GenericExtrinsic(ScaleType):
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return 'Extrinsic'
 
 

@@ -120,9 +120,12 @@ class Compact(ScaleType):
                 raise ValueError(&#39;{} out of range&#39;.format(value))
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        if cls.sub_type is None:
+            return cls.__name__
+
         scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)
 
 
 class CompactU32(Compact):
@@ -184,10 +187,15 @@ class Option(ScaleType):
         cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
-        sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
+        if cls.sub_type is None:
+            raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
+        sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
+        return None, sub_type_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
 
 class Bytes(ScaleType):
@@ -573,16 +581,21 @@ class Struct(ScaleType):
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+        if cls.type_mapping is None:
+            raise ValueError(&#34;&#39;type_mapping&#39; is not set&#34;)
+
+        if _recursion_level &gt; max_recursion:
             return cls.__name__
 
         result = {}
         for key, data_type in cls.type_mapping:
             if data_type is not None:
                 scale_obj = cls.runtime_config.create_scale_object(data_type)
-                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                data_type = scale_obj.generate_type_decomposition(
+                    _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                )
             result[key] = data_type
         return result
 
@@ -637,18 +650,20 @@ class Tuple(ScaleType):
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         result = ()
+        if cls.type_mapping:
+            for member_type in cls.type_mapping:
+                if member_type is not None:
+                    scale_obj = cls.runtime_config.create_scale_object(member_type)
+                    member_type = scale_obj.generate_type_decomposition(
+                        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                    )
 
-        for member_type in cls.type_mapping:
-            if member_type is not None:
-                scale_obj = cls.runtime_config.create_scale_object(member_type)
-                member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    if len(cls.type_mapping) == 1:
+                        return member_type
 
-                if len(cls.type_mapping) == 1:
-                    return member_type
-
-            result += (member_type,)
+                result += (member_type,)
         return result
 
 
@@ -686,6 +701,10 @@ class Set(ScaleType):
         u64_obj = self.runtime_config.create_scale_object(type_string=self.value_type)
 
         return u64_obj.encode(result)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return tuple(cls.value_list)
 
 
 class Era(ScaleType):
@@ -869,7 +888,7 @@ class GenericAccountId(H256):
         return
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;AccountId&#39;
 
 
@@ -963,15 +982,23 @@ class Vec(ScaleType):
         return len(self.value_object)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if cls.sub_type is None:
+            raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
         sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        sub_type_decomp = sub_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
         if sub_type_decomp == &#39;u8&#39;:
             # Translate Vec&lt;u8&gt; to Bytes
             return &#39;Bytes&#39;
         else:
-            return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]
+            return [
+                sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)
+            ]
 
 
 class BoundedVec(Vec):
@@ -1027,7 +1054,7 @@ class BitVec(ScaleType):
         return data + value.to_bytes(length=byte_length, byteorder=&#39;little&#39;)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;BitVec&#39;
 
 
@@ -1093,7 +1120,7 @@ class GenericAddress(ScaleType):
             return self.value
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()
 
 
@@ -1225,9 +1252,9 @@ class Enum(ScaleType):
                 return self.value_list[self.index]
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+        if _recursion_level &gt; max_recursion:
             return cls.__name__
 
         if cls.type_mapping:
@@ -1242,7 +1269,9 @@ class Enum(ScaleType):
                     data_type = None
                 if data_type is not None:
                     scale_obj = cls.runtime_config.create_scale_object(data_type)
-                    data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    data_type = scale_obj.generate_type_decomposition(
+                        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                    )
                 result[key] = data_type
             return result
         else:
@@ -1421,7 +1450,7 @@ class GenericVote(U8):
         return super().process_encode(value)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return {
             &#39;aye&#39;: &#39;bool&#39;,
             &#39;conviction&#39;: cls.runtime_config.create_scale_object(&#39;Conviction&#39;).generate_type_decomposition()
@@ -1652,7 +1681,7 @@ class GenericCall(ScaleType):
             return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;Call&#39;
 
 
@@ -1747,12 +1776,18 @@ class WrapperKeepOpaque(Struct):
             return f&#39;0x{bytes_obj.value_object.hex()}&#39;
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if cls.type_mapping is None:
+            raise ValueError(&#34;&#39;type_mapping&#39; is not set&#34;)
+
         # Return decomposition of wrapped type
         wrapped_obj = cls.runtime_config.create_scale_object(
             type_string=cls.type_mapping[1]
         )
-        return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        return wrapped_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
 
 class MultiAccountId(GenericAccountId):
@@ -1842,9 +1877,15 @@ class FixedLengthArray(ScaleType):
             return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        if cls.sub_type is None:
+            raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
         sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
-        return f&#39;[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]&#39;
+        sub_cls_decomp = sub_cls.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
+        return f&#39;[{sub_cls_decomp}; {cls.element_count}]&#39;
 
 
 class GenericMultiAddress(Enum):
@@ -2777,7 +2818,7 @@ class GenericExtrinsic(ScaleType):
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;Extrinsic&#39;
 
 
@@ -3407,7 +3448,7 @@ and a normal Bytes would be that the length prefix indicates the number of bits 
         return data + value.to_bytes(length=byte_length, byteorder=&#39;little&#39;)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;BitVec&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3426,7 +3467,7 @@ and a normal Bytes would be that the length prefix indicates the number of bits 
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.BitVec.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3435,7 +3476,7 @@ and a normal Bytes would be that the length prefix indicates the number of bits 
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return &#39;BitVec&#39;</code></pre>
 </details>
 </dd>
@@ -4050,9 +4091,12 @@ inheritance.</p>
                 raise ValueError(&#39;{} out of range&#39;.format(value))
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        if cls.sub_type is None:
+            return cls.__name__
+
         scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+        return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4074,7 +4118,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Compact.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -4083,9 +4127,12 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+    if cls.sub_type is None:
+        return cls.__name__
+
     scale_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-    return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+    return scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)</code></pre>
 </details>
 </dd>
 </dl>
@@ -4814,9 +4861,9 @@ inheritance.</p>
                 return self.value_list[self.index]
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+        if _recursion_level &gt; max_recursion:
             return cls.__name__
 
         if cls.type_mapping:
@@ -4831,7 +4878,9 @@ inheritance.</p>
                     data_type = None
                 if data_type is not None:
                     scale_obj = cls.runtime_config.create_scale_object(data_type)
-                    data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    data_type = scale_obj.generate_type_decomposition(
+                        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                    )
                 result[key] = data_type
             return result
         else:
@@ -4873,7 +4922,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Enum.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -4882,9 +4931,9 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-    if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+    if _recursion_level &gt; max_recursion:
         return cls.__name__
 
     if cls.type_mapping:
@@ -4899,7 +4948,9 @@ def generate_type_decomposition(cls, _recursion_level: int = 0):
                 data_type = None
             if data_type is not None:
                 scale_obj = cls.runtime_config.create_scale_object(data_type)
-                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                data_type = scale_obj.generate_type_decomposition(
+                    _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                )
             result[key] = data_type
         return result
     else:
@@ -5752,9 +5803,15 @@ inheritance.</p>
             return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        if cls.sub_type is None:
+            raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
         sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
-        return f&#39;[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]&#39;</code></pre>
+        sub_cls_decomp = sub_cls.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
+        return f&#39;[{sub_cls_decomp}; {cls.element_count}]&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5780,7 +5837,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.FixedLengthArray.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5789,9 +5846,15 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+    if cls.sub_type is None:
+        raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
     sub_cls = cls.runtime_config.get_decoder_class(cls.sub_type)
-    return f&#39;[{sub_cls.generate_type_decomposition(_recursion_level=_recursion_level + 1)}; {cls.element_count}]&#39;</code></pre>
+    sub_cls_decomp = sub_cls.generate_type_decomposition(
+        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+    )
+    return f&#39;[{sub_cls_decomp}; {cls.element_count}]&#39;</code></pre>
 </details>
 </dd>
 </dl>
@@ -5931,7 +5994,7 @@ inheritance.</p>
         return
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;AccountId&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5956,7 +6019,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.GenericAccountId.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5965,7 +6028,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return &#39;AccountId&#39;</code></pre>
 </details>
 </dd>
@@ -6180,7 +6243,7 @@ inheritance.</p>
             return self.value
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6204,7 +6267,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.GenericAddress.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -6213,7 +6276,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return cls.__name__.lower()</code></pre>
 </details>
 </dd>
@@ -6640,7 +6703,7 @@ inheritance.</p>
             return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;Call&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6659,7 +6722,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.GenericCall.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -6668,7 +6731,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return &#39;Call&#39;</code></pre>
 </details>
 </dd>
@@ -7843,7 +7906,7 @@ inheritance.</p>
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return &#39;Extrinsic&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7866,7 +7929,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.GenericExtrinsic.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -7875,7 +7938,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return &#39;Extrinsic&#39;</code></pre>
 </details>
 </dd>
@@ -10892,7 +10955,7 @@ inheritance.</p>
         return super().process_encode(value)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return {
             &#39;aye&#39;: &#39;bool&#39;,
             &#39;conviction&#39;: cls.runtime_config.create_scale_object(&#39;Conviction&#39;).generate_type_decomposition()
@@ -10916,7 +10979,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.GenericVote.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -10925,7 +10988,7 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     return {
         &#39;aye&#39;: &#39;bool&#39;,
         &#39;conviction&#39;: cls.runtime_config.create_scale_object(&#39;Conviction&#39;).generate_type_decomposition()
@@ -12583,9 +12646,15 @@ inheritance.</p>
         cls.sub_type = f&#34;{prefix}::{scale_info_definition.value[&#39;params&#39;][0][&#39;type&#39;]}&#34;
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if cls.sub_type is None:
+            raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
         sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+        return None, sub_type_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -12603,7 +12672,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Option.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -12612,9 +12681,15 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+    if cls.sub_type is None:
+        raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
     sub_type_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-    return None, sub_type_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+    return None, sub_type_obj.generate_type_decomposition(
+        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+    )</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.Option.process_scale_info_definition"><code class="name flex">
@@ -13871,7 +13946,11 @@ inheritance.</p>
 
         u64_obj = self.runtime_config.create_scale_object(type_string=self.value_type)
 
-        return u64_obj.encode(result)</code></pre>
+        return u64_obj.encode(result)
+
+    @classmethod
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return tuple(cls.value_list)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -13892,6 +13971,23 @@ inheritance.</p>
 <dt id="scalecodec.types.Set.value_type"><code class="name">var <span class="ident">value_type</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="scalecodec.types.Set.generate_type_decomposition"><code class="name flex">
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+    return tuple(cls.value_list)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -14308,16 +14404,21 @@ inheritance.</p>
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-        if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+        if cls.type_mapping is None:
+            raise ValueError(&#34;&#39;type_mapping&#39; is not set&#34;)
+
+        if _recursion_level &gt; max_recursion:
             return cls.__name__
 
         result = {}
         for key, data_type in cls.type_mapping:
             if data_type is not None:
                 scale_obj = cls.runtime_config.create_scale_object(data_type)
-                data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                data_type = scale_obj.generate_type_decomposition(
+                    _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                )
             result[key] = data_type
         return result</code></pre>
 </details>
@@ -14365,7 +14466,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Struct.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -14374,16 +14475,21 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
-    if _recursion_level &gt; TYPE_DECOMP_MAX_RECURSIVE:
+    if cls.type_mapping is None:
+        raise ValueError(&#34;&#39;type_mapping&#39; is not set&#34;)
+
+    if _recursion_level &gt; max_recursion:
         return cls.__name__
 
     result = {}
     for key, data_type in cls.type_mapping:
         if data_type is not None:
             scale_obj = cls.runtime_config.create_scale_object(data_type)
-            data_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+            data_type = scale_obj.generate_type_decomposition(
+                _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+            )
         result[key] = data_type
     return result</code></pre>
 </details>
@@ -14530,18 +14636,20 @@ inheritance.</p>
         return data
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         result = ()
+        if cls.type_mapping:
+            for member_type in cls.type_mapping:
+                if member_type is not None:
+                    scale_obj = cls.runtime_config.create_scale_object(member_type)
+                    member_type = scale_obj.generate_type_decomposition(
+                        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                    )
 
-        for member_type in cls.type_mapping:
-            if member_type is not None:
-                scale_obj = cls.runtime_config.create_scale_object(member_type)
-                member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                    if len(cls.type_mapping) == 1:
+                        return member_type
 
-                if len(cls.type_mapping) == 1:
-                    return member_type
-
-            result += (member_type,)
+                result += (member_type,)
         return result</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -14564,7 +14672,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Tuple.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -14573,18 +14681,20 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
     result = ()
+    if cls.type_mapping:
+        for member_type in cls.type_mapping:
+            if member_type is not None:
+                scale_obj = cls.runtime_config.create_scale_object(member_type)
+                member_type = scale_obj.generate_type_decomposition(
+                    _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+                )
 
-    for member_type in cls.type_mapping:
-        if member_type is not None:
-            scale_obj = cls.runtime_config.create_scale_object(member_type)
-            member_type = scale_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+                if len(cls.type_mapping) == 1:
+                    return member_type
 
-            if len(cls.type_mapping) == 1:
-                return member_type
-
-        result += (member_type,)
+            result += (member_type,)
     return result</code></pre>
 </details>
 </dd>
@@ -15392,15 +15502,23 @@ inheritance.</p>
         return len(self.value_object)
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if cls.sub_type is None:
+            raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
         sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-        sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+        sub_type_decomp = sub_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )
 
         if sub_type_decomp == &#39;u8&#39;:
             # Translate Vec&lt;u8&gt; to Bytes
             return &#39;Bytes&#39;
         else:
-            return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]</code></pre>
+            return [
+                sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)
+            ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -15422,7 +15540,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.Vec.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -15431,15 +15549,23 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+    if cls.sub_type is None:
+        raise ValueError(&#34;&#39;sub_type&#39; is not set&#34;)
+
     sub_obj = cls.runtime_config.create_scale_object(cls.sub_type)
-    sub_type_decomp = sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)
+    sub_type_decomp = sub_obj.generate_type_decomposition(
+        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+    )
 
     if sub_type_decomp == &#39;u8&#39;:
         # Translate Vec&lt;u8&gt; to Bytes
         return &#39;Bytes&#39;
     else:
-        return [sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)]</code></pre>
+        return [
+            sub_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1, max_recursion=max_recursion)
+        ]</code></pre>
 </details>
 </dd>
 </dl>
@@ -15604,12 +15730,18 @@ inheritance.</p>
             return f&#39;0x{bytes_obj.value_object.hex()}&#39;
 
     @classmethod
-    def generate_type_decomposition(cls, _recursion_level: int = 0):
+    def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if cls.type_mapping is None:
+            raise ValueError(&#34;&#39;type_mapping&#39; is not set&#34;)
+
         # Return decomposition of wrapped type
         wrapped_obj = cls.runtime_config.create_scale_object(
             type_string=cls.type_mapping[1]
         )
-        return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+        return wrapped_obj.generate_type_decomposition(
+            _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -15628,7 +15760,7 @@ inheritance.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="scalecodec.types.WrapperKeepOpaque.generate_type_decomposition"><code class="name flex">
-<span>def <span class="ident">generate_type_decomposition</span></span>(<span>)</span>
+<span>def <span class="ident">generate_type_decomposition</span></span>(<span>max_recursion: int = 9)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -15637,12 +15769,18 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def generate_type_decomposition(cls, _recursion_level: int = 0):
+def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+    if cls.type_mapping is None:
+        raise ValueError(&#34;&#39;type_mapping&#39; is not set&#34;)
+
     # Return decomposition of wrapped type
     wrapped_obj = cls.runtime_config.create_scale_object(
         type_string=cls.type_mapping[1]
     )
-    return wrapped_obj.generate_type_decomposition(_recursion_level=_recursion_level + 1)</code></pre>
+    return wrapped_obj.generate_type_decomposition(
+        _recursion_level=_recursion_level + 1, max_recursion=max_recursion
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -16463,6 +16601,7 @@ def generate_type_decomposition(cls, _recursion_level: int = 0):
 <li>
 <h4><code><a title="scalecodec.types.Set" href="#scalecodec.types.Set">Set</a></code></h4>
 <ul class="">
+<li><code><a title="scalecodec.types.Set.generate_type_decomposition" href="#scalecodec.types.Set.generate_type_decomposition">generate_type_decomposition</a></code></li>
 <li><code><a title="scalecodec.types.Set.process" href="#scalecodec.types.Set.process">process</a></code></li>
 <li><code><a title="scalecodec.types.Set.process_encode" href="#scalecodec.types.Set.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.Set.scale_info_type" href="#scalecodec.types.Set.scale_info_type">scale_info_type</a></code></li>
