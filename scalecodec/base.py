@@ -591,8 +591,6 @@ class ScaleDecoder(ABC):
 
     type_mapping = None
 
-    debug = False
-
     sub_type = None
 
     runtime_config = None
