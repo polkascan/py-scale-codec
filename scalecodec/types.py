@@ -1668,15 +1668,21 @@ class GenericContractExecResult(Enum):
 
     def process(self):
         value = super().process()
-        self.process_contract_result()
+        self.process_contract_result(value)
         return value
 
-    def process_contract_result(self):
-        if 'success' in self.value:
-            self.gas_consumed = self.value['success']['gas_consumed']
-            self.gas_required = self.value['success']['gas_required']
-            self.flags = self.value['success']['flags']
-            self.contract_result_data = self.value['success']['data']
+    def process_contract_result(self, value):
+        if 'success' in value:
+            self.gas_consumed = value['success']['gas_consumed']
+            self.gas_required = value['success']['gas_required']
+            self.flags = value['success']['flags']
+            self.contract_result_data = value['success']['data']
+
+        elif 'Success' in value:
+            self.gas_consumed = value['Success']['gas_consumed']
+            self.gas_required = None
+            self.flags = value['Success']['flags']
+            self.contract_result_data = value['Success']['data']
 
     def process_encode(self, value):
 
@@ -1686,6 +1692,31 @@ class GenericContractExecResult(Enum):
         if 'success' in value:
             value = {'Success': value['success']}
         return super().process_encode(value)
+
+
+class GenericContractExecResultV2(Struct):
+
+    @property
+    def gas_consumed(self):
+        return self.value['gas_consumed']
+
+    @property
+    def gas_required(self):
+        return self.value['gas_required']
+
+    @property
+    def flags(self):
+        try:
+            return self.value['result']['Ok']['flags']
+        except KeyError:
+            return None
+
+    @property
+    def contract_result_data(self):
+        try:
+            return self.value_object['result'][1]['data']
+        except KeyError:
+            return None
 
 
 class OpaqueCall(Bytes):
