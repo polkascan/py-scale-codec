@@ -235,13 +235,15 @@
     {
       "runtime_range": [1019, 1056],
       "types": {
-        "WeightV1": "u32"
+        "WeightV1": "u32",
+        "Weight": "WeightV1"
       }
     },
     {
       "runtime_range": [1057, null],
       "types": {
-        "WeightV1": "u64"
+        "WeightV1": "u64",
+        "Weight": "WeightV1"
       }
     },
     {
