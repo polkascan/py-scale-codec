@@ -6,7 +6,7 @@
     "AccountInfo": "AccountInfoWithTripleRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
-    "Weight": "u64",
+    "Weight": "WeightV1",
     "Keys": {
       "type": "struct",
       "type_mapping": [
@@ -235,13 +235,15 @@
     {
       "runtime_range": [1019, 1056],
       "types": {
-        "Weight": "u32"
+        "WeightV1": "u32",
+        "Weight": "WeightV1"
       }
     },
     {
       "runtime_range": [1057, null],
       "types": {
-        "Weight": "u64"
+        "WeightV1": "u64",
+        "Weight": "WeightV1"
       }
     },
     {

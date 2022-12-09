@@ -1608,6 +1608,68 @@
     },
     "ink_env::types::AccountId": "GenericAccountId",
     "ink_primitives::types::AccountId": "GenericAccountId",
+    "ContractExecResultTo267": {
+      "type": "struct",
+      "base_class": "GenericContractExecResultV2",
+      "type_mapping": [
+        [
+          "gas_consumed",
+          "Weight"
+        ],
+        [
+          "gas_required",
+          "Weight"
+        ],
+        [
+          "storage_deposit",
+          "StorageDeposit"
+        ],
+        [
+          "debug_message",
+          "Bytes"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
+        ]
+      ]
+    },
+    "ContractExecResultResult": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Ok",
+          "ContractExecResultOk"
+        ],
+        [
+          "Error",
+          "sp_runtime::dispatcherror"
+        ]
+      ]
+    },
+    "ContractExecResultOk": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "flags",
+          "ContractCallFlags"
+        ],
+        [
+          "data",
+          "Bytes"
+        ]
+      ]
+    },
+    "ContractCallFlags": {
+      "type": "set",
+      "value_type": "u32",
+      "value_list": {
+        "ForwardInput": 1,
+        "CloneInput": 2,
+        "TailCall": 4,
+        "AllowReentry":  8
+      }
+    },
     "ContractExecResultTo260": {
       "type": "enum",
       "base_class": "GenericContractExecResult",
@@ -1863,15 +1925,15 @@
               "type": "Balance"
             },
             {
-              "name": "gasLimit",
-              "type": "u64"
+              "name": "gas_limit",
+              "type": "Option<Weight>"
             },
             {
-              "name": "storageDepositLimit",
+              "name": "storage_deposit_limit",
               "type": "Option<Balance>"
             },
             {
-              "name": "inputData",
+              "name": "input_data",
               "type": "Vec<u8>"
             }
           ],
@@ -1922,7 +1984,7 @@
             },
             {
               "name": "gas_limit",
-              "type": "u64"
+              "type": "Option<Weight>"
             },
             {
               "name": "storage_deposit_limit",
