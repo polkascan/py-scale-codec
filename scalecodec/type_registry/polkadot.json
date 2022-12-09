@@ -6,7 +6,7 @@
     "AccountInfo": "AccountInfoWithTripleRefCount",
     "BlockNumber": "U32",
     "LeasePeriod": "BlockNumber",
-    "Weight": "u64",
+    "Weight": "WeightV1",
     "Keys": {
       "type": "struct",
       "type_mapping": [
