@@ -1696,15 +1696,21 @@ class GenericContractExecResult(Enum):
 
     def process(self):
         value = super().process()
-        self.process_contract_result()
+        self.process_contract_result(value)
         return value
 
-    def process_contract_result(self):
-        if &#39;success&#39; in self.value:
-            self.gas_consumed = self.value[&#39;success&#39;][&#39;gas_consumed&#39;]
-            self.gas_required = self.value[&#39;success&#39;][&#39;gas_required&#39;]
-            self.flags = self.value[&#39;success&#39;][&#39;flags&#39;]
-            self.contract_result_data = self.value[&#39;success&#39;][&#39;data&#39;]
+    def process_contract_result(self, value):
+        if &#39;success&#39; in value:
+            self.gas_consumed = value[&#39;success&#39;][&#39;gas_consumed&#39;]
+            self.gas_required = value[&#39;success&#39;][&#39;gas_required&#39;]
+            self.flags = value[&#39;success&#39;][&#39;flags&#39;]
+            self.contract_result_data = value[&#39;success&#39;][&#39;data&#39;]
+
+        elif &#39;Success&#39; in value:
+            self.gas_consumed = value[&#39;Success&#39;][&#39;gas_consumed&#39;]
+            self.gas_required = None
+            self.flags = value[&#39;Success&#39;][&#39;flags&#39;]
+            self.contract_result_data = value[&#39;Success&#39;][&#39;data&#39;]
 
     def process_encode(self, value):
 
@@ -1714,6 +1720,31 @@ class GenericContractExecResult(Enum):
         if &#39;success&#39; in value:
             value = {&#39;Success&#39;: value[&#39;success&#39;]}
         return super().process_encode(value)
+
+
+class GenericContractExecResultV2(Struct):
+
+    @property
+    def gas_consumed(self):
+        return self.value[&#39;gas_consumed&#39;]
+
+    @property
+    def gas_required(self):
+        return self.value[&#39;gas_required&#39;]
+
+    @property
+    def flags(self):
+        try:
+            return self.value[&#39;result&#39;][&#39;Ok&#39;][&#39;flags&#39;]
+        except KeyError:
+            return None
+
+    @property
+    def contract_result_data(self):
+        try:
+            return self.value_object[&#39;result&#39;][1][&#39;data&#39;]
+        except KeyError:
+            return None
 
 
 class OpaqueCall(Bytes):
@@ -7147,15 +7178,21 @@ inheritance.</p>
 
     def process(self):
         value = super().process()
-        self.process_contract_result()
+        self.process_contract_result(value)
         return value
 
-    def process_contract_result(self):
-        if &#39;success&#39; in self.value:
-            self.gas_consumed = self.value[&#39;success&#39;][&#39;gas_consumed&#39;]
-            self.gas_required = self.value[&#39;success&#39;][&#39;gas_required&#39;]
-            self.flags = self.value[&#39;success&#39;][&#39;flags&#39;]
-            self.contract_result_data = self.value[&#39;success&#39;][&#39;data&#39;]
+    def process_contract_result(self, value):
+        if &#39;success&#39; in value:
+            self.gas_consumed = value[&#39;success&#39;][&#39;gas_consumed&#39;]
+            self.gas_required = value[&#39;success&#39;][&#39;gas_required&#39;]
+            self.flags = value[&#39;success&#39;][&#39;flags&#39;]
+            self.contract_result_data = value[&#39;success&#39;][&#39;data&#39;]
+
+        elif &#39;Success&#39; in value:
+            self.gas_consumed = value[&#39;Success&#39;][&#39;gas_consumed&#39;]
+            self.gas_required = None
+            self.flags = value[&#39;Success&#39;][&#39;flags&#39;]
+            self.contract_result_data = value[&#39;Success&#39;][&#39;data&#39;]
 
     def process_encode(self, value):
 
@@ -7193,12 +7230,12 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def process(self):
     value = super().process()
-    self.process_contract_result()
+    self.process_contract_result(value)
     return value</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericContractExecResult.process_contract_result"><code class="name flex">
-<span>def <span class="ident">process_contract_result</span></span>(<span>self)</span>
+<span>def <span class="ident">process_contract_result</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -7206,12 +7243,18 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process_contract_result(self):
-    if &#39;success&#39; in self.value:
-        self.gas_consumed = self.value[&#39;success&#39;][&#39;gas_consumed&#39;]
-        self.gas_required = self.value[&#39;success&#39;][&#39;gas_required&#39;]
-        self.flags = self.value[&#39;success&#39;][&#39;flags&#39;]
-        self.contract_result_data = self.value[&#39;success&#39;][&#39;data&#39;]</code></pre>
+<pre><code class="python">def process_contract_result(self, value):
+    if &#39;success&#39; in value:
+        self.gas_consumed = value[&#39;success&#39;][&#39;gas_consumed&#39;]
+        self.gas_required = value[&#39;success&#39;][&#39;gas_required&#39;]
+        self.flags = value[&#39;success&#39;][&#39;flags&#39;]
+        self.contract_result_data = value[&#39;success&#39;][&#39;data&#39;]
+
+    elif &#39;Success&#39; in value:
+        self.gas_consumed = value[&#39;Success&#39;][&#39;gas_consumed&#39;]
+        self.gas_required = None
+        self.flags = value[&#39;Success&#39;][&#39;flags&#39;]
+        self.contract_result_data = value[&#39;Success&#39;][&#39;data&#39;]</code></pre>
 </details>
 </dd>
 <dt id="scalecodec.types.GenericContractExecResult.process_encode"><code class="name flex">
@@ -7239,6 +7282,132 @@ inheritance.</p>
 <li><code><b><a title="scalecodec.types.Enum" href="#scalecodec.types.Enum">Enum</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scalecodec.types.Enum.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scalecodec.types.GenericContractExecResultV2"><code class="flex name class">
+<span>class <span class="ident">GenericContractExecResultV2</span></span>
+<span>(</span><span>data=None, type_mapping=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>ScaleBytes</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sub_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>VersionedMetadata</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>runtime_config</code></strong> :&ensp;<code>RuntimeConfigurationObject</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericContractExecResultV2(Struct):
+
+    @property
+    def gas_consumed(self):
+        return self.value[&#39;gas_consumed&#39;]
+
+    @property
+    def gas_required(self):
+        return self.value[&#39;gas_required&#39;]
+
+    @property
+    def flags(self):
+        try:
+            return self.value[&#39;result&#39;][&#39;Ok&#39;][&#39;flags&#39;]
+        except KeyError:
+            return None
+
+    @property
+    def contract_result_data(self):
+        try:
+            return self.value_object[&#39;result&#39;][1][&#39;data&#39;]
+        except KeyError:
+            return None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></li>
+<li><a title="scalecodec.base.ScaleType" href="base.html#scalecodec.base.ScaleType">ScaleType</a></li>
+<li><a title="scalecodec.base.ScaleDecoder" href="base.html#scalecodec.base.ScaleDecoder">ScaleDecoder</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericContractExecResultV2.scale_info_type"><code class="name">var <span class="ident">scale_info_type</span> : <a title="scalecodec.types.GenericRegistryType" href="#scalecodec.types.GenericRegistryType">GenericRegistryType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scalecodec.types.GenericContractExecResultV2.contract_result_data"><code class="name">var <span class="ident">contract_result_data</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def contract_result_data(self):
+    try:
+        return self.value_object[&#39;result&#39;][1][&#39;data&#39;]
+    except KeyError:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericContractExecResultV2.flags"><code class="name">var <span class="ident">flags</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def flags(self):
+    try:
+        return self.value[&#39;result&#39;][&#39;Ok&#39;][&#39;flags&#39;]
+    except KeyError:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericContractExecResultV2.gas_consumed"><code class="name">var <span class="ident">gas_consumed</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def gas_consumed(self):
+    return self.value[&#39;gas_consumed&#39;]</code></pre>
+</details>
+</dd>
+<dt id="scalecodec.types.GenericContractExecResultV2.gas_required"><code class="name">var <span class="ident">gas_required</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def gas_required(self):
+    return self.value[&#39;gas_required&#39;]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scalecodec.types.Struct" href="#scalecodec.types.Struct">Struct</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scalecodec.types.Struct.get_decoder_class" href="base.html#scalecodec.base.ScaleDecoder.get_decoder_class">get_decoder_class</a></code></li>
 </ul>
 </li>
 </ul>
@@ -14432,6 +14601,7 @@ inheritance.</p>
 <ul class="hlist">
 <li><a title="scalecodec.types.EventRecord" href="#scalecodec.types.EventRecord">EventRecord</a></li>
 <li><a title="scalecodec.types.GenericConsensus" href="#scalecodec.types.GenericConsensus">GenericConsensus</a></li>
+<li><a title="scalecodec.types.GenericContractExecResultV2" href="#scalecodec.types.GenericContractExecResultV2">GenericContractExecResultV2</a></li>
 <li><a title="scalecodec.types.GenericErrorMetadata" href="#scalecodec.types.GenericErrorMetadata">GenericErrorMetadata</a></li>
 <li><a title="scalecodec.types.GenericEventMetadata" href="#scalecodec.types.GenericEventMetadata">GenericEventMetadata</a></li>
 <li><a title="scalecodec.types.GenericEventRecord" href="#scalecodec.types.GenericEventRecord">GenericEventRecord</a></li>
@@ -16114,6 +16284,16 @@ def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: i
 <li><code><a title="scalecodec.types.GenericContractExecResult.process_contract_result" href="#scalecodec.types.GenericContractExecResult.process_contract_result">process_contract_result</a></code></li>
 <li><code><a title="scalecodec.types.GenericContractExecResult.process_encode" href="#scalecodec.types.GenericContractExecResult.process_encode">process_encode</a></code></li>
 <li><code><a title="scalecodec.types.GenericContractExecResult.scale_info_type" href="#scalecodec.types.GenericContractExecResult.scale_info_type">scale_info_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scalecodec.types.GenericContractExecResultV2" href="#scalecodec.types.GenericContractExecResultV2">GenericContractExecResultV2</a></code></h4>
+<ul class="">
+<li><code><a title="scalecodec.types.GenericContractExecResultV2.contract_result_data" href="#scalecodec.types.GenericContractExecResultV2.contract_result_data">contract_result_data</a></code></li>
+<li><code><a title="scalecodec.types.GenericContractExecResultV2.flags" href="#scalecodec.types.GenericContractExecResultV2.flags">flags</a></code></li>
+<li><code><a title="scalecodec.types.GenericContractExecResultV2.gas_consumed" href="#scalecodec.types.GenericContractExecResultV2.gas_consumed">gas_consumed</a></code></li>
+<li><code><a title="scalecodec.types.GenericContractExecResultV2.gas_required" href="#scalecodec.types.GenericContractExecResultV2.gas_required">gas_required</a></code></li>
+<li><code><a title="scalecodec.types.GenericContractExecResultV2.scale_info_type" href="#scalecodec.types.GenericContractExecResultV2.scale_info_type">scale_info_type</a></code></li>
 </ul>
 </li>
 <li>
