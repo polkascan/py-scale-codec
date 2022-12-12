@@ -1608,6 +1608,8 @@
     },
     "ink_env::types::AccountId": "GenericAccountId",
     "ink_primitives::types::AccountId": "GenericAccountId",
+    "WeightV1": "u64",
+    "WeightV2": "sp_weights::weight_v2::Weight",
     "ContractExecResultTo267": {
       "type": "struct",
       "base_class": "GenericContractExecResultV2",
