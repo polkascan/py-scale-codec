@@ -2290,7 +2290,7 @@ class GenericVariant(Struct):
     def args(self):
         return self.value_object['fields']
 
-    def get_param_info(self) -> dict:
+    def get_param_info(self, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE) -> dict:
         """
         Generates a dictionary of all possible params with their decomposition information
 
@@ -2303,7 +2303,7 @@ class GenericVariant(Struct):
         for arg in self.args:
             param_type_obj = self.runtime_config.create_scale_object(arg.type)
 
-            param_info[arg.name] = param_type_obj.generate_type_decomposition()
+            param_info[arg.name] = param_type_obj.generate_type_decomposition(max_recursion=max_recursion)
 
         return param_info
 
@@ -2572,7 +2572,7 @@ class GenericStorageEntryMetadata(Struct):
         else:
             raise NotImplementedError()
 
-    def get_param_info(self) -> list:
+    def get_param_info(self, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE) -> list:
         raise NotImplementedError()
 
 
@@ -2624,7 +2624,7 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         else:
             raise NotImplementedError()
 
-    def get_param_info(self) -> list:
+    def get_param_info(self, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE) -> list:
         """
         Return a type decomposition how to format parameters for current storage function
 
@@ -2635,14 +2635,14 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         param_info = []
         for param_type_string in self.get_params_type_string():
             scale_type = self.runtime_config.create_scale_object(param_type_string)
-            param_info.append(scale_type.generate_type_decomposition())
+            param_info.append(scale_type.generate_type_decomposition(max_recursion=max_recursion))
 
         return param_info
 
 
 class GenericRuntimeCallDefinition(Struct):
 
-    def get_param_info(self) -> list:
+    def get_param_info(self, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE) -> list:
         """
         Return a type decomposition how to format parameters for current storage function
 
@@ -2653,7 +2653,7 @@ class GenericRuntimeCallDefinition(Struct):
         param_info = []
         for param in self.value['params']:
             scale_type = self.runtime_config.create_scale_object(param['type'])
-            param_info.append(scale_type.generate_type_decomposition())
+            param_info.append(scale_type.generate_type_decomposition(max_recursion=max_recursion))
 
         return param_info
 
