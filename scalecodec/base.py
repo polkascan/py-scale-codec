@@ -509,12 +509,47 @@ class RuntimeConfigurationObject:
 
     def add_portable_registry(self, metadata: 'GenericMetadataVersioned', prefix=None):
 
+        if prefix is None:
+            prefix = 'scale_info'
+
         scale_info_types = metadata.portable_registry.value_object['types'].value_object
 
         self.update_from_scale_info_types(scale_info_types, prefix=prefix)
 
-        # Todo process extrinsic types
-        pass
+        # Process extrinsic type in metadata to register correct Address and ExtrinsicSignature types
+        try:
+            extrinsic_type_id = metadata[1][1]['extrinsic']['ty'].value
+
+            extrinsic_type = self.get_decoder_class(f"{prefix}::{extrinsic_type_id}")
+
+            types_dict = {}
+
+            for param in extrinsic_type.scale_info_type.value['params']:
+                if param['name'] == 'Address':
+
+                    type_string = f'{prefix}::{param["type"]}'
+
+                    types_dict['Address'] = type_string
+                    types_dict['AccountId'] = type_string
+                    types_dict['LookupSource'] = type_string
+
+                    # Check if Address is MultiAddress
+                    addres_type = self.get_decoder_class(type_string)
+
+                    if addres_type is self.get_decoder_class('sp_runtime::multiaddress::MultiAddress'):
+                        for address_param in addres_type.scale_info_type.value['params']:
+                            if address_param['name'] == 'AccountId':
+                                # Set AccountId
+                                types_dict['AccountId'] = f'{prefix}::{address_param["type"]}'
+
+                elif param['name'] == 'Signature':
+                    types_dict['ExtrinsicSignature'] = f'{prefix}::{param["type"]}'
+
+            # Update type registry
+            self.update_type_registry_types(types_dict)
+        except NotImplementedError:
+            pass
+
 
     def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
         # TODO
