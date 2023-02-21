@@ -18,7 +18,7 @@ import struct
 import warnings
 from datetime import datetime
 from hashlib import blake2b
-from typing import Union
+from typing import Union, Optional
 
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
 from scalecodec.utils.ss58 import ss58_decode_account_index, ss58_decode, ss58_encode, is_valid_ss58_address
@@ -2451,18 +2451,28 @@ class GenericPalletMetadata(Struct):
         return self.value['name']
 
     @property
-    def storage(self):
+    def storage(self) -> Optional[list]:
+
         storage_functions = self.value_object['storage'].value_object
 
         if storage_functions:
-            return storage_functions.value_object['entries'].value_object
+            pallet_version_sf = self.runtime_config.create_scale_object("StorageEntryMetadataV13")
+            pallet_version_sf.encode({
+                'name': ':__STORAGE_VERSION__:',
+                'modifier': 'Default',
+                'type': {'Plain': "u16"},
+                'default': '0x0000',
+                'documentation': ['Returns the current pallet version from storage']
+            })
+
+            return [pallet_version_sf] + storage_functions['entries'].elements
 
     @property
     def calls(self):
         return self.value_object['calls'].value_object
 
     @property
-    def events(self):
+    def events(self) -> Optional[list]:
         events = self.value_object['events'].value_object
 
         if events:
@@ -2477,10 +2487,13 @@ class GenericPalletMetadata(Struct):
         return self.value_object['errors'].value_object
 
     def get_storage_function(self, name: str):
-        storage_functions = self.value_object['storage'].value_object
+        if self.storage:
 
-        if storage_functions.value_object:
-            for storage_function in storage_functions['entries']:
+            # Convert name for well-known PalletVersion storage entry
+            if name == 'PalletVersion':
+                name = ':__STORAGE_VERSION__:'
+
+            for storage_function in self.storage:
                 if storage_function.value['name'] == name:
                     return storage_function
 
