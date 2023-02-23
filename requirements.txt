@@ -8,3 +8,9 @@ py==1.10.0
 pytest>=6.1.2
 requests>=2.24.0
 six==1.15.0
+
+mkdocs
+mkdocs-material
+mkdocs-autorefs
+mkdocstrings
+mkdocstrings[python]

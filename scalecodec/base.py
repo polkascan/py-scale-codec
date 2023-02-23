@@ -42,6 +42,9 @@ class Singleton(type):
 
 
 class RuntimeConfigurationObject:
+    """
+    Container for runtime configuration, for example type definitions and runtime upgrade information
+    """
 
     @classmethod
     def all_subclasses(cls, class_):
@@ -93,6 +96,17 @@ class RuntimeConfigurationObject:
         return name
 
     def get_decoder_class(self, type_string: Union[str, dict]):
+        """
+        Lookup and return a ScaleDecoder class for given `type_string`
+
+        Parameters
+        ----------
+        type_string
+
+        Returns
+        -------
+        ScaleDecoder
+        """
 
         if type(type_string) is dict:
             # Inner struct
@@ -550,7 +564,6 @@ class RuntimeConfigurationObject:
         except NotImplementedError:
             pass
 
-
     def add_contract_metadata_dict_to_type_registry(self, metadata_dict):
         # TODO
         prefix = f"ink::{metadata_dict['source']['hash']}"
@@ -558,8 +571,18 @@ class RuntimeConfigurationObject:
 
 
 class ScaleBytes:
+    """
+    Representation of SCALE encoded Bytes.
+    """
 
     def __init__(self, data: Union[str, bytes, bytearray]):
+        """
+        Constructs a SCALE bytes-stream with provided `data`
+
+        Parameters
+        ----------
+        data
+        """
         self.offset = 0
 
         if type(data) is bytearray:
@@ -574,19 +597,52 @@ class ScaleBytes:
         self.length = len(self.data)
 
     def get_next_bytes(self, length: int) -> bytearray:
+        """
+        Retrieve `length` amount of bytes of the stream
+
+        Parameters
+        ----------
+        length: amount of requested bytes
+
+        Returns
+        -------
+        bytearray
+        """
         data = self.data[self.offset:self.offset + length]
         self.offset += length
         return data
 
     def get_remaining_bytes(self) -> bytearray:
+        """
+        Retrieves all remaining bytes from the stream
+
+        Returns
+        -------
+        bytearray
+        """
+
         data = self.data[self.offset:]
         self.offset = self.length
         return data
 
     def get_remaining_length(self) -> int:
+        """
+        Returns how many bytes are left in the stream
+
+        Returns
+        -------
+        int
+        """
         return self.length - self.offset
 
     def reset(self):
+        """
+        Resets the pointer of the stream to the beginning
+
+        Returns
+        -------
+
+        """
         self.offset = 0
 
     def __str__(self):
@@ -617,10 +673,20 @@ class ScaleBytes:
             return ScaleBytes(self.data + data)
 
     def to_hex(self) -> str:
+        """
+        Return a hex-string (e.g. "0x00") representation of the byte-stream
+
+        Returns
+        -------
+        str
+        """
         return f'0x{self.data.hex()}'
 
 
 class ScaleDecoder(ABC):
+    """
+    Base class for all SCALE decoding/encoding
+    """
 
     type_string = None
 
@@ -631,7 +697,15 @@ class ScaleDecoder(ABC):
     runtime_config = None
 
     def __init__(self, data: ScaleBytes, sub_type: str = None, runtime_config: RuntimeConfigurationObject = None):
+        """
+        Constructs an SCALE codec class capable of encoding and decoding SCALE-bytes
 
+        Parameters
+        ----------
+        data: ScaleBytes stream of SCALE data
+        sub_type
+        runtime_config
+        """
         if sub_type:
             self.sub_type = sub_type
 
@@ -696,30 +770,92 @@ class ScaleDecoder(ABC):
             cls.type_mapping = type_mapping
 
     def get_next_bytes(self, length) -> bytearray:
+        """
+        Retrieve `length` amount of bytes of the SCALE-bytes stream
+
+        Parameters
+        ----------
+        length: amount of requested bytes
+
+        Returns
+        -------
+        bytearray
+        """
         data = self.data.get_next_bytes(length)
         return data
 
     def get_next_u8(self) -> int:
+        """
+        Retrieves the next byte and convert to an int
+
+        Returns
+        -------
+        int
+        """
         return int.from_bytes(self.get_next_bytes(1), byteorder='little')
 
     def get_next_bool(self) -> bool:
+        """
+        Retrieves the next byte and convert to an bool
+
+        Returns
+        -------
+        bool
+        """
         data = self.get_next_bytes(1)
         if data not in [b'\x00', b'\x01']:
             raise InvalidScaleTypeValueException('Invalid value for datatype "bool"')
         return data == b'\x01'
 
     def get_remaining_bytes(self) -> bytearray:
+        """
+        Retrieves all remaining bytes from the stream
+
+        Returns
+        -------
+        bytearray
+        """
         data = self.data.get_remaining_bytes()
         return data
 
     def get_used_bytes(self) -> bytearray:
+        """
+        Returns a bytearray of all SCALE-bytes used in the decoding process
+
+        Returns
+        -------
+        bytearray
+        """
         return self.data.data[self.data_start_offset:self.data_end_offset]
 
     @abstractmethod
     def process(self):
+        """
+        Implementation of the decoding process
+
+        Returns
+        -------
+
+        """
         raise NotImplementedError
 
     def decode(self, data: ScaleBytes = None, check_remaining=True):
+        """
+        Decodes available SCALE-bytes according to type specification of this ScaleType
+
+        If no `data` is provided, it will try to decode data specified during init
+
+        If `check_remaining` is enabled, an exception will be raised when data is remaining after decoding
+
+        Parameters
+        ----------
+        data
+        check_remaining: If enabled, an exception will be raised when data is remaining after decoding
+
+        Returns
+        -------
+
+        """
 
         if data is not None:
             self.decoded = False
@@ -755,7 +891,18 @@ class ScaleDecoder(ABC):
     def __repr__(self):
         return "<{}(value={})>".format(self.__class__.__name__, self.serialize())
 
-    def encode(self, value=None):
+    def encode(self, value=None) -> ScaleBytes:
+        """
+        Encodes the serialized `value` representation of current `ScaleType` to a `ScaleBytes` stream
+
+        Parameters
+        ----------
+        value
+
+        Returns
+        -------
+        ScaleBytes
+        """
 
         if value and issubclass(self.__class__, value.__class__):
             # Accept instance of current class directly
@@ -776,11 +923,23 @@ class ScaleDecoder(ABC):
         return self.data
 
     def process_encode(self, value) -> ScaleBytes:
+        """
+        Implementation of the encoding process
+
+        Parameters
+        ----------
+        value
+
+        Returns
+        -------
+        ScaleBytes
+        """
         raise NotImplementedError("Encoding not implemented for this ScaleType")
 
     @classmethod
     def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs):
         """
+        Retrieves the decoding class for provided `type_string`
 
         Parameters
         ----------
@@ -814,6 +973,13 @@ class ScaleDecoder(ABC):
         return obj
 
     def serialize(self):
+        """
+        Returns a serialized representation of current ScaleType
+
+        Returns
+        -------
+
+        """
         return self.value_serialized
 
     @classmethod
@@ -826,11 +992,15 @@ class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
 
 
 class ScaleType(ScaleDecoder, ABC):
-
+    """
+    Base class for all SCALE types
+    """
     scale_info_type: 'GenericRegistryType' = None
 
     def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):
         """
+
+        Initializes an `ScaleType`
 
         Parameters
         ----------
@@ -891,7 +1061,9 @@ class ScaleType(ScaleDecoder, ABC):
 
 
 class ScalePrimitive(ScaleType, ABC):
-
+    """
+    A SCALE representation of a RUST primitive
+    """
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()

@@ -29,6 +29,9 @@ from scalecodec.utils.math import trailing_zeros, next_power_of_two
 
 
 class Compact(ScaleType):
+    """
+    A space efficient type to encoding fixed-width integers
+    """
 
     def __init__(self, data=None, **kwargs):
         self.compact_length = 0
@@ -136,6 +139,11 @@ class CompactU32(Compact):
 
 
 class Option(ScaleType):
+    """
+    Option is a type that represents an optional value, which can be either Some(value) if a value is present or None
+    if it is absent, allowing for safe handling of null or missing values without causing runtime errors.
+    """
+
     def process(self):
 
         option_byte = self.get_next_bytes(1)
@@ -171,7 +179,9 @@ class Option(ScaleType):
 
 
 class Bytes(ScaleType):
-
+    """
+    A variable collection of bytes, stored as an `Vec<u8>`
+    """
     type_string = 'Vec<u8>'
 
     def process(self):
@@ -289,6 +299,9 @@ class RawBytes(ScaleType):
 
 
 class U8(ScalePrimitive):
+    """
+    Unsigned 8-bit int type, encoded in little-endian (LE) format
+    """
 
     def process(self):
         return self.get_next_u8()
@@ -302,6 +315,9 @@ class U8(ScalePrimitive):
 
 
 class U16(ScalePrimitive):
+    """
+    Unsigned 16-bit int type, encoded in little-endian (LE) format
+    """
 
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little')
@@ -315,7 +331,9 @@ class U16(ScalePrimitive):
 
 
 class U32(ScalePrimitive):
-
+    """
+    Unsigned 32-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
@@ -328,7 +346,9 @@ class U32(ScalePrimitive):
 
 
 class U64(ScalePrimitive):
-
+    """
+    Unsigned 64-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder='little'))
 
@@ -341,6 +361,9 @@ class U64(ScalePrimitive):
 
 
 class U128(ScalePrimitive):
+    """
+    Unsigned 128-bit int type, encoded in little-endian (LE) format
+    """
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(16), byteorder='little'))
@@ -354,6 +377,9 @@ class U128(ScalePrimitive):
 
 
 class U256(ScalePrimitive):
+    """
+    Unsigned 256-bit int type, encoded in little-endian (LE) format
+    """
 
     def process(self):
         return int(int.from_bytes(self.get_next_bytes(32), byteorder='little'))
@@ -367,7 +393,9 @@ class U256(ScalePrimitive):
 
 
 class I8(ScalePrimitive):
-
+    """
+    Signed 8-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(1), byteorder='little', signed=True)
 
@@ -380,7 +408,9 @@ class I8(ScalePrimitive):
 
 
 class I16(ScalePrimitive):
-
+    """
+    Signed 16-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little', signed=True)
 
@@ -393,7 +423,9 @@ class I16(ScalePrimitive):
 
 
 class I32(ScalePrimitive):
-
+    """
+    Signed 32-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little', signed=True)
 
@@ -406,7 +438,9 @@ class I32(ScalePrimitive):
 
 
 class I64(ScalePrimitive):
-
+    """
+    Signed 64-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(8), byteorder='little', signed=True)
 
@@ -419,7 +453,9 @@ class I64(ScalePrimitive):
 
 
 class I128(ScalePrimitive):
-
+    """
+    Signed 128-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(16), byteorder='little', signed=True)
 
@@ -432,7 +468,9 @@ class I128(ScalePrimitive):
 
 
 class I256(ScalePrimitive):
-
+    """
+    Signed 256-bit int type, encoded in little-endian (LE) format
+    """
     def process(self):
         return int.from_bytes(self.get_next_bytes(32), byteorder='little', signed=True)
 
@@ -469,7 +507,9 @@ class F64(ScalePrimitive):
 
 
 class H160(ScalePrimitive):
-
+    """
+    Fixed-size uninterpreted hash type with 20 bytes (160 bits) size.
+    """
     def process(self):
         return '0x{}'.format(self.get_next_bytes(20).hex())
 
@@ -480,7 +520,9 @@ class H160(ScalePrimitive):
 
 
 class H256(ScalePrimitive):
-
+    """
+    Fixed-size uninterpreted hash type with 32 bytes (256 bits) size.
+    """
     def process(self):
         return '0x{}'.format(self.get_next_bytes(32).hex())
 
@@ -491,7 +533,9 @@ class H256(ScalePrimitive):
 
 
 class H512(ScalePrimitive):
-
+    """
+    Fixed-size uninterpreted hash type with 64 bytes (512 bits) size.
+    """
     def process(self):
         return '0x{}'.format(self.get_next_bytes(64).hex())
 
@@ -507,7 +551,9 @@ class H512(ScalePrimitive):
 
 
 class Struct(ScaleType):
-
+    """
+    A struct is a composite data type that groups together zero or more values with various types into a single object
+    """
     def __init__(self, data=None, type_mapping=None, **kwargs):
 
         if type_mapping:
@@ -640,6 +686,11 @@ class Tuple(ScaleType):
 
 
 class Set(ScaleType):
+    """
+    The Set type in Substrate is an unordered collection that contains unique elements.
+    It is implemented using a binary search tree, allowing for efficient insertion, removal, and lookup operations.
+    """
+
     value_list = []
     value_type = 'u64'
 
@@ -783,7 +834,9 @@ class Era(ScaleType):
 
 
 class Bool(ScalePrimitive):
-
+    """
+    Boolean type
+    """
     def process(self):
         return self.get_next_bool()
 
@@ -828,6 +881,9 @@ class ProposalPreimage(Struct):
 
 
 class GenericAccountId(H256):
+    """
+    An SS58 formatted representation of an account
+    """
 
     def __init__(self, data=None, **kwargs):
         self.ss58_address = None
@@ -865,18 +921,27 @@ class GenericAccountId(H256):
 
 
 class GenericEthereumAccountId(H160):
-
+    """
+    Representation of an Ethereum address, internally a `H160`
+    """
     @classmethod
     def process_scale_info_definition(cls, scale_info_definition: 'GenericRegistryType', prefix: str):
         return
 
 
 class GenericAccountIndex(U32):
+    """
+    The AccountIndex type Substrate represents an account index, which is a unique identifier assigned
+    to an account in the Substrate runtime.
+    """
     pass
 
 
 class Vec(ScaleType):
-
+    """
+    A Vec in RUST is a dynamically resizable array that can hold a sequence of elements of the same type, allowing for
+    efficient random access and insertion or removal of elements at the end of the vector.
+    """
     def __init__(self, data=None, **kwargs):
         self.elements = []
         super().__init__(data, **kwargs)
@@ -974,6 +1039,11 @@ class Vec(ScaleType):
 
 
 class BoundedVec(Vec):
+    """
+    BoundedVec is a fixed-size vector used in Substrate, with a maximum number of elements that can be added.
+    It is used in cases where a fixed-size buffer is required, such as in the case of the transaction input/output
+    limit in the Substrate runtime.
+    """
     def __init__(self, data=None, **kwargs):
 
         if self.sub_type and ',' in self.sub_type:
@@ -1129,7 +1199,9 @@ class RawAddress(GenericAddress):
 
 
 class Enum(ScaleType):
-
+    """
+    A fixed number of variants, each mutually exclusive and potentially implying a further value or series of values.
+    """
     value_list = []
     type_mapping = None
 
@@ -1369,6 +1441,12 @@ class StorageHasher(Enum):
 
 
 class Conviction(Enum):
+    """
+    Conviction represents a measure of the degree of confidence or trust that a stakeholder has in a particular proposal
+    in the Substrate runtime. It is used to determine the voting power of a stakeholder for a particular proposal,
+    with higher conviction leading to more voting power.
+    """
+
     CONVICTION_MASK = 0b01111111
     DEFAULT_CONVICTION = 0b00000000
 
@@ -1720,7 +1798,9 @@ class GenericContractExecResultV2(Struct):
 
 
 class OpaqueCall(Bytes):
-
+    """
+    A Bytes representation of a `Call`, without having to decode the contents
+    """
     def process_encode(self, value):
         call_obj = self.runtime_config.create_scale_object(
             type_string='Call', metadata=self.metadata
@@ -1827,7 +1907,9 @@ class MultiAccountId(GenericAccountId):
 
 
 class FixedLengthArray(ScaleType):
-
+    """
+    Fixed sized array of specified subtype e.g. [u8; 8]
+    """
     element_count = 0
 
     def process(self):
@@ -1892,6 +1974,11 @@ class FixedLengthArray(ScaleType):
 
 
 class GenericMultiAddress(Enum):
+
+    """
+    MultiAddress is a type used in the Substrate runtime to represent an address that can be expressed in multiple ways, such as an account ID, a public key, or a human-readable name, allowing for flexible addressing and storage of data.
+    """
+
     type_mapping = [
         ["Id", "AccountId"],
         ["Index", "Compact<AccountIndex>"],
@@ -2050,6 +2137,11 @@ class BTreeSet(ScaleType):
 
 
 class GenericMetadataAll(Enum):
+    """
+    Enum that contains a Metadata version.
+
+    E.g.  `{"V14": MetadataV14}`
+    """
 
     def __init__(self, data, sub_type=None, **kwargs):
         self.__call_index = {}
@@ -2149,6 +2241,9 @@ class GenericMetadataAll(Enum):
 
 
 class GenericMetadataVersioned(Tuple):
+    """
+    Tuple that contains a backwards compatible MetadataAll type
+    """
 
     @property
     def call_index(self):
@@ -2744,7 +2839,10 @@ class TypeNotSupported(ScaleType):
 
 
 class GenericExtrinsic(ScaleType):
-
+    """
+    The Extrinsic type is used to send transactions from an account to the Substrate runtime, and it can contain
+    one or more calls to the runtime functions.
+    """
     def __init__(self, *arg, **kwargs):
         self.signed = None
         super().__init__(*arg, **kwargs)
@@ -2876,7 +2974,13 @@ class GenericExtrinsicV4(Struct):
 
 
 class GenericEvent(Enum):
+    """
+    An Event is a type used to represent a runtime event, which is a signal that indicates that a
+    specific state transition has occurred.
 
+    It is implemented as a variant enum that contains different types of events, such as system events, runtime events,
+    and custom events, each with its own set of fields that describe the event.
+    """
     def __init__(self, *args, **kwargs):
 
         self.event_idx = None
