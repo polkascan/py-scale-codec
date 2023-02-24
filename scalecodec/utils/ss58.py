@@ -106,7 +106,7 @@ def ss58_encode(address: Union[str, bytes], ss58_format: int = 42) -> str:
 
     Returns
     -------
-
+    str
     """
     checksum_prefix = b'SS58PRE'
 
@@ -152,7 +152,7 @@ def ss58_encode_account_index(account_index: int, ss58_format: int = 42) -> str:
 
     Returns
     -------
-
+    str
     """
 
     if 0 <= account_index <= 2 ** 8 - 1:

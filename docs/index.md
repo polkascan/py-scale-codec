@@ -1,17 +1,5 @@
-# Python SCALE Codec
-
-[![Build Status](https://img.shields.io/github/actions/workflow/status/polkascan/py-scale-codec/unittests.yml?branch=master)](https://github.com/polkascan/py-scale-codec/actions/workflows/unittests.yml?query=workflow%3A%22Run+unit+tests%22)
-[![Latest Version](https://img.shields.io/pypi/v/scalecodec.svg)](https://pypi.org/project/scalecodec/) 
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/scalecodec.svg)](https://pypi.org/project/scalecodec/)
-[![License](https://img.shields.io/pypi/l/scalecodec.svg)](https://github.com/polkascan/py-scale-codec/blob/master/LICENSE)
-
-
 ## Description
 [Substrate](https://github.com/paritytech/substrate) uses a lightweight and efficient [encoding and decoding program](https://docs.substrate.io/reference/scale-codec/) to optimize how data is sent and received over the network. The program used to serialize and deserialize data is called the SCALE codec, with SCALE being an acronym for **S**imple **C**oncatenated **A**ggregate **L**ittle-**E**ndian.
-
-## Documentation
-https://polkascan.github.io/py-scale-codec/
-
 
 ## Installation
 ```bash
@@ -41,6 +29,3 @@ pip install scalecodec
 | `Enum` Example: `enum IntOrBool { Int(u8), Bool(bool),}`                     | A fixed number of variants, each mutually exclusive and potentially implying a further value or series of values. Encoded as the first byte identifying the index of the variant that the value is. Any further bytes are used to encode any data that the variant implies. Thus, no more than 256 variants are supported.                                                                                                                                                           | `{'Int': 8}`                                                                | `0x002a`                                                                        |
 |                                                                              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `{'Bool': True}`                                                            | `0x0101`                                                                        |
 | `Struct` Example: `struct Motion { pub votes: Vec<AccountId>, pub id: u32 }` | For structures, the values are named, but that is irrelevant for the encoding (names are ignored - only order matters). All containers store elements consecutively. The order of the elements is not fixed, depends on the container, and cannot be relied on at decoding. This implicitly means that decoding some byte-array into a specified structure that enforces an order and then re-encoding it could result in a different byte array than the original that was decoded. | `{"votes": ["5GDyPHLVHcQYPTWfygtPYeo gQjyZy7J9fsi4brPhgEFq4pcv"], "id": 4}` | `0x04b80269ec500e458a630846b99105c397ee57 4125823d6f4388e9c7572e115c0504000000` |
-
-## License
-https://github.com/polkascan/py-scale-codec/blob/master/LICENSE
