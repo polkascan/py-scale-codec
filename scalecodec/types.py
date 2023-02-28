@@ -577,12 +577,12 @@ class Struct(ScaleType):
 
         return result
 
-    def process_encode(self, value: Union[dict, tuple, str, int]) -> ScaleBytes:
+    def process_encode(self, value: Union[dict, tuple, str, int, bool]) -> ScaleBytes:
         data = ScaleBytes(bytearray())
 
         self.value_object = {}
 
-        if type(value) in (str, int):
+        if type(value) in (str, int, bool):
             # Convert to tuple with one element
             value = (value,)
 
