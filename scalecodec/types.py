@@ -577,14 +577,21 @@ class Struct(ScaleType):
 
         return result
 
-    def process_encode(self, value: Union[dict, tuple]) -> ScaleBytes:
+    def process_encode(self, value: Union[dict, tuple, str, int]) -> ScaleBytes:
         data = ScaleBytes(bytearray())
 
         self.value_object = {}
 
+        if type(value) in (str, int):
+            # Convert to tuple with one element
+            value = (value,)
+
         if type(value) is tuple:
             # Convert tuple to dict
-            value = {key: value[idx] for idx, (key, _) in enumerate(self.type_mapping)}
+            try:
+                value = {key: value[idx] for idx, (key, _) in enumerate(self.type_mapping)}
+            except IndexError:
+                raise ValueError("Not enough items in tuple to match type_mapping")
 
         for key, data_type in self.type_mapping:
             if key not in value:

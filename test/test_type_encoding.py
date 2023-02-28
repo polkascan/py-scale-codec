@@ -243,9 +243,20 @@ class TestScaleTypeEncoding(unittest.TestCase):
         })
 
         obj = TestStruct()
-
         data = obj.encode((4, 2))
+
         self.assertEqual(ScaleBytes("0x0400000002000000"), data)
+
+    def test_struct_encode_int(self):
+
+        TestStruct = type('TestStruct', (Struct,), {
+            'type_mapping': (('nonce', 'u32'),)
+        })
+
+        obj = TestStruct()
+        data = obj.encode(1)
+
+        self.assertEqual(ScaleBytes("0x01000000"), data)
 
     # def test_struct_raw_encode(self):
     #     RuntimeConfiguration().update_type_registry_types({
