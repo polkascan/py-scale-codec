@@ -6923,6 +6923,7 @@
     },
     "ContractExecResultTo267": {
       "type": "struct",
+      "base_class": "GenericContractExecResultV2",
       "type_mapping": [
         [
           "gas_consumed",

@@ -1703,7 +1703,7 @@
         ]
       ]
     },
-    "ContractExecResult": "ContractExecResultTo260",
+    "ContractExecResult": "ContractExecResultTo267",
     "RuntimeCallDefinition": {
       "type": "struct",
       "base_class": "GenericRuntimeCallDefinition",
