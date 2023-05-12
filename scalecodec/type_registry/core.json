@@ -3054,6 +3054,14 @@
             ["adjusted_weight_fee", "Balance"]
           ]
         },
+        "DispatchClass": {
+          "type": "enum",
+          "value_list": [
+            "Normal",
+            "Operational",
+            "Mandatory"
+          ]
+        },
         "RuntimeDispatchInfo": {
           "type": "struct",
           "type_mapping": [
