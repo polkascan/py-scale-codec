@@ -20,7 +20,7 @@ from typing import Optional
 
 import requests
 
-SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'legacy', 'development', 'kusama', 'polkadot', 'rococo', 'core',
+SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'legacy', 'kusama', 'polkadot', 'rococo', 'core',
                                    'substrate-node-template', 'westend', 'statemint', 'statemine', 'karura',
                                    'moonbeam', 'moonriver', 'moonbase-alpha', 'crust', 'polymesh-mainnet',
                                    'polymesh-testnet', 'acala', 'test')
