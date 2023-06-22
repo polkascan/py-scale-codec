@@ -23,7 +23,7 @@ import requests
 SUPPORTED_TYPE_REGISTRY_PRESETS = ('canvas', 'legacy', 'kusama', 'polkadot', 'rococo', 'core',
                                    'substrate-node-template', 'westend', 'statemint', 'statemine', 'karura',
                                    'moonbeam', 'moonriver', 'moonbase-alpha', 'crust', 'polymesh-mainnet',
-                                   'polymesh-testnet', 'acala', 'test')
+                                   'polymesh-testnet', 'acala', 'test', 'contracts-on-rococo')
 
 ONLINE_BASE_URL = 'https://raw.githubusercontent.com/polkascan/py-scale-codec/v1.0/scalecodec/type_registry/'
 
