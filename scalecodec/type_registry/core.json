@@ -1573,6 +1573,8 @@
       ]
     },
     "Compact<Moment>": "CompactMoment",
+    "primitive_types::H256": "H256",
+    "primitive_types::U256": "U256",
     "sp_core::crypto::AccountId32": "GenericAccountId",
     "sp_runtime::multiaddress::MultiAddress": "GenericMultiAddress",
     "sp_runtime::generic::era::Era": "Era",
@@ -1633,6 +1635,36 @@
         [
           "result",
           "ContractExecResultResult"
+        ]
+      ]
+    },
+    "ContractExecResultTo269": {
+      "type": "struct",
+      "base_class": "GenericContractExecResultV2",
+      "type_mapping": [
+        [
+          "gas_consumed",
+          "Weight"
+        ],
+        [
+          "gas_required",
+          "Weight"
+        ],
+        [
+          "storage_deposit",
+          "StorageDeposit"
+        ],
+        [
+          "debug_message",
+          "Bytes"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
+        ],
+        [
+          "events",
+          "Option<Vec<frame_system::eventrecord>>"
         ]
       ]
     },
