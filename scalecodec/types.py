@@ -2884,10 +2884,10 @@ class GenericExtrinsic(ScaleType):
             extrinsic_version = extrinsic_versions[extrinsic_version_idx]
 
             self.value_object.update(self.process_type(extrinsic_version, metadata=self.metadata).value_object)
-            value['extrinsic_hash'] = f'0x{self.extrinsic_hash.hex()}'
         else:
             self.value_object.update(self.process_type('Inherent', metadata=self.metadata).value_object)
-            value['extrinsic_hash'] = None
+
+        value['extrinsic_hash'] = f'0x{self.extrinsic_hash.hex()}'
 
         value.update({key: value.serialize() for (key, value) in self.value_object.items()})
 
