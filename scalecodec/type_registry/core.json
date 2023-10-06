@@ -1146,6 +1146,7 @@
     "CustomValueMetadata15": "Bytes",
     "RuntimeApiMetadataV15": {
       "type": "struct",
+      "base_class": "GenericRuntimeApiMetadata",
       "type_mapping": [
         [
           "name",
@@ -1163,6 +1164,7 @@
     },
     "RuntimeApiMethodMetadataV15": {
       "type": "struct",
+      "base_class": "GenericRuntimeApiMethodMetadata",
       "type_mapping": [
         [
           "name",
@@ -1192,6 +1194,59 @@
         [
           "type",
           "SiLookupTypeId"
+        ]
+      ]
+    },
+    "RuntimeApiMetadataV14": {
+      "type": "struct",
+      "base_class": "LegacyRuntimeApiMetadata",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "methods",
+          "Vec<RuntimeApiMethodMetadataV14>"
+        ],
+        [
+          "docs",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "RuntimeApiMethodMetadataV14": {
+      "type": "struct",
+      "base_class": "LegacyRuntimeApiMethodMetadata",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "inputs",
+          "Vec<RuntimeApiMethodParamMetadataV14>"
+        ],
+        [
+          "output",
+          "String"
+        ],
+        [
+          "docs",
+          "Vec<Text>"
+        ]
+      ]
+    },
+    "RuntimeApiMethodParamMetadataV14": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "type",
+          "String"
         ]
       ]
     },
@@ -1909,46 +1964,7 @@
         ]
       ]
     },
-    "ContractExecResult": "ContractExecResultTo267",
-    "RuntimeCallDefinition": {
-      "type": "struct",
-      "base_class": "GenericRuntimeCallDefinition",
-      "type_mapping": [
-        [
-          "api",
-          "String"
-        ],
-        [
-          "method",
-          "String"
-        ],
-        [
-          "description",
-          "String"
-        ],
-        [
-          "params",
-          "Vec<RuntimeCallDefinitionParam>"
-        ],
-        [
-          "type",
-          "String"
-        ]
-      ]
-    },
-    "RuntimeCallDefinitionParam": {
-      "type": "struct",
-      "type_mapping": [
-        [
-          "name",
-          "String"
-        ],
-        [
-          "type",
-          "String"
-        ]
-      ]
-    }
+    "ContractExecResult": "ContractExecResultTo267"
   },
   "runtime_api": {
     "AccountNonceApi": {
@@ -3008,8 +3024,8 @@
              ["nonce", "H64"]
           ]
         },
-        "EthBloom": "H2048",
         "H2048": "[u8; 256]",
+        "EthBloom": "H2048",
         "H64": "[u8; 8]",
         "Permill": "u32",
         "TransactionV2": {

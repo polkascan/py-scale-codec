@@ -112,6 +112,9 @@ class TestMetadataRegistry(unittest.TestCase):
 
         self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
 
+        # Test runtime api
+        self.assertIsNotNone(metadata_obj.get_runtime_api('Core'))
+
     def test_metadata_registry_decode_v15(self):
         metadata_obj = self.runtime_config.create_scale_object(
             "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V15'])
@@ -124,6 +127,11 @@ class TestMetadataRegistry(unittest.TestCase):
         self.assertGreater(len(metadata_obj.value[1]['V15']['pallets']), 0)
 
         self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
+
+        self.assertIsNotNone(metadata_obj.get_runtime_api('Core'))
+
+        method = metadata_obj.get_runtime_api('AccountNonceApi').get_method('account_nonce')
+
 
     # def test_pickle_test(self):
     #     metadata_obj = self.runtime_config.create_scale_object(

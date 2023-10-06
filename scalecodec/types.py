@@ -2192,6 +2192,42 @@ class GenericMetadataAll(Enum):
                 if pallet.value['name'] == name:
                     return pallet
 
+    def get_runtime_apis(self):
+        if self.index >= 15:
+            return self[1]['apis']
+        else:
+            return [self.get_runtime_api(name) for name in self.runtime_config.type_registry.get("runtime_api").keys()]
+
+    def get_runtime_api(self, name: str) -> Optional['GenericRuntimeApiMetadata']:
+
+        if self.index >= 15:
+            for runtime_api in self[1]['apis']:
+                if runtime_api.value['name'] == name:
+                    return runtime_api
+        else:
+            # Legacy: Runtime APIs not included in metadata
+            runtime_api_data = self.runtime_config.type_registry.get("runtime_api", {}).get(name)
+
+            if runtime_api_data:
+                runtime_api = self.runtime_config.create_scale_object("RuntimeApiMetadataV14")
+
+                # Transform data
+                data = {
+                    'name': name,
+                    'methods': [{
+                            'name': m_name, 'inputs': m_data['params'], 'output': m_data['type'],
+                            'docs': [m_data['description']]
+                    } for m_name, m_data in runtime_api_data['methods'].items()],
+                    'docs': []
+                }
+
+                runtime_api.encode(data)
+
+                # Add embedded types to type registry
+                self.runtime_config.update_type_registry_types(runtime_api_data.get("types", {}))
+
+                return runtime_api
+
     def process(self):
         value = super().process()
 
@@ -2325,6 +2361,12 @@ class GenericMetadataVersioned(Tuple):
                     signed_extensions[se] = extension_def[se]
 
         return signed_extensions
+
+    def get_runtime_api(self, name: str):
+        return self.get_metadata().get_runtime_api(name)
+
+    def get_runtime_apis(self):
+        return self.get_metadata().get_runtime_apis()
 
 
 class GenericStringType(String):
@@ -2755,7 +2797,28 @@ class ScaleInfoStorageEntryMetadata(GenericStorageEntryMetadata):
         return param_info
 
 
-class GenericRuntimeCallDefinition(Struct):
+class GenericRuntimeApiMetadata(Struct):
+
+    def get_methods(self):
+        return list(self.value_object['methods'])
+
+    def get_method(self, name: str) -> Optional['GenericRuntimeApiMethodMetadata']:
+        for method in self.value_object['methods']:
+            if name == method.value['name']:
+                return method
+
+
+class LegacyRuntimeApiMetadata(GenericRuntimeApiMetadata):
+    pass
+
+
+class GenericRuntimeApiMethodMetadata(Struct):
+
+    def get_params(self):
+        return [{'name': p['name'], 'type': f'scale_info::{p["type"]}'} for p in self.value['inputs']]
+
+    def get_return_type_string(self):
+        return f"scale_info::{self.value['output']}"
 
     def get_param_info(self, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE) -> list:
         """
@@ -2766,11 +2829,20 @@ class GenericRuntimeCallDefinition(Struct):
         list
         """
         param_info = []
-        for param in self.value['params']:
+        for param in self.get_params():
             scale_type = self.runtime_config.create_scale_object(param['type'])
             param_info.append(scale_type.generate_type_decomposition(max_recursion=max_recursion))
 
         return param_info
+
+
+class LegacyRuntimeApiMethodMetadata(GenericRuntimeApiMethodMetadata):
+
+    def get_params(self):
+        return [{'name': p['name'], 'type': p["type"]} for p in self.value['inputs']]
+
+    def get_return_type_string(self):
+        return self.value['output']
 
 
 class GenericEventMetadata(Struct):
