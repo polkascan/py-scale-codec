@@ -2308,6 +2308,10 @@ class GenericMetadataVersioned(Tuple):
         return self.value_object[1]
 
     @property
+    def version(self) -> int:
+        return self.value_object[1].index
+
+    @property
     def portable_registry(self):
         return self.value_object[1].portable_registry
 

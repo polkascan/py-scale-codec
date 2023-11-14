@@ -532,42 +532,69 @@ class RuntimeConfigurationObject:
 
         # Process extrinsic type in metadata to register correct Address and ExtrinsicSignature types
         try:
-            # Retrieve Extrinsic using common namespace
-            extrinsic_type = self.get_decoder_class("sp_runtime::generic::unchecked_extrinsic::UncheckedExtrinsic")
 
-            # Try to fall back on extrinsic type in metadata
-            if extrinsic_type is None:
-                extrinsic_type_id = metadata[1][1]['extrinsic']['ty'].value
-                extrinsic_type = self.get_decoder_class(f"{prefix}::{extrinsic_type_id}")
+            if metadata.version >= 15:
 
-            if extrinsic_type is not None:
-                # Extract Address and Signature type and set in type registry
+                extrinsic_dict = metadata[1][1]['extrinsic'].value
 
-                types_dict = {}
-
-                for param in extrinsic_type.scale_info_type.value['params']:
-                    if param['name'] == 'Address':
-
-                        type_string = f'{prefix}::{param["type"]}'
-
-                        types_dict['Address'] = type_string
-                        types_dict['AccountId'] = type_string
-                        types_dict['LookupSource'] = type_string
-
-                        # Check if Address is MultiAddress
-                        addres_type = self.get_decoder_class(type_string)
-
-                        if addres_type is self.get_decoder_class('sp_runtime::multiaddress::MultiAddress'):
-                            for address_param in addres_type.scale_info_type.value['params']:
-                                if address_param['name'] == 'AccountId':
-                                    # Set AccountId
-                                    types_dict['AccountId'] = f'{prefix}::{address_param["type"]}'
-
-                    elif param['name'] == 'Signature':
-                        types_dict['ExtrinsicSignature'] = f'{prefix}::{param["type"]}'
+                address_type_string = f"{prefix}::{extrinsic_dict['address_type']}"
 
                 # Update type registry
+                types_dict = {
+                    "Address": address_type_string,
+                    "AccountId": address_type_string,
+                    "LookupSource": address_type_string,
+                    "ExtrinsicSignature": f"{prefix}::{extrinsic_dict['signature_type']}"
+                }
+
+                # Check if Address is MultiAddress
+                addres_type = self.get_decoder_class(address_type_string)
+
+                if addres_type is self.get_decoder_class('sp_runtime::multiaddress::MultiAddress'):
+                    for address_param in addres_type.scale_info_type.value['params']:
+                        if address_param['name'] == 'AccountId':
+                            # Set AccountId
+                            types_dict['AccountId'] = f'{prefix}::{address_param["type"]}'
+
                 self.update_type_registry_types(types_dict)
+            else:
+
+                # Retrieve Extrinsic using common namespace
+                extrinsic_type = self.get_decoder_class("sp_runtime::generic::unchecked_extrinsic::UncheckedExtrinsic")
+
+                # Try to fall back on extrinsic type in metadata
+                if extrinsic_type is None:
+                    extrinsic_type_id = metadata[1][1]['extrinsic']['ty'].value
+                    extrinsic_type = self.get_decoder_class(f"{prefix}::{extrinsic_type_id}")
+
+                if extrinsic_type is not None:
+                    # Extract Address and Signature type and set in type registry
+
+                    types_dict = {}
+
+                    for param in extrinsic_type.scale_info_type.value['params']:
+                        if param['name'] == 'Address':
+
+                            type_string = f'{prefix}::{param["type"]}'
+
+                            types_dict['Address'] = type_string
+                            types_dict['AccountId'] = type_string
+                            types_dict['LookupSource'] = type_string
+
+                            # Check if Address is MultiAddress
+                            addres_type = self.get_decoder_class(type_string)
+
+                            if addres_type is self.get_decoder_class('sp_runtime::multiaddress::MultiAddress'):
+                                for address_param in addres_type.scale_info_type.value['params']:
+                                    if address_param['name'] == 'AccountId':
+                                        # Set AccountId
+                                        types_dict['AccountId'] = f'{prefix}::{address_param["type"]}'
+
+                        elif param['name'] == 'Signature':
+                            types_dict['ExtrinsicSignature'] = f'{prefix}::{param["type"]}'
+
+                    # Update type registry
+                    self.update_type_registry_types(types_dict)
         except NotImplementedError:
             pass
 
