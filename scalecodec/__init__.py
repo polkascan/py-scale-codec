@@ -1,6 +1,6 @@
 # Python SCALE Codec Library
 #
-# Copyright 2018-2020 Stichting Polkascan (Polkascan Foundation).
+# Copyright 2018-2023 Stichting Polkascan (Polkascan Foundation).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,4 +15,5 @@
 # limitations under the License.
 
 # Import all type to make sure types classes are registered when RuntimeConfiguration inits.
-from .types import *
+# from .types import *
+# from .base import *

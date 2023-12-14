@@ -21,9 +21,9 @@
 import os
 import unittest
 
-from scalecodec.types import GenericAccountId, Null
+from scalecodec.types import GenericAccountId, Null, MetadataVersioned
 
-from scalecodec.base import RuntimeConfigurationObject, ScaleDecoder, ScaleBytes
+from scalecodec.base import ScaleBytes
 
 from scalecodec.type_registry import load_type_registry_file, load_type_registry_preset
 
@@ -36,62 +36,71 @@ class ScaleInfoTestCase(unittest.TestCase):
 
         # scale_info_defaults = load_type_registry_file(os.path.join(module_path, 'fixtures', 'scale_info_defaults.json'))
 
-        cls.runtime_config = RuntimeConfigurationObject(ss58_format=42)
-        cls.runtime_config.update_type_registry(load_type_registry_preset("core"))
-        # cls.runtime_config.update_type_registry(scale_info_defaults)
+        # cls.runtime_config = RuntimeConfigurationObject(ss58_format=42)
+        # cls.runtime_config.update_type_registry(load_type_registry_preset("core"))
+        # # cls.runtime_config.update_type_registry(scale_info_defaults)
 
         cls.metadata_fixture_dict = load_type_registry_file(
             os.path.join(module_path, 'fixtures', 'metadata_hex.json')
         )
+        cls.metadata_obj = MetadataVersioned.new()
 
-        cls.metadata_obj = cls.runtime_config.create_scale_object(
-            'MetadataVersioned', data=ScaleBytes(cls.metadata_fixture_dict['V14'])
-        )
-        cls.metadata_obj.decode()
+        cls.metadata_obj.decode(ScaleBytes(cls.metadata_fixture_dict['V14']))
 
-        cls.runtime_config.add_portable_registry(cls.metadata_obj)
+        # cls.runtime_config.add_portable_registry(cls.metadata_obj)
+
+    def test_create_all_types(self):
+        for type_info in self.metadata_obj.portable_registry['types']:
+            try:
+                scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(type_info.value['id'])
+                obj = scale_type_def.new()
+                self.assertIsNotNone(obj)
+            except Exception as e:
+                raise Exception(f"Failed generate {type_info}: {e}")
+
+        self.assertGreater(len(self.metadata_obj.portable_registry.si_type_registry), 0)
 
     def test_path_overrides(self):
-        account_cls = self.runtime_config.get_decoder_class('scale_info::0')
-        self.assertIsInstance(account_cls(), GenericAccountId)
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(0)
+        obj = scale_type_def.new()
+        obj.encode("0x88f01441682a17b52d6ae12d1a5670cf675fd254897efabaa5069eb3a701ab73")
+        self.assertIsInstance(obj, GenericAccountId)
 
     def test_primitives(self):
         # scale_info::2 = u8
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::2', ScaleBytes("0x02")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(2)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x02"))
         self.assertEqual(obj.value, 2)
 
         # scale_info::4 = u32
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::4', ScaleBytes("0x2efb0000")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(4)
+        obj = scale_type_def.new()
+        obj.decode(ScaleBytes("0x2efb0000"))
         self.assertEqual(obj.value, 64302)
 
     def test_compact(self):
         # scale_info::98 = compact<u32>
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::98', ScaleBytes("0x02093d00")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(98)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x02093d00"))
         self.assertEqual(obj.value, 1000000)
 
         # scale_info::63 = compact<u128>
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::63', ScaleBytes("0x130080cd103d71bc22")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(63)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x130080cd103d71bc22"))
         self.assertEqual(obj.value, 2503000000000000000)
 
     def test_array(self):
         # scale_info::14 = [u8; 4]
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::14', ScaleBytes("0x01020304"),
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(14)
+        obj = scale_type_def.new()
 
-        )
-        obj.decode()
+        obj.decode(ScaleBytes("0x01020304"))
         self.assertEqual(obj.value, "0x01020304")
 
     def test_enum(self):
@@ -118,19 +127,18 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual("0x06010203041054657374", data.to_hex())
 
     def test_enum_no_value(self):
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::21', ScaleBytes("0x02")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(21)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x02"))
         self.assertEqual('CodeUpdated', obj.value)
 
     def test_named_struct(self):
         # scale_info::111 = ['frame_support', 'weights', 'RuntimeDbWeight']
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::111',
-            ScaleBytes("0xe110000000000000d204000000000000")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(111)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0xe110000000000000d204000000000000"))
 
         self.assertEqual(obj.value, {
             'read': 4321,
@@ -146,11 +154,10 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_unnamed_struct_one_element(self):
         # ('sp_arithmetic::per_things::percent', <class 'abc.scale_info::205'>)
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::203',
-            ScaleBytes("0x04")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(203)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x04"))
         self.assertEqual(obj.value, 4)
 
         obj.encode(5)
@@ -158,32 +165,28 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_unnamed_struct_multiple_elements(self):
         # pallet_democracy::vote::PriorLock
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::377',
-            ScaleBytes("0x0c00000022000000000000000000000000000000")
-        )
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(377)
+        obj = scale_type_def.new()
 
-        obj.decode()
+        obj.decode(ScaleBytes("0x0c00000022000000000000000000000000000000"))
         self.assertEqual((12, 34), obj.value)
 
         data = obj.encode((12, 34))
         self.assertEqual(data.to_hex(), '0x0c00000022000000000000000000000000000000')
 
     def test_tuple(self):
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::73',
-            ScaleBytes("0x0400000003000000")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(73)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x0400000003000000"))
 
         self.assertEqual((4, 3), obj.value)
 
     def test_option_none(self):
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::74',
-            ScaleBytes("0x00")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(74)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x00"))
 
         self.assertIsNone(obj.value)
 
@@ -192,11 +195,10 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual('0x00', data.to_hex())
 
     def test_option_some(self):
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::35',
-            ScaleBytes("0x0101")
-        )
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(35)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x0101"))
         self.assertEqual('Signed', obj.value)
 
         data = obj.encode('OnChain')
@@ -217,12 +219,10 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_bounded_vec(self):
         # 'scale_info::90' = frame_support::storage::bounded_vec::BoundedVec
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::90',
-            ScaleBytes("0x084345")
-        )
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(90)
+        obj = scale_type_def.new()
 
-        obj.decode()
+        obj.decode(ScaleBytes("0x084345"))
 
         self.assertEqual('CE', obj.value)
 
@@ -247,11 +247,10 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_era(self):
         # 'scale_info::516' = sp_runtime::generic::era::era
-        obj = self.runtime_config.create_scale_object(
-            'scale_info::516',
-            ScaleBytes("0x4e9c")
-        )
-        obj.decode()
+
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(516)
+        obj = scale_type_def.new()
+        obj.decode(ScaleBytes("0x4e9c"))
 
         self.assertTupleEqual(obj.value, (32768, 20000))
         self.assertEqual(obj.period, 32768)
@@ -260,12 +259,12 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_multiaddress(self):
         # 'scale_info::139' = sp_runtime::multiaddress::MultiAddress
-        obj = self.runtime_config.create_scale_object(
-            'sp_runtime::multiaddress::MultiAddress',
-            ScaleBytes("0x00d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d")
-        )
 
-        obj.decode()
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(139)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x00d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"))
+
         self.assertEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', obj.value)
         self.assertEqual('d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d', obj.account_id)
 
