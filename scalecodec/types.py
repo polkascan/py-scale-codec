@@ -1646,12 +1646,13 @@ class GenericCall(ScaleType):
 
             data = ScaleBytes(self.call_module['index'].get_used_bytes())
 
-            call_type_string = self.call_module['calls'].value_object.get_type_string()
+            if self.call_module['calls'].value_object:
+                # Retrieve call function
+                call_type_string = self.call_module['calls'].value_object.get_type_string()
+                call_obj = self.runtime_config.create_scale_object(call_type_string)
 
-            call_obj = self.runtime_config.create_scale_object(call_type_string)
-
-            # Retrieve used variant of call type
-            self.call_function = call_obj.scale_info_type['def'][1].get_variant_by_name(value['call_function'])
+                # Retrieve used variant of call type
+                self.call_function = call_obj.scale_info_type['def'][1].get_variant_by_name(value['call_function'])
 
             if not self.call_function:
                 raise ValueError(f"Call function '{value['call_module']}.{value['call_function']}' not found")
