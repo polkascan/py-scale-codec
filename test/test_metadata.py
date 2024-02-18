@@ -112,6 +112,30 @@ class TestMetadataRegistry(unittest.TestCase):
 
         self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
 
+        # Test runtime api
+        self.assertGreater(len(metadata_obj.get_runtime_apis()), 0)
+        self.assertIsNotNone(metadata_obj.get_runtime_api('Core'))
+
+    def test_metadata_registry_decode_v15(self):
+        metadata_obj = self.runtime_config.create_scale_object(
+            "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V15'])
+        )
+        metadata_obj.decode()
+        self.assertEqual(metadata_obj.value_object[1].index, 15)
+        self.assertIsNotNone(metadata_obj.portable_registry)
+
+        self.assertGreater(len(metadata_obj[1][1]['pallets']), 0)
+        self.assertGreater(len(metadata_obj.value[1]['V15']['pallets']), 0)
+
+        self.assertGreater(len(metadata_obj.get_signed_extensions().items()), 0)
+
+        # Test runtime api
+        self.assertGreater(len(metadata_obj.get_runtime_apis()), 0)
+        self.assertIsNotNone(metadata_obj.get_runtime_api('Core'))
+
+        self.assertIsNotNone(metadata_obj.get_runtime_api('AccountNonceApi').get_method('account_nonce'))
+
+
     # def test_pickle_test(self):
     #     metadata_obj = self.runtime_config.create_scale_object(
     #         "MetadataVersioned", data=ScaleBytes(self.metadata_fixture_dict['V14'])
