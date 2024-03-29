@@ -25,3 +25,11 @@ class InvalidScaleTypeValueException(Exception):
 
 class MetadataCallFunctionNotFound(ValueError):
     pass
+
+
+class ScaleDecodeException(ValueError):
+    pass
+
+
+class ScaleEncodeException(ValueError):
+    pass

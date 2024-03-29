@@ -380,7 +380,7 @@ def get_apis():
 
 
 def get_type_def(name: str, metadata: 'GenericMetadataVersioned'):
-    from scalecodec.types import AccountId, U32, Array, U8, Struct, Text, Vec, Hash, Compact, BlockNumber, Tuple, Balance, Option, Enum, U64, ExtrinsicDef
+    from scalecodec.types import AccountId, U32, Array, U8, Struct, Text, Vec, Hash, Compact, BlockNumber, Tuple, Balance, Option, Enum, U64, Extrinsic
 
     ApiId = Array(U8, 8)
     RuntimeVersionApi = Tuple(ApiId, U32)
@@ -409,13 +409,13 @@ def get_type_def(name: str, metadata: 'GenericMetadataVersioned'):
 
     try:
         return {
-            "AccountId": AccountId,
+            "AccountId": AccountId(),
             "Index": U32,
             "RuntimeVersion": RuntimeVersion,
             "Header": Header,
             "RuntimeDispatchInfo": RuntimeDispatchInfo,
             "FeeDetails": FeeDetails,
-            "Extrinsic": ExtrinsicDef(metadata),
+            "Extrinsic": Extrinsic(metadata),
             "u32": U32
         }[name]
     except KeyError:

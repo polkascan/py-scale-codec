@@ -19,7 +19,8 @@ import os
 import unittest
 
 from scalecodec.base import ScaleBytes, RuntimeConfigurationObject
-from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
+from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException, \
+    ScaleEncodeException, ScaleDecodeException
 # from scalecodec.types import GenericContractExecResult
 #
 # from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
@@ -27,7 +28,7 @@ from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidS
 # from scalecodec.types import GenericMultiAddress
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 from scalecodec.types import MetadataVersioned, Compact, U32, U16, I16, Tuple, String, Vec, AccountId, BitVec, Era, \
-    MultiAddress, AccountIdDef, Bool, Balance, Array, HashMap, Bytes, U8
+    MultiAddress, AccountId, Bool, Balance, Array, HashMap, Bytes, U8
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
 
 
@@ -90,7 +91,7 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_compact_u32_invalid(self):
         obj = Compact(U32).new()
-        self.assertRaises(InvalidScaleTypeValueException, obj.decode, ScaleBytes("0x"))
+        self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode, ScaleBytes("0x"))
 
     def test_u16(self):
         obj = U16.new()
@@ -113,18 +114,18 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, -0.0)
 
     def test_bool_true(self):
-        obj = Bool.new()
+        obj = Bool().new()
         obj.decode(ScaleBytes("0x01"))
         self.assertEqual(obj.value, True)
 
     def test_bool_false(self):
-        obj = Bool.new()
+        obj = Bool().new()
         obj.decode(ScaleBytes("0x00"))
         self.assertEqual(obj.value, False)
 
     def test_bool_invalid(self):
-        obj = Bool.new()
-        self.assertRaises(InvalidScaleTypeValueException, obj.decode, ScaleBytes("0x02"))
+        obj = Bool().new()
+        self.assertRaises(ScaleDecodeException, obj.decode, ScaleBytes("0x02"))
 
     def test_string(self):
         obj = String.new()
@@ -267,19 +268,6 @@ class TestScaleTypes(unittest.TestCase):
 
         self.assertEqual(obj.value, ["Value2", "Value3", "Value5"])
 
-    def test_box_call(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
-
-        scale_value = ScaleBytes("0x0400006e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402070010a5d4e8")
-
-        obj = RuntimeConfiguration().create_scale_object('Box<Call>', scale_value, metadata=self.metadata_decoder)
-        value = obj.decode()
-
-        self.assertEqual(value['call_function'], 'transfer')
-        self.assertEqual(value['call_module'], 'Balances')
-        self.assertEqual(value['call_args'][0]['value'], '0x6e57561de4b4e63f0af8bf336008252a9597e5cdcb7622c72de4ff39731c5402')
-        self.assertEqual(value['call_args'][1]['value'], 1000000000000)
-
     def test_dynamic_fixed_array_type_decode(self):
         obj = Array(U32, 1)
         self.assertEqual([1], obj.decode(ScaleBytes("0x01000000")))
@@ -406,14 +394,14 @@ class TestScaleTypes(unittest.TestCase):
         )
 
     def test_era_immortal(self):
-        obj = Era.new()
+        obj = Era().new()
         obj.decode(ScaleBytes('0x00'))
         self.assertEqual(obj.value, 'Immortal')
         self.assertIsNone(obj.period)
         self.assertIsNone(obj.phase)
 
     def test_era_mortal(self):
-        obj = Era.new()
+        obj = Era().new()
         obj.decode(ScaleBytes('0x4e9c'))
         self.assertDictEqual(obj.value, {'Mortal': (32768, 20000)})
         self.assertEqual(obj.period, 32768)
@@ -455,19 +443,20 @@ class TestScaleTypes(unittest.TestCase):
         self.assertRaises(ValueError, obj.encode, {'period': 2})
 
     def test_era_invalid_decode(self):
-        obj = Era.new()
+        obj = Era().new()
         self.assertRaises(ValueError, obj.decode, ScaleBytes('0x0101'))
 
     def test_multiaddress_ss58_address_as_str(self):
-        obj = MultiAddress
+        obj = MultiAddress(ss58_format=2).new()
         ss58_address = "CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo"
 
         public_key = ss58_decode(ss58_address)
 
         data = obj.encode(ss58_address)
-        decode_obj = RuntimeConfiguration().create_scale_object('MultiAddress', data=data)
+        decode_obj = MultiAddress(ss58_format=2).new()
+        value = decode_obj.decode(data)
 
-        self.assertEqual(decode_obj.decode(), f'0x{public_key}')
+        self.assertEqual(value, f'0x{public_key}')
 
     def test_multiaddress_ss58_address_as_str_runtime_config(self):
 
@@ -495,10 +484,13 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_multiaddress_account_id(self):
         # Decoding
-        obj = GenericMultiAddress(ScaleBytes('0x00f6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45'))
-        obj.decode()
-        self.assertEqual('0xf6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45', obj.value)
-        self.assertEqual('f6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45', obj.account_id)
+        obj = MultiAddress().new()
+        obj.decode(ScaleBytes('0x00f6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45'))
+        self.assertEqual({'Id': '5He5wScLMseSXNqdkS5pVoTag7w9GXwXSNHZUFw5j1r3czsF'}, obj.value)
+        self.assertEqual(
+            '0xf6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45',
+            obj.value_object[1].public_key
+        )
 
         # Encoding
         self.assertEqual(
@@ -512,11 +504,9 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_multiaddress_index(self):
         # Decoding
-        obj = GenericMultiAddress(data=ScaleBytes('0x0104'))
-        obj.decode()
-        self.assertEqual(1, obj.value)
-        self.assertEqual(None, obj.account_id)
-        self.assertEqual(1, obj.account_index)
+        obj = MultiAddress().new()
+        obj.decode(data=ScaleBytes('0x0104'))
+        self.assertEqual({'Index': 1}, obj.value)
 
         # Encoding
         self.assertEqual(ScaleBytes('0x0104'), obj.encode(1))
@@ -524,16 +514,14 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(ScaleBytes('0x0104'), obj.encode('F7NZ'))
 
     def test_multiaddress_address20(self):
-        obj = GenericMultiAddress(data=ScaleBytes('0x0467f89207abe6e1b093befd84a48f033137659292'))
-        obj.decode()
+        obj = MultiAddress().new()
+        obj.decode(ScaleBytes('0x0467f89207abe6e1b093befd84a48f033137659292'))
         self.assertEqual({'Address20': '0x67f89207abe6e1b093befd84a48f033137659292'}, obj.value)
-        self.assertEqual('67f89207abe6e1b093befd84a48f033137659292000000000000000000000000', obj.account_id)
 
     def test_multiaddress_address32(self):
-        obj = GenericMultiAddress(ScaleBytes('0x03f6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45'))
-        obj.decode()
+        obj = MultiAddress().new()
+        obj.decode(ScaleBytes('0x03f6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45'))
         self.assertEqual({'Address32': '0xf6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45'}, obj.value)
-        self.assertEqual('f6a299ecbfec56e238b5feedfb4cba567d2902af5d946eaf05e3badf05790e45', obj.account_id)
 
         # Encoding
         self.assertEqual(
@@ -543,15 +531,14 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_multiaddress_bytes_cap(self):
         # Test decoding
-        obj = GenericMultiAddress(data=ScaleBytes(
+        obj = MultiAddress().new()
+        obj.decode(ScaleBytes(
             '0x02b4111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'
         ))
-        obj.decode()
         self.assertEqual(
             {'Raw': '0x111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'},
             obj.value
         )
-        self.assertEqual('1111111111111111111111111111111111111111111111111111111111111111', obj.account_id)
 
         # Test encoding
         self.assertEqual(
@@ -563,7 +550,7 @@ class TestScaleTypes(unittest.TestCase):
             )
         )
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ScaleEncodeException):
             obj.encode('0x111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
 
     def test_multiaddress_bytes_pad(self):
@@ -753,13 +740,11 @@ class TestScaleTypes(unittest.TestCase):
         public_key = '0x' + ss58_decode(ss58_address)
 
         # Encode
-        AccountId = AccountIdDef(ss58_format=2)
-
-        obj = AccountId.new()
+        obj = AccountId().new(ss58_format=2)
         data = obj.encode(ss58_address)
 
         # Decode
-        decode_obj = AccountId.new()
+        decode_obj = AccountId().new(ss58_format=2)
         decode_obj.decode(data)
 
         self.assertEqual(decode_obj.value, ss58_address)

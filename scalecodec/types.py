@@ -16,12 +16,12 @@
 
 import math
 from hashlib import blake2b
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Type
 
 from scalecodec.base import ScaleType, ScaleBytes, ScalePrimitive, ScaleTypeDef, RegistryTypeDef
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE, DEFAULT_EXTRINSIC_VERSION, BIT_SIGNED, BIT_UNSIGNED, \
     UNMASK_VERSION
-from scalecodec.exceptions import InvalidScaleTypeValueException
+from scalecodec.exceptions import InvalidScaleTypeValueException, ScaleEncodeException, ScaleDecodeException
 from scalecodec.migrations.runtime_calls import get_apis, get_type_def
 from scalecodec.utils.math import trailing_zeros, next_power_of_two
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode_account_index, is_valid_ss58_address, ss58_decode
@@ -45,7 +45,7 @@ class UnsignedInteger(ScalePrimitive):
         if 0 <= int(value) <= 2**(self.byte_count * 8) - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(self.byte_count, 'little')))
         else:
-            raise ValueError(f'{value} out of range for u{self.bits}')
+            raise ScaleEncodeException(f'{value} out of range for u{self.bits}')
 
     def serialize(self, value: int) -> int:
         return value
@@ -53,6 +53,8 @@ class UnsignedInteger(ScalePrimitive):
     def deserialize(self, value: int) -> int:
         return value
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return self.bits
 
 class SignedInteger(ScalePrimitive):
     """
@@ -72,13 +74,16 @@ class SignedInteger(ScalePrimitive):
         if -2**self.bits <= int(value) <= 2**self.bits - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(self.byte_count, 'little', signed=True)))
         else:
-            raise ValueError(f'{value} out of range for i{self.bits}')
+            raise ScaleEncodeException(f'{value} out of range for i{self.bits}')
 
     def serialize(self, value: int) -> int:
         return value
 
     def deserialize(self, value: int) -> int:
         return value
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return -self.bits
 
 
 U8 = UnsignedInteger(8)
@@ -96,7 +101,7 @@ I128 = SignedInteger(128)
 I256 = SignedInteger(256)
 
 
-class Boolean(ScalePrimitive):
+class Bool(ScalePrimitive):
 
     @classmethod
     def new(cls):
@@ -106,7 +111,7 @@ class Boolean(ScalePrimitive):
 
         bool_data = data.get_next_bytes(1)
         if bool_data not in [b'\x00', b'\x01']:
-            raise InvalidScaleTypeValueException('Invalid value for datatype "bool"')
+            raise ScaleDecodeException('Invalid value for datatype "bool"')
         return bool_data == b'\x01'
 
     def process_encode(self, value: bool) -> ScaleBytes:
@@ -115,7 +120,7 @@ class Boolean(ScalePrimitive):
         elif value is False:
             return ScaleBytes('0x00')
         else:
-            raise ValueError("Value must be boolean")
+            raise ScaleEncodeException("Value must be boolean")
 
     def serialize(self, value: bool) -> bool:
         return value
@@ -123,9 +128,8 @@ class Boolean(ScalePrimitive):
     def deserialize(self, value: bool) -> bool:
         return value
 
-
-Bool = Boolean()
-
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return True
 
 class NullType(ScaleTypeDef):
 
@@ -141,6 +145,9 @@ class NullType(ScaleTypeDef):
     def deserialize(self, value: any) -> any:
         return None
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return None
+
 
 Null = NullType()
 
@@ -148,7 +155,7 @@ Null = NullType()
 class Struct(ScaleTypeDef):
 
     def __init__(self, **kwargs):
-        self.arguments = kwargs
+        self.arguments = {key.rstrip('_'): value for key, value in kwargs.items()}
         super().__init__()
 
     def process_encode(self, value):
@@ -156,7 +163,7 @@ class Struct(ScaleTypeDef):
         for name, scale_obj in self.arguments.items():
 
             if name not in value:
-                raise ValueError(f'Argument "{name}" of Struct is missing in given value')
+                raise ScaleEncodeException(f'Argument "{name}" of Struct is missing in given value')
 
             # if scale_obj.scale_type_cls is value[name].__class__:
             #     # Todo make generic
@@ -188,13 +195,24 @@ class Struct(ScaleTypeDef):
         value_object = {}
 
         for key, scale_def in self.arguments.items():
-            scale_obj = scale_def.new()
-            scale_obj.value_serialized = value[key]
-            scale_obj.deserialize(value[key])
+            if key in value:
+                scale_obj = scale_def.new()
 
-            value_object[key] = scale_obj
+                scale_obj.value_serialized = value[key]
+                scale_obj.deserialize(value[key])
+
+                value_object[key] = scale_obj
 
         return value_object
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if _recursion_level > max_recursion:
+            return f'<{self.__class__.__name__}>'
+
+        return {
+            k: scale_def.example_value(_recursion_level + 1, max_recursion) for k, scale_def in self.arguments.items()
+        }
 
 
 class Tuple(ScaleTypeDef):
@@ -242,6 +260,8 @@ class Tuple(ScaleTypeDef):
 
         return value_object
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return tuple([i.example_value() for i in self.values])
 
 class EnumType(ScaleType):
 
@@ -256,7 +276,7 @@ class EnumType(ScaleType):
 class Enum(ScaleTypeDef):
     def __init__(self, **kwargs):
         super().__init__()
-        self.variants = kwargs
+        self.variants = {key.rstrip('_'): value for key, value in kwargs.items()}
         self.scale_type_cls = EnumType
 
     def process_encode(self, value: Union[str, dict]) -> ScaleBytes:
@@ -264,23 +284,22 @@ class Enum(ScaleTypeDef):
         # if issubclass(value.__class__, ScaleType) and value.type_def.__class__ is self.__class__:
         #     value = value.value
 
-        value = value.copy()
+        if type(value) is dict:
+            value = value.copy()
 
         if type(value) is str:
             # Convert simple enum values
             value = {value: None}
 
         if type(value) is not dict:
-            raise ValueError(f"Value must be a dict or str when encoding enums, not '{value}'")
+            raise ScaleEncodeException(f"Value must be a dict or str when encoding enums, not '{value}'")
 
         if len(value) != 1:
-            raise ValueError("Only one variant can be specified for enums")
+            raise ScaleEncodeException("Only one variant can be specified for enums")
 
         enum_key, enum_value = list(value.items())[0]
 
         for idx, (variant_name, variant_obj) in enumerate(self.variants.items()):
-
-            variant_name = variant_name.rstrip('_')
 
             if enum_key == variant_name:
 
@@ -292,7 +311,7 @@ class Enum(ScaleTypeDef):
 
                 return data
 
-        raise ValueError(f"Variant '{enum_key}' not defined for this enum")
+        raise ScaleEncodeException(f"Variant '{enum_key}' not defined for this enum")
 
     def decode(self, data: ScaleBytes) -> tuple:
 
@@ -300,9 +319,8 @@ class Enum(ScaleTypeDef):
 
         try:
             enum_key, enum_variant = list(self.variants.items())[index]
-            enum_key = enum_key.rstrip('_')
         except IndexError:
-            raise ValueError(f"Index '{index}' not present in Enum type mapping")
+            raise ScaleDecodeException(f"Index '{index}' not present in Enum type mapping")
 
         if enum_variant is None:
             return (enum_key, None)
@@ -325,8 +343,6 @@ class Enum(ScaleTypeDef):
 
         for idx, (variant_name, variant_obj) in enumerate(self.variants.items()):
 
-            variant_name = variant_name.rstrip('_')
-
             if enum_key == variant_name:
 
                 if variant_obj is not None:
@@ -340,6 +356,20 @@ class Enum(ScaleTypeDef):
 
         raise ValueError(f"Error while deserializing Enum; variant '{enum_key}' not found")
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+
+        if _recursion_level > max_recursion:
+            return f'<{self.__class__.__name__}>'
+
+        example = {}
+        for idx, (variant_name, variant_obj) in enumerate(self.variants.items()):
+            if not variant_name.startswith('__'):
+                if variant_obj is None:
+                    example[variant_name] = None
+                else:
+                    example[variant_name] = variant_obj.example_value(_recursion_level + 1, max_recursion)
+        return example
+
 
 class Option(ScaleTypeDef):
     def __init__(self, some):
@@ -350,7 +380,7 @@ class Option(ScaleTypeDef):
         if value is None:
             return ScaleBytes('0x00')
         else:
-            return ScaleBytes('0x01') + self.some.encode(value)
+            return ScaleBytes('0x01') + self.some.encode(value, external_call=False)
 
     def decode(self, data: ScaleBytes) -> Optional[ScaleType]:
         if data.get_next_bytes(1) == b'\x00':
@@ -363,6 +393,15 @@ class Option(ScaleTypeDef):
     def serialize(self, value: Optional[ScaleType]) -> any:
         if value is not None:
             return value.value
+
+    def deserialize(self, value: any) -> Optional[ScaleType]:
+        if value is not None:
+            some_obj = self.some.new()
+            some_obj.deserialize(value)
+            return some_obj
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return None, self.some.example_value()
 
 
 class Compact(ScaleTypeDef):
@@ -377,7 +416,7 @@ class Compact(ScaleTypeDef):
         try:
             byte_mod = compact_byte[0] % 4
         except IndexError:
-            raise InvalidScaleTypeValueException("Invalid byte for Compact")
+            raise ScaleDecodeException("Invalid byte for Compact")
 
         if byte_mod == 0:
             self.compact_length = 1
@@ -425,7 +464,10 @@ class Compact(ScaleTypeDef):
                         ((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length,
                                                                                                 'little')))
             else:
-                raise ValueError('{} out of range'.format(value))
+                raise ScaleEncodeException('{} out of range'.format(value))
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return 1
 
     def serialize(self, value: int) -> int:
         return value
@@ -449,7 +491,7 @@ class Vec(ScaleTypeDef):
     def process_encode(self, value: list) -> ScaleBytes:
 
         if self.type_def is U8:
-            return Bytes.encode(value)
+            return Bytes.encode(value, external_call=False)
 
         # Encode length of Vec
         data = Compact().new().encode(len(value))
@@ -500,6 +542,11 @@ class Vec(ScaleTypeDef):
 
         return value_object
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        if self.type_def is U8:
+            return b'Bytes'
+        return [self.type_def.example_value()]
+
 
 class BitVec(ScaleTypeDef):
     """
@@ -516,13 +563,13 @@ class BitVec(ScaleTypeDef):
             value = int(value[2:], 2)
 
         if type(value) is not int:
-            raise ValueError("Provided value is not an int, binary str or a list of booleans")
+            raise ScaleEncodeException("Provided value is not an int, binary str or a list of booleans")
 
         if value == 0:
             return ScaleBytes(b'\x00')
 
         # encode the length in a compact u32
-        data = Compact().encode(value.bit_length())
+        data = Compact().encode(value.bit_length(), external_call=False)
 
         byte_length = math.ceil(value.bit_length() / 8)
 
@@ -541,6 +588,9 @@ class BitVec(ScaleTypeDef):
     def serialize(self, value: str) -> str:
         return value
 
+    def deserialize(self, value: str) -> str:
+        return value
+
 
 class Array(ScaleTypeDef):
     def __init__(self, type_def: ScaleTypeDef, length: int):
@@ -555,26 +605,26 @@ class Array(ScaleTypeDef):
             if type(value) is list:
                 value = bytes(value)
             elif type(value) is str:
-                if value[0:2] != '0x':
-                    raise ValueError(f'Value should start with "0x"')
-
-                value = bytes.fromhex(value[2:])
+                if value[0:2] == '0x':
+                    value = bytes.fromhex(value[2:])
+                else:
+                    value = value.encode('utf-8')
 
             if type(value) is not bytes:
-                raise ValueError('value should be of type list, str or bytes')
+                raise ScaleEncodeException('value should be of type list, str or bytes')
 
             if len(value) != self.length:
-                raise ValueError(f'Value should be {self.length} bytes long')
+                raise ScaleEncodeException(f'Value should be {self.length} bytes long')
 
             return ScaleBytes(value)
         else:
             data = ScaleBytes(bytearray())
 
             if type(value) is not list:
-                raise ValueError("Value must be of type list")
+                raise ScaleEncodeException("Value must be of type list")
 
             if len(value) != self.length:
-                raise ValueError("Length of list does not match size of array")
+                raise ScaleEncodeException("Length of list does not match size of array")
 
             for item in value:
                 data += self.type_def.encode(item)
@@ -596,14 +646,17 @@ class Array(ScaleTypeDef):
             return value
 
     def serialize(self, value: Union[list, bytes]) -> Union[list, str]:
-        if self.type_def is U8:
-            return f'0x{value.hex()}'
-        else:
+        if type(value) is list:
             return [i.value_serialized for i in value]
+        else:
+            return f'0x{value.hex()}'
 
-    def deserialize(self, value: Union[list, str]) -> Union[list, bytes]:
-        if self.type_def is U8:
-            return bytes.fromhex(value[2:])
+    def deserialize(self, value: Union[list, str, bytes]) -> Union[list, bytes]:
+        if type(value) is str:
+            if value[0:2] == '0x':
+                return bytes.fromhex(value[2:])
+            else:
+                return value.encode()
         else:
             value_object = []
 
@@ -615,6 +668,33 @@ class Array(ScaleTypeDef):
                 value_object.append(obj)
 
             return value_object
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        if self.type_def is U8:
+            return f'0x{str(self.length).zfill(2) * self.length}'
+        else:
+            return [self.type_def.example_value()] * self.length
+
+
+class DataType(EnumType):
+
+    def decode(self, data: ScaleBytes, check_remaining=False) -> any:
+        value = super().decode(data)
+
+        if type(value) is dict:
+            items = list(value.items())[0]
+            if items[0].startswith('Raw'):
+                self.value_serialized = {'Raw': items[1]}
+                self.value_object = ('Raw', self.value_object[1])
+
+        return self.value_serialized
+
+    def encode(self, value: dict) -> ScaleBytes:
+        items = list(value.items())[0]
+        if items[0] == 'Raw':
+            value = {f'Raw{len(items[1])}': items[1]}
+
+        return super().encode(value)
 
 
 class Map(ScaleTypeDef):
@@ -653,7 +733,7 @@ class Map(ScaleTypeDef):
         return [(k.value_serialized, v.value_serialized) for k, v in value]
 
 
-class BytesDef(ScaleTypeDef):
+class Bytes(ScaleTypeDef):
     """
     A variable collection of bytes, stored as an `Vec<u8>`
     """
@@ -665,13 +745,13 @@ class BytesDef(ScaleTypeDef):
                 # TODO implicit HexBytes conversion can have unexpected result if string is actually starting with '0x'
                 value = bytes.fromhex(value[2:])
             else:
-                value = value.encode()
+                value = value.encode('utf-8')
 
         elif type(value) in (bytearray, list):
             value = bytes(value)
 
         if type(value) is not bytes:
-            raise ValueError(f'Cannot encode type "{type(value)}"')
+            raise ScaleEncodeException(f'Cannot encode type "{type(value)}"')
 
         # Encode length of Vec
         data = Compact().new().encode(len(value))
@@ -689,11 +769,17 @@ class BytesDef(ScaleTypeDef):
 
     def deserialize(self, value: str) -> bytearray:
         if type(value) is str:
-            value = bytearray.fromhex(value[2:])
+            if value[0:2] == '0x':
+                value = bytearray.fromhex(value[2:])
+            else:
+                value = value.encode('utf-8')
         return value
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return b'Bytes'
 
-class StringDef(BytesDef):
+
+class String(Bytes):
     def decode(self, data: ScaleBytes) -> str:
         value = super().decode(data)
 
@@ -709,6 +795,9 @@ class StringDef(BytesDef):
         return value
 
 
+    def create_example(self, _recursion_level: int = 0):
+        return 'String'
+
 class HashDef(ScaleTypeDef):
 
     def __init__(self, bits: int):
@@ -723,15 +812,15 @@ class HashDef(ScaleTypeDef):
 
         if type(value) is str:
             if value[0:2] != '0x' or len(value) != (self.byte_count*2)+2:
-                raise ValueError(f'Value should start with "0x" and should be {self.byte_count} bytes long')
+                raise ScaleEncodeException(f'Value should start with "0x" and should be {self.byte_count} bytes long')
 
             value = bytes.fromhex(value[2:])
 
         if type(value) is not bytes:
-            raise ValueError('value should be of type str or bytes')
+            raise ScaleEncodeException('value should be of type str or bytes')
 
         if len(value) != self.byte_count:
-            raise ValueError(f'Value should be {self.byte_count} bytes long')
+            raise ScaleEncodeException(f'Value should be {self.byte_count} bytes long')
 
         return ScaleBytes(value)
 
@@ -740,6 +829,9 @@ class HashDef(ScaleTypeDef):
 
     def deserialize(self, value: str) -> bytes:
         return bytes.fromhex(value[2:])
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return f'0x{str(self.byte_count).zfill(2) * self.byte_count}'
 
 
 class TypeNotSupported(ScaleTypeDef):
@@ -786,18 +878,22 @@ class GenericPortableRegistry(ScaleType):
         self.path_lookup = {}
 
         self.__def_overrides = {
-            "sp_core::crypto::AccountId32": AccountIdDef,
-            'sp_runtime::multiaddress::MultiAddress': MultiAddressEnum,
-            'sp_runtime::generic::era::Era': Era,
-            'frame_system::extensions::check_mortality::CheckMortality': Era,
+            "sp_core::crypto::AccountId32": AccountId(),
+            'sp_runtime::multiaddress::MultiAddress': MultiAddress(),
+            'sp_runtime::generic::era::Era': Era(),
+            'frame_system::extensions::check_mortality::CheckMortality': Era(),
         }
 
         self.__impl_overrides = {
-            'RuntimeCall': GenericCall
+            'RuntimeCall': GenericCall,
+            # 'Call': GenericCall,
+            'EventRecord': GenericEventRecord,
+            'pallet_identity::types::Data': DataType
         }
 
         self.__primitive_types = {
             'U8': U8,
+            'u8': U8,
             'u16': U16,
             'u32': U32,
             'u64': U64,
@@ -809,7 +905,7 @@ class GenericPortableRegistry(ScaleType):
             'i64': I64,
             'i128': I128,
             'i256': I256,
-            'bool': Bool,
+            'bool': Bool(),
             'str': String
         }
 
@@ -818,6 +914,11 @@ class GenericPortableRegistry(ScaleType):
             return self.value_object['types'][si_type_id]['type']
         except IndexError:
             raise ValueError(f"RegistryType not found with id {si_type_id}")
+
+    def get_primitive_type_def(self, type_string: str) -> ScaleTypeDef:
+        if type_string not in self.__primitive_types:
+            raise ValueError(f"{type_string} is not a valid primitive")
+        return self.__primitive_types[type_string]
 
     def get_scale_type_def(self, si_type_id: int) -> ScaleTypeDef:
         if si_type_id not in self.si_type_registry:
@@ -830,15 +931,28 @@ class GenericPortableRegistry(ScaleType):
     def get_si_type_id(self, path: str) -> int:
         if not self.path_lookup:
             self.path_lookup = {'::'.join(t['type']['path']).lower(): t['id'] for t in self.value_object['types'].value if t['type']['path']}
-        return self.path_lookup.get(path.lower())
+        si_type_id = self.path_lookup.get(path.lower())
 
-    def get_type_def_override_for_path(self, path: list):
+        if si_type_id is None:
+            raise ValueError(f"Path '{path}' is not found in portable registry")
+
+        return si_type_id
+
+    def get_type_def_primitive(self, name) -> ScaleTypeDef:
+        type_def = self.__primitive_types.get(name.lower())
+
+        if type_def is None:
+            raise ValueError(f"Primitive '{name}' not found ")
+
+        return type_def
+
+    def get_type_def_override_for_path(self, path: list) -> Optional[ScaleTypeDef]:
         type_def = self.__def_overrides.get(path[-1])
         if type_def is None:
             type_def = self.__def_overrides.get('::'.join(path))
         return type_def
 
-    def get_impl_override_for_path(self, path: list):
+    def get_impl_override_for_path(self, path: list) -> Optional[Type[ScaleType]]:
         scale_type_cls = self.__impl_overrides.get(path[-1])
         if scale_type_cls is None:
             scale_type_cls = self.__impl_overrides.get('::'.join(path))
@@ -852,28 +966,28 @@ class GenericPortableRegistry(ScaleType):
         type_impl_override = None
 
         if 'path' in registry_type.value and len(registry_type.value['path']) > 0:
-            type_def_cls = self.get_type_def_override_for_path(registry_type.value['path'])
-            if type_def_cls:
-                return type_def_cls()
+            type_def_override = self.get_type_def_override_for_path(registry_type.value['path'])
+            if type_def_override:
+                return type_def_override
 
             type_impl_override = self.get_impl_override_for_path(registry_type.value['path'])
 
-        if "primitive" in registry_type.value["definition"]:
+        if "primitive" in registry_type.value["def"]:
             try:
-                return self.__primitive_types[registry_type.value["definition"]["primitive"]]
+                return self.__primitive_types[registry_type.value["def"]["primitive"]]
             except KeyError:
-                raise ValueError(f'Primitive type "{registry_type.value["definition"]["primitive"]}" not found')
+                raise ValueError(f'Primitive type "{registry_type.value["def"]["primitive"]}" not found')
 
-        elif 'array' in registry_type.value["definition"]:
+        elif 'array' in registry_type.value["def"]:
 
             return Array(
-                self.get_scale_type_def(registry_type.value['definition']['array']['type']),
-                registry_type.value['definition']['array']['len']
+                self.get_scale_type_def(registry_type.value['def']['array']['type']),
+                registry_type.value['def']['array']['len']
             )
 
-        elif 'composite' in registry_type.value["definition"]:
+        elif 'composite' in registry_type.value["def"]:
 
-            fields = registry_type.value["definition"]['composite']['fields']
+            fields = registry_type.value["def"]['composite']['fields']
 
             if all([f.get('name') for f in fields]):
 
@@ -889,12 +1003,12 @@ class GenericPortableRegistry(ScaleType):
 
             return type_def
 
-        elif 'sequence' in registry_type.value["definition"]:
+        elif 'sequence' in registry_type.value["def"]:
             # Vec
-            type_def = self.get_scale_type_def(registry_type.value['definition']['sequence']['type'])
+            type_def = self.get_scale_type_def(registry_type.value['def']['sequence']['type'])
             return Vec(type_def)
 
-        elif 'variant' in registry_type.value["definition"]:
+        elif 'variant' in registry_type.value["def"]:
 
             if registry_type.value["path"] == ['Option']:
                 # Option
@@ -903,12 +1017,12 @@ class GenericPortableRegistry(ScaleType):
             # Enum
             variants_mapping = []
 
-            variants = registry_type.value["definition"]['variant']['variants']
+            variants = registry_type.value["def"]['variant']['variants']
 
             if len(variants) > 0:
                 # Create placeholder list
                 variant_length = max([v['index'] for v in variants]) + 1
-                variants_mapping = [(f'v{i}', Null) for i in range(0, variant_length)]
+                variants_mapping = [(f'__{i}', Null) for i in range(0, variant_length)]
 
                 for variant in variants:
 
@@ -940,23 +1054,23 @@ class GenericPortableRegistry(ScaleType):
 
             return type_def
 
-        elif 'tuple' in registry_type.value["definition"]:
+        elif 'tuple' in registry_type.value["def"]:
 
-            items = [self.get_scale_type_def(i) for i in registry_type.value["definition"]['tuple']]
+            items = [self.get_scale_type_def(i) for i in registry_type.value["def"]['tuple']]
             return Tuple(*items)
 
-        elif 'compact' in registry_type.value["definition"]:
+        elif 'compact' in registry_type.value["def"]:
             # Compact
-            return Compact(self.get_scale_type_def(registry_type.value["definition"]['compact']["type"]))
+            return Compact(self.get_scale_type_def(registry_type.value["def"]['compact']["type"]))
 
-        elif 'phantom' in registry_type.value["definition"]:
+        elif 'phantom' in registry_type.value["def"]:
             return Null
 
-        elif 'bitsequence' in registry_type.value["definition"]:
+        elif 'bitsequence' in registry_type.value["def"]:
             return BitVec()
 
         else:
-            raise NotImplementedError(f"RegistryTypeDef {registry_type.value['definition']} not implemented")
+            raise NotImplementedError(f"RegistryTypeDef {registry_type.value['def']} not implemented")
 
 
 class GenericAccountId(ScaleType):
@@ -996,7 +1110,7 @@ class GenericAccountId(ScaleType):
             return super().serialize()
 
 
-class AccountIdDef(HashDef):
+class AccountId(HashDef):
 
     def __init__(self, ss58_format=None):
         self.ss58_format = ss58_format
@@ -1021,24 +1135,32 @@ class AccountIdDef(HashDef):
 
         return super().deserialize(value)
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+
 
 class GenericMultiAddress(ScaleType):
     pass
 
 
-class MultiAddressEnum(Enum):
+class MultiAddress(Enum):
 
-    def __init__(self,):
+    def __init__(self, ss58_format: int = None):
+        self.ss58_format = ss58_format
         super().__init__(
-            Id=AccountIdDef(),
+            Id=AccountId(ss58_format=ss58_format),
             Index=Compact(),
             Raw=Bytes,
             Address32=Array(U8, 32),
             Address20=Array(U8, 20)
         )
 
-    def new(self, **kwargs) -> GenericMultiAddress:
+    def new(self) -> GenericMultiAddress:
         return GenericMultiAddress(type_def=self)
+
+    def set_ss58_format(self, ss58_format: int):
+        self.ss58_format = ss58_format
+        self.variants['Id'] = AccountId(ss58_format=ss58_format)
 
     def process_encode(self, value: Union[str, dict]) -> ScaleBytes:
         if type(value) is int:
@@ -1059,7 +1181,7 @@ class MultiAddressEnum(Enum):
                 # Implied raw Address20
                 value = {"Address20": value}
             else:
-                raise NotImplementedError("Address type not yet supported")
+                raise ScaleEncodeException("Address type not yet supported")
 
         return super().process_encode(value)
 
@@ -1082,13 +1204,33 @@ class MultiAddressEnum(Enum):
                 # Implied raw Address20
                 value = {"Address20": value}
             else:
-                raise NotImplementedError("Address type not yet supported")
+                raise ValueError("Address type not yet supported")
 
         return super().deserialize(value)
 
 
-class GenericCall(ScaleType):
+class GenericCall(EnumType):
     pass
+
+
+class GenericEventRecord(ScaleType):
+
+    @property
+    def extrinsic_idx(self) -> Optional[int]:
+        if self.value and 'ApplyExtrinsic' in self.value['phase']:
+            return self.value['phase']['ApplyExtrinsic']
+
+    @property
+    def pallet_name(self):
+        return self.value_object['event'][0]
+
+    @property
+    def event_name(self):
+        return self.value_object['event'][1][0]
+
+    @property
+    def attributes(self):
+        return self.value_object['event'][1][1]
 
 
 class ExtrinsicV4Def(Struct):
@@ -1133,7 +1275,7 @@ class InherentDef(Struct):
         return cls(**variants)
 
 
-class ExtrinsicDef(Struct):
+class Extrinsic(Struct):
 
     def __init__(self, metadata: 'GenericMetadataVersioned', **kwargs):
         super().__init__(**kwargs)
@@ -1196,11 +1338,15 @@ class ExtrinsicDef(Struct):
 
         return extrinsic_def.decode(data)
 
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return '<Extrinsic>'
+
 
 class GenericExtrinsic(ScaleType):
     @property
     def extrinsic_hash(self):
-        return blake2b(self.data.data, digest_size=32).digest()
+        if self.data is not None:
+            return blake2b(self.data.data, digest_size=32).digest()
 
 
 class GenericEra(EnumType):
@@ -1212,7 +1358,8 @@ class GenericEra(EnumType):
 
     def decode(self, data: ScaleBytes) -> dict:
 
-        self.data = data
+        self._data = data
+        self._data_start_offset = data.offset
 
         enum_byte = data.get_next_bytes(1)
         if enum_byte == b'\x00':
@@ -1227,14 +1374,17 @@ class GenericEra(EnumType):
 
                 self.value_serialized = {'Mortal': (self.period, self.phase)}
             else:
-                raise ValueError('Invalid phase and period: {}, {}'.format(self.phase, self.period))
+                raise ScaleDecodeException('Invalid phase and period: {}, {}'.format(self.phase, self.period))
 
         self.value_object = self.deserialize(self.value_serialized)
+
+        self._data_end_offset = data.offset
+
         return self.value_serialized
 
     def _tuple_from_dict(self, value):
         if 'period' not in value:
-            raise ValueError("Value missing required field 'period' in dict Era")
+            raise ScaleEncodeException("Value missing required field 'period' in dict Era")
         period = value['period']
 
         if 'phase' in value:
@@ -1243,7 +1393,7 @@ class GenericEra(EnumType):
         # If phase not specified explicitly, let the user specify the current block,
         # and calculate the phase from that.
         if 'current' not in value:
-            raise ValueError("Dict Era must have one of the fields 'phase' or 'current'")
+            raise ScaleEncodeException("Dict Era must have one of the fields 'phase' or 'current'")
 
         current = value['current']
 
@@ -1255,23 +1405,24 @@ class GenericEra(EnumType):
 
         return (period, quantized_phase)
 
-    def encode(self, value: Union[str, dict]) -> ScaleBytes:
+    def encode(self, value: Union[str, dict, ScaleType]) -> ScaleBytes:
 
         if value and issubclass(self.__class__, value.__class__):
             # Accept instance of current class directly
-            self.data = value.data
+            self._data = value.data
             self.value_object = value.value_object
             self.value_serialized = value.value_serialized
             return value.data
 
-        value = value.copy()
+        if type(value) is dict:
+            value = value.copy()
 
         self.value_serialized = value
 
         if value == 'Immortal':
             self.period = None
             self.phase = None
-            self.data = ScaleBytes('0x00')
+            self._data = ScaleBytes('0x00')
         elif type(value) is dict:
             if 'Mortal' not in value and 'Immortal' not in value:
                 value = {'Mortal': value}
@@ -1280,18 +1431,21 @@ class GenericEra(EnumType):
 
             period, phase = value['Mortal']
             if not isinstance(phase, int) or not isinstance(period, int):
-                raise ValueError("Phase and period must be ints")
+                raise ScaleEncodeException("Phase and period must be ints")
             if phase > period:
-                raise ValueError("Phase must be less than period")
+                raise ScaleEncodeException("Phase must be less than period")
             self.period = period
             self.phase = phase
             quantize_factor = max(period >> 12, 1)
             encoded = min(15, max(1, trailing_zeros(period) - 1)) | ((phase // quantize_factor) << 4)
-            self.data = ScaleBytes(encoded.to_bytes(length=2, byteorder='little', signed=False))
+            self._data = ScaleBytes(encoded.to_bytes(length=2, byteorder='little', signed=False))
         else:
-            raise ValueError("Incorrect value for Era")
+            raise ScaleEncodeException("Incorrect value for Era")
 
-        return self.data
+        self._data_start_offset = self._data.offset
+        self._data_end_offset = self._data.length
+
+        return self._data
 
     def is_immortal(self) -> bool:
         """Returns true if the era is immortal, false if mortal."""
@@ -1433,7 +1587,7 @@ class GenericMetadataVersioned(ScaleType):
         return self.portable_registry.get_registry_type(si_type_id)
 
     def get_extrinsic_type_def(self) -> ScaleTypeDef:
-        return ExtrinsicDef(self)
+        return Extrinsic(self)
 
     def get_address_type_def(self) -> ScaleTypeDef:
         extrinsic_registry_type = self.get_extrinsic_registry_type()
@@ -1463,11 +1617,11 @@ class PalletMetadataType(ScaleType):
         storage_functions = self.value_object['storage'].value_object
 
         if storage_functions:
-            pallet_version_sf = StorageEntryMetadataV14.new()
+            pallet_version_sf = StorageEntryMetadataCustom.new()
             pallet_version_sf.encode({
                 'name': ':__STORAGE_VERSION__:',
                 'modifier': 'Default',
-                'type': {'Plain': 0},
+                'type': {'Plain': 'u16'},
                 'default': '0x0000',
                 'documentation': ['Returns the current pallet version from storage']
             })
@@ -1599,7 +1753,7 @@ class GenericStorageEntryMetadata(ScaleType):
         if 'Map' in self.value['type']:
             return self.value['type']['Map']['key']
 
-    def get_params_type_id(self):
+    def get_params_type_id(self) -> Optional[int]:
         if 'Plain' in self.value['type']:
             return None
         elif 'Map' in self.value['type']:
@@ -1637,9 +1791,8 @@ class GenericStorageEntryMetadata(ScaleType):
 
         return param_info
 
-
-String = StringDef()
-Bytes = BytesDef()
+String = String()
+Bytes = Bytes()
 Type = String
 Text = String
 H256 = HashDef(256)
@@ -1778,6 +1931,12 @@ PalletMetadataV14 = Struct(
     error=Option(PalletErrorMetadataV14), index=U8
 ).impl(PalletMetadataType)
 
+StorageEntryTypeCustom = Enum(Plain=String)
+StorageEntryMetadataCustom = Struct(
+    name=String, modifier=StorageEntryModifierV13, type=StorageEntryTypeCustom, default=Bytes, documentation=Vec(Text)
+).impl(GenericStorageEntryMetadata)
+
+
 SignedExtensionMetadataV14 = Struct(identifier=String, ty=SiLookupTypeId, additional_signed=SiLookupTypeId)
 ExtrinsicMetadataV14 = Struct(ty=SiLookupTypeId, version=U8, signed_extensions=Vec(SignedExtensionMetadataV14))
 TypeParameter = Struct(name=String, type=Option(SiLookupTypeId))
@@ -1800,7 +1959,7 @@ TypeDef = Enum(
     tuple=TypeDefTuple, primitive=TypeDefPrimitive, compact=TypeDefCompact, bitsequence=TypeDefBitSequence
 )
 RegistryType = Struct(
-    path=Vec(String), params=Vec(TypeParameter), definition=TypeDef, docs=Vec(String)
+    path=Vec(String), params=Vec(TypeParameter), def_=TypeDef, docs=Vec(String)
 ).impl(
     scale_type_cls=GenericRegistryType
 )
@@ -1885,8 +2044,8 @@ MetadataAll = Enum(
 
 MetadataVersioned = Tuple(Array(U8, 4), MetadataAll).impl(GenericMetadataVersioned)
 
-AccountId = AccountIdDef()
-MultiAddress = GenericMultiAddress
+# AccountId = AccountIdDef()
+# MultiAddress = MultiAddressEnum()
 Address = MultiAddress
 Index = U32
 Balance = U128
@@ -1900,7 +2059,6 @@ Phase = U64
 # Era = Enum(Immortal=None, Mortal=Tuple(Period, Phase)).impl(GenericEra)
 ExtrinsicV4 = Struct(address=Address, signature=ExtrinsicSignature, era=Era, nonce=Compact(Index), tip=Compact(Balance), call=Call)
 
-Extrinsic = GenericExtrinsic
 Inherent = Struct(call=Call)
 # Signature = H512
 

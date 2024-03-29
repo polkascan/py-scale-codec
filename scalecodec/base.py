@@ -64,6 +64,11 @@ class ScaleBytes:
         -------
         bytearray
         """
+        if self.offset + length > self.length:
+            raise RemainingScaleBytesNotEmptyException(
+                f'No more bytes available (needed: {self.offset + length} / total: {self.length})'
+            )
+
         data = self.data[self.offset:self.offset + length]
         self.offset += length
         return data
@@ -201,7 +206,8 @@ class ScaleTypeDef:
 
     # TODO implement
 
-    def type_info(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+    @abstractmethod
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
 
         if _recursion_level > max_recursion:
             return self.__class__.__name__
@@ -211,6 +217,7 @@ class ScaleTypeDef:
 class ScaleType:
 
     def __init__(self, type_def: ScaleTypeDef, metadata: 'GenericMetadataVersioned' = None):
+
         self.meta_info = None
         self.type_def: ScaleTypeDef = type_def
         self.value_serialized = None
@@ -218,7 +225,10 @@ class ScaleType:
         self.metadata = metadata
         # self.runtime_config = runtime_config
 
-        self.data: Optional[ScaleBytes] = None
+        self._data = None
+        self._data_start_offset = 0
+        self._data_end_offset = 0
+
         super().__init__()
 
     # def __call__(self, *args, **kwargs):
@@ -227,21 +237,28 @@ class ScaleType:
     def encode(self, value: any) -> ScaleBytes:
         if value and issubclass(self.__class__, value.__class__):
             # Accept instance of current class directly
-            self.data = value.data
+            self._data = value.data
             self.value_object = value.value_object
             self.value_serialized = value.value_serialized
             return value.data
 
-        self.data = self.type_def.encode(value, False)
+        self._data = self.type_def.encode(value, False)
+        self._data_start_offset = self._data.offset
+        self._data_end_offset = self._data.length
 
         self.value_serialized = value
         self.value_object = self.deserialize(value)
 
-        return self.data
+        return self._data
 
-    def decode(self, data: ScaleBytes) -> any:
-        self.data = data
+    def decode(self, data: ScaleBytes, check_remaining=False) -> any:
+        self._data = data
+        self._data_start_offset = data.offset
+        # Decode type
         self.value_object = self.type_def.decode(data)
+
+        self._data_end_offset = data.offset
+
         self.value_serialized = self.serialize()
         return self.value_serialized
 
@@ -257,6 +274,8 @@ class ScaleType:
             return self.value_object
 
         self.value_object = self.type_def.deserialize(value_serialized)
+        self.value_serialized = value_serialized
+
         return self.value_object
 
     @property
@@ -266,6 +285,21 @@ class ScaleType:
     @value.setter
     def value(self, value):
         self.value_serialized = value
+
+    @property
+    def data(self) -> Optional[ScaleBytes]:
+        """
+        Returns a ScaleBytes instance of the SCALE-bytes used in the decoding process
+
+        Returns
+        -------
+        bytearray
+        """
+        if self._data is not None:
+            return ScaleBytes(self._data.data[self._data_start_offset:self._data_end_offset])
+
+    def example_value(self):
+        return self.type_def.example_value()
 
     def __repr__(self):
 
@@ -354,6 +388,12 @@ class RegistryTypeDef(ScaleTypeDef):
 
     def deserialize(self, value: any) -> any:
         return self.type_def.deserialize(value)
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        # if _recursion_level <= 2:
+        #     return self.type_def.example_value(_recursion_level + 1, max_recursion)
+        # else:
+        return f'<RegistryTypeDef: {self.si_type_id}>'
 
 
 # class Singleton(type):

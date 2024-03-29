@@ -21,7 +21,7 @@
 import os
 import unittest
 
-from scalecodec.types import GenericAccountId, Null, MetadataVersioned
+from scalecodec.types import GenericAccountId, Null, MetadataVersioned, Tuple
 
 from scalecodec.base import ScaleBytes
 
@@ -55,6 +55,8 @@ class ScaleInfoTestCase(unittest.TestCase):
                 scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(type_info.value['id'])
                 obj = scale_type_def.new()
                 self.assertIsNotNone(obj)
+                example_value = obj.example_value()
+                # print(example_value)
             except Exception as e:
                 raise Exception(f"Failed generate {type_info}: {e}")
 
@@ -82,14 +84,14 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_compact(self):
         # scale_info::98 = compact<u32>
-        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(98)
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(10)
         obj = scale_type_def.new()
 
         obj.decode(ScaleBytes("0x02093d00"))
         self.assertEqual(obj.value, 1000000)
 
         # scale_info::63 = compact<u128>
-        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(63)
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(60)
         obj = scale_type_def.new()
 
         obj.decode(ScaleBytes("0x130080cd103d71bc22"))
@@ -97,7 +99,7 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_array(self):
         # scale_info::14 = [u8; 4]
-        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(14)
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(17)
         obj = scale_type_def.new()
 
         obj.decode(ScaleBytes("0x01020304"))
@@ -105,23 +107,26 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_enum(self):
         # ['sp_runtime', 'generic', 'digest', 'DigestItem']
-        obj = self.runtime_config.create_scale_object(
-            'sp_runtime::generic::digest::DigestItem', ScaleBytes("0x001054657374")
-        )
-        obj.decode()
-        self.assertEqual({"Other": "Test"}, obj.value)
+
+        scale_type_id = self.metadata_obj.portable_registry.get_si_type_id('sp_runtime::generic::digest::DigestItem')
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(scale_type_id)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x001054657374"))
+        self.assertEqual({"Other": '0x54657374'}, obj.value)
 
         obj.encode({'Other': "Test"})
         self.assertEqual(obj.data.to_hex(), "0x001054657374")
 
     def test_enum_multiple_fields(self):
 
-        obj = self.runtime_config.create_scale_object(
-            'sp_runtime::generic::digest::DigestItem', ScaleBytes("0x06010203041054657374")
-        )
-        obj.decode()
+        scale_type_id = self.metadata_obj.portable_registry.get_si_type_id('sp_runtime::generic::digest::DigestItem')
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(scale_type_id)
+        obj = scale_type_def.new()
 
-        self.assertEqual({'PreRuntime': ("0x01020304", "Test")}, obj.value)
+        obj.decode(ScaleBytes("0x06010203041054657374"))
+
+        self.assertEqual({'PreRuntime': ("0x01020304", "0x54657374")}, obj.value)
 
         data = obj.encode({'PreRuntime': ("0x01020304", "Test")})
         self.assertEqual("0x06010203041054657374", data.to_hex())
@@ -175,7 +180,7 @@ class ScaleInfoTestCase(unittest.TestCase):
         self.assertEqual(data.to_hex(), '0x0c00000022000000000000000000000000000000')
 
     def test_tuple(self):
-        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(73)
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(31)
         obj = scale_type_def.new()
 
         obj.decode(ScaleBytes("0x0400000003000000"))
@@ -234,11 +239,11 @@ class ScaleInfoTestCase(unittest.TestCase):
 
     def test_data(self):
         # 'scale_info::247' = pallet_identity::types::data
-        obj = self.runtime_config.create_scale_object(
-            'pallet_identity::types::data',
-            ScaleBytes("0x065465737431")
-        )
-        obj.decode()
+        scale_type_id = self.metadata_obj.portable_registry.get_si_type_id('pallet_identity::types::data')
+        scale_type_def = self.metadata_obj.portable_registry.get_scale_type_def(scale_type_id)
+        obj = scale_type_def.new()
+
+        obj.decode(ScaleBytes("0x065465737431"))
 
         self.assertEqual({"Raw": "Test1"}, obj.value)
 
@@ -292,7 +297,7 @@ class ScaleInfoTestCase(unittest.TestCase):
         )
         call.encode({
             "call_module": "Balances",
-            "call_function": "transfer",
+            "call_function": "transfer_keep_alive",
             "call_args": {"dest": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "value": 3},
         })
         self.assertEqual(

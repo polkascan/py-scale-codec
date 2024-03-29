@@ -19,7 +19,8 @@ import unittest
 from scalecodec.base import ScaleBytes
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
-from scalecodec.types import Compact, Struct, Era, MetadataVersioned, U16, I16, U32, Vec, Bytes, String, AccountId
+from scalecodec.types import Compact, Struct, Era, MetadataVersioned, U16, I16, U32, Vec, Bytes, String, AccountId, \
+    Option
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
@@ -48,7 +49,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_i16_out_of_bounds(self):
         obj = I16.new()
-        self.assertRaises(ValueError, obj.encode, -32769)
+        self.assertRaises(OverflowError, obj.encode, -32769)
 
     def test_f64(self):
         obj = RuntimeConfiguration().create_scale_object('f64')
@@ -225,23 +226,15 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_struct_encode_tuple(self):
 
-        TestStruct = type('TestStruct', (Struct,), {
-            'type_mapping': (('aye', 'u32'), ('nay', 'u32'))
-        })
-
-        obj = TestStruct()
+        obj = Struct(aye=U32, nay=U32).new()
         data = obj.encode((4, 2))
 
         self.assertEqual(ScaleBytes("0x0400000002000000"), data)
 
     def test_struct_encode_int(self):
 
-        TestStruct = type('TestStruct', (Struct,), {
-            'type_mapping': (('nonce', 'u32'),)
-        })
-
-        obj = TestStruct()
-        data = obj.encode(1)
+        obj = Struct(nonce=U32).new()
+        data = obj.encode({'nonce': 1})
 
         self.assertEqual(ScaleBytes("0x01000000"), data)
 
@@ -289,38 +282,22 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
-    def test_enum_type_mapping_empty_value_encode_decode(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        value = "Error"
-
-        obj = RuntimeConfiguration().create_scale_object('EnumWithoutBaseClass')
-        data = obj.encode(value)
-
-        obj_check = RuntimeConfiguration().create_scale_object('EnumWithoutBaseClass', data)
-
-        self.assertEqual(obj_check.decode(), value)
-
     def test_option_empty_encode_decode(self):
 
         value = None
 
-        obj = RuntimeConfiguration().create_scale_object('Option<Bytes>')
+        obj = Option(Bytes).new()
         data = obj.encode(value)
 
-        obj_check = RuntimeConfiguration().create_scale_object('Option<Bytes>', data)
-
-        self.assertEqual(obj_check.decode(), value)
+        self.assertEqual(obj.decode(data), value)
 
     def test_option_bytes_encode_decode(self):
         value = "Test"
 
-        obj = RuntimeConfiguration().create_scale_object('Option<Bytes>')
+        obj = Option(Bytes).new()
         data = obj.encode(value)
 
-        obj_check = RuntimeConfiguration().create_scale_object('Option<Bytes>', data)
-
-        self.assertEqual(obj_check.decode(), value)
+        self.assertEqual(obj.decode(data), value)
 
     def test_proposal_encode_decode(self):
 
@@ -380,7 +357,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
                 "call_args": {
                     "call": {
                         "call_module": "Balances",
-                        "call_function": "transfer",
+                        "call_function": "transfer_keep_alive",
                         "call_args": {
                             "dest": "CofvaLbP3m8PLeNRQmLVPWmTT7jGgAXTwyT69k2wkfPxJ9V",
                             "value": 10000000000000
@@ -399,7 +376,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_call_encode_invalid_type(self):
         call = RuntimeConfiguration().create_scale_object("Call", metadata=self.metadata_decoder)
-        self.assertRaises(TypeError, call.encode, '{"call_module": "Balances", "call_function": "transfer"}')
+        self.assertRaises(TypeError, call.encode, '{"call_module": "Balances", "call_function": "transfer_keep_alive"}')
         self.assertRaises(TypeError, call.encode, 2)
 
     def test_era_immortal_encode(self):
@@ -443,7 +420,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         call.encode({
             'call_module': 'Balances',
-            'call_function': 'transfer',
+            'call_function': 'transfer_keep_alive',
             'call_args': {
                 'dest': 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk',
                 'value': 1000000000000

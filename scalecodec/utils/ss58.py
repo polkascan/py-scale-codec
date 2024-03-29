@@ -163,13 +163,13 @@ def ss58_encode_account_index(account_index: int, ss58_format: int = 42) -> str:
     from scalecodec.types import U8, U16, U32, U64
 
     if 0 <= account_index <= 2 ** 8 - 1:
-        account_idx_encoder = U8
+        account_idx_encoder = U8.new()
     elif 2 ** 8 <= account_index <= 2 ** 16 - 1:
-        account_idx_encoder = U16
+        account_idx_encoder = U16.new()
     elif 2 ** 16 <= account_index <= 2 ** 32 - 1:
-        account_idx_encoder = U32
+        account_idx_encoder = U32.new()
     elif 2 ** 32 <= account_index <= 2 ** 64 - 1:
-        account_idx_encoder = U64
+        account_idx_encoder = U64.new()
     else:
         raise ValueError("Value too large for an account index")
 
