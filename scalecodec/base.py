@@ -17,6 +17,7 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from typing import Optional, TYPE_CHECKING, Union
 
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
@@ -110,11 +111,22 @@ class RuntimeConfigurationObject:
 
         if type(type_string) is dict:
             # Inner struct
-            decoder_class = type('InnerStruct', (self.get_decoder_class('Struct'),), {
+            decoder_class = type('InnerStruct', (self.get_decoder_class_from_string('Struct'),), {
                 'type_mapping': tuple(type_string.items())
             })
             decoder_class.runtime_config = self
             return decoder_class
+        else:
+            decoder_class = self.get_decoder_class_from_string(type_string)
+
+        if decoder_class:
+            # Attach RuntimeConfigurationObject to new class
+            decoder_class.runtime_config = self
+
+        return decoder_class
+
+    @lru_cache
+    def get_decoder_class_from_string(self, type_string: str):
 
         if type_string.strip() == '':
             return None
@@ -126,7 +138,7 @@ class RuntimeConfigurationObject:
 
         if not decoder_class:
 
-            # Type string containg subtype
+            # Type string containing subtype
             if type_string[-1:] == '>':
 
                 # Extract sub types
@@ -144,7 +156,7 @@ class RuntimeConfigurationObject:
             # Custom tuples
             elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
 
-                decoder_class = type(type_string, (self.get_decoder_class('tuple'),), {
+                decoder_class = type(type_string, (self.get_decoder_class_from_string('tuple'),), {
                     'type_string': type_string
                 })
 
@@ -158,14 +170,10 @@ class RuntimeConfigurationObject:
 
                 if type_parts:
                     # Create dynamic class for e.g. [u8; 4] resulting in array of u8 with 4 elements
-                    decoder_class = type(type_string, (self.get_decoder_class('FixedLengthArray'),), {
+                    decoder_class = type(type_string, (self.get_decoder_class_from_string('FixedLengthArray'),), {
                         'sub_type': type_parts[0],
                         'element_count': int(type_parts[1])
                     })
-
-        if decoder_class:
-            # Attach RuntimeConfigurationObject to new class
-            decoder_class.runtime_config = self
 
         return decoder_class
 
