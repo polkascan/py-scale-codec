@@ -125,7 +125,7 @@ class RuntimeConfigurationObject:
 
         return decoder_class
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def get_decoder_class_from_string(self, type_string: str):
 
         if type_string.strip() == '':
