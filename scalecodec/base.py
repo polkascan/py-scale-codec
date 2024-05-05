@@ -63,8 +63,8 @@ class RuntimeConfigurationObject:
         self.only_primitives_on_init = only_primitives_on_init
         self.ss58_format = ss58_format
         self.implements_scale_info = implements_scale_info
-        self.type_parts_brackets_match = re.compile(r'^\[([A-Za-z0-9]+); ([0-9]+)\]$')
-        self.type_parts_arrow_match = re.compile(r'^([^<]*)<(.+)>$')
+        self.arrow_match_re = re.compile(r'^([^<]*)<(.+)>$')
+        self.bracket_match_re = re.compile(r'^\[([A-Za-z0-9]+); ([0-9]+)\]$')
 
     @classmethod
     @lru_cache(maxsize=128)
@@ -119,61 +119,53 @@ class RuntimeConfigurationObject:
             })
             decoder_class.runtime_config = self
             return decoder_class
-        else:
-            if type_string.strip() == '':
-                return None
 
-            if self.implements_scale_info is False:
-                type_string = self.convert_type_string(type_string)
+        if type_string.strip() == '':
+            return None
 
-            decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
+        if self.implements_scale_info is False:
+            type_string = self.convert_type_string(type_string)
 
-            if not decoder_class:
-                # Type string containing subtype
-                if type_string[-1:] == '>':
+        decoder_class = self.type_registry.get('types', {}).get(type_string.lower(), None)
 
-                    # Extract sub types
-                    type_parts = self.type_parts_arrow_match.match(type_string)
+        if not decoder_class:
 
-                    if type_parts:
-                        type_parts = type_parts.groups()
+            # Type string containg subtype
+            if type_string[-1:] == '>':
 
-                    if type_parts:
-                        # Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as sub_type
-                        base_class = self.type_registry.get('types', {}).get(type_parts[0].lower(), None)
-                        if base_class:
-                            decoder_class = type(
-                                type_string,
-                                (base_class,),
-                                {'sub_type': type_parts[1]}
-                            )
-                elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
+                # Extract sub types
+                type_parts = self.arrow_match_re.match(type_string)
 
-                    decoder_class_ = self.get_decoder_class('tuple')
-                    decoder_class = type(type_string,
-                                         (decoder_class_,), {
-                                             'type_string': type_string
-                                         })
+                if type_parts:
+                    type_parts = type_parts.groups()
 
-                    decoder_class.build_type_mapping()
+                if type_parts:
+                    # Create dynamic class for Part1<Part2> based on Part1 and set class variable Part2 as sub_type
+                    base_class = self.type_registry.get('types', {}).get(type_parts[0].lower(), None)
+                    if base_class:
+                        decoder_class = type(type_string, (base_class,), {'sub_type': type_parts[1]})
 
-                elif type_string[0] == '[' and type_string[-1] == ']':
-                    type_parts = self.type_parts_brackets_match.match(type_string)
+            # Custom tuples
+            elif type_string != '()' and type_string[0] == '(' and type_string[-1] == ')':
 
-                    if type_parts:
-                        type_parts = type_parts.groups()
+                decoder_class = type(type_string, (self.get_decoder_class('tuple'),), {
+                    'type_string': type_string
+                })
 
-                    if type_parts:
-                        # Create dynamic class for e.g. [u8; 4] resulting in array of u8 with 4 elements
-                        decoder_class_ = self.get_decoder_class('FixedLengthArray')
-                        decoder_class = type(
-                            type_string,
-                            (decoder_class_,),
-                            {
-                                'sub_type': type_parts[0],
-                                'element_count': int(type_parts[1])
-                            }
-                        )
+                decoder_class.build_type_mapping()
+
+            elif type_string[0] == '[' and type_string[-1] == ']':
+                type_parts = self.bracket_match_re.match(type_string)
+
+                if type_parts:
+                    type_parts = type_parts.groups()
+
+                if type_parts:
+                    # Create dynamic class for e.g. [u8; 4] resulting in array of u8 with 4 elements
+                    decoder_class = type(type_string, (self.get_decoder_class('FixedLengthArray'),), {
+                        'sub_type': type_parts[0],
+                        'element_count': int(type_parts[1])
+                    })
 
         if decoder_class:
             # Attach RuntimeConfigurationObject to new class
@@ -318,8 +310,7 @@ class RuntimeConfigurationObject:
             for versioning_item in self.type_registry.get('versioning') or []:
                 # Check if versioning item is in current version range
                 if versioning_item['runtime_range'][0] <= spec_version_id and \
-                        (not versioning_item['runtime_range'][1] or versioning_item['runtime_range'][
-                            1] >= spec_version_id):
+                        (not versioning_item['runtime_range'][1] or versioning_item['runtime_range'][1] >= spec_version_id):
                     # Update types in type registry
                     self.update_type_registry_types(versioning_item['types'])
 
@@ -382,8 +373,7 @@ class RuntimeConfigurationObject:
 
                 if base_decoder_class is None:
                     # Try catch-all type
-                    catch_all_path = '*::' * (len(scale_info_type.value['path']) - 1) + scale_info_type.value["path"][
-                        -1]
+                    catch_all_path = '*::' * (len(scale_info_type.value['path']) - 1) + scale_info_type.value["path"][-1]
                     base_decoder_class = self.get_decoder_class(catch_all_path)
 
             if base_decoder_class and hasattr(base_decoder_class, 'process_scale_info_definition'):
@@ -734,7 +724,7 @@ class ScaleDecoder(ABC):
             self.build_type_mapping()
 
         if data:
-            assert (type(data) == ScaleBytes)
+            assert(type(data) == ScaleBytes)
 
         if runtime_config:
             self.runtime_config = runtime_config
@@ -1085,7 +1075,8 @@ class ScalePrimitive(ScaleType, ABC):
     """
     A SCALE representation of a RUST primitive
     """
-
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()
+
+
