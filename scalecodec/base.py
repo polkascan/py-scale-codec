@@ -17,6 +17,7 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from typing import Optional, TYPE_CHECKING, Union
 
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
@@ -62,8 +63,11 @@ class RuntimeConfigurationObject:
         self.only_primitives_on_init = only_primitives_on_init
         self.ss58_format = ss58_format
         self.implements_scale_info = implements_scale_info
+        self.arrow_match_re = re.compile(r'^([^<]*)<(.+)>$')
+        self.bracket_match_re = re.compile(r'^\[([A-Za-z0-9]+); ([0-9]+)\]$')
 
     @classmethod
+    @lru_cache(maxsize=128)
     def convert_type_string(cls, name):
 
         name = re.sub(r'T::', "", name)
@@ -130,7 +134,7 @@ class RuntimeConfigurationObject:
             if type_string[-1:] == '>':
 
                 # Extract sub types
-                type_parts = re.match(r'^([^<]*)<(.+)>$', type_string)
+                type_parts = self.arrow_match_re.match(type_string)
 
                 if type_parts:
                     type_parts = type_parts.groups()
@@ -151,7 +155,7 @@ class RuntimeConfigurationObject:
                 decoder_class.build_type_mapping()
 
             elif type_string[0] == '[' and type_string[-1] == ']':
-                type_parts = re.match(r'^\[([A-Za-z0-9]+); ([0-9]+)\]$', type_string)
+                type_parts = self.bracket_match_re.match(type_string)
 
                 if type_parts:
                     type_parts = type_parts.groups()
@@ -1074,6 +1078,5 @@ class ScalePrimitive(ScaleType, ABC):
     @classmethod
     def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return cls.__name__.lower()
-
 
 
