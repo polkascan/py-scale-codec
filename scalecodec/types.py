@@ -2976,6 +2976,9 @@ class GenericExtrinsicV4(Struct):
                 if 'ChargeAssetTxPayment' in signed_extensions:
                     self.type_mapping.append(['asset_id', signed_extensions['ChargeAssetTxPayment']['extrinsic']])
 
+                if 'CheckMetadataHash' in signed_extensions:
+                    self.type_mapping.append(['mode', signed_extensions['CheckMetadataHash']['extrinsic']])
+
                 self.type_mapping.append(['call', 'Call'])
 
         super().__init__(*args, **kwargs)
