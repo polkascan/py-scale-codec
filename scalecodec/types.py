@@ -51,10 +51,13 @@ class UnsignedInteger(ScalePrimitive):
         return value
 
     def deserialize(self, value: int) -> int:
+        if type(value) is not int:
+            raise ValueError('Value must be an integer')
         return value
 
     def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return self.bits
+
 
 class SignedInteger(ScalePrimitive):
     """
@@ -80,6 +83,8 @@ class SignedInteger(ScalePrimitive):
         return value
 
     def deserialize(self, value: int) -> int:
+        if type(value) is not int:
+            raise ValueError('Value must be an integer')
         return value
 
     def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
@@ -251,11 +256,11 @@ class Tuple(ScaleTypeDef):
     def deserialize(self, value: tuple) -> tuple:
         value_object = ()
 
-        for scale_def in self.values:
+        for idx, scale_def in enumerate(self.values):
             scale_obj = scale_def.new()
 
             scale_obj.value_serialized = value
-            scale_obj.deserialize(value)
+            scale_obj.deserialize(value[idx])
             value_object += (scale_obj,)
 
         return value_object
@@ -473,6 +478,8 @@ class Compact(ScaleTypeDef):
         return value
 
     def deserialize(self, value: int) -> int:
+        if type(value) is not int:
+            raise ValueError('Value must be an integer')
         return value
 
 

@@ -187,6 +187,11 @@ class TestScaleTypes(unittest.TestCase):
         obj.decode(ScaleBytes("0x0c00"))
         self.assertEqual(obj.value, (3, 0))
 
+    def test_tuple_deserialize(self):
+        obj = Tuple(Compact(U32), Compact(U32)).new()
+        obj.deserialize((3, 2))
+        self.assertEqual(obj.value, (3, 2))
+
     def test_address(self):
         obj = RuntimeConfiguration().create_scale_object(
             'Address',
