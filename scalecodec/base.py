@@ -234,13 +234,16 @@ class ScaleType:
     # def __call__(self, *args, **kwargs):
     #     return self
 
-    def encode(self, value: any) -> ScaleBytes:
-        if value and issubclass(self.__class__, value.__class__):
+    def encode(self, value: Optional[any] = None) -> ScaleBytes:
+        if value is not None and issubclass(self.__class__, value.__class__):
             # Accept instance of current class directly
             self._data = value.data
             self.value_object = value.value_object
             self.value_serialized = value.value_serialized
             return value.data
+
+        if value is None:
+            value = self.value_serialized
 
         self._data = self.type_def.encode(value, False)
         self._data_start_offset = self._data.offset
