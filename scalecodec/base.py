@@ -150,8 +150,11 @@ class ScaleBytes:
 
 class ScaleTypeDef:
 
+    scale_type_cls = None
+
     def __init__(self, name: str = None, metadata=None):
-        self.scale_type_cls = ScaleType
+        if self.scale_type_cls is None:
+            self.scale_type_cls = ScaleType
         self.name = name
         self.runtime_config = None
         self.metadata = metadata

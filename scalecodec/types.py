@@ -159,8 +159,11 @@ Null = NullType()
 
 class Struct(ScaleTypeDef):
 
+    arguments = None
+
     def __init__(self, **kwargs):
-        self.arguments = {key.rstrip('_'): value for key, value in kwargs.items()}
+        if len(kwargs) > 0:
+            self.arguments = {key.rstrip('_'): value for key, value in kwargs.items()}
         super().__init__()
 
     def process_encode(self, value):
@@ -222,8 +225,11 @@ class Struct(ScaleTypeDef):
 
 class Tuple(ScaleTypeDef):
 
+    values = None
+
     def __init__(self, *args, **kwargs):
-        self.values = args
+        if len(args) > 0:
+            self.values = args
         super().__init__()
 
     def process_encode(self, value: tuple) -> ScaleBytes:
@@ -279,10 +285,17 @@ class EnumType(ScaleType):
 
 
 class Enum(ScaleTypeDef):
+
+    variants = None
+
     def __init__(self, **kwargs):
         super().__init__()
-        self.variants = {key.rstrip('_'): value for key, value in kwargs.items()}
-        self.scale_type_cls = EnumType
+
+        if len(kwargs) > 0:
+            self.variants = {key.rstrip('_'): value for key, value in kwargs.items()}
+
+        if self.scale_type_cls is None:
+            self.scale_type_cls = EnumType
 
     def process_encode(self, value: Union[str, dict]) -> ScaleBytes:
 

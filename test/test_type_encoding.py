@@ -224,6 +224,13 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
         self.assertEqual(obj_check.decode(), value)
 
+    def test_struct_encode(self):
+
+        obj = Struct(aye=U32, nay=U32).new()
+        data = obj.encode({'aye': 4, 'nay': 2})
+
+        self.assertEqual(ScaleBytes("0x0400000002000000"), data)
+
     def test_struct_encode_tuple(self):
 
         obj = Struct(aye=U32, nay=U32).new()
@@ -237,6 +244,17 @@ class TestScaleTypeEncoding(unittest.TestCase):
         data = obj.encode({'nonce': 1})
 
         self.assertEqual(ScaleBytes("0x01000000"), data)
+
+    def test_struct_subclass(self):
+
+        class Votes(Struct):
+            arguments = {'aye': U32, 'nay': U32}
+
+        obj = Votes().new()
+
+        data = obj.encode({'aye': 4, 'nay': 2})
+
+        self.assertEqual(ScaleBytes("0x0400000002000000"), data)
 
     # def test_struct_raw_encode(self):
     #     RuntimeConfiguration().update_type_registry_types({
