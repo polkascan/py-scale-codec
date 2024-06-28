@@ -364,6 +364,9 @@ class TestScaleTypes(unittest.TestCase):
         obj = RuntimeConfiguration().create_scale_object('[u32; 0]', data=ScaleBytes(bytes()))
         self.assertEqual([], obj.decode())
 
+        obj = RuntimeConfiguration().create_scale_object('[u64; 3]', data=ScaleBytes("0x010000000000000002000000000000000300000000000000"))
+        self.assertEqual([1, 2, 3], obj.decode())
+
     def test_dynamic_fixed_array_type_decode_u8(self):
         obj = RuntimeConfiguration().create_scale_object('[u8; 65]', data=ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
         self.assertEqual('0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01', obj.decode())
@@ -381,11 +384,23 @@ class TestScaleTypes(unittest.TestCase):
         obj = RuntimeConfiguration().create_scale_object('[u8; 3]')
         self.assertEqual('0x010203', str(obj.encode('0x010203')))
 
+        obj = RuntimeConfiguration().create_scale_object('[u64; 1]')
+        self.assertEqual('0x01000000000000000200000000000000', str(obj.encode([1, 2])))
+
+        obj = RuntimeConfiguration().create_scale_object('[u64; 3]')
+        self.assertEqual('0x010000000000000002000000000000000300000000000000', str(obj.encode([1, 2, 3])))
+
+        obj = RuntimeConfiguration().create_scale_object('[u64; 3]')
+        self.assertEqual('0x010000000000000002000000000000000300000000000000', str(obj.encode('0x010000000000000002000000000000000300000000000000')))
+
     def test_invalid_fixed_array_type_encode(self):
         obj = RuntimeConfiguration().create_scale_object('[u8; 3]')
         self.assertRaises(ValueError, obj.encode, '0x0102')
 
         obj = RuntimeConfiguration().create_scale_object('[u32; 3]')
+        self.assertRaises(ValueError, obj.encode, '0x0102')
+
+        obj = RuntimeConfiguration().create_scale_object('[u64; 3]')
         self.assertRaises(ValueError, obj.encode, '0x0102')
 
     def test_custom_tuple(self):
