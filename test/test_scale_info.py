@@ -292,17 +292,23 @@ class ScaleInfoTestCase(unittest.TestCase):
             self.runtime_config.get_decoder_class_for_scale_info_definition('unknown::type', unknown_type, 'runtime')
 
     def test_encode_call(self):
-        call = self.runtime_config.create_scale_object(
-            "Call", metadata=self.metadata_obj
-        )
-        call.encode({
-            "call_module": "Balances",
-            "call_function": "transfer_keep_alive",
-            "call_args": {"dest": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "value": 3},
-        })
+
+        call = self.metadata_obj.get_call_type_def().new()
+
+        call.encode({"Balances": {"transfer_keep_alive": {"dest": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "value": 3}}})
         self.assertEqual(
             call.data.to_hex(),
-            '0x060000be5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f0c'
+            '0x050300be5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f0c'
+        )
+
+    def test_decode_call(self):
+
+        call = self.metadata_obj.get_call_type_def().new()
+
+        call.decode(ScaleBytes("0x050300be5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f0c"))
+        self.assertDictEqual(
+            call.value,
+            {"Balances": {"transfer_keep_alive": {"dest": {'Id': '5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY'}, "value": 3}}}
         )
 
 

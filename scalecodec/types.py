@@ -21,7 +21,8 @@ from typing import Union, Optional, List, Type
 from scalecodec.base import ScaleType, ScaleBytes, ScalePrimitive, ScaleTypeDef, RegistryTypeDef
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE, DEFAULT_EXTRINSIC_VERSION, BIT_SIGNED, BIT_UNSIGNED, \
     UNMASK_VERSION
-from scalecodec.exceptions import InvalidScaleTypeValueException, ScaleEncodeException, ScaleDecodeException
+from scalecodec.exceptions import InvalidScaleTypeValueException, ScaleEncodeException, ScaleDecodeException, \
+    ScaleDeserializeException
 from scalecodec.migrations.runtime_calls import get_apis, get_type_def
 from scalecodec.utils.math import trailing_zeros, next_power_of_two
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode_account_index, is_valid_ss58_address, ss58_decode
@@ -157,26 +158,35 @@ class NullType(ScaleTypeDef):
 Null = NullType()
 
 
+class StructObject(ScaleType):
+    def encode(self, value: Optional[Union[dict, tuple]] = None) -> ScaleBytes:
+        if type(value) is tuple:
+            # Convert tuple to dict
+            try:
+                value = {key: value[idx] for idx, key in enumerate(self.type_def.arguments.keys())}
+            except IndexError:
+                raise ScaleEncodeException("Not enough items in tuple to convert to dict")
+        return super().encode(value)
+
+
 class Struct(ScaleTypeDef):
 
     arguments = None
+    scale_type_cls = StructObject
 
     def __init__(self, **kwargs):
         if len(kwargs) > 0:
             self.arguments = {key.rstrip('_'): value for key, value in kwargs.items()}
         super().__init__()
 
-    def process_encode(self, value):
+    def process_encode(self, value: dict) -> ScaleBytes:
+
         data = ScaleBytes(bytearray())
         for name, scale_obj in self.arguments.items():
 
             if name not in value:
                 raise ScaleEncodeException(f'Argument "{name}" of Struct is missing in given value')
 
-            # if scale_obj.scale_type_cls is value[name].__class__:
-            #     # Todo make generic
-            #     data += value[name].data
-            # else:
             data += scale_obj.new().encode(value[name])
 
             if value[name] and issubclass(value[name].__class__, ScaleType):
@@ -210,6 +220,8 @@ class Struct(ScaleTypeDef):
                 scale_obj.deserialize(value[key])
 
                 value_object[key] = scale_obj
+            else:
+                raise ScaleDeserializeException(f'Argument "{key}" of Struct is missing in given value')
 
         return value_object
 
@@ -647,7 +659,7 @@ class Array(ScaleTypeDef):
                 raise ScaleEncodeException("Length of list does not match size of array")
 
             for item in value:
-                data += self.type_def.encode(item)
+                data += self.type_def.encode(item, external_call=False)
 
             return data
 
@@ -898,10 +910,11 @@ class GenericPortableRegistry(ScaleType):
         self.path_lookup = {}
 
         self.__def_overrides = {
-            "sp_core::crypto::AccountId32": AccountId(),
-            'sp_runtime::multiaddress::MultiAddress': MultiAddress(),
-            'sp_runtime::generic::era::Era': Era(),
-            'frame_system::extensions::check_mortality::CheckMortality': Era(),
+            "sp_core::crypto::AccountId32": AccountId,
+            'sp_runtime::multiaddress::MultiAddress': MultiAddress,
+            'sp_runtime::generic::era::Era': Era,
+            'frame_system::extensions::check_mortality::CheckMortality': Era,
+            'RuntimeCall': Call
         }
 
         self.__impl_overrides = {
@@ -967,9 +980,9 @@ class GenericPortableRegistry(ScaleType):
         return type_def
 
     def get_type_def_override_for_path(self, path: list) -> Optional[ScaleTypeDef]:
-        type_def = self.__def_overrides.get(path[-1])
+        type_def = self.__def_overrides.get('::'.join(path))
         if type_def is None:
-            type_def = self.__def_overrides.get('::'.join(path))
+            type_def = self.__def_overrides.get(path[-1])
         return type_def
 
     def get_impl_override_for_path(self, path: list) -> Optional[Type[ScaleType]]:
@@ -983,12 +996,11 @@ class GenericPortableRegistry(ScaleType):
         registry_type = self.value_object['types'][si_type_id]['type']
 
         # Check if def override is defined for path
+        type_def_override = None
         type_impl_override = None
 
         if 'path' in registry_type.value and len(registry_type.value['path']) > 0:
             type_def_override = self.get_type_def_override_for_path(registry_type.value['path'])
-            if type_def_override:
-                return type_def_override
 
             type_impl_override = self.get_impl_override_for_path(registry_type.value['path'])
 
@@ -1012,11 +1024,13 @@ class GenericPortableRegistry(ScaleType):
             if all([f.get('name') for f in fields]):
 
                 fields = {field['name']: self.get_scale_type_def(field['type']) for field in fields}
-                type_def = Struct(**fields)
+                type_def_cls = type_def_override or Struct
+                type_def = type_def_cls(**fields)
 
             else:
                 items = [self.get_scale_type_def(field['type']) for field in fields]
-                type_def = Tuple(*items)
+                type_def_cls = type_def_override or Tuple
+                type_def = type_def_cls(*items)
 
             if type_impl_override:
                 type_def = type_def.impl(type_impl_override)
@@ -1067,7 +1081,10 @@ class GenericPortableRegistry(ScaleType):
 
             # TODO convert reserved names
             variants_dict = {v[0]: v[1] for v in variants_mapping}
-            type_def = Enum(**variants_dict)
+
+            type_def_cls = type_def_override or Enum
+
+            type_def = type_def_cls(**variants_dict)
 
             if type_impl_override:
                 type_def = type_def.impl(type_impl_override)
@@ -1077,7 +1094,10 @@ class GenericPortableRegistry(ScaleType):
         elif 'tuple' in registry_type.value["def"]:
 
             items = [self.get_scale_type_def(i) for i in registry_type.value["def"]['tuple']]
-            return Tuple(*items)
+
+            type_def_cls = type_def_override or Tuple
+
+            return type_def_cls(*items)
 
         elif 'compact' in registry_type.value["def"]:
             # Compact
@@ -1096,15 +1116,33 @@ class GenericPortableRegistry(ScaleType):
 class GenericAccountId(ScaleType):
 
     def __init__(self, type_def: ScaleTypeDef, metadata: 'GenericMetadataVersioned' = None, ss58_format=None):
+        if ss58_format is None:
+            ss58_format = 42
         self.ss58_format = ss58_format
         self.ss58_address = None
         self.public_key = None
         super().__init__(type_def, metadata)
 
-    def encode(self, value: any) -> ScaleBytes:
+    def encode(self, value: any = None) -> ScaleBytes:
+
+        if value is not None and issubclass(self.__class__, value.__class__):
+            # Accept instance of current class directly
+            self._data = value.data
+            self.value_object = value.value_object
+            self.value_serialized = value.value_serialized
+            return value.data
+
+        if value is None:
+            value = self.value_serialized
+
+        if type(value) is bytes:
+            value = f'0x{value.hex()}'
+
         if type(value) is str:
             if value[0:2] == '0x':
+                from scalecodec.utils.ss58 import ss58_encode
                 self.public_key = value
+                self.ss58_address = ss58_encode(value, ss58_format=self.ss58_format)
             else:
                 from scalecodec.utils.ss58 import ss58_decode
                 self.ss58_address = value
@@ -1112,7 +1150,7 @@ class GenericAccountId(ScaleType):
 
         return super().encode(self.public_key)
 
-    def decode(self, data: ScaleBytes) -> any:
+    def decode(self, data: ScaleBytes, check_remaining=False) -> any:
         value = super().decode(data)
         self.public_key = f'0x{self.value_object.hex()}'
         return value
@@ -1129,10 +1167,16 @@ class GenericAccountId(ScaleType):
         except ValueError:
             return super().serialize()
 
+    def deserialize(self, value_serialized: any):
+        value_object = super().deserialize(value_serialized)
+        self.public_key = f'0x{self.value_object.hex()}'
+
+        return value_object
+
 
 class AccountId(HashDef):
 
-    def __init__(self, ss58_format=None):
+    def __init__(self, *args, ss58_format=None):
         self.ss58_format = ss58_format
         super().__init__(256)
 
@@ -1159,13 +1203,54 @@ class AccountId(HashDef):
         return '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
 
 
+class GenericMultiAccountId(GenericAccountId):
+    def __init__(self, type_def: ScaleTypeDef, metadata: 'GenericMetadataVersioned' = None, ss58_format=None,
+                 signatories: list = None, threshold: int = None):
+        self.ss58_format = ss58_format
+        self.ss58_address = None
+        self.public_key = None
+        self.signatories = signatories
+        self.threshold = threshold
+        super().__init__(type_def, metadata=metadata, ss58_format=ss58_format)
+
+
+class MultiAccountId(AccountId):
+
+    def __init__(self, signatories: list, threshold: int, ss58_format=None):
+        self.signatories = signatories
+        self.threshold = threshold
+        super().__init__(ss58_format=ss58_format)
+
+    def new(self, ss58_format=None) -> GenericMultiAccountId:
+        if ss58_format is None:
+            ss58_format = self.ss58_format
+
+        multi_account_id = GenericMultiAccountId(
+            type_def=self, ss58_format=ss58_format, signatories=self.signatories, threshold=self.threshold
+        )
+
+        signatories = sorted([s.public_key for s in self.signatories])
+
+        account_list = Vec(AccountId(ss58_format=ss58_format)).new()
+        account_list.encode(signatories)
+        threshold_data = U16.encode(self.threshold, external_call=False)
+
+        multi_account_id_data = blake2b(
+            b"modlpy/utilisuba" + bytes(account_list.encode(signatories).data) + bytes(threshold_data.data), digest_size=32
+        ).digest()
+
+        multi_account_id.encode(multi_account_id_data)
+
+        return multi_account_id
+
+
 class GenericMultiAddress(ScaleType):
     pass
 
 
 class MultiAddress(Enum):
 
-    def __init__(self, ss58_format: int = None):
+    def __init__(self, ss58_format: int = None, **kwargs):
         self.ss58_format = ss58_format
         super().__init__(
             Id=AccountId(ss58_format=ss58_format),
@@ -1231,6 +1316,18 @@ class MultiAddress(Enum):
 
 class GenericCall(EnumType):
     pass
+
+
+class Call(Enum):
+    scale_type_cls = GenericCall
+
+    def __init__(self, **kwargs):
+        self.metadata = None
+        super().__init__(**kwargs)
+
+    def new(self, **kwargs) -> GenericCall:
+        # return self.scale_type_cls(type_def=self, metadata=self.metadata)
+        return self.scale_type_cls(type_def=self, metadata=self.metadata, **kwargs)
 
 
 class GenericEventRecord(ScaleType):
@@ -1376,7 +1473,7 @@ class GenericEra(EnumType):
         self.phase = None
         super().__init__(type_def)
 
-    def decode(self, data: ScaleBytes) -> dict:
+    def decode(self, data: ScaleBytes, check_remaining=False) -> dict:
 
         self._data = data
         self._data_start_offset = data.offset
@@ -1425,7 +1522,7 @@ class GenericEra(EnumType):
 
         return (period, quantized_phase)
 
-    def encode(self, value: Union[str, dict, ScaleType]) -> ScaleBytes:
+    def encode(self, value: Union[str, dict, ScaleType] = None) -> ScaleBytes:
 
         if value and issubclass(self.__class__, value.__class__):
             # Accept instance of current class directly
@@ -1433,6 +1530,9 @@ class GenericEra(EnumType):
             self.value_object = value.value_object
             self.value_serialized = value.value_serialized
             return value.data
+
+        if value is None:
+            value = self.value_serialized
 
         if type(value) is dict:
             value = value.copy()
@@ -1492,7 +1592,7 @@ class GenericEra(EnumType):
 
 class Era(Enum):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__(Immortal=None, Mortal=Tuple(Period, Phase))
         self.scale_type_cls = GenericEra
 
@@ -1600,7 +1700,9 @@ class GenericMetadataVersioned(ScaleType):
         extrinsic_registry_type = self.get_extrinsic_registry_type()
         for param in extrinsic_registry_type.value['params']:
             if param['name'] == 'Call':
-                return self.portable_registry.get_scale_type_def(param['type']).impl(GenericCall)
+                call_def = self.portable_registry.get_scale_type_def(param['type'])
+                call_def.metadata = self
+                return call_def
 
     def get_extrinsic_registry_type(self) -> GenericRegistryType:
         si_type_id = self.value_object[1][1]['extrinsic']['ty'].value
@@ -1820,11 +1922,9 @@ H512 = HashDef(512)
 Hash = H256
 HashMap = Map
 BTreeMap = Map
-MultiAccountId = GenericAccountId
+
 GenericRuntimeCallDefinition = Enum()
-# Extrinsic = GenericExtrinsic
 GenericContractExecResult = Enum()
-Call = Enum().impl(GenericCall) # TODO .init(scale_type_cls=GenericCall)
 BlockNumber = U32
 SlotNumber = U64
 VrfOutput = Array(U8, 32)
@@ -1834,96 +1934,7 @@ RawBabePreDigestPrimary = Struct(authority_index=U32, slot_number=SlotNumber, vr
 RawBabePreDigestSecondaryPlain = Struct(authority_index=U32, slot_number=SlotNumber)
 RawBabePreDigestSecondaryVRF = Struct(authority_index=U32, slot_number=SlotNumber, vrf_output=VrfOutput, vrf_proof=VrfProof)
 RawBabePreDigest = Enum(Phantom=None, Primary=RawBabePreDigestPrimary, SecondaryPlain=RawBabePreDigestSecondaryPlain, SecondaryVRF=RawBabePreDigestSecondaryVRF)
-# ErrorMetadataV9 = Struct(name=Text, documentation=Vec(Text))
-# EventMetadataV9 = Struct(name=Text, args=Vec(Type), documentation=Vec(Text))
-# FunctionArgumentMetadataV9 = Struct(name=Text, type=Type)
-# FunctionMetadataV9 = Struct(name=Text, args=Vec(FunctionArgumentMetadataV9), documentation=Vec(Text))
-# MapTypeV9 = Struct(hasher=StorageHasherV9, key=Type, value=Type, linked=bool)
-# MetadataV9 = Struct(modules=Vec(ModuleMetadataV9))
-# ModuleConstantMetadataV9 = Struct(name=Text, type=Type, value=Bytes, documentation=Vec(Text))
-# StorageEntryModifierV9 = Enum(Optional=None, Default=None, Required=None)
-# StorageHasherV9 = Enum(Blake2_128=None, Blake2_256=None, Blake2_128Concat=None, Twox128=None, Twox256=None, Twox64Concat=None)
-# DoubleMapTypeV9 = Struct(hasher=StorageHasherV9, key1=Type, key2=Type, value=Type, key2_hasher=StorageHasherV9)
-# StorageEntryTypeV9 = Enum(Plain=Type, Map=MapTypeV9, DoubleMap=DoubleMapTypeV9)
-# StorageEntryMetadataV9 = Struct(name=String, modifier=StorageEntryModifierV9, type=StorageEntryTypeV9, default=Bytes, documentation=Vec(Text))
-# StorageMetadataV9 = Struct(prefix=Text, entries=Vec(StorageEntryMetadataV9))
-# ModuleMetadataV9 = Struct(name=Text, storage=Option(StorageMetadataV9), calls=Option(Vec(FunctionMetadataV9)), events=Option(Vec(EventMetadataV9)), constants=Vec(ModuleConstantMetadataV9), errors=Vec(ErrorMetadataV9))
-# ErrorMetadataV10 = ErrorMetadataV9
-# EventMetadataV10 = EventMetadataV9
-# FunctionArgumentMetadataV10 = FunctionArgumentMetadataV9
-# FunctionMetadataV10 = FunctionMetadataV9
-# MapTypeV10 = Struct(hasher=StorageHasherV10, key=Type, value=Type, linked=bool)
-# MetadataV10 = Struct(modules=Vec(ModuleMetadataV10))
-# ModuleConstantMetadataV10 = ModuleConstantMetadataV9
-# ModuleMetadataV10 = Struct(name=Text, storage=Option(StorageMetadataV10), calls=Option(Vec(FunctionMetadataV10)), events=Option(Vec(EventMetadataV10)), constants=Vec(ModuleConstantMetadataV10), errors=Vec(ErrorMetadataV10))
-# StorageEntryModifierV10 = StorageEntryModifierV9
-# StorageEntryMetadataV10 = Struct(name=String, modifier=StorageEntryModifierV10, type=StorageEntryTypeV10, default=Bytes, documentation=Vec(Text))
-# StorageEntryTypeV10 = Enum(Plain=Type, Map=MapTypeV10, DoubleMap=DoubleMapTypeV10)
-# StorageMetadataV10 = Struct(prefix=Text, entries=Vec(StorageEntryMetadataV10))
-# StorageHasherV10 = Enum(Blake2_128=None, Blake2_256=None, Blake2_128Concat=None, Twox128=None, Twox256=None, Twox64Concat=None)
-# DoubleMapTypeV10 = Struct(hasher=StorageHasherV10, key1=Type, key2=Type, value=Type, key2_hasher=StorageHasherV10)
-# DoubleMapTypeV11 = Struct(hasher=StorageHasherV11, key1=Type, key2=Type, value=Type, key2_hasher=StorageHasherV11)
-# ErrorMetadataV11 = ErrorMetadataV10
-# EventMetadataV11 = EventMetadataV10
-# ExtrinsicMetadataV11 = Struct(version=U8, signed_extensions=Vec(Text))
-# FunctionArgumentMetadataV11 = FunctionArgumentMetadataV10
-# FunctionMetadataV11 = FunctionMetadataV10
-# MapTypeV11 = Struct(hasher=StorageHasherV11, key=Type, value=Type, linked=bool)
-# MetadataV11 = Struct(modules=Vec(ModuleMetadataV11), extrinsic=ExtrinsicMetadataV11)
-# ModuleConstantMetadataV11 = ModuleConstantMetadataV10
-# ModuleMetadataV11 = Struct(name=Text, storage=Option(StorageMetadataV11), calls=Option(Vec(FunctionMetadataV11)), events=Option(Vec(EventMetadataV11)), constants=Vec(ModuleConstantMetadataV11), errors=Vec(ErrorMetadataV11))
-# StorageEntryModifierV11 = StorageEntryModifierV10
-# StorageEntryMetadataV11 = Struct(name=Text, modifier=StorageEntryModifierV11, type=StorageEntryTypeV11, default=Bytes, documentation=Vec(Text))
-# StorageEntryTypeV11 = Enum(Plain=Type, Map=MapTypeV11, DoubleMap=DoubleMapTypeV11)
-# StorageMetadataV11 = Struct(prefix=Text, entries=Vec(StorageEntryMetadataV11))
-# StorageHasherV11 = Enum(Blake2_128=None, Blake2_256=None, Blake2_128Concat=None, Twox128=None, Twox256=None, Twox64Concat=None, Identity=None)
-# DoubleMapTypeV12 = DoubleMapTypeV11
-# ErrorMetadataV12 = ErrorMetadataV11
-# EventMetadataV12 = EventMetadataV11
-# ExtrinsicMetadataV12 = ExtrinsicMetadataV11
-# FunctionArgumentMetadataV12 = FunctionArgumentMetadataV11
-# FunctionMetadataV12 = FunctionMetadataV11
-# MapTypeV12 = MapTypeV11
-# MetadataV12 = Struct(modules=Vec(ModuleMetadataV12), extrinsic=ExtrinsicMetadataV12)
-# ModuleConstantMetadataV12 = ModuleConstantMetadataV11
-# ModuleMetadataV12 = Struct(name=Text, storage=Option(StorageMetadataV12), calls=Option(Vec(FunctionMetadataV12)), events=Option(Vec(EventMetadataV12)), constants=Vec(ModuleConstantMetadataV12), errors=Vec(ErrorMetadataV12), index=U8)
-# StorageEntryModifierV12 = StorageEntryModifierV11
-# StorageEntryMetadataV12 = StorageEntryMetadataV11
-# StorageEntryTypeV12 = StorageEntryTypeV11
-# StorageMetadataV12 = StorageMetadataV11
-# StorageHasherV12 = StorageHasherV11
-# DoubleMapTypeV13 = DoubleMapTypeV12
-# ErrorMetadataV13 = ErrorMetadataV12
-# EventMetadataV13 = EventMetadataV12
-# ExtrinsicMetadataV13 = ExtrinsicMetadataV12
-# FunctionArgumentMetadataV13 = FunctionArgumentMetadataV12
-# FunctionMetadataV13 = FunctionMetadataV12
-# MapTypeV13 = MapTypeV12
-# MetadataV13 = Struct(modules=Vec(ModuleMetadataV13), extrinsic=ExtrinsicMetadataV13)
-# ModuleConstantMetadataV13 = ModuleConstantMetadataV9
-# ModuleMetadataV13 = Struct(name=Text, storage=Option(StorageMetadataV13), calls=Option(Vec(FunctionMetadataV13)), events=Option(Vec(EventMetadataV13)), constants=Vec(ModuleConstantMetadataV13), errors=Vec(ErrorMetadataV13), index=U8)
-# NMapTypeV13 = Struct(keys=Vec(Type), hashers=Vec(StorageHasherV13), value=Type)
-# StorageEntryModifierV13 = StorageEntryModifierV12
-# StorageEntryMetadataV13 = Struct(name=String, modifier=StorageEntryModifierV13, type=StorageEntryTypeV13, default=Bytes, documentation=Vec(Text))
-# StorageEntryTypeV13 = Enum(Plain=Type, Map=MapTypeV13, DoubleMap=DoubleMapTypeV13, NMap=NMapTypeV13)
-# StorageMetadataV13 = Struct(prefix=Text, entries=Vec(StorageEntryMetadataV13))
-# StorageHasherV13 = StorageHasherV12
-# DoubleMapTypeLatest = DoubleMapTypeV13
-# ErrorMetadataLatest = ErrorMetadataV13
-# EventMetadataLatest = EventMetadataV13
-# ExtrinsicMetadataLatest = ExtrinsicMetadataV13
-# FunctionArgumentMetadataLatest = FunctionArgumentMetadataV13
-# FunctionMetadataLatest = FunctionMetadataV13
-# MapTypeLatest = MapTypeV13
-# MetadataLatest = MetadataV13
-# ModuleConstantMetadataLatest = ModuleConstantMetadataV13
-# ModuleMetadataLatest = ModuleMetadataV13
-# NMapTypeLatest = NMapTypeV13
-# StorageEntryMetadataLatest = StorageEntryMetadataV13
-# StorageEntryModifierLatest = StorageEntryModifierV13
-# StorageEntryTypeLatest = StorageEntryTypeV13
-# StorageMetadataLatest = StorageMetadataV13
-# StorageHasher = StorageHasherV13
+
 SiLookupTypeId = Compact(U32)
 StorageHasherV13 = Enum(
     Blake2_128=None, Blake2_256=None, Blake2_128Concat=None, Twox128=None, Twox256=None, Twox64Concat=None,

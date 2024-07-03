@@ -28,7 +28,7 @@ from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidS
 # from scalecodec.types import GenericMultiAddress
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 from scalecodec.types import MetadataVersioned, Compact, U32, U16, I16, Tuple, String, Vec, AccountId, BitVec, Era, \
-    MultiAddress, AccountId, Bool, Balance, Array, HashMap, Bytes, U8
+    MultiAddress, AccountId, Bool, Balance, Array, HashMap, Bytes, U8, MultiAccountId
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
 
 
@@ -63,14 +63,14 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, obj.value_object)
 
     def test_value_object(self):
-        obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
-        obj.decode()
+        obj = Tuple(Compact(U32), Compact(U32)).new()
+        obj.decode(ScaleBytes("0x0c00"))
         self.assertEqual(obj.value_object[0].value_object, 3)
         self.assertEqual(obj.value_object[1].value_object, 0)
 
     def test_value_object_shorthand(self):
-        obj = RuntimeConfiguration().create_scale_object('(Compact<u32>,Compact<u32>)', ScaleBytes("0x0c00"))
-        obj.decode()
+        obj = Tuple(Compact(U32), Compact(U32)).new()
+        obj.decode(ScaleBytes("0x0c00"))
         self.assertEqual(obj[0], 3)
         self.assertEqual(obj[1], 0)
 
@@ -86,8 +86,8 @@ class TestScaleTypes(unittest.TestCase):
 
     def test_compact_u32_remaining_bytes(self):
         obj = Compact(U32).new()
-        with self.assertRaises(RemainingScaleBytesNotEmptyException):
-            obj.decode(ScaleBytes("0x02093d0001"))
+        with self.assertRaises(ScaleDecodeException):
+            obj.decode(ScaleBytes("0x02093d0001"), check_remaining=True)
 
     def test_compact_u32_invalid(self):
         obj = Compact(U32).new()
@@ -146,41 +146,13 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, "µ")
 
     def test_vec_accountid(self):
-        obj = Vec(AccountId)
+        obj = Vec(AccountId()).new()
 
         obj.decode(ScaleBytes("0x0865d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b97765d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b977"))
         self.assertListEqual(obj.value, [
-            '0x65d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b977',
-            '0x65d2273adeb04478658e183dc5edf41f1d86e42255442af62e72dbf1e6c0b977'
+            '5END82tfD39fvgwxe9qCkZJxtyQCtFJXzeSnBXpAR2D7vkVM',
+            '5END82tfD39fvgwxe9qCkZJxtyQCtFJXzeSnBXpAR2D7vkVM'
         ])
-
-    def test_bounded_vec_encode(self):
-        obj = RuntimeConfiguration().create_scale_object('BoundedVec<Hash, maxproposals>')
-        value = obj.encode(['0xe1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236'])
-        self.assertEqual(str(value), '0x04e1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236')
-
-        obj = RuntimeConfiguration().create_scale_object('BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>')
-        self.assertEqual(obj.sub_type, 'Option<RegistrarInfo<BalanceOf, AccountId>>')
-
-        value = obj.encode([None, None])
-        self.assertEqual(str(value), '0x080000')
-
-    def test_bounded_vec_decode(self):
-        obj = RuntimeConfiguration().create_scale_object(
-            'BoundedVec<Hash, maxproposals>',
-            data=ScaleBytes('0x04e1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236')
-        )
-        self.assertEqual(obj.decode(), ['0xe1781813275653a970b4260298b3858b36d38e072256dad674f7c786a0cae236'])
-
-        obj = RuntimeConfiguration().create_scale_object(
-            'BoundedVec<Option<RegistrarInfo<BalanceOf, AccountId>>,5>', data=ScaleBytes('0x080000')
-        )
-        self.assertEqual([None, None], obj.decode())
-
-    def test_validatorprefs_struct(self):
-        obj = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145', ScaleBytes("0x0c00"))
-        obj.decode()
-        self.assertEqual(obj.value, {'unstake_threshold': 3, 'validator_payment': 0})
 
     def test_tuple(self):
         obj = Tuple(Compact(U32), Compact(U32)).new()
@@ -192,211 +164,62 @@ class TestScaleTypes(unittest.TestCase):
         obj.deserialize((3, 2))
         self.assertEqual(obj.value, (3, 2))
 
-    def test_address(self):
-        obj = RuntimeConfiguration().create_scale_object(
-            'Address',
-            ScaleBytes("0xff1fa9d1bd1db014b65872ee20aee4fd4d3a942d95d3357f463ea6c799130b6318")
-        )
-        obj.decode()
-        self.assertEqual(obj.value, '1fa9d1bd1db014b65872ee20aee4fd4d3a942d95d3357f463ea6c799130b6318')
-
-    def test_moment(self):
-        obj = RuntimeConfiguration().create_scale_object('Compact<Moment>', ScaleBytes("0x03d68b655c"))
-        obj.decode()
-        self.assertEqual(obj.value, 1550158806)
-
-    def test_moment_v14(self):
-        obj = self.runtime_config_v14.create_scale_object(
-            'scale_info::132', ScaleBytes("0x03d68b655c"), metadata=self.metadata_v14_obj
-        )
-        obj.decode()
-        self.assertEqual(obj.value, 1550158806)
-
     def test_balance(self):
         obj = Compact(Balance).new()
         obj.decode(ScaleBytes("0x130080cd103d71bc22"))
         self.assertEqual(obj.value, 2503000000000000000)
 
-    def test_dynamic_set(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
-
-        obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x0100000000000000"))
-        obj.decode()
-
-        self.assertEqual(obj.value, ["TransactionPayment"])
-
-        obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x0300000000000000"))
-        obj.decode()
-
-        self.assertEqual(obj.value, ["TransactionPayment", "Transfer"])
-
-        obj = RuntimeConfiguration().create_scale_object('WithdrawReasons', ScaleBytes("0x1600000000000000"))
-        obj.decode()
-
-        self.assertEqual(obj.value, ["Transfer", "Reserve", "Tip"])
-
-    def test_set_value_type_u32(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("legacy"))
-
-        # Create set type with u32
-        RuntimeConfiguration().update_type_registry({
-            "types": {
-                "CustomU32Set": {
-                    "type": "set",
-                    "value_type": "u32",
-                    "value_list": {
-                        "Value1": 1,
-                        "Value2": 2,
-                        "Value3": 4,
-                        "Value4": 8,
-                        "Value5": 16
-                    }
-                }
-            }
-        })
-
-        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x0100000000000000"))
-        self.assertRaises(RemainingScaleBytesNotEmptyException, obj.decode)
-
-        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x01000000"))
-        obj.decode()
-
-        self.assertEqual(obj.value, ["Value1"])
-
-        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x03000000"))
-        obj.decode()
-
-        self.assertEqual(obj.value, ["Value1", "Value2"])
-
-        obj = RuntimeConfiguration().create_scale_object('CustomU32Set', ScaleBytes("0x16000000"))
-        obj.decode()
-
-        self.assertEqual(obj.value, ["Value2", "Value3", "Value5"])
-
     def test_dynamic_fixed_array_type_decode(self):
-        obj = Array(U32, 1)
+        obj = Array(U32, 1).new()
         self.assertEqual([1], obj.decode(ScaleBytes("0x01000000")))
 
-        obj = RuntimeConfiguration().create_scale_object('[u32; 3]', data=ScaleBytes("0x010000000200000003000000"))
-        self.assertEqual([1, 2, 3], obj.decode())
+        obj = Array(U32, 3).new()
+        self.assertEqual([1, 2, 3], obj.decode(ScaleBytes("0x010000000200000003000000")))
 
-        obj = RuntimeConfiguration().create_scale_object('[u32; 0]', data=ScaleBytes(bytes()))
-        self.assertEqual([], obj.decode())
+        obj = Array(U32, 0).new()
+        self.assertEqual([], obj.decode(ScaleBytes(bytes())))
 
     def test_dynamic_fixed_array_type_decode_u8(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 65]', data=ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
-        self.assertEqual('0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01', obj.decode())
+        obj = Array(U8, 65).new()
+        self.assertEqual(
+            '0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01',
+            obj.decode(ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
+        )
 
     def test_dynamic_fixed_array_type_encode_u8(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 2]')
+        obj = Array(U8, 2).new()
         self.assertEqual('0x0102', str(obj.encode('0x0102')))
         self.assertEqual('0x0102', str(obj.encode(b'\x01\x02')))
         self.assertEqual('0x0102', str(obj.encode([1, 2])))
 
     def test_dynamic_fixed_array_type_encode(self):
-        obj = RuntimeConfiguration().create_scale_object('[u32; 1]')
+        obj = Array(U32, 2).new()
         self.assertEqual('0x0100000002000000', str(obj.encode([1, 2])))
 
-        obj = RuntimeConfiguration().create_scale_object('[u8; 3]')
+        obj = Array(U8, 3).new()
         self.assertEqual('0x010203', str(obj.encode('0x010203')))
 
     def test_invalid_fixed_array_type_encode(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 3]')
-        self.assertRaises(ValueError, obj.encode, '0x0102')
+        obj = Array(U8, 3).new()
+        self.assertRaises(ScaleEncodeException, obj.encode, '0x0102')
 
-        obj = RuntimeConfiguration().create_scale_object('[u32; 3]')
-        self.assertRaises(ValueError, obj.encode, '0x0102')
-
-    def test_custom_tuple(self):
-        obj = RuntimeConfiguration().create_scale_object('(u8,u8)', ScaleBytes("0x0102"))
-        self.assertEqual((1, 2), obj.decode())
+        obj = Array(U32, 3).new()
+        self.assertRaises(ScaleEncodeException, obj.encode, '0x0102')
 
     def test_create_multi_sig_address(self):
-        MultiAccountId = RuntimeConfiguration().get_decoder_class("MultiAccountId")
 
-        multi_sig_account = MultiAccountId.create_from_account_list(
-            ["CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo",
-             "J9aQobenjZjwWtU2MsnYdGomvcYbgauCnBeb8xGrcqznvJc",
-             "HvqnQxDQbi3LL2URh7WQfcmi8b2ZWfBhu7TEDmyyn5VK8e2"], 2)
+        account1 = AccountId(ss58_format=2).new()
+        account1.deserialize("CdVuGwX71W4oRbXHsLuLQxNPns23rnSSiZwZPN4etWf6XYo")
 
-        multi_sig_address = ss58_encode(multi_sig_account.value.replace('0x', ''), 2)
+        account2 = AccountId(ss58_format=2).new()
+        account2.deserialize("J9aQobenjZjwWtU2MsnYdGomvcYbgauCnBeb8xGrcqznvJc")
 
-        self.assertEqual(multi_sig_address, "HFXXfXavDuKhLLBhFQTat2aaRQ5CMMw9mwswHzWi76m6iLt")
+        account3 = AccountId(ss58_format=2).new()
+        account3.deserialize("HvqnQxDQbi3LL2URh7WQfcmi8b2ZWfBhu7TEDmyyn5VK8e2")
 
-    def test_opaque_call(self):
+        multi_account_id = MultiAccountId([account1, account2, account3], 2, ss58_format=2).new()
 
-        opaque_call_obj = RuntimeConfiguration().create_scale_object('OpaqueCall', metadata=self.metadata_decoder)
-
-        call_value = {
-            'call_module': 'System',
-            'call_function': 'remark',
-            'call_args': {
-                '_remark': '0x0123456789'
-            }
-        }
-
-        scale_data = opaque_call_obj.encode(call_value)
-
-        self.assertEqual(str(scale_data), '0x200001140123456789')
-
-        opaque_call_obj = RuntimeConfiguration().create_scale_object('OpaqueCall', data=scale_data, metadata=self.metadata_decoder)
-
-        value = opaque_call_obj.decode()
-
-        self.assertEqual(value['call_function'], 'remark')
-        self.assertEqual(value['call_module'], 'System')
-        self.assertEqual(value['call_args'][0]['value'], '0x0123456789')
-        self.assertEqual(value['call_args'][0]['name'], '_remark')
-
-    def test_wrapped_opaque_decode_success(self):
-        opaque_hex = '0x1805000022db73'
-        wrapped_obj = self.runtime_config_v14.create_scale_object(
-            type_string="WrapperKeepOpaque",
-            metadata=self.metadata_v14_obj
-        )
-        wrapped_obj.type_mapping = ("Compact<u32>", "Call")
-        wrapped_obj.decode(ScaleBytes(opaque_hex))
-        self.assertEqual("Indices", wrapped_obj.value["call_module"])
-
-    def test_wrapped_opaque_decode_fail(self):
-        opaque_hex = '0x180a000022db73'
-        wrapped_obj = self.runtime_config_v14.create_scale_object(
-            type_string="WrapperKeepOpaque",
-            metadata=self.metadata_v14_obj
-        )
-        wrapped_obj.type_mapping = ("Compact<u32>", "Call")
-        wrapped_obj.decode(ScaleBytes(opaque_hex))
-        self.assertEqual(
-            "0x0a000022db73",
-            wrapped_obj.value
-        )
-
-    def test_wrapped_opaque_decode_incorrect(self):
-        opaque_hex = '0xa405000022db73'
-        wrapped_obj = self.runtime_config_v14.create_scale_object(
-            type_string="WrapperKeepOpaque",
-            metadata=self.metadata_v14_obj
-        )
-        with self.assertRaises(ValueError):
-            wrapped_obj.decode(ScaleBytes(opaque_hex))
-
-    def test_wrapped_opaque_encode(self):
-        wrapped_obj = self.runtime_config_v14.create_scale_object(
-            type_string="WrapperKeepOpaque",
-            metadata=self.metadata_v14_obj
-        )
-        wrapped_obj.type_mapping = ("Compact<u32>", "Call")
-
-        wrapped_obj.encode({
-            'call_function': 'claim',
-            'call_module': 'Indices',
-            'call_args': {'index': 1943740928}
-        })
-
-        self.assertEqual(
-            "0x1805000022db73",
-            wrapped_obj.data.to_hex()
-        )
+        self.assertEqual(multi_account_id.ss58_address, "HFXXfXavDuKhLLBhFQTat2aaRQ5CMMw9mwswHzWi76m6iLt")
 
     def test_era_immortal(self):
         obj = Era().new()
@@ -412,13 +235,13 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.period, 32768)
         self.assertEqual(obj.phase, 20000)
 
-        obj = Era.new()
+        obj = Era().new()
         obj.decode(ScaleBytes('0xc503'))
         self.assertDictEqual(obj.value, {'Mortal': (64, 60)})
         self.assertEqual(obj.period, 64)
         self.assertEqual(obj.phase, 60)
 
-        obj = Era.new()
+        obj = Era().new()
         obj.decode(ScaleBytes('0x8502'))
         self.assertDictEqual(obj.value, {'Mortal': (64, 40)})
         self.assertEqual(obj.period, 64)
@@ -666,58 +489,6 @@ class TestScaleTypes(unittest.TestCase):
         data = obj.encode([])
         self.assertEqual(data.to_hex(), '0x00')
 
-    def test_struct_with_base_class(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = RuntimeConfiguration().create_scale_object('StructWithoutBaseClass')
-        self.assertFalse(isinstance(obj, GenericContractExecResult))
-
-        obj = RuntimeConfiguration().create_scale_object('StructWithBaseClass')
-        self.assertTrue(isinstance(obj, GenericContractExecResult))
-
-    def test_enum_with_base_class(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = RuntimeConfiguration().create_scale_object('EnumWithoutBaseClass')
-        self.assertFalse(isinstance(obj, GenericContractExecResult))
-
-        obj = RuntimeConfiguration().create_scale_object('EnumWithBaseClass')
-        self.assertTrue(isinstance(obj, GenericContractExecResult))
-
-    def test_enum_with_specified_index_number(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex')
-
-        data = obj.encode("KSM")
-        self.assertEqual("0x82", data.to_hex())
-
-        obj = RuntimeConfiguration().create_scale_object('EnumSpecifiedIndex', data=ScaleBytes("0x80"))
-
-        self.assertEqual("KAR", obj.decode())
-
-    def test_enum_with_named_fields(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = RuntimeConfiguration().create_scale_object('EnumWithNestedStruct')
-
-        data = obj.encode({"Nested": {"a": 3, "b": 8}})
-
-        self.assertEqual("0x010308", data.to_hex())
-
-        value = obj.decode(data)
-
-        self.assertEqual({"Nested": {"a": 3, "b": 8}}, value)
-
-    def test_set_with_base_class(self):
-        RuntimeConfiguration().update_type_registry(load_type_registry_preset("test"))
-
-        obj = RuntimeConfiguration().create_scale_object('SetWithoutBaseClass')
-        self.assertFalse(isinstance(obj, GenericContractExecResult))
-
-        obj = RuntimeConfiguration().create_scale_object('SetWithBaseClass')
-        self.assertTrue(isinstance(obj, GenericContractExecResult))
-
     def test_hashmap_encode(self):
         obj = HashMap(Vec(U8), U32).new()
         data = obj.encode([('1', 2), ('23', 24), ('28', 30), ('45', 80)])
@@ -727,17 +498,6 @@ class TestScaleTypes(unittest.TestCase):
         obj = HashMap(String, U32).new()
         data = ScaleBytes("0x10043102000000083233180000000832381e00000008343550000000")
         self.assertEqual([('1', 2), ('23', 24), ('28', 30), ('45', 80)], obj.decode(data))
-
-    def test_btreeset_encode(self):
-        obj = RuntimeConfiguration().create_scale_object('BTreeSet<u32>')
-        data = obj.encode([2, 24, 30, 80])
-        self.assertEqual(data.to_hex(), "0x1002000000180000001e00000050000000")
-
-    def test_btreeset_decode(self):
-        obj = RuntimeConfiguration().create_scale_object(
-            'BTreeSet<u32>', data=ScaleBytes("0x1002000000180000001e00000050000000")
-        )
-        self.assertEqual([2, 24, 30, 80], obj.decode())
 
     def test_account_id(self):
 

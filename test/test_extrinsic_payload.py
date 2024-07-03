@@ -98,7 +98,7 @@ class TestScaleTypeEncoding(unittest.TestCase):
         self.assertEqual(str(payload), "0xb804180405000010270000010000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 
     def test_signed_extrinsic(self):
-        extrinsic = Extrinsic(metadata=self.metadata_decoder)
+        extrinsic = Extrinsic(metadata=self.metadata_obj).new()
 
         extrinsic_value = {
             'account_id': '5E9oDs9PjpsBbxXxRE9uMaZZhnBAV38n2ouLB28oecBDdeQo',

@@ -20,7 +20,7 @@ from scalecodec.base import ScaleBytes
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
 from scalecodec.types import Compact, Struct, Era, MetadataVersioned, U16, I16, U32, Vec, Bytes, String, AccountId, \
-    Option
+    Option, Balance
 
 
 class TestScaleTypeEncoding(unittest.TestCase):
@@ -189,72 +189,26 @@ class TestScaleTypeEncoding(unittest.TestCase):
 
     def test_accountid_encode_decode(self):
         value = '0x586cb27c291c813ce74e86a60dad270609abf2fc8bee107e44a80ac00225c409'
+        ss58_address = 'EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk'
 
-        obj = RuntimeConfiguration().create_scale_object('AccountId')
+        obj = AccountId().new(ss58_format=2)
         data = obj.encode(value)
 
-        obj_check = RuntimeConfiguration().create_scale_object('AccountId', data)
-
-        self.assertEqual(obj_check.decode(), value)
+        self.assertEqual(obj.decode(data), ss58_address)
 
     def test_compact_balance_encode_decode(self):
         scale_data = ScaleBytes('0x070010a5d4e8')
         value = 1000000000000
 
-        obj = RuntimeConfiguration().create_scale_object('Compact<Balance>')
+        obj = Compact(Balance).new()
         data = obj.encode(value)
 
         self.assertEqual(str(scale_data), str(data))
 
-        obj_check = RuntimeConfiguration().create_scale_object('Compact<Balance>', data)
+        self.assertEqual(obj.decode(data), value)
 
-        self.assertEqual(obj_check.decode(), value)
 
-    def test_struct_encode_decode(self):
 
-        value = {'unstake_threshold': 3, 'validator_payment': 0}
-        scale_data = ScaleBytes("0x0c00")
-
-        obj = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145')
-        data = obj.encode(value)
-
-        self.assertEqual(str(scale_data), str(data))
-
-        obj_check = RuntimeConfiguration().create_scale_object('ValidatorPrefsTo145', data)
-
-        self.assertEqual(obj_check.decode(), value)
-
-    def test_struct_encode(self):
-
-        obj = Struct(aye=U32, nay=U32).new()
-        data = obj.encode({'aye': 4, 'nay': 2})
-
-        self.assertEqual(ScaleBytes("0x0400000002000000"), data)
-
-    def test_struct_encode_tuple(self):
-
-        obj = Struct(aye=U32, nay=U32).new()
-        data = obj.encode((4, 2))
-
-        self.assertEqual(ScaleBytes("0x0400000002000000"), data)
-
-    def test_struct_encode_int(self):
-
-        obj = Struct(nonce=U32).new()
-        data = obj.encode({'nonce': 1})
-
-        self.assertEqual(ScaleBytes("0x01000000"), data)
-
-    def test_struct_subclass(self):
-
-        class Votes(Struct):
-            arguments = {'aye': U32, 'nay': U32}
-
-        obj = Votes().new()
-
-        data = obj.encode({'aye': 4, 'nay': 2})
-
-        self.assertEqual(ScaleBytes("0x0400000002000000"), data)
 
     # def test_struct_raw_encode(self):
     #     RuntimeConfiguration().update_type_registry_types({

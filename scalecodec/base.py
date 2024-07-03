@@ -20,7 +20,8 @@ from abc import ABC, abstractmethod
 from typing import Optional, TYPE_CHECKING, Union
 
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
-from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException
+from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException, \
+    ScaleDecodeException
 
 if TYPE_CHECKING:
     from scalecodec.types import GenericMetadataVersioned, GenericRegistryType
@@ -264,6 +265,11 @@ class ScaleType:
         self.value_object = self.type_def.decode(data)
 
         self._data_end_offset = data.offset
+
+        if check_remaining and self._data_end_offset != self._data.length:
+            raise ScaleDecodeException(
+                f'Remaining ScaleBytes - Current offset: {self._data_end_offset} / length: {self._data.length}'
+            )
 
         self.value_serialized = self.serialize()
         return self.value_serialized
