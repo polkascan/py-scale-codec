@@ -636,7 +636,9 @@ class Tuple(ScaleType):
     def process(self):
 
         if len(self.type_mapping) == 1:
-            return self.process_type(self.type_mapping[0], metadata=self.metadata).value
+            obj = self.process_type(self.type_mapping[0], metadata=self.metadata)
+            self.value_object = obj.value_object
+            return obj.value
 
         result = ()
         self.value_object = ()
