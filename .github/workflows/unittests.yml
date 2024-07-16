@@ -2,10 +2,10 @@ name: Run unit tests
 
 on:
   push:
-    branches: [master, develop, v1.0, v0.11]
+    branches: [master, develop, v1.0, v2]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [master, develop, v1.0, v0.11]
+    branches: [master, develop, v1.0, v2]
 
 jobs:
   build:
