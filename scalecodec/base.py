@@ -32,7 +32,7 @@ class ScaleBytes:
     Representation of SCALE encoded Bytes.
     """
 
-    def __init__(self, data: Union[str, bytes, bytearray]):
+    def __init__(self, data: Union[str, bytes, bytearray, int]):
         """
         Constructs a SCALE bytes-stream with provided `data`
 
@@ -180,7 +180,7 @@ class ScaleTypeDef:
     # def create_from_registry_type(self, registry_type):
 
     @abstractmethod
-    def process_encode(self, value: any) -> ScaleBytes:
+    def _encode(self, value: any) -> ScaleBytes:
         pass
 
     def encode(self, value: any, external_call=True) -> ScaleBytes:
@@ -194,7 +194,7 @@ class ScaleTypeDef:
         #     else:
         #         raise ValueError(f"Cannot encode '{value.type_def.__class__}' to a '{self.__class__}'")
         # else:
-        return self.process_encode(value)
+        return self._encode(value)
 
     @abstractmethod
     def decode(self, data: ScaleBytes) -> any:
@@ -389,8 +389,8 @@ class RegistryTypeDef(ScaleTypeDef):
     def new(self, **kwargs) -> 'ScaleType':
         return self.type_def.scale_type_cls(type_def=self.type_def, **kwargs)
 
-    def process_encode(self, value: any) -> ScaleBytes:
-        return self.type_def.process_encode(value)
+    def _encode(self, value: any) -> ScaleBytes:
+        return self.type_def._encode(value)
 
     def decode(self, data: ScaleBytes) -> any:
         return self.type_def.decode(data)

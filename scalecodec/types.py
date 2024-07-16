@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import math
+import struct
 from hashlib import blake2b
 from typing import Union, Optional, List, Type
 
@@ -41,7 +42,7 @@ class UnsignedInteger(ScalePrimitive):
     def decode(self, data: ScaleBytes) -> int:
         return int.from_bytes(data.get_next_bytes(self.byte_count), byteorder='little')
 
-    def process_encode(self, value) -> ScaleBytes:
+    def _encode(self, value) -> ScaleBytes:
 
         if 0 <= int(value) <= 2**(self.byte_count * 8) - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(self.byte_count, 'little')))
@@ -73,7 +74,7 @@ class SignedInteger(ScalePrimitive):
     def decode(self, data: ScaleBytes) -> int:
         return int.from_bytes(data.get_next_bytes(self.byte_count), byteorder='little', signed=True)
 
-    def process_encode(self, value) -> ScaleBytes:
+    def _encode(self, value) -> ScaleBytes:
 
         if -2**self.bits <= int(value) <= 2**self.bits - 1:
             return ScaleBytes(bytearray(int(value).to_bytes(self.byte_count, 'little', signed=True)))
@@ -92,6 +93,35 @@ class SignedInteger(ScalePrimitive):
         return -self.bits
 
 
+class Float(ScalePrimitive):
+
+    def __init__(self, bits: int):
+        super().__init__()
+        self.bits = bits
+        self.byte_count = int(self.bits / 8)
+        self.struct_format = 'f' if self.bits == 32 else 'd'
+
+    def decode(self, data: ScaleBytes) -> int:
+        return struct.unpack(self.struct_format, data.get_next_bytes(self.byte_count))[0]
+
+    def _encode(self, value: float) -> ScaleBytes:
+        if type(value) is not float:
+            raise ScaleEncodeException(f'{value} is not a float')
+
+        return ScaleBytes(struct.pack(self.struct_format, value))
+
+    def serialize(self, value: float) -> float:
+        return value
+
+    def deserialize(self, value: float) -> float:
+        if type(value) is not float:
+            raise ScaleDeserializeException('Value must be an float')
+        return value
+
+    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
+        return float(self.bits)
+
+
 U8 = UnsignedInteger(8)
 U16 = UnsignedInteger(16)
 U32 = UnsignedInteger(32)
@@ -105,6 +135,8 @@ I32 = SignedInteger(32)
 I64 = SignedInteger(64)
 I128 = SignedInteger(128)
 I256 = SignedInteger(256)
+F32 = Float(32)
+F64 = Float(64)
 
 
 class Bool(ScalePrimitive):
@@ -120,7 +152,7 @@ class Bool(ScalePrimitive):
             raise ScaleDecodeException('Invalid value for datatype "bool"')
         return bool_data == b'\x01'
 
-    def process_encode(self, value: bool) -> ScaleBytes:
+    def _encode(self, value: bool) -> ScaleBytes:
         if value is True:
             return ScaleBytes('0x01')
         elif value is False:
@@ -142,7 +174,7 @@ class NullType(ScaleTypeDef):
     def decode(self, data: ScaleBytes) -> any:
         return None
 
-    def process_encode(self, value: any) -> ScaleBytes:
+    def _encode(self, value: any) -> ScaleBytes:
         return ScaleBytes(bytearray())
 
     def serialize(self, value: any) -> any:
@@ -179,7 +211,7 @@ class Struct(ScaleTypeDef):
             self.arguments = {key.rstrip('_'): value for key, value in kwargs.items()}
         super().__init__()
 
-    def process_encode(self, value: dict) -> ScaleBytes:
+    def _encode(self, value: dict) -> ScaleBytes:
 
         data = ScaleBytes(bytearray())
         for name, scale_obj in self.arguments.items():
@@ -244,9 +276,9 @@ class Tuple(ScaleTypeDef):
             self.values = args
         super().__init__()
 
-    def process_encode(self, value: tuple) -> ScaleBytes:
+    def _encode(self, value: tuple) -> ScaleBytes:
         if type(value) is not tuple:
-            value = [value]
+            value = (value,)
 
         data = ScaleBytes(bytearray())
         for idx, scale_obj in enumerate(self.values):
@@ -272,6 +304,10 @@ class Tuple(ScaleTypeDef):
         return tuple((i.value for i in value))
 
     def deserialize(self, value: tuple) -> tuple:
+
+        if type(value) is not tuple:
+            value = (value,)
+
         value_object = ()
 
         for idx, scale_def in enumerate(self.values):
@@ -309,7 +345,7 @@ class Enum(ScaleTypeDef):
         if self.scale_type_cls is None:
             self.scale_type_cls = EnumType
 
-    def process_encode(self, value: Union[str, dict]) -> ScaleBytes:
+    def _encode(self, value: Union[str, dict]) -> ScaleBytes:
 
         # if issubclass(value.__class__, ScaleType) and value.type_def.__class__ is self.__class__:
         #     value = value.value
@@ -406,7 +442,7 @@ class Option(ScaleTypeDef):
         self.some = some
         super().__init__()
 
-    def process_encode(self, value: any) -> ScaleBytes:
+    def _encode(self, value: any) -> ScaleBytes:
         if value is None:
             return ScaleBytes('0x00')
         else:
@@ -474,7 +510,7 @@ class Compact(ScaleTypeDef):
         else:
             return int.from_bytes(self.compact_bytes, byteorder='little')
 
-    def process_encode(self, value: int) -> ScaleBytes:
+    def _encode(self, value: int) -> ScaleBytes:
 
         value = int(value)
 
@@ -520,7 +556,7 @@ class Vec(ScaleTypeDef):
         self.scale_type_cls = VecType
         self.type_def = type_def
 
-    def process_encode(self, value: list) -> ScaleBytes:
+    def _encode(self, value: list) -> ScaleBytes:
 
         if self.type_def is U8:
             return Bytes.encode(value, external_call=False)
@@ -586,7 +622,7 @@ class BitVec(ScaleTypeDef):
     and a normal Bytes would be that the length prefix indicates the number of bits encoded, not the bytes
     """
 
-    def process_encode(self, value: Union[list, str, int]) -> ScaleBytes:
+    def _encode(self, value: Union[list, str, int]) -> ScaleBytes:
 
         if type(value) is list:
             value = sum(v << i for i, v in enumerate(reversed(value)))
@@ -630,7 +666,7 @@ class Array(ScaleTypeDef):
         self.length = length
         super().__init__()
 
-    def process_encode(self, value: Union[list, str, bytes]) -> ScaleBytes:
+    def _encode(self, value: Union[list, str, bytes]) -> ScaleBytes:
 
         if self.type_def is U8:
 
@@ -736,7 +772,7 @@ class Map(ScaleTypeDef):
         self.key_def = key_def
         self.value_def = value_def
 
-    def process_encode(self, value: list) -> ScaleBytes:
+    def _encode(self, value: list) -> ScaleBytes:
         # Encode length of Vec
         data = Compact().encode(len(value))
 
@@ -770,7 +806,7 @@ class Bytes(ScaleTypeDef):
     A variable collection of bytes, stored as an `Vec<u8>`
     """
 
-    def process_encode(self, value: Union[str, bytes, bytearray, list]) -> ScaleBytes:
+    def _encode(self, value: Union[str, bytes, bytearray, list]) -> ScaleBytes:
 
         if type(value) is str:
             if value[0:2] == '0x':
@@ -840,7 +876,7 @@ class HashDef(ScaleTypeDef):
     def decode(self, data: ScaleBytes) -> bytes:
         return data.get_next_bytes(self.byte_count)
 
-    def process_encode(self, value: Union[str, bytes]) -> ScaleBytes:
+    def _encode(self, value: Union[str, bytes]) -> ScaleBytes:
 
         if type(value) is str:
             if value[0:2] != '0x' or len(value) != (self.byte_count*2)+2:
@@ -875,7 +911,7 @@ class TypeNotSupported(ScaleTypeDef):
     def new(self):
         raise NotImplementedError(f"Type {self.type_string} not supported")
 
-    def process_encode(self, value: any) -> ScaleBytes:
+    def _encode(self, value: any) -> ScaleBytes:
         raise NotImplementedError(f"Type {self.type_string} not supported")
 
     def decode(self, data: ScaleBytes) -> any:
@@ -1185,12 +1221,12 @@ class AccountId(HashDef):
             ss58_format = self.ss58_format
         return GenericAccountId(type_def=self, ss58_format=ss58_format)
 
-    def process_encode(self, value: any) -> ScaleBytes:
+    def _encode(self, value: any) -> ScaleBytes:
         if type(value) is str and value[0:2] != '0x':
             from scalecodec.utils.ss58 import ss58_decode
             value = f'0x{ss58_decode(value)}'
 
-        return super().process_encode(value)
+        return super()._encode(value)
 
     def deserialize(self, value: str) -> bytes:
         if type(value) is str and value[0:2] != '0x':
@@ -1267,7 +1303,7 @@ class MultiAddress(Enum):
         self.ss58_format = ss58_format
         self.variants['Id'] = AccountId(ss58_format=ss58_format)
 
-    def process_encode(self, value: Union[str, dict]) -> ScaleBytes:
+    def _encode(self, value: Union[str, dict]) -> ScaleBytes:
         if type(value) is int:
             # Implied decoded AccountIndex
             value = {"Index": value}
@@ -1288,7 +1324,7 @@ class MultiAddress(Enum):
             else:
                 raise ScaleEncodeException("Address type not yet supported")
 
-        return super().process_encode(value)
+        return super()._encode(value)
 
     def deserialize(self, value: Union[str, dict]) -> tuple:
         if type(value) is int:
@@ -1327,7 +1363,8 @@ class Call(Enum):
 
     def new(self, **kwargs) -> GenericCall:
         # return self.scale_type_cls(type_def=self, metadata=self.metadata)
-        return self.scale_type_cls(type_def=self, metadata=self.metadata, **kwargs)
+        kwargs['metadata'] = self.metadata
+        return self.scale_type_cls(type_def=self, **kwargs)
 
 
 class GenericEventRecord(ScaleType):
@@ -1418,7 +1455,7 @@ class Extrinsic(Struct):
         return InherentDef.create_from_metadata(self.metadata)
 
     # TODO encode must return ScaleType object?
-    def process_encode(self, value) -> ScaleBytes:
+    def _encode(self, value) -> ScaleBytes:
 
         if 'address' in value and 'signature' in value:
             data = ScaleBytes(bytes([DEFAULT_EXTRINSIC_VERSION | BIT_SIGNED]))

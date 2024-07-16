@@ -28,7 +28,7 @@ from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidS
 # from scalecodec.types import GenericMultiAddress
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 from scalecodec.types import MetadataVersioned, Compact, U32, U16, I16, Tuple, String, Vec, AccountId, BitVec, Era, \
-    MultiAddress, AccountId, Bool, Balance, Array, HashMap, Bytes, U8, MultiAccountId
+    MultiAddress, AccountId, Bool, Balance, Array, HashMap, Bytes, U8, MultiAccountId, F32, F64
 from scalecodec.utils.ss58 import ss58_encode, ss58_decode, ss58_decode_account_index, ss58_encode_account_index
 
 
@@ -104,14 +104,14 @@ class TestScaleTypes(unittest.TestCase):
         self.assertEqual(obj.value, -1234)
 
     def test_f64(self):
-        obj = RuntimeConfiguration().create_scale_object('f64', ScaleBytes("0x0000000000000080"))
-        obj.decode()
-        self.assertEqual(obj.value, -0.0)
+        obj = F64.new()
+        obj.decode(ScaleBytes("0x333333333333f33f"))
+        self.assertAlmostEqual(obj.value, 1.2)
 
     def test_f32(self):
-        obj = RuntimeConfiguration().create_scale_object('f32', ScaleBytes("0x00000080"))
-        obj.decode()
-        self.assertEqual(obj.value, -0.0)
+        obj = F32.new()
+        obj.decode(ScaleBytes("0x9a99993f"))
+        self.assertAlmostEqual(obj.value, 1.2)
 
     def test_bool_true(self):
         obj = Bool().new()
@@ -182,7 +182,7 @@ class TestScaleTypes(unittest.TestCase):
     def test_dynamic_fixed_array_type_decode_u8(self):
         obj = Array(U8, 65).new()
         self.assertEqual(
-            '0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01',
+            bytes.fromhex('c42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01'),
             obj.decode(ScaleBytes("0xc42b82d02bce3202f6a05d4b06d1ad46963d3be36fd0528bbe90e7f7a4e5fcd38d14234b1c9fcee920d76cfcf43b4ed5dd718e357c2bc1aae3a642975207e67f01"))
         )
 

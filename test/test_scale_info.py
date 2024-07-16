@@ -245,7 +245,7 @@ class ScaleInfoTestCase(unittest.TestCase):
 
         obj.decode(ScaleBytes("0x065465737431"))
 
-        self.assertEqual({"Raw": "Test1"}, obj.value)
+        self.assertEqual({"Raw": b"Test1"}, obj.value)
 
         data = obj.encode({"Raw": "Test123"})
         self.assertEqual('0x0854657374313233', data.to_hex())
