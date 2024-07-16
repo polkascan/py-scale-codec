@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scalecodec"
-version = "2.0.0-dev1"
 description = "Python SCALE Codec Library"
 readme = "README.md"
 
@@ -21,7 +20,7 @@ classifiers = [
 ]
 keywords = ["scale", "codec", "polkascan", "polkadot", "substrate", "blockchain", "kusama"]
 
-dynamic = ["dependencies"]
+dynamic = ["dependencies", "version"]
 
 [project.optional-dependencies]
 dev = [

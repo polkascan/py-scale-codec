@@ -1,6 +1,6 @@
 # Python SCALE Codec Library
 #
-# Copyright 2018-2023 Stichting Polkascan (Polkascan Foundation).
+# Copyright 2018-2024 Stichting Polkascan (Polkascan Foundation).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Import all type to make sure types classes are registered when RuntimeConfiguration inits.
-# from .types import *
-# from .base import *
+import os
+
+if os.getenv('GITHUB_REF'):
+    if not os.getenv('GITHUB_REF').startswith('refs/tags/v'):
+        raise ValueError('Incorrect tag format {}'.format(os.getenv('GITHUB_REF')))
+    __version__ = os.getenv('GITHUB_REF').replace('refs/tags/v', '')
+else:
+    __version__ = '2.0.0-dev1'
