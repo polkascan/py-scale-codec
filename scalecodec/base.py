@@ -13,18 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import copy
-import re
-import warnings
-from abc import ABC, abstractmethod
-from typing import Optional, TYPE_CHECKING, Union
+
+from abc import abstractmethod
+from typing import Optional, Union
 
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
-from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, InvalidScaleTypeValueException, \
-    ScaleDecodeException
-
-if TYPE_CHECKING:
-    from scalecodec.types import GenericMetadataVersioned, GenericRegistryType
+from scalecodec.exceptions import RemainingScaleBytesNotEmptyException, ScaleDecodeException
 
 
 class ScaleBytes:
@@ -127,15 +121,15 @@ class ScaleBytes:
 
     def __add__(self, data):
 
-        if type(data) == ScaleBytes:
+        if type(data) is ScaleBytes:
             return ScaleBytes(self.data + data.data)
 
-        if type(data) == bytes:
+        if type(data) is bytes:
             data = bytearray(data)
         elif type(data) == str and data[0:2] == '0x':
             data = bytearray.fromhex(data[2:])
 
-        if type(data) == bytearray:
+        if type(data) is bytearray:
             return ScaleBytes(self.data + data)
 
     def to_hex(self) -> str:
@@ -161,8 +155,15 @@ class ScaleTypeDef:
         self.metadata = metadata
 
     def new(self, **kwargs) -> 'ScaleType':
-        # return self.scale_type_cls(type_def=self, metadata=self.metadata)
-        return self.scale_type_cls(type_def=self, **kwargs)
+        obj = self.scale_type_cls(type_def=self, **kwargs)
+        if 'value' in kwargs:
+            obj.deserialize(kwargs['value'])
+
+        if 'scale' in kwargs:
+            obj.decode(kwargs['scale'])
+
+        return obj
+
 
     def impl(self, scale_type_cls: type = None, runtime_config=None) -> 'ScaleTypeDef':
         """
@@ -220,14 +221,13 @@ class ScaleTypeDef:
 
 class ScaleType:
 
-    def __init__(self, type_def: ScaleTypeDef, metadata: 'GenericMetadataVersioned' = None):
+    def __init__(self, type_def: ScaleTypeDef, **kwargs):
+        # TODO remove kwargs
 
         self.meta_info = None
         self.type_def: ScaleTypeDef = type_def
         self.value_serialized = None
         self.value_object = None
-        self.metadata = metadata
-        # self.runtime_config = runtime_config
 
         self._data = None
         self._data_start_offset = 0
@@ -369,472 +369,3 @@ class ScaleType:
 
 class ScalePrimitive(ScaleTypeDef):
     pass
-
-
-class RegistryTypeDef(ScaleTypeDef):
-
-    def __init__(self, portable_registry, si_type_id):
-        super().__init__()
-        self.portable_registry = portable_registry
-        self.si_type_id = si_type_id
-        self.__type_def = None
-
-    @property
-    def type_def(self) -> ScaleTypeDef:
-        if self.__type_def is None:
-            self.__type_def = self.portable_registry.create_scale_type_def(self.si_type_id)
-            self.scale_type_cls = self.__type_def.scale_type_cls
-        return self.__type_def
-
-    def new(self, **kwargs) -> 'ScaleType':
-        return self.type_def.scale_type_cls(type_def=self.type_def, **kwargs)
-
-    def _encode(self, value: any) -> ScaleBytes:
-        return self.type_def._encode(value)
-
-    def decode(self, data: ScaleBytes) -> any:
-        return self.type_def.decode(data)
-
-    def serialize(self, value: any) -> any:
-        return self.type_def.serialize(value)
-
-    def deserialize(self, value: any) -> any:
-        return self.type_def.deserialize(value)
-
-    def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
-        # if _recursion_level <= 2:
-        #     return self.type_def.example_value(_recursion_level + 1, max_recursion)
-        # else:
-        return f'<RegistryTypeDef: {self.si_type_id}>'
-
-
-# class Singleton(type):
-#     _instances = {}
-#
-#     def __call__(cls, *args, **kwargs):
-#
-#         if 'config_id' in kwargs:
-#             instance_key = kwargs['config_id']
-#         else:
-#             instance_key = cls
-#
-#         if instance_key not in cls._instances:
-#             cls._instances[instance_key] = super(Singleton, cls).__call__(*args, **kwargs)
-#         return cls._instances[instance_key]
-#
-#
-class RuntimeConfigurationObject:
-    """
-    Container for runtime configuration, for example type definitions and runtime upgrade information
-    """
-
-    # @classmethod
-    # def all_subclasses(cls, class_):
-    #     return set(class_.__subclasses__()).union(
-    #         [s for c in class_.__subclasses__() for s in cls.all_subclasses(c)])
-
-    def __init__(self, ss58_format=None):
-        self.active_spec_version_id = None
-        self.chain_id = None
-
-        self.ss58_format = ss58_format
-
-    def set_active_spec_version_id(self, spec_version_id):
-        # TODO remove
-        if spec_version_id != self.active_spec_version_id:
-            self.active_spec_version_id = spec_version_id
-
-
-
-#
-#
-
-#
-#
-# class ScaleDecoder(ABC):
-#     """
-#     Base class for all SCALE decoding/encoding
-#     """
-#
-#     type_string = None
-#
-#     type_mapping = None
-#
-#     sub_type = None
-#
-#     runtime_config = None
-#
-#     def __init__(self, data: ScaleBytes, sub_type: str = None, runtime_config: RuntimeConfigurationObject = None):
-#         """
-#         Constructs an SCALE codec class capable of encoding and decoding SCALE-bytes
-#
-#         Parameters
-#         ----------
-#         data: ScaleBytes stream of SCALE data
-#         sub_type
-#         runtime_config
-#         """
-#         if sub_type:
-#             self.sub_type = sub_type
-#
-#         if self.type_mapping is None and self.type_string:
-#             self.build_type_mapping()
-#
-#         if data:
-#             assert(type(data) == ScaleBytes)
-#
-#         if runtime_config:
-#             self.runtime_config = runtime_config
-#
-#         if not self.runtime_config:
-#             # if no runtime config is provided, fallback on singleton
-#             self.runtime_config = RuntimeConfiguration()
-#
-#         self.data = data
-#
-#         self.value_object = None
-#         self.value_serialized = None
-#
-#         self.decoded = False
-#
-#         self.data_start_offset = None
-#         self.data_end_offset = None
-#
-#     @property
-#     def value(self):
-#         # TODO fix
-#         # if not self.decoded:
-#         #     self.decode()
-#         return self.value_serialized
-#
-#     @value.setter
-#     def value(self, value):
-#         self.value_serialized = value
-#
-#     @staticmethod
-#     def is_primitive(type_string: str) -> bool:
-#         return type_string in ('bool', 'u8', 'u16', 'u32', 'u64', 'u128', 'u256', 'i8', 'i16', 'i32', 'i64', 'i128',
-#                                'i256', 'h160', 'h256', 'h512', '[u8; 4]', '[u8; 4]', '[u8; 8]', '[u8; 16]', '[u8; 32]',
-#                                '&[u8]')
-#
-#     @classmethod
-#     def build_type_mapping(cls):
-#
-#         if cls.type_string and cls.type_string[0] == '(' and cls.type_string[-1] == ')':
-#             type_mapping = ()
-#
-#             tuple_contents = cls.type_string[1:-1]
-#
-#             # replace subtype types
-#             sub_types = re.search(r'([A-Za-z]+[<][^>]*[>])', tuple_contents)
-#             if sub_types:
-#                 sub_types = sub_types.groups()
-#                 for sub_type in sub_types:
-#                     tuple_contents = tuple_contents.replace(sub_type, sub_type.replace(',', '|'))
-#
-#             for tuple_element in tuple_contents.split(','):
-#                 type_mapping += (tuple_element.strip().replace('|', ','),)
-#
-#             cls.type_mapping = type_mapping
-#
-#     def get_next_bytes(self, length) -> bytearray:
-#         """
-#         Retrieve `length` amount of bytes of the SCALE-bytes stream
-#
-#         Parameters
-#         ----------
-#         length: amount of requested bytes
-#
-#         Returns
-#         -------
-#         bytearray
-#         """
-#         data = self.data.get_next_bytes(length)
-#         return data
-#
-#     def get_next_u8(self) -> int:
-#         """
-#         Retrieves the next byte and convert to an int
-#
-#         Returns
-#         -------
-#         int
-#         """
-#         return int.from_bytes(self.get_next_bytes(1), byteorder='little')
-#
-#     def get_next_bool(self) -> bool:
-#         """
-#         Retrieves the next byte and convert to an bool
-#
-#         Returns
-#         -------
-#         bool
-#         """
-#         data = self.get_next_bytes(1)
-#         if data not in [b'\x00', b'\x01']:
-#             raise InvalidScaleTypeValueException('Invalid value for datatype "bool"')
-#         return data == b'\x01'
-#
-#     def get_remaining_bytes(self) -> bytearray:
-#         """
-#         Retrieves all remaining bytes from the stream
-#
-#         Returns
-#         -------
-#         bytearray
-#         """
-#         data = self.data.get_remaining_bytes()
-#         return data
-#
-#     def get_used_bytes(self) -> bytearray:
-#         """
-#         Returns a bytearray of all SCALE-bytes used in the decoding process
-#
-#         Returns
-#         -------
-#         bytearray
-#         """
-#         return self.data.data[self.data_start_offset:self.data_end_offset]
-#
-#     @abstractmethod
-#     def process(self):
-#         """
-#         Implementation of the decoding process
-#
-#         Returns
-#         -------
-#
-#         """
-#         raise NotImplementedError
-#
-#     def decode(self, data: ScaleBytes = None, check_remaining=True):
-#         """
-#         Decodes available SCALE-bytes according to type specification of this ScaleType
-#
-#         If no `data` is provided, it will try to decode data specified during init
-#
-#         If `check_remaining` is enabled, an exception will be raised when data is remaining after decoding
-#
-#         Parameters
-#         ----------
-#         data
-#         check_remaining: If enabled, an exception will be raised when data is remaining after decoding
-#
-#         Returns
-#         -------
-#
-#         """
-#
-#         if data is not None:
-#             self.decoded = False
-#             self.data = data
-#
-#         if not self.decoded:
-#
-#             self.data_start_offset = self.data.offset
-#             self.value_serialized = self.process()
-#             self.decoded = True
-#
-#             if self.value_object is None:
-#                 # Default for value_object if not explicitly defined
-#                 self.value_object = self.value_serialized
-#
-#             self.data_end_offset = self.data.offset
-#
-#             if check_remaining and self.data.offset != self.data.length:
-#                 raise RemainingScaleBytesNotEmptyException(
-#                     f'Decoding <{self.__class__.__name__}> - Current offset: {self.data.offset} / length: {self.data.length}'
-#                 )
-#
-#             if self.data.offset > self.data.length:
-#                 raise RemainingScaleBytesNotEmptyException(
-#                     f'Decoding <{self.__class__.__name__}> - No more bytes available (needed: {self.data.offset} / total: {self.data.length})'
-#                 )
-#
-#         return self.value
-#
-#     def __str__(self):
-#         return str(self.serialize()) or ''
-#
-#     def __repr__(self):
-#         return "<{}(value={})>".format(self.__class__.__name__, self.serialize())
-#
-#     def encode(self, value=None) -> ScaleBytes:
-#         """
-#         Encodes the serialized `value` representation of current `ScaleType` to a `ScaleBytes` stream
-#
-#         Parameters
-#         ----------
-#         value
-#
-#         Returns
-#         -------
-#         ScaleBytes
-#         """
-#
-#         if value and issubclass(self.__class__, value.__class__):
-#             # Accept instance of current class directly
-#             self.data = value.data
-#             self.value_object = value.value_object
-#             self.value_serialized = value.value_serialized
-#             return value.data
-#
-#         if value is not None:
-#             self.value_serialized = value
-#             self.decoded = True
-#
-#         self.data = self.process_encode(self.value_serialized)
-#
-#         if self.value_object is None:
-#             self.value_object = self.value_serialized
-#
-#         return self.data
-#
-#     def process_encode(self, value) -> ScaleBytes:
-#         """
-#         Implementation of the encoding process
-#
-#         Parameters
-#         ----------
-#         value
-#
-#         Returns
-#         -------
-#         ScaleBytes
-#         """
-#         raise NotImplementedError("Encoding not implemented for this ScaleType")
-#
-#     @classmethod
-#     def get_decoder_class(cls, type_string, data=None, runtime_config=None, **kwargs):
-#         """
-#         Retrieves the decoding class for provided `type_string`
-#
-#         Parameters
-#         ----------
-#         type_string
-#         data
-#         runtime_config
-#         kwargs
-#
-#         Returns
-#         -------
-#         ScaleType
-#         """
-#
-#         warnings.warn("Use RuntimeConfigurationObject.create_scale_object() instead", DeprecationWarning)
-#
-#         if not runtime_config:
-#             runtime_config = RuntimeConfiguration()
-#
-#         decoder_class = runtime_config.get_decoder_class(
-#             type_string
-#         )
-#         if decoder_class:
-#             return decoder_class(data=data, runtime_config=runtime_config, **kwargs)
-#
-#         raise NotImplementedError('Decoder class for "{}" not found'.format(type_string))
-#
-#     # TODO rename to decode_type (confusing when encoding is introduced)
-#     def process_type(self, type_string, **kwargs):
-#         obj = self.runtime_config.create_scale_object(type_string, self.data, **kwargs)
-#         obj.decode(check_remaining=False)
-#         return obj
-#
-#     def serialize(self):
-#         """
-#         Returns a serialized representation of current ScaleType
-#
-#         Returns
-#         -------
-#
-#         """
-#         return self.value_serialized
-#
-#     @classmethod
-#     def convert_type(cls, name):
-#         return RuntimeConfigurationObject.convert_type_string(name)
-#
-#
-# class RuntimeConfiguration(RuntimeConfigurationObject, metaclass=Singleton):
-#     pass
-#
-#
-# class ScaleType(ScaleDecoder, ABC):
-#     """
-#     Base class for all SCALE types
-#     """
-#     scale_info_type: 'GenericRegistryType' = None
-#
-#     def __init__(self, data=None, sub_type=None, metadata=None, runtime_config=None):
-#         """
-#
-#         Initializes an `ScaleType`
-#
-#         Parameters
-#         ----------
-#         data: ScaleBytes
-#         sub_type: str
-#         metadata: VersionedMetadata
-#         runtime_config: RuntimeConfigurationObject
-#         """
-#         self.metadata = metadata
-#
-#         # Container for meta information
-#         self.meta_info: dict = {}
-#
-#         if not data:
-#             data = ScaleBytes(bytearray())
-#         super().__init__(data, sub_type, runtime_config=runtime_config)
-#
-#     def __getitem__(self, item):
-#         return self.value_object[item]
-#
-#     def __iter__(self):
-#         for item in self.value_object:
-#             yield item
-#
-#     def __eq__(self, other):
-#         if isinstance(other, ScaleType):
-#             return other.value_serialized == self.value_serialized
-#         else:
-#             return other == self.value_serialized
-#
-#     def __gt__(self, other):
-#         if isinstance(other, ScaleType):
-#             return self.value_serialized > other.value_serialized
-#         else:
-#             return self.value_serialized > other
-#
-#     def __ge__(self, other):
-#         if isinstance(other, ScaleType):
-#             return self.value_serialized >= other.value_serialized
-#         else:
-#             return self.value_serialized >= other
-#
-#     def __lt__(self, other):
-#         if isinstance(other, ScaleType):
-#             return self.value_serialized < other.value_serialized
-#         else:
-#             return self.value_serialized < other
-#
-#     def __le__(self, other):
-#         if isinstance(other, ScaleType):
-#             return self.value_serialized <= other.value_serialized
-#         else:
-#             return self.value_serialized <= other
-#
-#     @classmethod
-#     def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
-#         return cls.__name__
-#
-#
-# class ScalePrimitive(ScaleType, ABC):
-#     """
-#     A SCALE representation of a RUST primitive
-#     """
-#     @classmethod
-#     def generate_type_decomposition(cls, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
-#         return cls.__name__.lower()
-#
-#
-#
