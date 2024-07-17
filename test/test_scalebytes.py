@@ -19,8 +19,9 @@
 
 import unittest
 
-from scalecodec.base import ScaleDecoder, ScaleBytes, RuntimeConfiguration
+from scalecodec.base import ScaleBytes
 from scalecodec.exceptions import RemainingScaleBytesNotEmptyException
+from scalecodec.types import Compact, U32, Array, U8, String
 
 
 class TestScaleBytes(unittest.TestCase):
@@ -30,8 +31,8 @@ class TestScaleBytes(unittest.TestCase):
         self.assertRaises(ValueError, ScaleBytes, 'test')
 
     def test_bytes_data_format(self):
-        obj = RuntimeConfiguration().create_scale_object('Compact<u32>', ScaleBytes(b"\x02\x09\x3d\x00"))
-        obj.decode()
+        obj = Compact(U32).new()
+        obj.decode(ScaleBytes(b"\x02\x09\x3d\x00"))
         self.assertEqual(obj.value, 1000000)
 
     def test_remaining_bytes(self):
@@ -45,12 +46,6 @@ class TestScaleBytes(unittest.TestCase):
         scale.reset()
         self.assertEqual(scale.get_remaining_bytes(), b'\x01\x02\x03\x04')
 
-    def test_abstract_process(self):
-        self.assertRaises(NotImplementedError, ScaleDecoder.process, None)
-
-    def test_abstract_encode(self):
-        self.assertRaises(NotImplementedError, ScaleDecoder.process_encode, None, None)
-
     def test_add_scalebytes(self):
         scale_total = ScaleBytes("0x0102") + "0x0304"
 
@@ -60,22 +55,8 @@ class TestScaleBytes(unittest.TestCase):
         self.assertEqual(ScaleBytes('0x1234'), ScaleBytes('0x1234'))
         self.assertNotEqual(ScaleBytes('0x1234'), ScaleBytes('0x555555'))
 
-    def test_scale_decoder_remaining_bytes(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 3]', ScaleBytes("0x010203"))
-        self.assertEqual(obj.get_remaining_bytes(), b"\x01\x02\x03")
-
     def test_no_more_bytes_available(self):
-        obj = RuntimeConfiguration().create_scale_object('[u8; 4]', ScaleBytes("0x010203"))
+        obj = Array(U8, 4).new()
         with self.assertRaises(RemainingScaleBytesNotEmptyException):
-            obj.decode(check_remaining=False)
-
-    def test_str_representation(self):
-        obj = RuntimeConfiguration().create_scale_object('String', ScaleBytes("0x1054657374"))
-        obj.decode()
-        self.assertEqual(str(obj), "Test")
-
-    def test_type_convert(self):
-        self.assertEqual(ScaleDecoder.convert_type("<Balance as HasCompact>::Type"), "Compact<Balance>")
-        self.assertEqual(ScaleDecoder.convert_type("<BlockNumber as HasCompact>::Type"), "Compact<BlockNumber>")
-        self.assertEqual(ScaleDecoder.convert_type("<Moment as HasCompact>::Type"), "Compact<Moment>")
+            obj.decode(ScaleBytes("0x010203"), check_remaining=False)
 

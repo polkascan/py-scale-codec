@@ -18,6 +18,32 @@ https://polkascan.github.io/py-scale-codec/
 pip install scalecodec
 ```
 
+## Code examples
+
+```python
+from scalecodec.types import ScaleBytes, Bool, String, U32, U8, U16, Struct, Vec, Compact, Tuple, Enum
+
+# encode a Vec<u16>
+obj = Vec(U16).new()
+value = [1, 2]
+data = obj.encode(value)
+
+# Define and decode a Struct
+scale_obj = Struct(test=U8, test2=Tuple(U8, U8)).new()
+value = scale_obj.decode(ScaleBytes("0x020105"))
+
+# Define and encode an Enum
+scale_obj = Enum(
+    Bool=Bool(), 
+    Number=U32, 
+    Complex=Struct(data=String(), version=Compact(U8)), 
+    None_=None
+).new()
+value = {'Bool': True}
+
+data = scale_obj.encode(value)
+```
+
 ## Examples of different types
 
 | Type                                                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Example SCALE decoding value                                                | SCALE encoded value                                                             |
