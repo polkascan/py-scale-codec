@@ -163,6 +163,7 @@ class Bool(ScalePrimitive):
     def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return True
 
+
 class NullType(ScaleTypeDef):
 
     def decode(self, data: ScaleBytes) -> any:
@@ -798,7 +799,7 @@ class Map(ScaleTypeDef):
         return [(self.key_def.deserialize(k), self.value_def.deserialize(v)) for k, v in value]
 
 
-class Bytes(ScaleTypeDef):
+class BytesDef(ScaleTypeDef):
     """
     A variable collection of bytes, stored as an `Vec<u8>`
     """
@@ -844,7 +845,7 @@ class Bytes(ScaleTypeDef):
         return b'Bytes'
 
 
-class String(Bytes):
+class StringDef(BytesDef):
     def decode(self, data: ScaleBytes) -> str:
         value = super().decode(data)
 
@@ -900,8 +901,8 @@ class HashDef(ScaleTypeDef):
         return f'0x{str(self.byte_count).zfill(2) * self.byte_count}'
 
 
-String = String()
-Bytes = Bytes()
+String = StringDef()
+Bytes = BytesDef()
 Type = String
 Text = String
 H256 = HashDef(256)
