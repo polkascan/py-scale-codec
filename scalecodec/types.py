@@ -288,13 +288,17 @@ class Tuple(ScaleTypeDef):
             scale_obj = scale_def.new()
 
             scale_obj.decode(data)
+
+            if len(self.values) == 1:
+                return scale_obj
+
             value += (scale_obj,)
 
         return value
 
-    def serialize(self, value: tuple) -> tuple:
-        if len(value) == 1:
-            return value[0].value
+    def serialize(self, value: Union[tuple, ScaleType]) -> tuple:
+        if issubclass(value.__class__, ScaleType):
+            return value.value
 
         return tuple((i.value for i in value))
 

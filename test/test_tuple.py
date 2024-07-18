@@ -42,6 +42,13 @@ class TestTuple(unittest.TestCase):
         obj.deserialize((3, 2))
         self.assertEqual(obj.value, (3, 2))
 
+    def test_tuple_single_value(self):
+        # PolkadotJS compatilibity
+        obj = Tuple(U8).new()
+        obj.decode(ScaleBytes('0x03'))
+        self.assertEqual(obj.value, 3)
+        self.assertEqual(obj.value_object, U8.new(value=3))
+
 
 if __name__ == '__main__':
     unittest.main()
