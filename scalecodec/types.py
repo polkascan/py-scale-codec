@@ -1960,6 +1960,22 @@ class FixedLengthArray(ScaleType):
 
         else:
 
+            if type(value) is str:
+                if value[0:2] != '0x':
+                    raise ValueError('Give the value is not from 0x')
+                elif self.runtime_config.get_decoder_class(self.sub_type) is U16 and len(value[2:]) != self.element_count * 4:
+                    raise ValueError('Value should be {} bytes long'.format(self.element_count))
+                elif self.runtime_config.get_decoder_class(self.sub_type) is U32 and len(value[2:]) != self.element_count * 8:
+                    raise ValueError('Value should be {} bytes long'.format(self.element_count))
+                elif self.runtime_config.get_decoder_class(self.sub_type) is U64 and len(value[2:]) != self.element_count * 16:
+                    raise ValueError('Value should be {} bytes long'.format(self.element_count))
+                elif self.runtime_config.get_decoder_class(self.sub_type) is U128 and len(value[2:]) != self.element_count * 32:
+                    raise ValueError('Value should be {} bytes long'.format(self.element_count))
+                elif self.runtime_config.get_decoder_class(self.sub_type) is U256 and len(value[2:]) != self.element_count * 64:
+                    raise ValueError('Value should be {} bytes long'.format(self.element_count))
+                else:
+                    return ScaleBytes(value)
+
             if not type(value) is list:
                 raise ValueError('Given value is not a list')
 
