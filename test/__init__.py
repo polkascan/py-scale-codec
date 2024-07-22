@@ -1,6 +1,6 @@
 # Python SCALE Codec Library
 #
-# Copyright 2018-2020 Stichting Polkascan (Polkascan Foundation).
+# Copyright 2018-2024 Stichting Polkascan (Polkascan Foundation).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
-import os
 
-
-def load_json_file(file_path: str) -> dict:
-
-    with open(os.path.abspath(file_path), 'r') as fp:
-        data = fp.read()
-
-    return json.loads(data)

@@ -22,7 +22,7 @@ from scalecodec.types import Enum, Bool, U32
 
 class TestEnum(unittest.TestCase):
 
-    def test_enum(self):
+    def test_enum_encode_decode(self):
         scale_obj = Enum(Bool=Bool(), Number=U32, None_=None).new()
         value = {'Bool': True}
 
@@ -44,6 +44,21 @@ class TestEnum(unittest.TestCase):
         scale_obj.decode(data)
 
         self.assertEqual(value, scale_obj.value)
+
+    def test_enum_deserialize(self):
+        scale_obj = Enum(Bool=Bool(), Number=U32, None_=None).new()
+
+        scale_obj.deserialize({'Bool': True})
+        self.assertEqual(('Bool', Bool().new(value=True)), scale_obj.value_object)
+
+        scale_obj.deserialize({'Number': 1})
+        self.assertEqual(('Number', U32.new(value=1)), scale_obj.value_object)
+
+        scale_obj.deserialize({'None': None})
+        self.assertEqual(('None', None), scale_obj.value_object)
+
+        scale_obj.deserialize('None')
+        self.assertEqual(('None', None), scale_obj.value_object)
 
 
 if __name__ == '__main__':

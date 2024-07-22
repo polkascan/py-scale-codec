@@ -135,10 +135,6 @@ F64 = Float(64)
 
 class Bool(ScalePrimitive):
 
-    @classmethod
-    def new(cls):
-        return ScaleType(type_def=cls())
-
     def decode(self, data: ScaleBytes) -> bool:
 
         bool_data = data.get_next_bytes(1)
@@ -898,8 +894,10 @@ class HashDef(ScaleTypeDef):
     def serialize(self, value: bytes) -> str:
         return f'0x{value.hex()}'
 
-    def deserialize(self, value: str) -> bytes:
-        return bytes.fromhex(value[2:])
+    def deserialize(self, value: Union[str, bytes]) -> bytes:
+        if type(value) is str:
+            value = bytes.fromhex(value[2:])
+        return value
 
     def example_value(self, _recursion_level: int = 0, max_recursion: int = TYPE_DECOMP_MAX_RECURSIVE):
         return f'0x{str(self.byte_count).zfill(2) * self.byte_count}'
