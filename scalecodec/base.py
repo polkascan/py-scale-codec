@@ -164,7 +164,6 @@ class ScaleTypeDef:
 
         return obj
 
-
     def impl(self, scale_type_cls: type = None, runtime_config=None) -> 'ScaleTypeDef':
         """
 
@@ -286,7 +285,7 @@ class ScaleType:
             return self.value_object
 
         self.value_object = self.type_def.deserialize(value_serialized)
-        self.value_serialized = value_serialized
+        self.value_serialized = self.type_def.serialize(self.value_object)
 
         return self.value_object
 

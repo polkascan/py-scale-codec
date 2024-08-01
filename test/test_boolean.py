@@ -47,6 +47,11 @@ class TestBoolean(unittest.TestCase):
 
         self.assertEqual(value, scale_obj.value)
 
+    def test_bool_encode_false(self):
+        scale_obj = Bool().new()
+        data = scale_obj.encode(False)
+        self.assertEqual(ScaleBytes("0x00"), data)
+
 
 if __name__ == '__main__':
     unittest.main()
