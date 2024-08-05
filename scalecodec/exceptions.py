@@ -37,3 +37,7 @@ class ScaleEncodeException(ValueError):
 
 class ScaleDeserializeException(ValueError):
     pass
+
+
+class ScaleSerializeException(ValueError):
+    pass

@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import enum
 
 import math
 import struct
@@ -20,7 +21,8 @@ from typing import Union, Optional
 
 from scalecodec.base import ScaleType, ScaleBytes, ScalePrimitive, ScaleTypeDef
 from scalecodec.constants import TYPE_DECOMP_MAX_RECURSIVE
-from scalecodec.exceptions import ScaleEncodeException, ScaleDecodeException, ScaleDeserializeException
+from scalecodec.exceptions import ScaleEncodeException, ScaleDecodeException, ScaleDeserializeException, \
+    ScaleSerializeException
 
 
 class UnsignedInteger(ScalePrimitive):
@@ -230,6 +232,8 @@ class Struct(ScaleTypeDef):
         return value
 
     def serialize(self, value: dict) -> dict:
+        if value is None:
+            raise ScaleSerializeException('Value cannot be None')
         return {k: obj.value for k, obj in value.items()}
 
     def deserialize(self, value: dict) -> dict:
@@ -399,6 +403,12 @@ class Enum(ScaleTypeDef):
     def deserialize(self, value: Union[str, dict]) -> tuple:
         if type(value) is str:
             value = {value: None}
+
+        if isinstance(value, enum.Enum):
+            value = {value.name: None}
+
+        if len(list(value.items())) != 1:
+            raise ScaleDeserializeException("Only one variant can be specified for enums")
 
         enum_key, enum_value = list(value.items())[0]
 
