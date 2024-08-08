@@ -735,9 +735,9 @@ class Array(ScaleTypeDef):
         else:
             return f'0x{value.hex()}'
 
-    def deserialize(self, value: Union[list, str, bytes]) -> Union[list, bytes]:
+    def deserialize(self, value: Union[list, str, bytes, bytearray]) -> Union[list, bytes]:
 
-        if type(value) not in [list, str, bytes]:
+        if type(value) not in [list, str, bytes, bytearray]:
             raise ScaleDeserializeException('value should be of type list, str or bytes')
 
         if type(value) is str:
@@ -748,6 +748,9 @@ class Array(ScaleTypeDef):
 
         if len(value) != self.length:
             raise ScaleDeserializeException('Length of array does not match size of value')
+
+        if type(value) is bytearray:
+            value = bytes(value)
 
         if type(value) is bytes:
             if self.type_def is not U8:
@@ -950,9 +953,12 @@ class HashDef(ScaleTypeDef):
     def serialize(self, value: bytes) -> str:
         return f'0x{value.hex()}'
 
-    def deserialize(self, value: Union[str, bytes]) -> bytes:
+    def deserialize(self, value: Union[str, bytes, bytearray]) -> bytes:
         if type(value) is str:
             value = bytes.fromhex(value[2:])
+
+        if type(value) is bytearray:
+            value = bytes(value)
 
         if type(value) is not bytes:
             raise ScaleDeserializeException('value should be of type str or bytes')

@@ -101,7 +101,6 @@ class ScaleBytes:
         """
         self.offset = 0
 
-
     def copy(self):
         return ScaleBytes(self.data)
 
@@ -131,6 +130,12 @@ class ScaleBytes:
 
         if type(data) is bytearray:
             return ScaleBytes(self.data + data)
+
+    def __bytes__(self):
+        return self.to_bytes()
+
+    def to_bytes(self):
+        return bytes(self.data)
 
     def to_hex(self) -> str:
         """
