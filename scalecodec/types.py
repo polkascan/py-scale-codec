@@ -147,12 +147,18 @@ class Option(ScaleType):
     def process(self):
 
         option_byte = self.get_next_bytes(1)
-
-        if self.sub_type and option_byte != b'\x00':
+        if self.sub_type is None:
+            raise ValueError("Plain 'Option' without type parameter is not valid as a type")
+        if option_byte == b'\x01':
             self.value_object = self.process_type(self.sub_type)
             return self.value_object.value
+        elif option_byte == b'\x00':
+            return None
+        else:
+            raise InvalidScaleTypeValueException(
+                f"Invalid starting byte for 'Option': '0x{option_byte.hex()}'"
+            )
 
-        return None
 
     def process_encode(self, value):
 

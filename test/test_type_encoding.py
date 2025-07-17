@@ -17,6 +17,7 @@ import os
 import unittest
 
 from scalecodec.base import ScaleBytes, ScaleDecoder, RuntimeConfiguration
+from scalecodec.exceptions import InvalidScaleTypeValueException
 from scalecodec.type_registry import load_type_registry_preset, load_type_registry_file
 
 from scalecodec.types import CompactU32, Struct
@@ -334,6 +335,13 @@ class TestScaleTypeEncoding(unittest.TestCase):
         obj_check = RuntimeConfiguration().create_scale_object('Option<Bytes>', data)
 
         self.assertEqual(obj_check.decode(), value)
+
+    def test_option_decode_invalid(self):
+        obj = RuntimeConfiguration().create_scale_object('Option<Bytes>', ScaleBytes("0x0200"))
+        with self.assertRaisesRegex(
+            InvalidScaleTypeValueException, r"^Invalid starting byte for 'Option': '0x02'$"
+        ):
+            obj.decode()
 
     def test_proposal_encode_decode(self):
 
