@@ -1,0 +1,60 @@
+[project]
+name = "scalecodec"
+description = "Python SCALE Codec Library"
+keywords = ["scale", "codec", "polkascan", "polkadot", "substrate", "blockchain", "kusama"]
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "Stichting Polkascan (Polkascan Foundation)", email = "info@polkascan.org" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+requires-python = ">=3.9"
+dependencies = ["base58>=2.0.1", "more-itertools", "requests>=2.24.0"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/polkascan/py-scale-codec"
+
+[dependency-groups]
+dev = [
+    "base58==2.0.1",
+    "atomicwrites~=1.4.0",
+    "attrs~=20.3.0",
+    "build",
+    "coverage==5.3",
+    "flake8",
+    "more-itertools~=8.6.0",
+    "pluggy==0.13.1",
+    "pytest>=6.1.2",
+    "requests>=2.24.0",
+    "six==1.15.0",
+    "twine",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-autorefs",
+    "mkdocstrings",
+    "mkdocstrings[python]",
+]
+
+[tool.setuptools.packages.find]
+include = ["scalecodec*"]
+
+[tool.setuptools.package-data]
+"scalecodec.type_registry" = ["*.json"]
+
+[tool.setuptools_scm]
+version_file = "scalecodec/_version.py"
+
+[build-system]
+requires = ["setuptools>=77.0.3", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
